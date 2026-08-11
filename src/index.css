@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+::selection {
+  background: #ffffff;
+  color: #061735;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* Signature checkerboard — the recurring NERVE mark.
+   Two sizes: .nv-checker (bold, navy/white) and .nv-checker-soft (subtle, mist/navy) */
+.nv-checker {
+  background-image:
+    linear-gradient(45deg, #061735 25%, transparent 25%),
+    linear-gradient(-45deg, #061735 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #061735 75%),
+    linear-gradient(-45deg, transparent 75%, #061735 75%);
+  background-size: 32px 32px;
+  background-position: 0 0, 0 16px, 16px -16px, -16px 0px;
+  background-color: #ffffff;
+}
+
+.nv-checker-inv {
+  background-image:
+    linear-gradient(45deg, #ffffff 25%, transparent 25%),
+    linear-gradient(-45deg, #ffffff 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #ffffff 75%),
+    linear-gradient(-45deg, transparent 75%, #ffffff 75%);
+  background-size: 32px 32px;
+  background-position: 0 0, 0 16px, 16px -16px, -16px 0px;
+  background-color: #061735;
+}
+
+.nv-checker-mini {
+  background-image:
+    linear-gradient(45deg, currentColor 25%, transparent 25%),
+    linear-gradient(-45deg, currentColor 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, currentColor 75%),
+    linear-gradient(-45deg, transparent 75%, currentColor 75%);
+  background-size: 10px 10px;
+  background-position: 0 0, 0 5px, 5px -5px, -5px 0px;
+}
+
+.nv-heading {
+  font-family: 'Anton', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 0.92;
+}
+
+.nv-eyebrow {
+  font-family: 'Archivo Narrow', sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  font-size: 0.72rem;
+}
+
+.nv-edit {
+  font-family: 'Archivo Narrow', sans-serif;
+}
+
+.nv-hairline {
+  border-color: rgba(167, 167, 167, 0.35);
+}
+
+/* thin custom scrollbar for drawers */
+.nv-scroll::-webkit-scrollbar { width: 5px; }
+.nv-scroll::-webkit-scrollbar-thumb { background: rgba(167,167,167,.5); border-radius: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

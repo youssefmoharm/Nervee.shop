@@ -1,0 +1,11 @@
+name: Dependabot auto-merge
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Dependabot configured via .github/dependabot.yml"
