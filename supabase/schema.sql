@@ -144,19 +144,10 @@ CREATE TABLE orders (
   
   -- Order status
   status TEXT DEFAULT 'placed',
-  payment_status TEXT DEFAULT 'pending',
   fulfillment_status TEXT DEFAULT 'unfulfilled',
-  
-  -- Payment
-  payment_provider TEXT, -- 'paymob', 'stripe'
-  payment_transaction_id TEXT,
-  
-  -- Tracking
-  tracking_number TEXT,
   
   -- Timestamps
   placed_at TIMESTAMPTZ DEFAULT NOW(),
-  paid_at TIMESTAMPTZ,
   shipped_at TIMESTAMPTZ,
   delivered_at TIMESTAMPTZ,
   cancelled_at TIMESTAMPTZ,
@@ -166,9 +157,6 @@ CREATE TABLE orders (
   
   CONSTRAINT valid_status CHECK (status IN (
     'placed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'
-  )),
-  CONSTRAINT valid_payment_status CHECK (payment_status IN (
-    'pending', 'paid', 'failed', 'refunded'
   )),
   CONSTRAINT valid_fulfillment_status CHECK (fulfillment_status IN (
     'unfulfilled', 'partial', 'fulfilled'

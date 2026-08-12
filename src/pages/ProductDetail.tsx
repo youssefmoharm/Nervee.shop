@@ -1,89 +1,102 @@
-﻿import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { Heart, Loader2, Minus, Plus, RotateCcw, Ruler, Truck, Star } from 'lucide-react'
-import type { Product, Size, ProductReview } from '../types'
-import { productService } from '../services/productService'
-import { backInStockService } from '../services/backInStockService'
-import { reviewService } from '../services/reviewService'
-import { useAuth } from '../context/AuthContext'
-import { useCart } from '../context/CartContext'
-import { useWishlist } from '../context/WishlistContext'
-import { useToast } from '../context/ToastContext'
-import ProductCard from '../components/ProductCard'
-import SizeGuideModal from '../components/SizeGuideModal'
-import Skeleton from '../components/Skeleton'
+﻿import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Heart, Loader2, Minus, Plus, RotateCcw, Ruler, Truck, Star } from 'lucide-react';
+import type { Product, Size, ProductReview } from '../types';
+import { productService } from '../services/productService';
+import { backInStockService } from '../services/backInStockService';
+import { reviewService } from '../services/reviewService';
+import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
+import { useToast } from '../context/ToastContext';
+import { useSEO } from '../lib/seo';
+import ProductCard from '../components/ProductCard';
+import SizeGuideModal from '../components/SizeGuideModal';
+import Skeleton from '../components/Skeleton';
 
-type Tab = 'description' | 'size' | 'shipping'
+type Tab = 'description' | 'size' | 'shipping';
 
 export default function ProductDetail() {
-  const { slug } = useParams()
-  const navigate = useNavigate()
-  const { addLine, openCart } = useCart()
-  const { toggle, has } = useWishlist()
-  const { showToast } = useToast()
-  const { user } = useAuth()
+  const { slug } = useParams();
+  const navigate = useNavigate();
+  const { addLine, openCart } = useCart();
+  const { toggle, has } = useWishlist();
+  const { showToast } = useToast();
+  const { user } = useAuth();
 
-  const [product, setProduct] = useState<Product | null>(null)
-  const [related, setRelated] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
-  const [colorIdx, setColorIdx] = useState(0)
-  const [size, setSize] = useState<Size | null>(null)
-  const [qty, setQty] = useState(1)
-  const [activeImage, setActiveImage] = useState(0)
-  const [tab, setTab] = useState<Tab>('description')
-  const [sizeError, setSizeError] = useState(false)
-  const [sizeGuideOpen, setSizeGuideOpen] = useState(false)
-  const [notifySize, setNotifySize] = useState<Size | null>(null)
-  const [notifyEmail, setNotifyEmail] = useState('')
-  const [notifyStatus, setNotifyStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
-  const [reviews, setReviews] = useState<ProductReview[]>([])
-  const [reviewStats, setReviewStats] = useState({ reviewCount: 0, averageRating: 0 })
-  const [showReviewForm, setShowReviewForm] = useState(false)
-  const [reviewForm, setReviewForm] = useState({ rating: 5, title: '', comment: '' })
-  const [submittingReview, setSubmittingReview] = useState(false)
+  const [product, setProduct] = useState<Product | null>(null);
+  const [related, setRelated] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [colorIdx, setColorIdx] = useState(0);
+  const [size, setSize] = useState<Size | null>(null);
+  const [qty, setQty] = useState(1);
+  const [activeImage, setActiveImage] = useState(0);
+  const [tab, setTab] = useState<Tab>('description');
+  const [sizeError, setSizeError] = useState(false);
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
+  const [notifySize, setNotifySize] = useState<Size | null>(null);
+  const [notifyEmail, setNotifyEmail] = useState('');
+  const [notifyStatus, setNotifyStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [reviews, setReviews] = useState<ProductReview[]>([]);
+  const [reviewStats, setReviewStats] = useState({ reviewCount: 0, averageRating: 0 });
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewForm, setReviewForm] = useState({ rating: 5, title: '', comment: '' });
+  const [submittingReview, setSubmittingReview] = useState(false);
+
+  useSEO({
+    title: product ? `${product.name} | NERVE` : 'NERVE — Cool but Chic',
+    description: product
+      ? product.description
+      : 'A contemporary Egyptian concept store. Cool but chic. EST 2026.',
+    type: product ? 'product' : 'website',
+    price: product?.price,
+    currency: product ? 'EGP' : undefined,
+    brand: 'NERVE',
+    availability: product && product.sizes.some(s => s.inStock) ? 'InStock' : 'OutOfStock',
+  });
 
   useEffect(() => {
-    if (!slug) return
-    let mounted = true
-    setLoading(true)
-    setColorIdx(0)
-    setSize(null)
-    setActiveImage(0)
-    setNotifySize(null)
-    setNotifyStatus('idle')
-    productService.getBySlug(slug).then(async (p) => {
-      if (!mounted) return
+    if (!slug) return;
+    let mounted = true;
+    setLoading(true);
+    setColorIdx(0);
+    setSize(null);
+    setActiveImage(0);
+    setNotifySize(null);
+    setNotifyStatus('idle');
+    productService.getBySlug(slug).then(async p => {
+      if (!mounted) return;
       if (!p) {
-        setProduct(null)
-        setLoading(false)
-        return
+        setProduct(null);
+        setLoading(false);
+        return;
       }
-      setProduct(p)
-      const rel = await productService.getRelated(p)
-      if (mounted) setRelated(rel)
-      const reviewData = await reviewService.getByProduct(p.id)
-      if (reviewData.reviews) setReviews(reviewData.reviews)
-      const statsData = await reviewService.getStats(p.id)
-      if (statsData.stats) setReviewStats(statsData.stats)
-      setLoading(false)
-    })
+      setProduct(p);
+      const rel = await productService.getRelated(p);
+      if (mounted) setRelated(rel);
+      const reviewData = await reviewService.getByProduct(p.id);
+      if (reviewData.reviews) setReviews(reviewData.reviews);
+      const statsData = await reviewService.getStats(p.id);
+      if (statsData.stats) setReviewStats(statsData.stats);
+      setLoading(false);
+    });
     return () => {
-      mounted = false
-    }
-  }, [slug])
+      mounted = false;
+    };
+  }, [slug]);
 
   useEffect(() => {
-    if (!product) return
+    if (!product) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') {
-        setActiveImage((i) => (i - 1 + product.gallery.length) % product.gallery.length)
+        setActiveImage(i => (i - 1 + product.gallery.length) % product.gallery.length);
       } else if (e.key === 'ArrowRight') {
-        setActiveImage((i) => (i + 1) % product.gallery.length)
+        setActiveImage(i => (i + 1) % product.gallery.length);
       }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [product])
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [product]);
 
   if (loading) {
     return (
@@ -107,7 +120,7 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (!product) {
@@ -118,16 +131,16 @@ export default function ProductDetail() {
           Back to Shop
         </button>
       </div>
-    )
+    );
   }
 
-  const color = product.colors[colorIdx]
-  const wished = has(product.id)
+  const color = product.colors[colorIdx];
+  const wished = has(product.id);
 
   const handleAddToBag = () => {
     if (!size) {
-      setSizeError(true)
-      return
+      setSizeError(true);
+      return;
     }
     addLine({
       productId: product.id,
@@ -138,44 +151,44 @@ export default function ProductDetail() {
       color: color.name,
       size,
       quantity: qty,
-    })
-  }
+    });
+  };
 
   const handleBuyNow = () => {
     if (!size) {
-      setSizeError(true)
-      return
+      setSizeError(true);
+      return;
     }
-    handleAddToBag()
-    openCart()
-  }
+    handleAddToBag();
+    openCart();
+  };
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!user) return
-    setSubmittingReview(true)
+    e.preventDefault();
+    if (!user) return;
+    setSubmittingReview(true);
     const result = await reviewService.create({
       productId: product.id,
       rating: reviewForm.rating,
       title: reviewForm.title,
       comment: reviewForm.comment,
-    })
+    });
     if (result.success) {
-      setReviews([...reviews, result.review!])
-      setReviewForm({ rating: 5, title: '', comment: '' })
-      setShowReviewForm(false)
-      showToast('Review submitted successfully', 'success', 2000)
+      setReviews([...reviews, result.review!]);
+      setReviewForm({ rating: 5, title: '', comment: '' });
+      setShowReviewForm(false);
+      showToast('Review submitted successfully', 'success', 2000);
     } else {
-      showToast(result.error || 'Failed to submit review', 'error', 3000)
+      showToast(result.error || 'Failed to submit review', 'error', 3000);
     }
-    setSubmittingReview(false)
-  }
+    setSubmittingReview(false);
+  };
 
   const getAverageRating = (reviewList: ProductReview[]) => {
-    if (reviewList.length === 0) return 0
-    const sum = reviewList.reduce((acc, r) => acc + r.rating, 0)
-    return (sum / reviewList.length).toFixed(1)
-  }
+    if (reviewList.length === 0) return 0;
+    const sum = reviewList.reduce((acc, r) => acc + r.rating, 0);
+    return (sum / reviewList.length).toFixed(1);
+  };
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }).map((_, i) => (
@@ -186,12 +199,12 @@ export default function ProductDetail() {
           i < rating
             ? 'fill-navy text-navy'
             : i < Math.ceil(rating)
-              ? 'fill-navy text-navy/50'
-              : 'text-navy/20'
+            ? 'fill-navy text-navy/50'
+            : 'text-navy/20'
         }
       />
-    ))
-  }
+    ));
+  };
 
   return (
     <div className="bg-white text-navy min-h-screen pt-24 md:pt-28">
@@ -210,7 +223,7 @@ export default function ProductDetail() {
                 <button
                   key={g + i}
                   onClick={() => setActiveImage(i)}
-                  className={spect-square bg-mist overflow-hidden border-2 transition-colors }
+                  className="aspect-square bg-mist overflow-hidden border-2 transition-colors"
                 >
                   <img src={g} alt="" className="w-full h-full object-cover" />
                 </button>
@@ -247,15 +260,24 @@ export default function ProductDetail() {
                   <button
                     key={c.name}
                     onClick={() => {
-                      setColorIdx(i)
-                      setActiveImage(0)
+                      setColorIdx(i);
+                      setActiveImage(0);
                     }}
-                    aria-label={Choose }
+                    aria-label={`Choose ${c.name}`}
                     aria-pressed={i === colorIdx}
-                    className={w-10 h-10 rounded-full border-2 transition-all }
-                    style={{ boxShadow: inset 0 0 0 1px  }}
+                    data-testid="color-option"
+                    className="w-10 h-10 rounded-full border-2 transition-all"
+                    style={{
+                      boxShadow:
+                        i === colorIdx
+                          ? 'inset 0 0 0 2px rgba(10,10,40,0.4)'
+                          : 'inset 0 0 0 1px rgba(10,10,40,0.1)',
+                    }}
                   >
-                    <span className="block w-full h-full rounded-full" style={{ backgroundColor: c.hex }} />
+                    <span
+                      className="block w-full h-full rounded-full"
+                      style={{ backgroundColor: c.hex }}
+                    />
                   </button>
                 ))}
               </div>
@@ -263,28 +285,32 @@ export default function ProductDetail() {
 
             <div className="mt-8">
               <div className="flex items-center justify-between mb-3">
-                <p className="nv-eyebrow text-navy/60">Size {size && : }</p>
-                <button onClick={() => setSizeGuideOpen(true)} className="text-xs underline text-navy/50">
+                <p className="nv-eyebrow text-navy/60">Size{size ? `: ${size}` : ''}</p>
+                <button
+                  onClick={() => setSizeGuideOpen(true)}
+                  className="text-xs underline text-navy/50"
+                >
                   Size Guide
                 </button>
               </div>
               <div className="grid grid-cols-6 gap-2">
-                {product.sizes.map((s) => (
+                {product.sizes.map(s => (
                   <button
                     key={s.size}
                     aria-pressed={size === s.size}
-                    aria-label={${s.size} size option}
+                    aria-label={`${s.size} size option`}
+                    data-testid="size-option"
                     onClick={() => {
                       if (s.inStock) {
-                        setSize(s.size)
-                        setSizeError(false)
-                        setNotifySize(null)
+                        setSize(s.size);
+                        setSizeError(false);
+                        setNotifySize(null);
                       } else {
-                        setNotifySize(s.size)
-                        setNotifyStatus('idle')
+                        setNotifySize(s.size);
+                        setNotifyStatus('idle');
                       }
                     }}
-                    className={h-11 text-sm border transition-colors }
+                    className="h-11 text-sm border transition-colors"
                   >
                     {s.size}
                   </button>
@@ -297,27 +323,32 @@ export default function ProductDetail() {
                 <div className="mt-4 border border-navy/15 p-4">
                   {notifyStatus === 'done' ? (
                     <p className="text-sm">
-                      We'll email you the moment <strong>{notifySize}</strong> is back.
+                      We&apos;ll email you the moment <strong>{notifySize}</strong> is back.
                     </p>
                   ) : (
                     <form
-                      onSubmit={async (e) => {
-                        e.preventDefault()
-                        setNotifyStatus('loading')
-                        const { error } = await backInStockService.request(product.id, notifySize, notifyEmail)
-                        setNotifyStatus(error ? 'error' : 'done')
+                      onSubmit={async e => {
+                        e.preventDefault();
+                        setNotifyStatus('loading');
+                        const { error } = await backInStockService.request(
+                          product.id,
+                          notifySize,
+                          notifyEmail,
+                        );
+                        setNotifyStatus(error ? 'error' : 'done');
                       }}
                       className="space-y-2"
                     >
                       <p className="text-sm">
-                        Size <strong>{notifySize}</strong> is out of stock. Get an email when it's back:
+                        Size <strong>{notifySize}</strong> is out of stock. Get an email when
+                        it&apos;s back:
                       </p>
                       <div className="flex gap-2">
                         <input
                           type="email"
                           required
                           value={notifyEmail}
-                          onChange={(e) => setNotifyEmail(e.target.value)}
+                          onChange={e => setNotifyEmail(e.target.value)}
                           placeholder="you@email.com"
                           className="flex-1 border border-navy/20 px-3 py-2.5 text-sm focus:outline-none focus:border-navy"
                         />
@@ -326,11 +357,17 @@ export default function ProductDetail() {
                           disabled={notifyStatus === 'loading'}
                           className="bg-navy text-white nv-eyebrow px-5 text-xs disabled:opacity-60 flex items-center gap-1.5"
                         >
-                          {notifyStatus === 'loading' && <Loader2 size={13} className="animate-spin" />}
+                          {notifyStatus === 'loading' && (
+                            <Loader2 size={13} className="animate-spin" />
+                          )}
                           Notify Me
                         </button>
                       </div>
-                      {notifyStatus === 'error' && <p className="text-xs text-red-600">Something went wrong. Please try again.</p>}
+                      {notifyStatus === 'error' && (
+                        <p className="text-xs text-red-600">
+                          Something went wrong. Please try again.
+                        </p>
+                      )}
                     </form>
                   )}
                 </div>
@@ -341,7 +378,7 @@ export default function ProductDetail() {
               <div className="flex items-center border border-navy/25">
                 <button
                   aria-label="Decrease quantity"
-                  onClick={() => setQty((q) => Math.max(1, q - 1))}
+                  onClick={() => setQty(q => Math.max(1, q - 1))}
                   className="w-11 h-14 flex items-center justify-center hover:bg-mist"
                 >
                   <Minus size={14} />
@@ -349,7 +386,7 @@ export default function ProductDetail() {
                 <span className="w-10 text-center">{qty}</span>
                 <button
                   aria-label="Increase quantity"
-                  onClick={() => setQty((q) => q + 1)}
+                  onClick={() => setQty(q => q + 1)}
                   className="w-11 h-14 flex items-center justify-center hover:bg-mist"
                 >
                   <Plus size={14} />
@@ -357,6 +394,7 @@ export default function ProductDetail() {
               </div>
               <button
                 onClick={handleAddToBag}
+                data-testid="add-to-bag-button"
                 className="flex-1 bg-navy text-white nv-eyebrow py-4 hover:bg-navy-2 transition-colors"
               >
                 Add to Bag
@@ -370,12 +408,12 @@ export default function ProductDetail() {
                     slug: product.slug,
                     image: color.image,
                     price: product.price,
-                  })
+                  });
                   showToast(
                     wished ? 'Removed from wishlist' : 'Added to wishlist',
                     'success',
-                    2000
-                  )
+                    2000,
+                  );
                 }}
                 className="w-14 h-14 border border-navy/25 flex items-center justify-center hover:border-navy transition-colors flex-shrink-0"
               >
@@ -384,6 +422,7 @@ export default function ProductDetail() {
             </div>
             <button
               onClick={handleBuyNow}
+              data-testid="buy-now-button"
               className="mt-3 w-full border border-navy nv-eyebrow py-4 hover:bg-navy hover:text-white transition-colors"
             >
               Buy Now
@@ -412,11 +451,14 @@ export default function ProductDetail() {
                       {key === 'description' && (
                         <>
                           <p>{product.description}</p>
-                          <p><span className="font-medium text-navy">Material:</span> {product.material}</p>
+                          <p>
+                            <span className="font-medium text-navy">Material:</span>{' '}
+                            {product.material}
+                          </p>
                           <div>
                             <p className="font-medium text-navy mb-1">Care Instructions:</p>
                             <ul className="list-disc list-inside space-y-0.5">
-                              {product.care.map((c) => (
+                              {product.care.map(c => (
                                 <li key={c}>{c}</li>
                               ))}
                             </ul>
@@ -475,8 +517,13 @@ export default function ProductDetail() {
                     <div className="bg-mist/50 p-4 rounded-lg">
                       <form onSubmit={handleReviewSubmit} className="space-y-3">
                         <div>
-                          <label className="text-xs font-medium text-navy/60 mb-1 block">Rating</label>
-                          <div className="flex gap-1">
+                          <label
+                            htmlFor="review-rating"
+                            className="text-xs font-medium text-navy/60 mb-1 block"
+                          >
+                            Rating
+                          </label>
+                          <div className="flex gap-1" id="review-rating">
                             {Array.from({ length: 5 }).map((_, i) => (
                               <button
                                 key={i}
@@ -487,9 +534,7 @@ export default function ProductDetail() {
                                 <Star
                                   size={24}
                                   className={
-                                    i < reviewForm.rating
-                                      ? 'fill-navy text-navy'
-                                      : 'text-navy/20'
+                                    i < reviewForm.rating ? 'fill-navy text-navy' : 'text-navy/20'
                                   }
                                 />
                               </button>
@@ -497,21 +542,35 @@ export default function ProductDetail() {
                           </div>
                         </div>
                         <div>
-                          <label className="text-xs font-medium text-navy/60 mb-1 block">Title</label>
+                          <label
+                            htmlFor="review-title"
+                            className="text-xs font-medium text-navy/60 mb-1 block"
+                          >
+                            Title
+                          </label>
                           <input
+                            id="review-title"
                             type="text"
                             required
                             value={reviewForm.title}
-                            onChange={(e) => setReviewForm({ ...reviewForm, title: e.target.value })}
+                            onChange={e => setReviewForm({ ...reviewForm, title: e.target.value })}
                             className="w-full border border-navy/20 px-3 py-2 text-sm focus:outline-none focus:border-navy"
                             placeholder="Short summary"
                           />
                         </div>
                         <div>
-                          <label className="text-xs font-medium text-navy/60 mb-1 block">Comment</label>
+                          <label
+                            htmlFor="review-comment"
+                            className="text-xs font-medium text-navy/60 mb-1 block"
+                          >
+                            Comment
+                          </label>
                           <textarea
+                            id="review-comment"
                             value={reviewForm.comment}
-                            onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                            onChange={e =>
+                              setReviewForm({ ...reviewForm, comment: e.target.value })
+                            }
                             className="w-full border border-navy/20 px-3 py-2 text-sm focus:outline-none focus:border-navy"
                             placeholder="Share your thoughts"
                             rows={3}
@@ -539,14 +598,18 @@ export default function ProductDetail() {
                 </div>
               ) : (
                 <p className="text-sm text-navy/50 mb-4">
-                  Please <a href="/login" className="text-navy underline">sign in</a> to write a review.
+                  Please{' '}
+                  <a href="/login" className="text-navy underline">
+                    sign in
+                  </a>{' '}
+                  to write a review.
                 </p>
               )}
 
               {/* Review List */}
               {reviews.length > 0 ? (
                 <div className="space-y-4">
-                  {reviews.map((review) => (
+                  {reviews.map(review => (
                     <div key={review.id} className="border-b border-navy/10 pb-4">
                       <div className="flex items-center gap-2 mb-1">
                         <div className="flex">{renderStars(review.rating)}</div>
@@ -559,7 +622,7 @@ export default function ProductDetail() {
                       <p className="font-medium text-sm mb-1">{review.title}</p>
                       <p className="text-sm text-navy/60">{review.comment}</p>
                       <p className="text-xs text-navy/40 mt-1">
-                        {new Date(review.created_at).toLocaleDateString()}
+                        {new Date(review.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                   ))}
@@ -576,7 +639,7 @@ export default function ProductDetail() {
           <div className="mt-24">
             <h2 className="nv-heading text-3xl md:text-4xl mb-8">You May Also Like</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-10">
-              {related.map((p) => (
+              {related.map(p => (
                 <ProductCard key={p.id} product={p} />
               ))}
             </div>
@@ -585,15 +648,21 @@ export default function ProductDetail() {
       </div>
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-navy/10 bg-white/95 p-3 backdrop-blur md:hidden">
         <div className="mx-auto flex max-w-5xl items-center gap-2">
-          <button onClick={handleAddToBag} className="flex-1 rounded-full bg-navy px-4 py-3 text-sm font-semibold text-white">
+          <button
+            onClick={handleAddToBag}
+            className="flex-1 rounded-full bg-navy px-4 py-3 text-sm font-semibold text-white"
+          >
             Add to Bag
           </button>
-          <button onClick={handleBuyNow} className="flex-1 rounded-full border border-navy px-4 py-3 text-sm font-semibold text-navy">
+          <button
+            onClick={handleBuyNow}
+            className="flex-1 rounded-full border border-navy px-4 py-3 text-sm font-semibold text-navy"
+          >
             Buy Now
           </button>
         </div>
       </div>
       {sizeGuideOpen && <SizeGuideModal onClose={() => setSizeGuideOpen(false)} />}
     </div>
-  )
+  );
 }

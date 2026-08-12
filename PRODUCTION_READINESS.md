@@ -5,16 +5,15 @@
 - [x] Database schema with 16 tables and RLS policies
 - [x] Edge Functions deployed (create-order, paymob-webhook, etc.)
 - [x] Customer authentication (Supabase Auth)
-- [x] Payment integration (Paymob + COD)
+- [x] Payment integration (Cash on Delivery)
 
 ## What Requires External Action (HUMAN DEPLOYMENT REQUIRED)
 - [ ] Create production Supabase project
 - [ ] Run database migrations (002, 003, 006)
 - [ ] Deploy Edge Functions to production
-- [ ] Set Edge Function secrets (PAYMOB_*, RESEND_*, STORE_URL)
+- [ ] Set Edge Function secrets (RESEND_*, STORE_URL)
 - [ ] Configure Vercel deployment
 - [ ] Set Vercel environment variables
-- [ ] Configure Paymob webhook URL
 - [ ] Configure custom DNS domain
 
 ## CI/CD Status
@@ -31,6 +30,6 @@
 - [ ] Test authenticated checkout (cart persistence)
 - [ ] Test admin login and dashboard
 - [ ] Test order confirmation email delivery
-- [ ] Test Paymob payment flow (test cards)
+- [ ] Test order confirmation email delivery
 - [ ] Verify RLS policies work (no data leakage)
 - [ ] Test rate limiting (create 15 rapid orders)

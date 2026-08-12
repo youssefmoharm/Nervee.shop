@@ -1,29 +1,29 @@
-import { useState, type FormEvent } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Loader2 } from 'lucide-react'
-import { useAuth } from '../../context/AuthContext'
+import { useState, type FormEvent } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Login() {
-  const { signIn } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation() as { state?: { from?: string } }
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const { signIn } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation() as { state?: { from?: string } };
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const onSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
-    const { error } = await signIn(email, password)
-    setLoading(false)
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    const { error } = await signIn(email, password);
+    setLoading(false);
     if (error) {
-      setError(error)
-      return
+      setError(error);
+      return;
     }
-    navigate(location.state?.from ?? '/account')
-  }
+    navigate(location.state?.from ?? '/account');
+  };
 
   return (
     <div className="bg-white text-navy min-h-screen pt-32 pb-24 px-5 md:px-8">
@@ -37,8 +37,9 @@ export default function Login() {
             <input
               type="email"
               required
+              data-testid="login-email-input"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors"
             />
           </label>
@@ -47,8 +48,9 @@ export default function Login() {
             <input
               type="password"
               required
+              data-testid="login-password-input"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors"
             />
           </label>
@@ -57,6 +59,7 @@ export default function Login() {
 
           <button
             type="submit"
+            data-testid="login-button"
             disabled={loading}
             className="w-full bg-navy text-white nv-eyebrow py-4 hover:bg-navy-2 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
           >
@@ -74,5 +77,5 @@ export default function Login() {
         </div>
       </div>
     </div>
-  )
+  );
 }

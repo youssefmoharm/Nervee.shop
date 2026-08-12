@@ -1,6 +1,6 @@
-import { type ReactNode } from 'react'
-import { NavLink, Link } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { type ReactNode } from 'react';
+import { NavLink, Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const links = [
   { to: '/admin', label: 'Dashboard', end: true },
@@ -9,12 +9,11 @@ const links = [
   { to: '/admin/customers', label: 'Customers' },
   { to: '/admin/contacts', label: 'Contacts' },
   { to: '/admin/newsletter', label: 'Newsletter' },
-  { to: '/admin/payments', label: 'Payments' },
   { to: '/admin/discounts', label: 'Discounts' },
-]
+];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  const { signOut } = useAuth()
+  const { signOut } = useAuth();
 
   return (
     <div className="bg-white text-navy min-h-screen">
@@ -22,13 +21,16 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <Link to="/" className="nv-heading text-xl tracking-wide">
           NERVE <span className="nv-eyebrow text-silver ml-2 text-[10px]">ADMIN</span>
         </Link>
-        <button onClick={() => signOut()} className="nv-eyebrow text-xs text-silver hover:text-white">
+        <button
+          onClick={() => signOut()}
+          className="nv-eyebrow text-xs text-silver hover:text-white"
+        >
           Sign Out
         </button>
       </header>
       <div className="grid md:grid-cols-[200px_1fr] min-h-[calc(100vh-64px)]">
         <nav className="border-r border-navy/10 p-4 flex md:flex-col gap-1 overflow-x-auto">
-          {links.map((l) => (
+          {links.map(l => (
             <NavLink
               key={l.to}
               to={l.to}
@@ -46,5 +48,5 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <main className="p-6 md:p-10 min-w-0">{children}</main>
       </div>
     </div>
-  )
+  );
 }

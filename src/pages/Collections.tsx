@@ -1,7 +1,13 @@
-import { Link } from 'react-router-dom'
-import { collections } from '../data/products'
+import { Link } from 'react-router-dom';
+import { collections } from '../data/products';
+import { useSEO } from '../lib/seo';
 
 export default function Collections() {
+  useSEO({
+    title: 'Collections | NERVE Streetwear',
+    description:
+      "Explore NERVE's curated collections — core essentials, limited archive drops, and pieces built for movement.",
+  });
   return (
     <div className="bg-navy min-h-screen pt-24 md:pt-28">
       <div className="px-5 md:px-8 py-10 md:py-16">
@@ -9,9 +15,17 @@ export default function Collections() {
         <h1 className="nv-heading text-5xl md:text-8xl">Collections</h1>
       </div>
       <div className="grid md:grid-cols-3 gap-1 px-1 pb-1">
-        {collections.map((c) => (
-          <Link key={c.id} to={`/collections/${c.id}`} className="group relative aspect-[3/4] overflow-hidden block">
-            <img src={c.image} alt={c.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+        {collections.map(c => (
+          <Link
+            key={c.id}
+            to={`/collections/${c.id}`}
+            className="group relative aspect-[3/4] overflow-hidden block"
+          >
+            <img
+              src={c.image}
+              alt={c.name}
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-navy/90 via-navy/10 to-transparent" />
             <div className="absolute bottom-0 left-0 p-6">
               <p className="nv-eyebrow text-silver mb-1">{c.tagline}</p>
@@ -24,5 +38,5 @@ export default function Collections() {
         ))}
       </div>
     </div>
-  )
+  );
 }

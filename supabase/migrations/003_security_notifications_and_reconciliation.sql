@@ -2,9 +2,8 @@
 -- NERVE — Migration 003
 -- Fixes a critical pre-existing RLS gap (admin checks were unreachable) and
 -- a customer-id-spoofing gap in merge_guest_cart, adds COD abuse limits,
--- payment reconciliation support, webhook idempotency, back-in-stock
--- signups, and an atomic admin order-status function (restock on
--- cancel/refund + status timestamps).
+-- back-in-stock signups, and an atomic admin order-status function (restock
+-- on cancel/refund + status timestamps).
 --
 -- Run this AFTER 002_orders_rpc_and_extras.sql, in the Supabase SQL Editor.
 -- ============================================================================
@@ -37,29 +36,9 @@ COMMENT ON COLUMN discount_codes.discount_value IS 'Percentage (e.g. 15) or fixe
 COMMENT ON COLUMN discount_codes.minimum_purchase IS 'Minimum order subtotal in whole EGP.';
 
 -- ============================================================================
--- New order columns
+-- Tracking URL for shipments
 -- ============================================================================
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS paymob_order_id TEXT;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS tracking_url TEXT;
-
-CREATE INDEX IF NOT EXISTS orders_paymob_order_id_idx ON orders(paymob_order_id);
-
--- ============================================================================
--- Webhook idempotency ledger.
---
--- Paymob (like most payment providers) may redeliver the same webhook. This
--- table is the dedupe key: the first time we see a given Paymob transaction
--- id, we process it and record it here; every subsequent delivery of the
--- same id is a no-op. Not exposed via RLS to anon/authenticated at all —
--- only the service role (used by the edge functions) touches it.
--- ============================================================================
-CREATE TABLE IF NOT EXISTS payment_events (
-  id TEXT PRIMARY KEY, -- Paymob transaction id
-  order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
-  received_at TIMESTAMPTZ DEFAULT NOW()
-);
-ALTER TABLE payment_events ENABLE ROW LEVEL SECURITY;
--- No policies = fully locked to service_role. Intentional.
 
 -- ============================================================================
 -- Back-in-stock signups
@@ -96,9 +75,7 @@ CREATE INDEX IF NOT EXISTS back_in_stock_lookup_idx
 
 -- ============================================================================
 -- place_order(): replaces the version from migration 002. Adds:
---   - COD requires a signed-in customer (guests must pay by card)
---   - a cap on how many open/unpaid COD orders one customer can have at once
---   - a maximum order value for COD (large orders must be paid by card)
+--   - a cap on how many open COD orders one customer can have at once
 -- Everything else is unchanged from migration 002.
 -- ============================================================================
 CREATE OR REPLACE FUNCTION place_order(
@@ -134,7 +111,6 @@ DECLARE
   v_order orders;
   v_order_number TEXT;
   v_open_cod_orders INTEGER;
-  v_cod_max_value CONSTANT INTEGER := 15000; -- EGP. Above this, card only.
   v_cod_open_order_cap CONSTANT INTEGER := 3;
 BEGIN
   IF p_items IS NULL OR jsonb_array_length(p_items) = 0 THEN
@@ -145,17 +121,12 @@ BEGIN
     RAISE EXCEPTION 'Invalid delivery method' USING ERRCODE = 'P0001';
   END IF;
 
-  IF p_payment_provider NOT IN ('cod', 'paymob') THEN
+  IF p_payment_provider <> 'cod' THEN
     RAISE EXCEPTION 'Invalid payment method' USING ERRCODE = 'P0001';
   END IF;
 
-  -- ---- Cash on Delivery abuse guards ----
-  IF p_payment_provider = 'cod' THEN
-    IF p_customer_id IS NULL THEN
-      RAISE EXCEPTION 'Please sign in to place a Cash on Delivery order. Guests can still check out by card.'
-        USING ERRCODE = 'P0001';
-    END IF;
-
+  -- ---- Cash on Delivery abuse guard ----
+  IF p_customer_id IS NOT NULL THEN
     SELECT COUNT(*) INTO v_open_cod_orders
       FROM orders
       WHERE customer_id = p_customer_id
@@ -226,12 +197,6 @@ BEGIN
   END IF;
 
   v_total := GREATEST(v_subtotal + v_shipping - v_discount_amount, 0);
-
-  -- ---- COD maximum order value
-  IF p_payment_provider = 'cod' AND v_total > v_cod_max_value THEN
-    RAISE EXCEPTION 'Orders over EGP % must be paid by card — please select Card payment to continue.', v_cod_max_value
-      USING ERRCODE = 'P0001';
-  END IF;
 
   -- ---- Create the order
   v_order_number := 'NRV-' || LPAD(FLOOR(RANDOM() * 1000000)::TEXT, 6, '0');

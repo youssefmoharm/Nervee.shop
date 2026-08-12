@@ -8,10 +8,7 @@
   the frontend via `@supabase/supabase-js`, protected by Row Level Security
   on every table — plus two small Supabase Edge Functions for the handful
   of operations that must not run in the browser.
-- **Payments:** Paymob (Egyptian market: local cards, widely supported).
-  Abstracted behind `orderService.placeOrder()` so a second provider (e.g.
-  Stripe for international cards) can be added later without touching
-  checkout UI.
+- **Payments:** Cash on Delivery (Egyptian market).
 
 ## Why no separate Express/Node API
 
@@ -31,10 +28,7 @@ extra service to deploy, monitor, and keep patched, for no security or
 functionality gain.
 
 What genuinely cannot happen in the browser:
-1. **Order pricing/stock validation.** The client must never be trusted for
-   totals or "is this in stock."
-2. **Anything using a payment-provider secret key** (Paymob's API key,
-   HMAC secret).
+1. **Order pricing/stock validation.** The client must never be trusted for totals or "is this in stock."
 
 Both are narrow, well-defined operations — a natural fit for **Supabase Edge
 Functions** (Deno, deployed alongside the same Supabase project, with
@@ -58,13 +52,8 @@ Client (Checkout.tsx)
           - validates + applies any discount code
           - rejects the whole call if anything is out of stock
           - inserts orders + order_items atomically
-      - if paying by card: opens a Paymob session, returns an iframe URL
       - if COD: returns the confirmed order directly
-  ← { order, paymentUrl }
-Client redirects to paymentUrl (card) or shows confirmation (COD)
-
-Paymob → paymob-webhook (HMAC-verified) → updates orders.payment_status
-```
+  ← { order }
 
 Nothing about price, stock, or "did payment succeed" is ever trusted from
 the browser at any point in this chain.
@@ -282,3 +271,5 @@ Migration includes:
 - No PII sent to GA4 by default
 - User ID only set after authentication
 - Analytics ID exposed in browser (intentional for GA4)
+
+

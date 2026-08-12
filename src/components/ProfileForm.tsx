@@ -1,31 +1,31 @@
-import { useState, useEffect, type FormEvent } from 'react'
-import { useAuth } from '../context/AuthContext'
-import { useToast } from '../context/ToastContext'
-import { supabase } from '../lib/supabase'
-import { Eye, EyeOff, Calendar, MapPin, Phone, User, Mail, Lock } from 'lucide-react'
-import PasswordStrengthIndicator from './PasswordStrengthIndicator'
-import { calculatePasswordStrength } from '../lib/passwordValidation'
+import { useState, useEffect, type FormEvent } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { supabase } from '../lib/supabase';
+import { Eye, EyeOff, Calendar, MapPin, Phone, User, Mail, Lock } from 'lucide-react';
+import PasswordStrengthIndicator from './PasswordStrengthIndicator';
+import { calculatePasswordStrength } from '../lib/passwordValidation';
 
 interface ProfileData {
-  firstName: string
-  lastName: string
-  phone: string
-  dateOfBirth: string
-  gender: string
-  city: string
-  bio: string
+  firstName: string;
+  lastName: string;
+  phone: string;
+  dateOfBirth: string;
+  gender: string;
+  city: string;
+  bio: string;
 }
 
 interface PasswordChangeData {
-  currentPassword: string
-  newPassword: string
-  confirmPassword: string
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
 }
 
 export default function ProfileForm() {
-  const { user, updatePassword } = useAuth()
-  const { showToast } = useToast()
-  
+  const { user, updatePassword } = useAuth();
+  const { showToast } = useToast();
+
   // Profile state
   const [profile, setProfile] = useState<ProfileData>({
     firstName: '',
@@ -35,30 +35,30 @@ export default function ProfileForm() {
     gender: '',
     city: '',
     bio: '',
-  })
-  
+  });
+
   // Password change state
   const [passwordData, setPasswordData] = useState<PasswordChangeData>({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
-  })
-  
+  });
+
   // UI state
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [changingPassword, setChangingPassword] = useState(false)
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
     confirm: false,
-  })
-  const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile')
+  });
+  const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
 
   // Load profile data
   useEffect(() => {
-    if (!user) return
-    
+    if (!user) return;
+
     supabase
       .from('customers')
       .select('first_name, last_name, phone, date_of_birth, gender, city, bio')
@@ -74,19 +74,19 @@ export default function ProfileForm() {
             gender: data.gender ?? '',
             city: data.city ?? '',
             bio: data.bio ?? '',
-          })
+          });
         }
-        setLoading(false)
-      })
-  }, [user])
+        setLoading(false);
+      });
+  }, [user]);
 
   // Save profile changes
   const saveProfile = async (e: FormEvent) => {
-    e.preventDefault()
-    if (!user) return
+    e.preventDefault();
+    if (!user) return;
 
-    setSaving(true)
-    
+    setSaving(true);
+
     const { error } = await supabase
       .from('customers')
       .update({
@@ -98,62 +98,62 @@ export default function ProfileForm() {
         city: profile.city || null,
         bio: profile.bio || null,
       })
-      .eq('id', user.id)
+      .eq('id', user.id);
 
-    setSaving(false)
+    setSaving(false);
 
     if (error) {
-      showToast('Failed to update profile', 'error')
+      showToast('Failed to update profile', 'error');
     } else {
-      showToast('Profile updated successfully', 'success')
+      showToast('Profile updated successfully', 'success');
     }
-  }
+  };
 
   // Change password
   const changePassword = async (e: FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     // Validation
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      showToast('Passwords do not match', 'error')
-      return
+      showToast('Passwords do not match', 'error');
+      return;
     }
 
-    const strength = calculatePasswordStrength(passwordData.newPassword)
+    const strength = calculatePasswordStrength(passwordData.newPassword);
     if (!strength.isValid) {
-      showToast('Password does not meet requirements', 'error')
-      return
+      showToast('Password does not meet requirements', 'error');
+      return;
     }
 
-    setChangingPassword(true)
+    setChangingPassword(true);
 
     // First verify current password by attempting to sign in
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: user?.email ?? '',
       password: passwordData.currentPassword,
-    })
+    });
 
     if (signInError) {
-      setChangingPassword(false)
-      showToast('Current password is incorrect', 'error')
-      return
+      setChangingPassword(false);
+      showToast('Current password is incorrect', 'error');
+      return;
     }
 
     // Update password
-    const { error } = await updatePassword(passwordData.newPassword)
-    setChangingPassword(false)
+    const { error } = await updatePassword(passwordData.newPassword);
+    setChangingPassword(false);
 
     if (error) {
-      showToast(error, 'error')
+      showToast(error, 'error');
     } else {
-      showToast('Password updated successfully', 'success')
+      showToast('Password updated successfully', 'success');
       setPasswordData({
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
-      })
+      });
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -165,7 +165,7 @@ export default function ProfileForm() {
           <div className="h-12 bg-mist w-full" />
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -204,10 +204,13 @@ export default function ProfileForm() {
       {activeTab === 'profile' && (
         <form onSubmit={saveProfile} className="space-y-6">
           <h3 className="nv-heading text-xl mb-4">Personal Information</h3>
-          
+
           {/* Email (readonly) */}
           <div>
-            <label htmlFor="profile-email" className="flex items-center gap-2 text-sm font-medium text-navy/60 mb-2">
+            <label
+              htmlFor="profile-email"
+              className="flex items-center gap-2 text-sm font-medium text-navy/60 mb-2"
+            >
               <Mail size={14} />
               Email Address
             </label>
@@ -224,7 +227,10 @@ export default function ProfileForm() {
           {/* Name fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="profile-firstName" className="flex items-center gap-2 text-sm font-medium text-navy/60 mb-2">
+              <label
+                htmlFor="profile-firstName"
+                className="flex items-center gap-2 text-sm font-medium text-navy/60 mb-2"
+              >
                 <User size={14} />
                 First Name
               </label>
@@ -232,13 +238,16 @@ export default function ProfileForm() {
                 id="profile-firstName"
                 type="text"
                 value={profile.firstName}
-                onChange={(e) => setProfile(prev => ({ ...prev, firstName: e.target.value }))}
+                onChange={e => setProfile(prev => ({ ...prev, firstName: e.target.value }))}
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors"
                 placeholder="Enter your first name"
               />
             </div>
             <div>
-              <label htmlFor="profile-lastName" className="flex items-center gap-2 text-sm font-medium text-navy/60 mb-2">
+              <label
+                htmlFor="profile-lastName"
+                className="flex items-center gap-2 text-sm font-medium text-navy/60 mb-2"
+              >
                 <User size={14} />
                 Last Name
               </label>
@@ -246,7 +255,7 @@ export default function ProfileForm() {
                 id="profile-lastName"
                 type="text"
                 value={profile.lastName}
-                onChange={(e) => setProfile(prev => ({ ...prev, lastName: e.target.value }))}
+                onChange={e => setProfile(prev => ({ ...prev, lastName: e.target.value }))}
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors"
                 placeholder="Enter your last name"
               />
@@ -255,7 +264,10 @@ export default function ProfileForm() {
 
           {/* Phone */}
           <div>
-            <label htmlFor="profile-phone" className="flex items-center gap-2 text-sm font-medium text-navy/60 mb-2">
+            <label
+              htmlFor="profile-phone"
+              className="flex items-center gap-2 text-sm font-medium text-navy/60 mb-2"
+            >
               <Phone size={14} />
               Phone Number
             </label>
@@ -263,7 +275,7 @@ export default function ProfileForm() {
               id="profile-phone"
               type="tel"
               value={profile.phone}
-              onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
+              onChange={e => setProfile(prev => ({ ...prev, phone: e.target.value }))}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors"
               placeholder="+20 1xx xxx xxxx"
             />
@@ -272,7 +284,10 @@ export default function ProfileForm() {
           {/* Date of Birth & Gender */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="profile-dob" className="flex items-center gap-2 text-sm font-medium text-navy/60 mb-2">
+              <label
+                htmlFor="profile-dob"
+                className="flex items-center gap-2 text-sm font-medium text-navy/60 mb-2"
+              >
                 <Calendar size={14} />
                 Date of Birth
               </label>
@@ -280,18 +295,21 @@ export default function ProfileForm() {
                 id="profile-dob"
                 type="date"
                 value={profile.dateOfBirth}
-                onChange={(e) => setProfile(prev => ({ ...prev, dateOfBirth: e.target.value }))}
+                onChange={e => setProfile(prev => ({ ...prev, dateOfBirth: e.target.value }))}
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors"
               />
             </div>
             <div>
-              <label htmlFor="profile-gender" className="text-sm font-medium text-navy/60 mb-2 block">
+              <label
+                htmlFor="profile-gender"
+                className="text-sm font-medium text-navy/60 mb-2 block"
+              >
                 Gender
               </label>
               <select
                 id="profile-gender"
                 value={profile.gender}
-                onChange={(e) => setProfile(prev => ({ ...prev, gender: e.target.value }))}
+                onChange={e => setProfile(prev => ({ ...prev, gender: e.target.value }))}
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors bg-white"
               >
                 <option value="">Select gender</option>
@@ -305,7 +323,10 @@ export default function ProfileForm() {
 
           {/* City */}
           <div>
-            <label htmlFor="profile-city" className="flex items-center gap-2 text-sm font-medium text-navy/60 mb-2">
+            <label
+              htmlFor="profile-city"
+              className="flex items-center gap-2 text-sm font-medium text-navy/60 mb-2"
+            >
               <MapPin size={14} />
               City
             </label>
@@ -313,7 +334,7 @@ export default function ProfileForm() {
               id="profile-city"
               type="text"
               value={profile.city}
-              onChange={(e) => setProfile(prev => ({ ...prev, city: e.target.value }))}
+              onChange={e => setProfile(prev => ({ ...prev, city: e.target.value }))}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors"
               placeholder="Cairo, Alexandria, etc."
             />
@@ -327,15 +348,13 @@ export default function ProfileForm() {
             <textarea
               id="profile-bio"
               value={profile.bio}
-              onChange={(e) => setProfile(prev => ({ ...prev, bio: e.target.value }))}
+              onChange={e => setProfile(prev => ({ ...prev, bio: e.target.value }))}
               rows={4}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors resize-none"
               placeholder="Tell us a bit about yourself..."
               maxLength={500}
             />
-            <p className="text-xs text-navy/40 mt-1">
-              {profile.bio.length}/500 characters
-            </p>
+            <p className="text-xs text-navy/40 mt-1">{profile.bio.length}/500 characters</p>
           </div>
 
           <button
@@ -352,17 +371,23 @@ export default function ProfileForm() {
       {activeTab === 'password' && (
         <form onSubmit={changePassword} className="space-y-6">
           <h3 className="nv-heading text-xl mb-4">Change Password</h3>
-          
+
           {/* Current Password */}
           <div>
-            <label className="text-sm font-medium text-navy/60 mb-2 block">
+            <label
+              htmlFor="current-password"
+              className="text-sm font-medium text-navy/60 mb-2 block"
+            >
               Current Password
             </label>
             <div className="relative">
               <input
+                id="current-password"
                 type={showPasswords.current ? 'text' : 'password'}
                 value={passwordData.currentPassword}
-                onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                onChange={e =>
+                  setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))
+                }
                 className="w-full border border-navy/20 px-4 py-3 pr-12 text-sm focus:outline-none focus:border-navy transition-colors"
                 placeholder="Enter your current password"
                 required
@@ -379,14 +404,15 @@ export default function ProfileForm() {
 
           {/* New Password */}
           <div>
-            <label className="text-sm font-medium text-navy/60 mb-2 block">
+            <label htmlFor="new-password" className="text-sm font-medium text-navy/60 mb-2 block">
               New Password
             </label>
             <div className="relative">
               <input
+                id="new-password"
                 type={showPasswords.new ? 'text' : 'password'}
                 value={passwordData.newPassword}
-                onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                onChange={e => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
                 className="w-full border border-navy/20 px-4 py-3 pr-12 text-sm focus:outline-none focus:border-navy transition-colors"
                 placeholder="Enter a strong password"
                 required
@@ -399,7 +425,7 @@ export default function ProfileForm() {
                 {showPasswords.new ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-            
+
             {/* Password Strength Indicator */}
             {passwordData.newPassword && (
               <div className="mt-3">
@@ -410,16 +436,23 @@ export default function ProfileForm() {
 
           {/* Confirm Password */}
           <div>
-            <label className="text-sm font-medium text-navy/60 mb-2 block">
+            <label
+              htmlFor="confirm-password"
+              className="text-sm font-medium text-navy/60 mb-2 block"
+            >
               Confirm New Password
             </label>
             <div className="relative">
               <input
+                id="confirm-password"
                 type={showPasswords.confirm ? 'text' : 'password'}
                 value={passwordData.confirmPassword}
-                onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                onChange={e =>
+                  setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))
+                }
                 className={`w-full border px-4 py-3 pr-12 text-sm focus:outline-none transition-colors ${
-                  passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword
+                  passwordData.confirmPassword &&
+                  passwordData.newPassword !== passwordData.confirmPassword
                     ? 'border-red-500 focus:border-red-500'
                     : 'border-navy/20 focus:border-navy'
                 }`}
@@ -434,14 +467,21 @@ export default function ProfileForm() {
                 {showPasswords.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-            {passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
-              <p className="text-xs text-red-600 mt-1">Passwords do not match</p>
-            )}
+            {passwordData.confirmPassword &&
+              passwordData.newPassword !== passwordData.confirmPassword && (
+                <p className="text-xs text-red-600 mt-1">Passwords do not match</p>
+              )}
           </div>
 
           <button
             type="submit"
-            disabled={changingPassword || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword || passwordData.newPassword !== passwordData.confirmPassword}
+            disabled={
+              changingPassword ||
+              !passwordData.currentPassword ||
+              !passwordData.newPassword ||
+              !passwordData.confirmPassword ||
+              passwordData.newPassword !== passwordData.confirmPassword
+            }
             className="bg-navy text-white nv-eyebrow px-8 py-3.5 hover:bg-navy-2 transition-colors disabled:opacity-60"
           >
             {changingPassword ? 'Changing Password...' : 'Change Password'}
@@ -449,5 +489,5 @@ export default function ProfileForm() {
         </form>
       )}
     </div>
-  )
+  );
 }

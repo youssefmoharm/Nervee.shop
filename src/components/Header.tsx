@@ -1,36 +1,36 @@
-import { useEffect, useState } from 'react'
-import { Link, NavLink, useLocation } from 'react-router-dom'
-import { Menu, Search, ShoppingBag, User, X } from 'lucide-react'
-import { useCart } from '../context/CartContext'
-import { useAuth } from '../context/AuthContext'
+import { useEffect, useState } from 'react';
+import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Menu, Search, ShoppingBag, User, X } from 'lucide-react';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 const links = [
   { to: '/shop', label: 'Shop' },
   { to: '/shop?category=New%20Arrivals', label: 'New Drop' },
   { to: '/collections', label: 'Collections' },
   { to: '/about', label: 'About' },
-]
+];
 
 export default function Header({ onSearch }: { onSearch: () => void }) {
-  const [scrolled, setScrolled] = useState(false)
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const { count, openCart } = useCart()
-  const { user } = useAuth()
-  const location = useLocation()
-  const isHome = location.pathname === '/'
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const { count, openCart } = useCart();
+  const { user } = useAuth();
+  const location = useLocation();
+  const isHome = location.pathname === '/';
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24)
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
-    setMobileOpen(false)
-  }, [location.pathname])
+    setMobileOpen(false);
+  }, [location.pathname]);
 
-  const solid = scrolled || !isHome
+  const solid = scrolled || !isHome;
 
   return (
     <>
@@ -53,10 +53,11 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
             </Link>
 
             <nav className="hidden lg:flex items-center gap-10">
-              {links.map((l) => (
+              {links.map(l => (
                 <NavLink
                   key={l.label}
                   to={l.to}
+                  data-testid={`nav-${l.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
                   className={({ isActive }) =>
                     `nv-eyebrow transition-colors hover:text-white ${
                       isActive ? 'text-white' : 'text-silver'
@@ -71,6 +72,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
             <div className="flex items-center gap-4 md:gap-5">
               <button
                 aria-label="Search"
+                data-testid="search-button"
                 onClick={onSearch}
                 className="p-2 hover:opacity-60 transition-opacity"
               >
@@ -79,24 +81,30 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
               <Link
                 to={user ? '/account' : '/login'}
                 aria-label="Account"
+                data-testid="account-link"
                 className="hidden sm:block p-2 hover:opacity-60 transition-opacity"
               >
                 <User size={19} strokeWidth={1.75} />
               </Link>
               <button
                 aria-label={`Bag, ${count} items`}
+                data-testid="bag-button"
                 onClick={openCart}
                 className="relative p-2 hover:opacity-60 transition-opacity"
               >
                 <ShoppingBag size={19} strokeWidth={1.75} />
                 {count > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 bg-white text-navy text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  <span
+                    data-testid="cart-count"
+                    className="absolute -top-0.5 -right-0.5 bg-white text-navy text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center"
+                  >
                     {count}
                   </span>
                 )}
               </button>
               <button
                 aria-label="Menu"
+                data-testid="menu-button"
                 onClick={() => setMobileOpen(true)}
                 className="lg:hidden p-2"
               >
@@ -109,6 +117,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
 
       {/* Mobile full-screen drawer */}
       <div
+        data-testid="mobile-menu"
         className={`fixed inset-0 z-50 bg-navy transition-transform duration-500 ease-[cubic-bezier(.65,0,.35,1)] lg:hidden ${
           mobileOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
@@ -137,5 +146,5 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
         </div>
       </div>
     </>
-  )
+  );
 }

@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowRight } from 'lucide-react'
-import type { Product } from '../types'
-import { productService } from '../services/productService'
-import { collections } from '../data/products'
-import ProductCard from '../components/ProductCard'
-import Checkerboard from '../components/Checkerboard'
-import Newsletter from '../components/Newsletter'
-import Skeleton from '../components/Skeleton'
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
+import type { Product } from '../types';
+import { productService } from '../services/productService';
+import { collections } from '../data/products';
+import { useSEO, seoHelpers } from '../lib/seo';
+import ProductCard from '../components/ProductCard';
+import Checkerboard from '../components/Checkerboard';
+import Newsletter from '../components/Newsletter';
+import Skeleton from '../components/Skeleton';
 
 const categoryTiles = [
   { name: 'T-Shirts', seed: 'cat-tees' },
@@ -16,26 +17,27 @@ const categoryTiles = [
   { name: 'Jackets', seed: 'cat-jackets' },
   { name: 'Caps', seed: 'cat-caps' },
   { name: 'Accessories', seed: 'cat-acc' },
-]
+];
 
-const gallery = ['nw-1', 'nw-2', 'nw-3', 'nw-4', 'nw-5', 'nw-6']
+const gallery = ['nw-1', 'nw-2', 'nw-3', 'nw-4', 'nw-5', 'nw-6'];
 
 export default function Home() {
-  const [newDrop, setNewDrop] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
+  useSEO(seoHelpers.home());
+  const [newDrop, setNewDrop] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true
-    productService.getNewDrop().then((data) => {
+    let mounted = true;
+    productService.getNewDrop().then(data => {
       if (mounted) {
-        setNewDrop(data)
-        setLoading(false)
+        setNewDrop(data);
+        setLoading(false);
       }
-    })
+    });
     return () => {
-      mounted = false
-    }
-  }, [])
+      mounted = false;
+    };
+  }, []);
 
   return (
     <>
@@ -51,7 +53,10 @@ export default function Home() {
 
         <div className="relative w-full px-5 md:px-8 pb-14 md:pb-20">
           <div className="mx-auto max-w-[1600px]">
-            <p className="nv-eyebrow text-silver mb-3 animate-fadeUp" style={{ animationDelay: '100ms' }}>
+            <p
+              className="nv-eyebrow text-silver mb-3 animate-fadeUp"
+              style={{ animationDelay: '100ms' }}
+            >
               New Season · 2026
             </p>
             <h1
@@ -92,7 +97,10 @@ export default function Home() {
               <p className="nv-eyebrow text-navy/50 mb-2">Just Landed</p>
               <h2 className="nv-heading text-4xl md:text-6xl">The New Drop</h2>
             </div>
-            <Link to="/shop" className="hidden sm:inline-flex nv-eyebrow items-center gap-2 hover:opacity-60">
+            <Link
+              to="/shop"
+              className="hidden sm:inline-flex nv-eyebrow items-center gap-2 hover:opacity-60"
+            >
               View All <ArrowRight size={14} />
             </Link>
           </div>
@@ -108,7 +116,7 @@ export default function Home() {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-10">
-              {newDrop.map((p) => (
+              {newDrop.map(p => (
                 <ProductCard key={p.id} product={p} />
               ))}
             </div>
@@ -123,8 +131,12 @@ export default function Home() {
           <h2 className="nv-heading text-4xl md:text-6xl mb-10 md:mb-14">Collections</h2>
 
           <div className="grid md:grid-cols-3 gap-1">
-            {collections.map((c) => (
-              <Link key={c.id} to={`/collections/${c.id}`} className="group relative aspect-[3/4] overflow-hidden block">
+            {collections.map(c => (
+              <Link
+                key={c.id}
+                to={`/collections/${c.id}`}
+                className="group relative aspect-[3/4] overflow-hidden block"
+              >
                 <img
                   src={c.image}
                   alt={c.name}
@@ -149,7 +161,7 @@ export default function Home() {
         <div className="mx-auto max-w-[1600px]">
           <h2 className="nv-heading text-4xl md:text-6xl mb-10 md:mb-14">Shop by Category</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {categoryTiles.map((c) => (
+            {categoryTiles.map(c => (
               <Link
                 key={c.name}
                 to={`/shop?category=${encodeURIComponent(c.name)}`}
@@ -177,13 +189,24 @@ export default function Home() {
         <div className="mx-auto max-w-[1600px]">
           <div className="flex items-end justify-between mb-10">
             <h2 className="nv-heading text-4xl md:text-6xl">Nerve in the Wild</h2>
-            <a href="#" className="hidden sm:inline-flex nv-eyebrow items-center gap-2 hover:opacity-60">
+            <a
+              href="https://instagram.com/nerve_store"
+              target="_blank"
+              rel="noreferrer"
+              className="hidden sm:inline-flex nv-eyebrow items-center gap-2 hover:opacity-60"
+            >
               @nerve <ArrowRight size={14} />
             </a>
           </div>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-1.5">
-            {gallery.map((g) => (
-              <a key={g} href="#" className="group aspect-square overflow-hidden block">
+            {gallery.map(g => (
+              <a
+                key={g}
+                href="https://instagram.com/nerve_store"
+                target="_blank"
+                rel="noreferrer"
+                className="group aspect-square overflow-hidden block"
+              >
                 <img
                   src={`https://picsum.photos/seed/${g}/500/500`}
                   alt="Community post"
@@ -197,5 +220,5 @@ export default function Home() {
 
       <Newsletter />
     </>
-  )
+  );
 }

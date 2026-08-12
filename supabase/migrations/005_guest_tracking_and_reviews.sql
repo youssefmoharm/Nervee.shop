@@ -1,5 +1,5 @@
 -- ============================================================================
--- NERVE — Migration 006
+-- NERVE — Migration 005
 -- Adds: guest_orders table, product_reviews table, product_review_stats view
 --
 -- Run this via `supabase db push` or the Supabase SQL Editor.

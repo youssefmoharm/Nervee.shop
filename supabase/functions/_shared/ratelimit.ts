@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Production-ready distributed rate limiter for Edge Functions
  * 
  * Uses Supabase database as a distributed store for rate limiting
