@@ -1,19 +1,19 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Heart, Plus } from 'lucide-react'
-import type { Product, Size } from '../types'
-import { useCart } from '../context/CartContext'
-import { useWishlist } from '../context/WishlistContext'
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Heart, Plus } from 'lucide-react';
+import type { Product, Size } from '../types';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 
 export default function ProductCard({ product }: { product: Product }) {
-  const [colorIdx, setColorIdx] = useState(0)
-  const [hovered, setHovered] = useState(false)
-  const [quickAddOpen, setQuickAddOpen] = useState(false)
-  const { addLine } = useCart()
-  const { toggle, has } = useWishlist()
+  const [colorIdx, setColorIdx] = useState(0);
+  const [hovered, setHovered] = useState(false);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const { addLine } = useCart();
+  const { toggle, has } = useWishlist();
 
-  const color = product.colors[colorIdx]
-  const wished = has(product.id)
+  const color = product.colors[colorIdx];
+  const wished = has(product.id);
 
   const handleQuickAdd = (size: Size) => {
     addLine({
@@ -25,17 +25,18 @@ export default function ProductCard({ product }: { product: Product }) {
       color: color.name,
       size,
       quantity: 1,
-    })
-    setQuickAddOpen(false)
-  }
+    });
+    setQuickAddOpen(false);
+  };
 
   return (
     <div
+      data-testid="product-card"
       className="group relative"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => {
-        setHovered(false)
-        setQuickAddOpen(false)
+        setHovered(false);
+        setQuickAddOpen(false);
       }}
     >
       <div className="relative aspect-[4/5] overflow-hidden bg-mist">
@@ -89,7 +90,7 @@ export default function ProductCard({ product }: { product: Product }) {
             </button>
           ) : (
             <div className="bg-navy p-2 flex flex-wrap gap-1.5">
-              {product.sizes.map((s) => (
+              {product.sizes.map(s => (
                 <button
                   key={s.size}
                   disabled={!s.inStock}
@@ -113,7 +114,7 @@ export default function ProductCard({ product }: { product: Product }) {
           </Link>
         </div>
         <div className="flex items-center gap-2 mt-1">
-          <span className="text-sm font-medium">
+          <span data-testid="product-price" className="text-sm font-medium">
             EGP {product.price.toLocaleString()}
           </span>
           {product.compareAtPrice && (
@@ -131,14 +132,19 @@ export default function ProductCard({ product }: { product: Product }) {
                 aria-label={c.name}
                 onClick={() => setColorIdx(i)}
                 className={`w-4 h-4 rounded-full border transition-all ${
-                  i === colorIdx ? 'ring-1 ring-offset-2 ring-offset-white ring-navy' : 'border-navy/20'
+                  i === colorIdx
+                    ? 'ring-1 ring-offset-2 ring-offset-white ring-navy'
+                    : 'border-navy/20'
                 }`}
-                style={{ backgroundColor: c.hex, borderColor: c.hex === '#FFFFFF' ? '#A7A7A7' : c.hex }}
+                style={{
+                  backgroundColor: c.hex,
+                  borderColor: c.hex === '#FFFFFF' ? '#A7A7A7' : c.hex,
+                }}
               />
             ))}
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }

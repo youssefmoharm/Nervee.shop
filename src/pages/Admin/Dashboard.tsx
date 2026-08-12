@@ -1,45 +1,50 @@
-import { useEffect, useState } from 'react'
-import { Loader2 } from 'lucide-react'
-import { adminService } from '../../services/adminService'
-import AdminLayout from './AdminLayout'
+import { useEffect, useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import { adminService } from '../../services/adminService';
+import AdminLayout from './AdminLayout';
 
 interface Stats {
-  totalRevenue: number
-  totalOrders: number
-  totalCustomers: number
-  recentOrders: { order_number?: string; total: number; created_at: string; status: string }[]
-  lowStock: { product_id: string; size: string; stock_quantity: number; products?: { name: string }[] | null }[]
+  totalRevenue: number;
+  totalOrders: number;
+  totalCustomers: number;
+  recentOrders: { order_number?: string; total: number; created_at: string; status: string }[];
+  lowStock: {
+    product_id: string;
+    size: string;
+    stock_quantity: number;
+    products?: { name: string }[] | null;
+  }[];
 }
 
 export default function Dashboard() {
-  const [stats, setStats] = useState<Stats | null>(null)
+  const [stats, setStats] = useState<Stats | null>(null);
 
   useEffect(() => {
-    adminService.getDashboardStats().then((s) => setStats(s as unknown as Stats))
-  }, [])
+    adminService.getDashboardStats().then(s => setStats(s as unknown as Stats));
+  }, []);
 
   if (!stats) {
     return (
       <AdminLayout>
         <Loader2 className="animate-spin text-navy/40" size={20} />
       </AdminLayout>
-    )
+    );
   }
 
   return (
     <AdminLayout>
       <h1 className="nv-heading text-4xl mb-8">Dashboard</h1>
 
-      <div className="grid sm:grid-cols-3 gap-5 mb-10">
-        <div className="border border-navy/10 p-6">
+      <div className="grid sm:grid-cols-3 gap-5 mb-10" data-testid="admin-dashboard">
+        <div className="border border-navy/10 p-6" data-testid="total-revenue-card">
           <p className="nv-eyebrow text-xs text-navy/50 mb-2">Total Revenue</p>
           <p className="text-3xl font-semibold">EGP {stats.totalRevenue.toLocaleString()}</p>
         </div>
-        <div className="border border-navy/10 p-6">
+        <div className="border border-navy/10 p-6" data-testid="total-orders-card">
           <p className="nv-eyebrow text-xs text-navy/50 mb-2">Total Orders</p>
           <p className="text-3xl font-semibold">{stats.totalOrders}</p>
         </div>
-        <div className="border border-navy/10 p-6">
+        <div className="border border-navy/10 p-6" data-testid="total-customers-card">
           <p className="nv-eyebrow text-xs text-navy/50 mb-2">Total Customers</p>
           <p className="text-3xl font-semibold">{stats.totalCustomers}</p>
         </div>
@@ -70,7 +75,9 @@ export default function Dashboard() {
             <ul className="divide-y divide-navy/10 border border-navy/10">
               {stats.lowStock.map((row, i) => (
                 <li key={i} className="flex justify-between px-4 py-3 text-sm">
-                  <span>{row.products?.[0]?.name ?? row.product_id} / {row.size}</span>
+                  <span>
+                    {row.products?.[0]?.name ?? row.product_id} / {row.size}
+                  </span>
                   <span className="text-red-600 font-medium">{row.stock_quantity} left</span>
                 </li>
               ))}
@@ -79,5 +86,5 @@ export default function Dashboard() {
         </div>
       </div>
     </AdminLayout>
-  )
+  );
 }

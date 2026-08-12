@@ -6,7 +6,7 @@ A production-ready e-commerce platform for NERVE, an Egyptian fashion concept st
 
 - Full-featured shopping experience (browse, search, filter, cart, wishlist)
 - Customer authentication & accounts (Supabase Auth)
-- Egyptian payment processing (Paymob card sessions + Cash on Delivery)
+- Cash on Delivery (Egyptian market)
 - Admin dashboard (products, orders, customers, discount codes)
 - Transactional email via Resend
 - Inventory management & order fulfillment
@@ -39,7 +39,6 @@ A production-ready e-commerce platform for NERVE, an Egyptian fashion concept st
 - Node.js 18+
 - npm or yarn
 - Supabase account (free tier)
-- Paymob account (for live payments)
 
 ### Installation
 
@@ -101,7 +100,7 @@ npm run test:e2e      # Run E2E tests
    - `supabase/migrations/002_orders_rpc_and_extras.sql`
    - `supabase/migrations/003_security_notifications_and_reconciliation.sql`
    - `supabase/migrations/006_guest_tracking_and_reviews.sql` (NEW)
-   - `supabase/migrations/007_rate_limiting.sql` (NEW)
+   - `supabase/migrations/006_email_automation.sql` (NEW)
 4. Run `supabase/seed.sql` for sample data
 
 ## Edge Functions
@@ -110,13 +109,12 @@ Deploy the Edge Functions to Supabase:
 
 ```bash
 supabase functions deploy create-order
-supabase functions deploy paymob-webhook --no-verify-jwt
-supabase functions deploy verify-payment
 supabase functions deploy update-order-status
 supabase functions deploy process-restock
 supabase functions deploy back-in-stock
 supabase functions deploy contact
-supabase functions deploy payment-reconciliation
+supabase functions deploy send-email
+supabase functions deploy process-abandoned-carts
 ```
 
 ## Environment Variables
@@ -126,8 +124,6 @@ Create `.env` from `.env.example`:
 ```env
 VITE_SUPABASE_URL=your-supabase-project-url
 VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
-VITE_PAYMOB_PUBLIC_KEY=your-paymob-public-key
-VITE_PAYMOB_IFRAME_ID=your-paymob-iframe-id
 VITE_GA_ID=your-google-analytics-id
 VITE_ENV=development
 ```
@@ -135,10 +131,6 @@ VITE_ENV=development
 Edge Functions require these secrets (set via Supabase dashboard):
 
 ```bash
-supabase secrets set PAYMOB_API_KEY=your-paymob-api-key
-supabase secrets set PAYMOB_INTEGRATION_ID_CARD=your-integration-id
-supabase secrets set PAYMOB_IFRAME_ID=your-iframe-id
-supabase secrets set PAYMOB_HMAC_SECRET=your-hmac-secret
 supabase secrets set RESEND_API_KEY=your-resend-api-key
 supabase secrets set RESEND_FROM_EMAIL="NERVE <orders@yourdomain.com>"
 supabase secrets set STORE_URL=https://your-production-domain.com
@@ -147,9 +139,8 @@ supabase secrets set STORE_URL=https://your-production-domain.com
 ## Security
 
 - Row Level Security (RLS) enabled on all tables
-- HMAC-verified Paymob webhooks
-- Timestamp validation on webhooks (5-minute window)
 - Distributed rate limiting
+- Input validation & sanitization
 - Input validation & sanitization
 - SQL injection prevention via parameterized queries
 

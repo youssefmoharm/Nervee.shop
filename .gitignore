@@ -7,6 +7,13 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Test artifacts
+playwright-report/
+test-results/
+
+# TypeScript build info
+*.tsbuildinfo
+
 node_modules
 dist
 dist-ssr
@@ -27,3 +34,8 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+
+# Supabase CLI machine state (linked project info is local-only)
+supabase/.temp/
+supabase/.branches/
+supabase/.env

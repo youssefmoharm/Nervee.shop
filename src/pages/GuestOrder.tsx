@@ -1,71 +1,75 @@
-﻿import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { Loader2, Check, Mail } from 'lucide-react'
-import { guestOrderService } from '../services/guestOrderService'
-import type { GuestOrder } from '../types'
+﻿import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Loader2, Check, Mail } from 'lucide-react';
+import { guestOrderService } from '../services/guestOrderService';
+import type { GuestOrder } from '../types';
 
-type Step = 'search' | 'loading' | 'success' | 'not-found' | 'error'
+type Step = 'search' | 'loading' | 'success' | 'not-found' | 'error';
 
 export default function GuestOrder() {
-  const [searchParams] = useSearchParams()
-  const [step, setStep] = useState<Step>('search')
-  const [order, setOrder] = useState<GuestOrder | null>(null)
-  const [email, setEmail] = useState('')
-  const [orderNumber, setOrderNumber] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [searchParams] = useSearchParams();
+  const [step, setStep] = useState<Step>('search');
+  const [order, setOrder] = useState<GuestOrder | null>(null);
+  const [email, setEmail] = useState('');
+  const [orderNumber, setOrderNumber] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = searchParams.get('token')
-    const paramsEmail = searchParams.get('email')
-    const paramsOrderNumber = searchParams.get('orderNumber')
+    const token = searchParams.get('token');
+    const paramsEmail = searchParams.get('email');
+    const paramsOrderNumber = searchParams.get('orderNumber');
 
     if (token && paramsEmail && paramsOrderNumber) {
-      setEmail(paramsEmail)
-      setOrderNumber(paramsOrderNumber)
-      handleLookup(paramsEmail, paramsOrderNumber, token)
+      setEmail(paramsEmail);
+      setOrderNumber(paramsOrderNumber);
+      handleLookup(paramsEmail, paramsOrderNumber, token);
     }
-  }, [searchParams])
+  }, [searchParams]);
 
-  const handleLookup = async (lookupEmail: string, lookupOrderNumber: string, verificationToken?: string) => {
-    setStep('loading')
-    setError(null)
+  const handleLookup = async (
+    lookupEmail: string,
+    lookupOrderNumber: string,
+    verificationToken?: string,
+  ) => {
+    setStep('loading');
+    setError(null);
 
     const { order, error } = await guestOrderService.lookup(
       lookupEmail,
       lookupOrderNumber,
-      verificationToken
-    )
+      verificationToken,
+    );
 
     if (error || !order) {
-      setStep('not-found')
-      setError(error || 'Order not found')
-      return
+      setStep('not-found');
+      setError(error || 'Order not found');
+      return;
     }
 
-    setOrder(order)
-    setStep('success')
-  }
+    setOrder(order);
+    setStep('success');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     if (!email || !orderNumber) {
-      setError('Please enter both email and order number')
-      return
+      setError('Please enter both email and order number');
+      return;
     }
 
-    await handleLookup(email, orderNumber)
-  }
+    await handleLookup(email, orderNumber);
+  };
 
   if (step === 'success' && order) {
-    const statusLabels = {
+    const statusLabels: Record<string, string> = {
       placed: 'Order Placed',
       processing: 'Processing',
       shipped: 'Shipped',
       delivered: 'Delivered',
       cancelled: 'Cancelled',
       refunded: 'Refunded',
-    }
+    };
 
     const getStatusBadge = (status: string) => {
       const colors: Record<string, string> = {
@@ -75,13 +79,17 @@ export default function GuestOrder() {
         delivered: 'bg-green-100 text-green-800',
         cancelled: 'bg-red-100 text-red-800',
         refunded: 'bg-gray-100 text-gray-800',
-      }
+      };
       return (
-        <span className={'inline-block px-3 py-1 rounded-full text-xs font-medium ' + (colors[status] || '')}>
+        <span
+          className={
+            'inline-block px-3 py-1 rounded-full text-xs font-medium ' + (colors[status] || '')
+          }
+        >
           {statusLabels[status] || status}
         </span>
-      )
-    }
+      );
+    };
 
     return (
       <div className="bg-white text-navy min-h-screen pt-24 md:pt-28 px-5 md:px-8">
@@ -123,7 +131,7 @@ export default function GuestOrder() {
 
             <div className="border-t border-navy/10 pt-4">
               <p className="text-xs text-navy/50">
-                We've sent a confirmation email to {order.email} with your order details.
+                We&apos;ve sent a confirmation email to {order.email} with your order details.
               </p>
             </div>
           </div>
@@ -135,7 +143,7 @@ export default function GuestOrder() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (step === 'not-found') {
@@ -146,11 +154,13 @@ export default function GuestOrder() {
             <Mail size={32} />
           </div>
           <h1 className="nv-heading text-4xl mb-2">Order Not Found</h1>
-          <p className="text-navy/60 mb-6">{error || 'We couldn'\''t find an order matching your information.'}</p>
-          
+          <p className="text-navy/60 mb-6">
+            {error || "We couldn't find an order matching your information."}
+          </p>
+
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-8">
             <p className="text-sm text-amber-800">
-              <strong>Can'\''t find your order?</strong> 
+              <strong>Can&apos;t find your order?</strong>
               Check your spam folder for the order confirmation email, or contact us.
             </p>
           </div>
@@ -163,7 +173,7 @@ export default function GuestOrder() {
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -179,36 +189,46 @@ export default function GuestOrder() {
         <div className="bg-mist/50 rounded-2xl p-6 md:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="text-xs font-medium text-navy/60 mb-1.5 block">Email</label>
+              <label
+                htmlFor="guest-email"
+                className="text-xs font-medium text-navy/60 mb-1.5 block"
+              >
+                Email
+              </label>
               <input
+                id="guest-email"
                 type="email"
                 required
+                data-testid="guest-email-input"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy rounded-lg"
                 placeholder="you@email.com"
               />
             </div>
 
             <div>
-              <label className="text-xs font-medium text-navy/60 mb-1.5 block">Order Number</label>
+              <label
+                htmlFor="guest-order-number"
+                className="text-xs font-medium text-navy/60 mb-1.5 block"
+              >
+                Order Number
+              </label>
               <input
+                id="guest-order-number"
                 type="text"
                 required
+                data-testid="guest-order-number-input"
                 value={orderNumber}
-                onChange={(e) => setOrderNumber(e.target.value.toUpperCase())}
+                onChange={e => setOrderNumber(e.target.value.toUpperCase())}
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy rounded-lg font-mono"
                 placeholder="NRV-123456"
               />
-              <p className="text-[10px] text-navy/40 mt-1">
-                Example: NRV-123456
-              </p>
+              <p className="text-[10px] text-navy/40 mt-1">Example: NRV-123456</p>
             </div>
 
             {error && (
-              <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">
-                {error}
-              </div>
+              <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">{error}</div>
             )}
 
             <button
@@ -237,5 +257,5 @@ export default function GuestOrder() {
         </div>
       </div>
     </div>
-  )
+  );
 }

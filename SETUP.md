@@ -19,7 +19,6 @@ This guide walks you through setting up the NERVE e-commerce application from sc
 
 - Node.js 18+ and npm
 - A Supabase account (free tier works)
-- A Paymob account for Egyptian payment processing (or Stripe for international)
 
 ---
 
@@ -261,8 +260,7 @@ supabase login
 supabase link --project-ref <your-project-ref>
 
 supabase functions deploy create-order
-supabase functions deploy paymob-webhook --no-verify-jwt
-supabase functions deploy verify-payment
+
 supabase functions deploy update-order-status
 supabase functions deploy process-restock
 
@@ -385,8 +383,7 @@ Check that:
   guest cart merged into your account (check the `carts`/`cart_items`
   tables, or just reload and see the same items)
 - Checkout completes with Cash on Delivery and creates a row in `orders`,
-  and an order-received email arrives (Paymob card payments need the Edge
-  Function secrets from the Payment Integration section above)
+  and an order-received email arrives (The order-received email arrives)
 - After creating an admin user (see Authentication Setup above), `/admin`
   shows the dashboard with real numbers — **if the dashboard loads but every
   list is empty even though data exists, migration 003 likely wasn't run**
@@ -484,10 +481,7 @@ After basic setup is complete:
 - [ ] Build order fulfillment interface
 - [ ] Add discount code manager
 
-### Phase 3: Payment Webhooks
-- [ ] Create Supabase Edge Function for Paymob webhooks
-- [ ] Handle payment success/failure
-- [ ] Update order status based on payment events
+### Phase 3: Email Setup\s+- [ ] Test order confirmation emails
 - [ ] Send order confirmation emails
 
 ### Phase 4: Customer Accounts
@@ -550,8 +544,7 @@ After basic setup is complete:
 **Problem:** Payment form not submitting, errors on checkout
 
 **Solution:**
-1. Verify Paymob credentials are correct
-2. Check Paymob integration is in "test mode" for development
+1. Check email configuration
 3. Use test card numbers from Paymob docs
 4. Check webhook endpoint is accessible (use ngrok for local testing)
 
@@ -591,3 +584,17 @@ Before going live:
 ## License
 
 Proprietary - NERVE Concept Store © 2026
+
+
+
+
+
+
+
+
+
+
+
+
+
+
