@@ -1,227 +1,353 @@
 /**
  * Email Automation Service
- * 
+ *
  * Handles cart abandonment, marketing emails, and transactional messages
- * Integrates with existing Resend service
+ * Integrates with Supabase Edge Functions for secure email sending
  */
 
-import type { CartLine } from '../types'
+import { supabase } from './supabase';
+import type { CartLine } from '../types';
 
 interface EmailTemplate {
-  subject: string
-  html: string
-  text?: string
+  subject: string;
+  html: string;
+  text?: string;
 }
 
 interface CartAbandonmentData {
-  customerEmail: string
-  customerName?: string
-  cartItems: CartLine[]
-  cartValue: number
-  recoveryUrl: string
+  customerEmail: string;
+  customerName?: string;
+  cartItems: CartLine[];
+  cartValue: number;
+  recoveryUrl: string;
 }
 
 interface NewsletterData {
-  email: string
-  firstName?: string
-  preferences?: string[]
+  email: string;
+  firstName?: string;
+  preferences?: string[];
 }
 
 interface BackInStockData {
-  customerEmail: string
-  customerName?: string
-  productName: string
-  productUrl: string
-  productImage: string
-  price: number
+  customerEmail: string;
+  customerName?: string;
+  productName: string;
+  productUrl: string;
+  productImage: string;
+  price: number;
 }
 
 class EmailAutomationService {
-  private readonly apiUrl = '/api/email'
-
-  // Send cart abandonment email
-  async sendCartAbandonmentEmail(data: CartAbandonmentData): Promise<boolean> {
+  // Call Edge Function to send emails securely (server-side)
+  private async sendEmailViaEdgeFunction(
+    to: string,
+    subject: string,
+    html: string,
+    emailType: string,
+    metadata?: Record<string, any>,
+  ): Promise<boolean> {
     try {
-      const template = this.getCartAbandonmentTemplate(data)
-      
-      const response = await fetch(`${this.apiUrl}/send`, {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          to: data.customerEmail,
-          subject: template.subject,
-          html: template.html,
-          text: template.text,
-          type: 'cart_abandonment',
-          metadata: {
-            cart_value: data.cartValue,
-            item_count: data.cartItems.length,
-          },
+          to,
+          subject,
+          html,
+          type: emailType,
+          metadata,
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to send cart abandonment email')
+        const error = await response.json();
+        console.error('Email send failed:', error);
+        return false;
       }
 
-      // Track the email send
-      this.trackEmailEvent('cart_abandonment_sent', {
-        customer_email: data.customerEmail,
-        cart_value: data.cartValue,
-        item_count: data.cartItems.length,
-      })
-
-      return true
+      return true;
     } catch (error) {
-      console.error('Cart abandonment email failed:', error)
+      console.error('Failed to call send-email function:', error);
+      return false;
+    }
+  }
+
+  // Send cart abandonment email
+  async sendCartAbandonmentEmail(data: CartAbandonmentData): Promise<boolean> {
+    try {
+      const template = this.getCartAbandonmentTemplate(data);
+
+      const success = await this.sendEmailViaEdgeFunction(
+        data.customerEmail,
+        template.subject,
+        template.html,
+        'cart_abandonment',
+        {
+          cart_value: data.cartValue,
+          item_count: data.cartItems.length,
+        },
+      );
+
+      if (success) {
+        // Track the email send
+        this.trackEmailEvent('cart_abandonment_sent', {
+          customer_email: data.customerEmail,
+          cart_value: data.cartValue,
+          item_count: data.cartItems.length,
+        });
+
+        // Record cart abandonment in database for tracking
+        await this.recordCartAbandonment(data.customerEmail, data.cartItems, data.cartValue);
+      } else {
+        this.trackEmailEvent('cart_abandonment_failed', {
+          customer_email: data.customerEmail,
+        });
+      }
+
+      return success;
+    } catch (error) {
+      console.error('Cart abandonment email failed:', error);
       this.trackEmailEvent('cart_abandonment_failed', {
         customer_email: data.customerEmail,
         error: (error as Error).message,
-      })
-      return false
+      });
+      return false;
     }
   }
 
   // Send welcome email for new subscribers
   async sendWelcomeEmail(email: string, firstName?: string): Promise<boolean> {
     try {
-      const template = this.getWelcomeTemplate(firstName)
-      
-      const response = await fetch(`${this.apiUrl}/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          to: email,
-          subject: template.subject,
-          html: template.html,
-          text: template.text,
-          type: 'welcome',
-        }),
-      })
+      const template = this.getWelcomeTemplate(firstName);
 
-      return response.ok
+      const success = await this.sendEmailViaEdgeFunction(
+        email,
+        template.subject,
+        template.html,
+        'welcome',
+      );
+
+      return success;
     } catch (error) {
-      console.error('Welcome email failed:', error)
-      return false
+      console.error('Welcome email failed:', error);
+      return false;
     }
   }
 
   // Send back-in-stock notification
   async sendBackInStockEmail(data: BackInStockData): Promise<boolean> {
     try {
-      const template = this.getBackInStockTemplate(data)
-      
-      const response = await fetch(`${this.apiUrl}/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          to: data.customerEmail,
-          subject: template.subject,
-          html: template.html,
-          text: template.text,
-          type: 'back_in_stock',
-          metadata: {
-            product_name: data.productName,
-            price: data.price,
-          },
-        }),
-      })
+      const template = this.getBackInStockTemplate(data);
 
-      return response.ok
+      const success = await this.sendEmailViaEdgeFunction(
+        data.customerEmail,
+        template.subject,
+        template.html,
+        'back_in_stock',
+        {
+          product_name: data.productName,
+          price: data.price,
+        },
+      );
+
+      return success;
     } catch (error) {
-      console.error('Back in stock email failed:', error)
-      return false
+      console.error('Back in stock email failed:', error);
+      return false;
     }
   }
 
   // Newsletter signup
   async subscribeToNewsletter(data: NewsletterData): Promise<boolean> {
     try {
-      // Add to newsletter list
-      const response = await fetch(`${this.apiUrl}/newsletter/subscribe`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-
-      if (response.ok) {
-        // Send welcome email
-        await this.sendWelcomeEmail(data.email, data.firstName)
-        return true
-      }
-
-      return false
-    } catch (error) {
-      console.error('Newsletter subscription failed:', error)
-      return false
-    }
-  }
-
-  // Schedule cart abandonment email
-  scheduleCartAbandonmentEmail(customerEmail: string, cartItems: CartLine[], delay: number = 24 * 60 * 60 * 1000) {
-    // Store in localStorage for now (in production, this would be server-side)
-    const abandonmentData = {
-      customerEmail,
-      cartItems,
-      cartValue: cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-      scheduledFor: Date.now() + delay,
-      recoveryUrl: `${window.location.origin}/cart?recovery=true`,
-    }
-
-    const existingSchedule = localStorage.getItem('scheduled_emails') || '[]'
-    const scheduled = JSON.parse(existingSchedule)
-    
-    // Remove any existing scheduled email for this customer
-    const filtered = scheduled.filter((item: any) => item.customerEmail !== customerEmail)
-    filtered.push(abandonmentData)
-    
-    localStorage.setItem('scheduled_emails', JSON.stringify(filtered))
-
-    // In a real app, you'd send this to your backend to be processed by a job queue
-    console.log('Cart abandonment email scheduled for:', new Date(abandonmentData.scheduledFor))
-  }
-
-  // Check for and process scheduled emails (call this periodically)
-  async processScheduledEmails() {
-    try {
-      const scheduled = JSON.parse(localStorage.getItem('scheduled_emails') || '[]')
-      const now = Date.now()
-      const toProcess = scheduled.filter((email: any) => email.scheduledFor <= now)
-      
-      if (toProcess.length === 0) return
-
-      for (const emailData of toProcess) {
-        await this.sendCartAbandonmentEmail({
-          customerEmail: emailData.customerEmail,
-          cartItems: emailData.cartItems,
-          cartValue: emailData.cartValue,
-          recoveryUrl: emailData.recoveryUrl,
+      // Add to newsletter subscribers table
+      const { error: insertError } = await supabase
+        .from('newsletter_subscribers')
+        .insert({
+          email: data.email,
+          first_name: data.firstName,
+          is_active: true,
         })
+        .select()
+        .single();
+
+      if (insertError) {
+        // If subscriber already exists, just reactivate
+        if (insertError.message.includes('duplicate')) {
+          const { error: updateError } = await supabase
+            .from('newsletter_subscribers')
+            .update({ is_active: true })
+            .eq('email', data.email);
+
+          if (updateError) {
+            console.error('Failed to reactivate subscription:', updateError);
+            return false;
+          }
+        } else {
+          console.error('Failed to add to newsletter:', insertError);
+          return false;
+        }
       }
 
-      // Remove processed emails
-      const remaining = scheduled.filter((email: any) => email.scheduledFor > now)
-      localStorage.setItem('scheduled_emails', JSON.stringify(remaining))
-      
+      // Send welcome email
+      await this.sendWelcomeEmail(data.email, data.firstName);
+      return true;
     } catch (error) {
-      console.error('Failed to process scheduled emails:', error)
+      console.error('Newsletter subscription failed:', error);
+      return false;
+    }
+  }
+
+  // Request back-in-stock notification
+  async requestBackInStockNotification(
+    productId: string,
+    customerEmail: string,
+    size?: string,
+  ): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('back_in_stock_requests')
+        .insert({
+          product_id: productId,
+          customer_email: customerEmail,
+          size: size || null,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Failed to request back-in-stock notification:', error);
+        return false;
+      }
+
+      this.trackEmailEvent('back_in_stock_request', {
+        product_id: productId,
+        customer_email: customerEmail,
+        size: size || 'any',
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Back-in-stock request failed:', error);
+      return false;
+    }
+  }
+
+  // Record cart abandonment for tracking (used by cron job to send emails)
+  private async recordCartAbandonment(
+    customerEmail: string,
+    cartItems: CartLine[],
+    cartValue: number,
+  ): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('cart_abandonment_tracking')
+        .upsert({
+          customer_email: customerEmail,
+          cart_items: JSON.parse(JSON.stringify(cartItems)),
+          cart_value: cartValue,
+          last_activity_at: new Date().toISOString(),
+        })
+        .eq('customer_email', customerEmail);
+
+      if (error) {
+        console.error('Failed to record cart abandonment:', error);
+      }
+    } catch (error) {
+      console.error('Error recording cart abandonment:', error);
+    }
+  }
+
+  // Generate unsubscribe link for email
+  async getUnsubscribeLink(email: string, emailType?: string): Promise<string> {
+    try {
+      const token = await supabase.rpc('create_unsubscribe_token', {
+        p_email: email,
+        p_email_type: emailType || null,
+      });
+
+      if (token.error) {
+        console.error('Failed to create unsubscribe token:', token.error);
+        return ''; // Fallback to empty link if token creation fails
+      }
+
+      const storeUrl = import.meta.env.VITE_APP_URL || 'https://nerve-store.com';
+      return `${storeUrl}/unsubscribe?token=${token.data}`;
+    } catch (error) {
+      console.error('Error getting unsubscribe link:', error);
+      return '';
+    }
+  }
+
+  // Check if email should receive emails
+  async shouldSendEmail(email: string): Promise<boolean> {
+    try {
+      const { data } = await supabase.rpc('should_send_email', {
+        p_email: email,
+      });
+
+      return data === true;
+    } catch (error) {
+      console.error('Error checking email status:', error);
+      return false;
+    }
+  }
+
+  // Track cart activity for abandonment detection
+  async trackCartActivity(
+    customerEmail: string,
+    cartItems: CartLine[],
+    cartValue: number,
+  ): Promise<void> {
+    try {
+      // Update or insert cart abandonment tracking
+      const { error } = await supabase.from('cart_abandonment_tracking').upsert(
+        {
+          customer_email: customerEmail,
+          cart_items: JSON.parse(JSON.stringify(cartItems)),
+          cart_value: cartValue,
+          last_activity_at: new Date().toISOString(),
+        },
+        {
+          onConflict: 'customer_email',
+        },
+      );
+
+      if (error) {
+        console.error('Failed to track cart activity:', error);
+      }
+    } catch (error) {
+      console.error('Error tracking cart activity:', error);
+    }
+  }
+
+  // Mark cart as recovered (order placed)
+  async markCartAsRecovered(customerEmail: string): Promise<void> {
+    try {
+      const { error } = await supabase.rpc('mark_cart_abandonment_recovered', {
+        p_customer_email: customerEmail,
+      });
+
+      if (error) {
+        console.error('Failed to mark cart as recovered:', error);
+      }
+    } catch (error) {
+      console.error('Error marking cart as recovered:', error);
     }
   }
 
   // Email templates
   private getCartAbandonmentTemplate(data: CartAbandonmentData): EmailTemplate {
-    const itemsHtml = data.cartItems.map(item => `
+    const itemsHtml = data.cartItems
+      .map(
+        item => `
       <tr>
         <td style="padding: 15px; border-bottom: 1px solid #eee;">
-          <img src="${item.image}" alt="${item.name}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+          <img src="${item.image}" alt="${
+          item.name
+        }" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
         </td>
         <td style="padding: 15px; border-bottom: 1px solid #eee;">
           <h3 style="margin: 0; font-size: 16px;">${item.name}</h3>
@@ -232,10 +358,14 @@ class EmailAutomationService {
           <strong>EGP ${(item.price * item.quantity).toLocaleString()}</strong>
         </td>
       </tr>
-    `).join('')
+    `,
+      )
+      .join('');
 
     return {
-      subject: `You left ${data.cartItems.length} item${data.cartItems.length > 1 ? 's' : ''} in your cart ✨`,
+      subject: `You left ${data.cartItems.length} item${
+        data.cartItems.length > 1 ? 's' : ''
+      } in your cart ✨`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -260,7 +390,9 @@ class EmailAutomationService {
               </p>
               
               <p style="margin-bottom: 25px;">
-                You left <strong>${data.cartItems.length} awesome item${data.cartItems.length > 1 ? 's' : ''}</strong> 
+                You left <strong>${data.cartItems.length} awesome item${
+        data.cartItems.length > 1 ? 's' : ''
+      }</strong> 
                 worth <strong>EGP ${data.cartValue.toLocaleString()}</strong> in your bag.
               </p>
 
@@ -283,7 +415,9 @@ class EmailAutomationService {
 
               <!-- CTA Button -->
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${data.recoveryUrl}" style="background: #061735; color: white; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; display: inline-block; transition: all 0.2s;">
+                <a href="${
+                  data.recoveryUrl
+                }" style="background: #061735; color: white; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; display: inline-block; transition: all 0.2s;">
                   Complete Your Purchase →
                 </a>
               </div>
@@ -309,16 +443,19 @@ class EmailAutomationService {
             <div style="background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px;">
               <p style="margin: 0;">NERVE - Cool but Chic | Cairo, Egypt</p>
               <p style="margin: 5px 0 0 0;">
-                <a href="#" style="color: #061735; text-decoration: none;">Unsubscribe</a> | 
-                <a href="#" style="color: #061735; text-decoration: none;">Contact Us</a>
+                <a href="#" style="color: #061735; text-decoration: none;">Unsubscribe</a>
               </p>
             </div>
           </div>
         </body>
         </html>
       `,
-      text: `Hi ${data.customerName || 'there'}! You left ${data.cartItems.length} items worth EGP ${data.cartValue.toLocaleString()} in your cart. Complete your purchase now and get 10% off with code COMEBACK10: ${data.recoveryUrl}`
-    }
+      text: `Hi ${data.customerName || 'there'}! You left ${
+        data.cartItems.length
+      } items worth EGP ${data.cartValue.toLocaleString()} in your cart. Complete your purchase now and get 10% off with code COMEBACK10: ${
+        data.recoveryUrl
+      }`,
+    };
   }
 
   private getWelcomeTemplate(firstName?: string): EmailTemplate {
@@ -351,7 +488,9 @@ class EmailAutomationService {
               </div>
               
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${window.location.origin}/shop" style="background: #061735; color: white; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; display: inline-block;">
+                <a href="${
+                  window.location.origin
+                }/shop" style="background: #061735; color: white; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; display: inline-block;">
                   Start Shopping →
                 </a>
               </div>
@@ -362,8 +501,8 @@ class EmailAutomationService {
         </body>
         </html>
       `,
-      text: `Welcome to NERVE! We're excited to have you join our community. Start shopping: ${window.location.origin}/shop`
-    }
+      text: `Welcome to NERVE! We're excited to have you join our community. Start shopping: ${window.location.origin}/shop`,
+    };
   }
 
   private getBackInStockTemplate(data: BackInStockData): EmailTemplate {
@@ -380,15 +519,21 @@ class EmailAutomationService {
             </div>
             
             <div style="padding: 30px; text-align: center;">
-              <img src="${data.productImage}" alt="${data.productName}" style="width: 200px; height: 200px; object-fit: cover; border-radius: 12px; margin-bottom: 20px;">
+              <img src="${data.productImage}" alt="${
+        data.productName
+      }" style="width: 200px; height: 200px; object-fit: cover; border-radius: 12px; margin-bottom: 20px;">
               
               <h2 style="margin: 0; color: #061735;">${data.productName}</h2>
               <p style="font-size: 24px; color: #f5576c; font-weight: 600; margin: 10px 0;">EGP ${data.price.toLocaleString()}</p>
               
-              <p>Hi ${data.customerName || 'there'}! Great news - the item you requested is now back in stock and ready to ship.</p>
+              <p>Hi ${
+                data.customerName || 'there'
+              }! Great news - the item you requested is now back in stock and ready to ship.</p>
               
               <div style="margin: 30px 0;">
-                <a href="${data.productUrl}" style="background: #061735; color: white; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; display: inline-block;">
+                <a href="${
+                  data.productUrl
+                }" style="background: #061735; color: white; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; display: inline-block;">
                   Shop Now →
                 </a>
               </div>
@@ -399,51 +544,51 @@ class EmailAutomationService {
         </body>
         </html>
       `,
-      text: `${data.productName} is back in stock! Shop now: ${data.productUrl}`
-    }
+      text: `${data.productName} is back in stock! Shop now: ${data.productUrl}`,
+    };
   }
 
   // Track email events for analytics
   private trackEmailEvent(eventName: string, data: Record<string, any>) {
     // This would integrate with your analytics system
     if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', eventName, data)
+      (window as any).gtag('event', eventName, data);
     }
   }
 }
 
 // Global instance
-export const emailAutomation = new EmailAutomationService()
+export const emailAutomation = new EmailAutomationService();
 
 // React hook for cart abandonment tracking
 export function useCartAbandonmentTracking() {
   return {
-    scheduleAbandonmentEmail: (customerEmail: string, cartItems: CartLine[]) => {
-      emailAutomation.scheduleCartAbandonmentEmail(customerEmail, cartItems)
+    trackCartActivity: (customerEmail: string, cartItems: CartLine[], cartValue: number) => {
+      emailAutomation.trackCartActivity(customerEmail, cartItems, cartValue);
     },
-    
-    processScheduledEmails: () => {
-      emailAutomation.processScheduledEmails()
-    }
-  }
+
+    markCartAsRecovered: (customerEmail: string) => {
+      emailAutomation.markCartAsRecovered(customerEmail);
+    },
+  };
 }
 
 // Utility functions
 export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emailRegex.test(email)
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
 }
 
 export function getOptimalSendTime(): number {
   // Send emails at optimal times (10 AM local time)
-  const now = new Date()
-  const optimal = new Date()
-  optimal.setHours(10, 0, 0, 0)
-  
+  const now = new Date();
+  const optimal = new Date();
+  optimal.setHours(10, 0, 0, 0);
+
   // If it's past 10 AM today, schedule for 10 AM tomorrow
   if (now.getTime() > optimal.getTime()) {
-    optimal.setDate(optimal.getDate() + 1)
+    optimal.setDate(optimal.getDate() + 1);
   }
-  
-  return optimal.getTime()
+
+  return optimal.getTime();
 }

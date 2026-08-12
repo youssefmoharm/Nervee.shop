@@ -6,18 +6,16 @@
 // which locks inventory rows, re-prices everything from `products.price`,
 // and rejects the whole order if anything is out of stock.
 //
-// For card payments it then opens a Paymob payment session and returns an
-// iframe URL for the client to redirect/embed. For cash-on-delivery it
-// returns the confirmed order directly.
+// For cash-on-delivery it returns the confirmed order directly.
 //
 // Deploy:
 //   supabase functions deploy create-order
 //
 // Required secrets (set with `supabase secrets set KEY=value`, NEVER put
 // these in the frontend .env / VITE_ variables):
-//   PAYMOB_API_KEY              - Paymob "API Key" from Settings > Account Info
-//   PAYMOB_INTEGRATION_ID_CARD  - Integration ID of your "Online Card" integration
-//   PAYMOB_IFRAME_ID            - Iframe ID from Developers > Payment Integrations
+//   RESEND_API_KEY        - Resend API key for sending emails
+//   RESEND_FROM_EMAIL     - Email address to send from (e.g., "NERVE <orders@yourdomain.com>")
+//   STORE_URL             - Your production domain (for links in emails)
 // SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are injected automatically by
 // the Edge Functions runtime — you don't set those yourself.
 
@@ -25,19 +23,18 @@ import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
 import { corsHeaders } from '../_shared/cors.ts'
 import { orderConfirmedEmail, sendEmail } from '../_shared/email.ts'
-import { getPaymobAuthToken } from '../_shared/paymob.ts'
 import { rateLimit, getRateLimitHeaders } from '../_shared/ratelimit.ts'
-import { 
-  logOrderSuccess, 
-  logOrderFailure, 
-  logRateLimitHit, 
-  PerformanceTimer 
+import {
+  logOrderSuccess,
+  logOrderFailure,
+  logRateLimitHit,
+  PerformanceTimer
 } from '../_shared/monitoring.ts'
-import { 
-  validateOrderRequest, 
-  validateRequestSize, 
+import {
+  validateOrderRequest,
+  validateRequestSize,
   ValidationException,
-  sanitizeText 
+  sanitizeText
 } from '../_shared/validation.ts'
 
 interface CartLineInput {
@@ -58,16 +55,14 @@ interface CreateOrderBody {
   governorate: string
   postalCode?: string
   deliveryMethod: 'standard' | 'express'
-  paymentMethod: 'cod' | 'card'
+  paymentMethod: 'cod'
   discountCode?: string
   items: CartLineInput[]
 }
 
-const PAYMOB_BASE = 'https://accept.paymob.com/api'
-
 serve(async (req) => {
   const timer = new PerformanceTimer('create-order')
-  
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -82,7 +77,7 @@ serve(async (req) => {
     // Rate limiting: 10 orders per minute per IP (adjust as needed)
     const identifier = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'anonymous'
     const allowed = rateLimit(identifier, { windowMs: 60000, maxRequests: 10 })
-    
+
     if (!allowed) {
       logRateLimitHit(identifier, 'create-order')
       const rateLimitHeaders = getRateLimitHeaders(identifier, { windowMs: 60000, maxRequests: 10 })
@@ -140,7 +135,7 @@ serve(async (req) => {
       p_governorate: sanitizedBody.governorate,
       p_postal_code: sanitizedBody.postalCode ?? null,
       p_delivery_method: sanitizedBody.deliveryMethod,
-      p_payment_provider: sanitizedBody.paymentMethod === 'card' ? 'paymob' : 'cod',
+      p_payment_provider: 'cod',
       p_discount_code: sanitizedBody.discountCode ?? null,
       p_items: sanitizedBody.items.map((i) => ({
         product_id: i.productId,
@@ -159,34 +154,22 @@ serve(async (req) => {
       return json({ error: error.message }, 400)
     }
 
-    logOrderSuccess(order.id, order.order_number, order.total, sanitizedBody.paymentMethod)
+    logOrderSuccess(order.id, order.order_number, order.total, 'cod')
 
-    if (sanitizedBody.paymentMethod === 'cod') {
-      const { data: items } = await supabase
-        .from('order_items')
-        .select('product_name, color, size, quantity, subtotal')
-        .eq('order_id', order.id)
+    // COD is confirmed the moment it's placed — no payment step to wait on.
+    const { data: items } = await supabase
+      .from('order_items')
+      .select('product_name, color, size, quantity, subtotal')
+      .eq('order_id', order.id)
 
-      // COD is confirmed the moment it's placed — no payment step to wait on.
-      await sendEmail(
-        sanitizedBody.email,
-        `Order Confirmed — #${order.order_number}`,
-        orderConfirmedEmail(order, items ?? [])
-      )
+    await sendEmail(
+      sanitizedBody.email,
+      `Order Confirmed — #${order.order_number}`,
+      orderConfirmedEmail(order, items ?? [])
+    )
 
-      timer.end()
-      return json({ order, paymentUrl: null })
-    }
-
-    // ---- Card payment via Paymob ----
-    // We deliberately do NOT email a confirmation yet — the order exists in
-    // "placed"/payment "pending" so the reserved stock isn't lost, but the
-    // customer hasn't actually paid. paymob-webhook (or an admin's manual
-    // "Verify Payment") sends the confirmation once payment_status flips to
-    // "paid".
-    const paymentUrl = await createPaymobSession(supabase, order, sanitizedBody)
     timer.end()
-    return json({ order, paymentUrl })
+    return json({ order })
   } catch (err) {
     console.error('create-order error:', err)
     logOrderFailure(err.message, 'unknown', null)
@@ -194,76 +177,6 @@ serve(async (req) => {
     return json({ error: 'Something went wrong placing your order. Please try again.' }, 500)
   }
 })
-
-async function createPaymobSession(supabase: any, order: any, body: CreateOrderBody): Promise<string> {
-  const integrationId = Deno.env.get('PAYMOB_INTEGRATION_ID_CARD')
-  const iframeId = Deno.env.get('PAYMOB_IFRAME_ID')
-
-  if (!Deno.env.get('PAYMOB_API_KEY') || !integrationId || !iframeId) {
-    throw new Error(
-      'Paymob is not configured on the server (PAYMOB_API_KEY / PAYMOB_INTEGRATION_ID_CARD / PAYMOB_IFRAME_ID). ' +
-        'Set these with `supabase secrets set`, or use Cash on Delivery in the meantime.'
-    )
-  }
-
-  const amountCents = Math.round(order.total * 100)
-  const authToken = await getPaymobAuthToken()
-
-  // 2. Register order with Paymob
-  const orderRes = await fetch(`${PAYMOB_BASE}/ecommerce/orders`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      auth_token: authToken,
-      delivery_needed: false,
-      amount_cents: amountCents,
-      currency: 'EGP',
-      merchant_order_id: order.order_number,
-      items: [],
-    }),
-  })
-  const orderData = await orderRes.json()
-  if (!orderRes.ok || !orderData.id) throw new Error('Paymob order registration failed')
-
-  // Save the Paymob order id right away, before payment even happens — this
-  // is what lets an admin manually "Verify Payment" later if the webhook
-  // never arrives (closed tab, network blip, etc).
-  await supabase.from('orders').update({ paymob_order_id: String(orderData.id) }).eq('id', order.id)
-
-  // 3. Payment key (billing data required by Paymob; "NA" is their documented
-  // placeholder for optional fields we don't collect)
-  const keyRes = await fetch(`${PAYMOB_BASE}/acceptance/payment_keys`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      auth_token: authToken,
-      amount_cents: amountCents,
-      expiration: 3600,
-      order_id: orderData.id,
-      billing_data: {
-        first_name: body.firstName || 'NA',
-        last_name: body.lastName || 'NA',
-        email: body.email,
-        phone_number: body.phone,
-        street: body.address || 'NA',
-        city: body.city || 'NA',
-        state: body.governorate || 'NA',
-        country: 'EG',
-        postal_code: body.postalCode || 'NA',
-        apartment: 'NA',
-        floor: 'NA',
-        building: 'NA',
-        shipping_method: 'NA',
-      },
-      currency: 'EGP',
-      integration_id: Number(integrationId),
-    }),
-  })
-  const keyData = await keyRes.json()
-  if (!keyRes.ok || !keyData.token) throw new Error('Paymob payment key request failed')
-
-  return `${PAYMOB_BASE}/acceptance/iframes/${iframeId}?payment_token=${keyData.token}`
-}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {

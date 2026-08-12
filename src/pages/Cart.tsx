@@ -1,34 +1,34 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Lock, Minus, Plus, ShieldCheck, X } from 'lucide-react'
-import { useCart } from '../context/CartContext'
-import { productService } from '../services/productService'
-import type { Product } from '../types'
-import ProductCard from '../components/ProductCard'
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Lock, Minus, Plus, ShieldCheck, X } from 'lucide-react';
+import { useCart } from '../context/CartContext';
+import { productService } from '../services/productService';
+import type { Product } from '../types';
+import ProductCard from '../components/ProductCard';
 
 export default function Cart() {
-  const { lines, removeLine, updateQuantity, subtotal } = useCart()
-  const [promo, setPromo] = useState('')
-  const [promoStatus, setPromoStatus] = useState<'idle' | 'applied' | 'invalid'>('idle')
-  const [discount, setDiscount] = useState(0)
-  const [recommended, setRecommended] = useState<Product[]>([])
+  const { lines, removeLine, updateQuantity, subtotal } = useCart();
+  const [promo, setPromo] = useState('');
+  const [promoStatus, setPromoStatus] = useState<'idle' | 'applied' | 'invalid'>('idle');
+  const [discount, setDiscount] = useState(0);
+  const [recommended, setRecommended] = useState<Product[]>([]);
 
   useEffect(() => {
-    productService.getBestSellers().then((p) => setRecommended(p.slice(0, 4)))
-  }, [])
+    productService.getBestSellers().then(p => setRecommended(p.slice(0, 4)));
+  }, []);
 
   const applyPromo = () => {
     if (promo.trim().toUpperCase() === 'NERVE10') {
-      setDiscount(subtotal * 0.1)
-      setPromoStatus('applied')
+      setDiscount(subtotal * 0.1);
+      setPromoStatus('applied');
     } else {
-      setPromoStatus('invalid')
-      setDiscount(0)
+      setPromoStatus('invalid');
+      setDiscount(0);
     }
-  }
+  };
 
-  const shippingEstimate = subtotal > 2000 || subtotal === 0 ? 0 : 100
-  const total = subtotal - discount + shippingEstimate
+  const shippingEstimate = subtotal > 2000 || subtotal === 0 ? 0 : 100;
+  const total = subtotal - discount + shippingEstimate;
 
   return (
     <div className="bg-white text-navy min-h-screen pt-24 md:pt-28 px-5 md:px-8 pb-24">
@@ -38,31 +38,49 @@ export default function Cart() {
         {lines.length === 0 ? (
           <div className="text-center py-24">
             <p className="nv-edit text-xl text-navy/50 mb-6">Your bag is empty.</p>
-            <Link to="/shop" className="inline-block bg-navy text-white nv-eyebrow px-8 py-4 hover:bg-navy-2 transition-colors">
+            <Link
+              to="/shop"
+              className="inline-block bg-navy text-white nv-eyebrow px-8 py-4 hover:bg-navy-2 transition-colors"
+            >
               Shop the Drop
             </Link>
           </div>
         ) : (
           <div className="grid lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2 divide-y divide-navy/10 border-y border-navy/10">
-              {lines.map((line) => (
-                <div key={`${line.productId}-${line.color}-${line.size}`} className="flex gap-5 py-6">
-                  <Link to={`/product/${line.slug}`} className="w-28 h-32 bg-mist flex-shrink-0 overflow-hidden">
+              {lines.map(line => (
+                <div
+                  key={`${line.productId}-${line.color}-${line.size}`}
+                  className="flex gap-5 py-6"
+                >
+                  <Link
+                    to={`/product/${line.slug}`}
+                    className="w-28 h-32 bg-mist flex-shrink-0 overflow-hidden"
+                  >
                     <img src={line.image} alt={line.name} className="w-full h-full object-cover" />
                   </Link>
                   <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <Link to={`/product/${line.slug}`} className="nv-edit font-semibold uppercase">
+                      <Link
+                        to={`/product/${line.slug}`}
+                        className="nv-edit font-semibold uppercase"
+                      >
                         {line.name}
                       </Link>
-                      <p className="text-sm text-navy/50 mt-1">{line.color} / {line.size}</p>
-                      <p className="text-sm font-medium mt-2 sm:hidden">EGP {(line.price * line.quantity).toLocaleString()}</p>
+                      <p className="text-sm text-navy/50 mt-1">
+                        {line.color} / {line.size}
+                      </p>
+                      <p className="text-sm font-medium mt-2 sm:hidden">
+                        EGP {(line.price * line.quantity).toLocaleString()}
+                      </p>
                     </div>
                     <div className="flex items-center gap-6">
                       <div className="flex items-center border border-navy/20">
                         <button
                           aria-label="Decrease quantity"
-                          onClick={() => updateQuantity(line.productId, line.color, line.size, line.quantity - 1)}
+                          onClick={() =>
+                            updateQuantity(line.productId, line.color, line.size, line.quantity - 1)
+                          }
                           className="w-8 h-8 flex items-center justify-center hover:bg-mist"
                         >
                           <Minus size={12} />
@@ -70,7 +88,9 @@ export default function Cart() {
                         <span className="w-9 text-center text-sm">{line.quantity}</span>
                         <button
                           aria-label="Increase quantity"
-                          onClick={() => updateQuantity(line.productId, line.color, line.size, line.quantity + 1)}
+                          onClick={() =>
+                            updateQuantity(line.productId, line.color, line.size, line.quantity + 1)
+                          }
                           className="w-8 h-8 flex items-center justify-center hover:bg-mist"
                         >
                           <Plus size={12} />
@@ -98,19 +118,28 @@ export default function Cart() {
                 <div className="flex gap-2">
                   <input
                     value={promo}
-                    onChange={(e) => {
-                      setPromo(e.target.value)
-                      setPromoStatus('idle')
+                    onChange={e => {
+                      setPromo(e.target.value);
+                      setPromoStatus('idle');
                     }}
                     placeholder="Discount code"
+                    data-testid="promo-input"
                     className="flex-1 border border-navy/20 bg-white px-3 py-2.5 text-sm focus:outline-none focus:border-navy"
                   />
-                  <button onClick={applyPromo} className="px-4 border border-navy text-xs font-semibold uppercase hover:bg-navy hover:text-white transition-colors">
+                  <button
+                    onClick={applyPromo}
+                    data-testid="promo-apply"
+                    className="px-4 border border-navy text-xs font-semibold uppercase hover:bg-navy hover:text-white transition-colors"
+                  >
                     Apply
                   </button>
                 </div>
-                {promoStatus === 'applied' && <p className="text-xs text-green-700">Code NERVE10 applied — 10% off.</p>}
-                {promoStatus === 'invalid' && <p className="text-xs text-red-600">Invalid discount code.</p>}
+                {promoStatus === 'applied' && (
+                  <p className="text-xs text-green-700">Code NERVE10 applied — 10% off.</p>
+                )}
+                {promoStatus === 'invalid' && (
+                  <p className="text-xs text-red-600">Invalid discount code.</p>
+                )}
 
                 <div className="space-y-2 pt-2 border-t border-navy/10 text-sm">
                   <div className="flex justify-between">
@@ -135,6 +164,7 @@ export default function Cart() {
 
                 <Link
                   to="/checkout"
+                  data-testid="proceed-to-checkout"
                   className="block text-center bg-navy text-white nv-eyebrow py-4 hover:bg-navy-2 transition-colors"
                 >
                   Proceed to Checkout
@@ -154,7 +184,7 @@ export default function Cart() {
           <div className="mt-24">
             <h2 className="nv-heading text-3xl md:text-4xl mb-8">You May Also Like</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-10">
-              {recommended.map((p) => (
+              {recommended.map(p => (
                 <ProductCard key={p.id} product={p} />
               ))}
             </div>
@@ -162,5 +192,5 @@ export default function Cart() {
         )}
       </div>
     </div>
-  )
+  );
 }

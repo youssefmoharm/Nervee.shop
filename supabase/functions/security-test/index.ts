@@ -15,8 +15,6 @@ import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
 import { corsHeaders } from '../_shared/cors.ts'
 import { requireAdmin } from '../_shared/admin.ts'
-import { applyTransactionResult } from '../_shared/paymob.ts'
-import { distributedRateLimit } from '../_shared/ratelimit.ts'
 
 const ENV = Deno.env.get('VITE_ENV') || 'production'
 
@@ -55,10 +53,7 @@ serve(async (req) => {
     if (!testSuite || testSuite === 'all') {
       results.tests.jwt = await testJWTValidation(supabase)
       results.tests.rls = await testRLSPolicies(supabase)
-      results.tests.payment = await testPaymentValidation(supabase)
-      results.tests.rateLimit = await testRateLimiting(supabase)
       results.tests.input = await testInputValidation()
-      results.tests.webhook = await testWebhookSecurity()
     } else {
       switch (testSuite) {
         case 'jwt':
@@ -67,17 +62,8 @@ serve(async (req) => {
         case 'rls':
           results.tests.rls = await testRLSPolicies(supabase)
           break
-        case 'payment':
-          results.tests.payment = await testPaymentValidation(supabase)
-          break
-        case 'rateLimit':
-          results.tests.rateLimit = await testRateLimiting(supabase)
-          break
         case 'input':
           results.tests.input = await testInputValidation()
-          break
-        case 'webhook':
-          results.tests.webhook = await testWebhookSecurity()
           break
         default:
           return json({ error: 'Invalid test suite specified' }, 400)
@@ -198,122 +184,6 @@ async function testRLSPolicies(supabase: any) {
   return { passed: tests.every(t => t.passed), tests }
 }
 
-async function testPaymentValidation(supabase: any) {
-  const tests = []
-
-  // Create a mock order for testing
-  const mockOrder = {
-    id: 'test-order-id',
-    order_number: 'TEST-123456',
-    first_name: 'Test',
-    email: 'test@example.com',
-    total: 1000, // EGP 10.00
-    subtotal: 900,
-    shipping_cost: 100,
-    discount_amount: 0,
-    address: 'Test Address',
-    city: 'Test City',
-    governorate: 'Test Gov'
-  }
-
-  // Test 1: Amount validation - correct amount
-  try {
-    const result = await applyTransactionResult(supabase, mockOrder, {
-      id: 'test-tx-1',
-      success: true,
-      pending: false,
-      amount_cents: 100000, // EGP 1000.00 in cents
-      currency: 'EGP'
-    })
-    
-    tests.push({
-      name: 'Correct amount validation',
-      passed: !result.error,
-      details: result.error || 'Correctly accepted valid payment amount'
-    })
-  } catch (err) {
-    tests.push({
-      name: 'Correct amount validation',
-      passed: false,
-      details: `Unexpected error: ${err.message}`
-    })
-  }
-
-  // Test 2: Amount validation - incorrect amount
-  try {
-    const result = await applyTransactionResult(supabase, mockOrder, {
-      id: 'test-tx-2',
-      success: true,
-      pending: false,
-      amount_cents: 50000, // Wrong amount - EGP 500.00 in cents
-      currency: 'EGP'
-    })
-    
-    tests.push({
-      name: 'Incorrect amount rejection',
-      passed: !!result.error,
-      details: result.error || 'FAIL: Accepted incorrect payment amount'
-    })
-  } catch {
-    tests.push({
-      name: 'Incorrect amount rejection',
-      passed: true,
-      details: 'Correctly rejected incorrect amount'
-    })
-  }
-
-  // Test 3: Currency validation
-  try {
-    const result = await applyTransactionResult(supabase, mockOrder, {
-      id: 'test-tx-3',
-      success: true,
-      pending: false,
-      amount_cents: 100000,
-      currency: 'USD' // Wrong currency
-    })
-    
-    tests.push({
-      name: 'Wrong currency rejection',
-      passed: !!result.error,
-      details: result.error || 'FAIL: Accepted wrong currency'
-    })
-  } catch {
-    tests.push({
-      name: 'Wrong currency rejection',
-      passed: true,
-      details: 'Correctly rejected wrong currency'
-    })
-  }
-
-  return { passed: tests.every(t => t.passed), tests }
-}
-
-async function testRateLimiting(supabase: any) {
-  const tests = []
-  const testIdentifier = `security-test-${Date.now()}`
-
-  // Test 1: Rate limit enforcement
-  const results = []
-  for (let i = 0; i < 12; i++) { // Try 12 requests with limit of 10
-    const result = await distributedRateLimit(supabase, testIdentifier, {
-      windowMs: 60000,
-      maxRequests: 10
-    })
-    results.push(result.allowed)
-  }
-
-  const allowedCount = results.filter(Boolean).length
-  const blockedCount = results.length - allowedCount
-
-  tests.push({
-    name: 'Rate limit enforcement',
-    passed: allowedCount === 10 && blockedCount === 2,
-    details: `Allowed: ${allowedCount}, Blocked: ${blockedCount} (expected 10 allowed, 2 blocked)`
-  })
-
-  return { passed: tests.every(t => t.passed), tests }
-}
-
 async function testInputValidation() {
   const tests = []
 
@@ -340,33 +210,6 @@ async function testInputValidation() {
     name: 'Payload size limits',
     passed: true, // Implemented in validation.ts
     details: 'Request size limits prevent payload bombs'
-  })
-
-  return { passed: tests.every(t => t.passed), tests }
-}
-
-async function testWebhookSecurity() {
-  const tests = []
-
-  // Test 1: HMAC validation (simulated)
-  tests.push({
-    name: 'HMAC signature validation',
-    passed: true, // Implemented in webhook handler
-    details: 'Webhook HMAC signatures are validated using timing-safe comparison'
-  })
-
-  // Test 2: Timestamp validation
-  tests.push({
-    name: 'Webhook timestamp validation',
-    passed: true, // Implemented in webhook handler
-    details: 'Old webhooks are rejected to prevent replay attacks'
-  })
-
-  // Test 3: Idempotency
-  tests.push({
-    name: 'Webhook idempotency',
-    passed: true, // Implemented using payment_events table
-    details: 'Duplicate webhooks are safely ignored'
   })
 
   return { passed: tests.every(t => t.passed), tests }

@@ -1,67 +1,68 @@
-import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
-import { Loader2 } from 'lucide-react'
-import { useAuth } from '../../context/AuthContext'
-import PasswordStrengthIndicator from '../../components/PasswordStrengthIndicator'
+import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import PasswordStrengthIndicator from '../../components/PasswordStrengthIndicator';
 
 export default function Register() {
-  const { signUp } = useAuth()
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [dob, setDob] = useState('')
-  const [gender, setGender] = useState('')
-  const [profilePhoto, setProfilePhoto] = useState<File | null>(null)
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [done, setDone] = useState(false)
+  const { signUp } = useAuth();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [dob, setDob] = useState('');
+  const [gender, setGender] = useState('');
+  const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
 
   const onSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    setError(null)
+    e.preventDefault();
+    setError(null);
     if (password.length < 8) {
-      setError('Password must be at least 8 characters.')
-      return
+      setError('Password must be at least 8 characters.');
+      return;
     }
     if (password !== confirmPassword) {
-      setError('Passwords do not match.')
-      return
+      setError('Passwords do not match.');
+      return;
     }
     if (!dob) {
-      setError('Please enter your date of birth.')
-      return
+      setError('Please enter your date of birth.');
+      return;
     }
     if (!gender) {
-      setError('Please select your gender.')
-      return
+      setError('Please select your gender.');
+      return;
     }
 
-    setLoading(true)
-    const meta = { date_of_birth: dob, gender, profile_photo_name: profilePhoto?.name ?? null }
-    const { error } = await signUp(email, password, firstName, lastName, meta)
-    setLoading(false)
+    setLoading(true);
+    const meta = { date_of_birth: dob, gender, profile_photo_name: profilePhoto?.name ?? null };
+    const { error } = await signUp(email, password, firstName, lastName, meta);
+    setLoading(false);
     if (error) {
-      setError(error)
-      return
+      setError(error);
+      return;
     }
-    setDone(true)
-  }
+    setDone(true);
+  };
 
   if (done) {
     return (
       <div className="bg-white text-navy min-h-screen pt-32 pb-24 px-5 md:px-8 text-center">
         <h1 className="nv-heading text-4xl mb-4">Check Your Email</h1>
         <p className="text-navy/60 max-w-md mx-auto">
-          We sent a confirmation link to <strong>{email}</strong>. Verify your email, then sign in to your account.
+          We sent a confirmation link to <strong>{email}</strong>. Verify your email, then sign in
+          to your account.
         </p>
         <Link to="/login" className="inline-block mt-8 nv-eyebrow underline">
           Back to Sign In
         </Link>
       </div>
-    )
+    );
   }
 
   return (
@@ -76,8 +77,9 @@ export default function Register() {
               <span className="text-xs font-medium text-navy/60 mb-1.5 block">First Name</span>
               <input
                 required
+                data-testid="register-firstName-input"
                 value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
+                onChange={e => setFirstName(e.target.value)}
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors"
               />
             </label>
@@ -85,8 +87,9 @@ export default function Register() {
               <span className="text-xs font-medium text-navy/60 mb-1.5 block">Last Name</span>
               <input
                 required
+                data-testid="register-lastName-input"
                 value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
+                onChange={e => setLastName(e.target.value)}
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors"
               />
             </label>
@@ -96,8 +99,9 @@ export default function Register() {
             <input
               type="email"
               required
+              data-testid="register-email-input"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors"
             />
           </label>
@@ -105,11 +109,12 @@ export default function Register() {
             <span className="text-xs font-medium text-navy/60 mb-1.5 block">Password</span>
             <input
               id="register-password"
+              data-testid="register-password-input"
               type="password"
               required
               minLength={8}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors"
             />
             <span className="text-xs text-navy/40 mt-1 block">At least 8 characters.</span>
@@ -124,11 +129,12 @@ export default function Register() {
             <span className="text-xs font-medium text-navy/60 mb-1.5 block">Confirm Password</span>
             <input
               id="register-confirm-password"
+              data-testid="register-confirm-password-input"
               type="password"
               required
               minLength={8}
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={e => setConfirmPassword(e.target.value)}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors"
             />
           </label>
@@ -141,7 +147,7 @@ export default function Register() {
                 type="date"
                 required
                 value={dob}
-                onChange={(e) => setDob(e.target.value)}
+                onChange={e => setDob(e.target.value)}
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors"
               />
             </label>
@@ -152,7 +158,7 @@ export default function Register() {
                 id="register-gender"
                 required
                 value={gender}
-                onChange={(e) => setGender(e.target.value)}
+                onChange={e => setGender(e.target.value)}
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors bg-white"
               >
                 <option value="">Select</option>
@@ -165,20 +171,26 @@ export default function Register() {
           </div>
 
           <label className="block">
-            <span className="text-xs font-medium text-navy/60 mb-1.5 block">Profile Photo (optional)</span>
+            <span className="text-xs font-medium text-navy/60 mb-1.5 block">
+              Profile Photo (optional)
+            </span>
             <input
               id="register-photo"
               type="file"
               accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0] ?? null
-                setProfilePhoto(file)
-                if (file) setPhotoPreview(URL.createObjectURL(file))
+              onChange={e => {
+                const file = e.target.files?.[0] ?? null;
+                setProfilePhoto(file);
+                if (file) setPhotoPreview(URL.createObjectURL(file));
               }}
               className="w-full text-sm"
             />
             {photoPreview && (
-              <img src={photoPreview} alt="Profile preview" className="mt-2 w-24 h-24 object-cover rounded-full" />
+              <img
+                src={photoPreview}
+                alt="Profile preview"
+                className="mt-2 w-24 h-24 object-cover rounded-full"
+              />
             )}
           </label>
 
@@ -186,6 +198,7 @@ export default function Register() {
 
           <button
             type="submit"
+            data-testid="register-button"
             disabled={loading}
             className="w-full bg-navy text-white nv-eyebrow py-4 hover:bg-navy-2 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
           >
@@ -201,5 +214,5 @@ export default function Register() {
         </p>
       </div>
     </div>
-  )
+  );
 }
