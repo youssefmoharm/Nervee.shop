@@ -255,53 +255,38 @@ WHERE product_id IN (SELECT product_id FROM order_items WHERE order_id = 'ORDER_
 
 ---
 
-### Test Case 3.3: Card Payment Flow
+### Test Case 3.3: COD Full Checkout Flow
 
-**Objective**: Verify Paymob integration end-to-end.
+**Objective**: Verify the end-to-end Cash on Delivery checkout.
 
 **Prerequisites**:
 - Edge functions deployed
-- Paymob secrets set (test/sandbox credentials)
+- Resend key set (optional — without it the email step is skipped)
 
 **Steps**:
 1. Add items to cart
-2. Go to checkout, select "Pay by Card"
+2. Go to checkout, select "Cash on Delivery" (the only payment option)
 3. Fill shipping details
 4. Click "Place Order"
-5. Should redirect to Paymob iframe
-6. Use Paymob test card:
-   - Number: `4987654321098769`
-   - CVV: `123`
-   - Expiry: Any future date
-7. Complete payment
 
 **Expected Results**:
-- ✓ Redirected to Paymob hosted page
-- ✓ Payment processed
-- ✓ Webhook received (check Edge Function logs)
-- ✓ Order status updated to `confirmed`
-- ✓ Payment status updated to `paid`
-- ✓ Order confirmation email sent ONLY AFTER payment success
+- ✓ Order created with `payment_method = 'cod'`
+- ✓ Order confirmation email sent
+- ✓ No payment provider is contacted (nothing to redirect to)
 
 **Database Checks**:
 ```sql
--- Verify payment event logged
-SELECT id, order_id, transaction_id, event_type, raw_payload
-FROM payment_events
+-- Verify order created with COD payment
+SELECT id, status, payment_method, total_amount
+FROM orders
 ORDER BY created_at DESC
 LIMIT 1;
-
--- Verify order updated
-SELECT id, status, payment_status, payment_provider_order_id
-FROM orders
-WHERE id = 'ORDER_ID';
 ```
 
 **Edge Function Logs**:
 ```bash
 # In Supabase dashboard: Edge Functions > Logs
-# Check both create-order and paymob-webhook logs
-# Look for successful HMAC verification
+# Check create-order logs for a successful order placement
 ```
 
 ---
@@ -458,27 +443,26 @@ SELECT size, stock_quantity FROM product_inventory WHERE product_id = 'NEW_PRODU
 
 ---
 
-### Test Case 4.3: Payment Reconciliation
+### Test Case 4.3: COD Payment Lifecycle
 
-**Objective**: Verify "Verify Payment" button for stuck orders.
+**Objective**: Verify Cash on Delivery payment handling.
 
 **Setup**:
-1. Create a card order that completes in Paymob but webhook fails to arrive
-2. Order stuck in `pending` payment status
+1. A COD order is placed (payment status `pending` — payment is collected
+   at the door, so no provider transaction exists to reconcile)
 
 **Steps**:
-1. In `/admin/orders`, find the pending order
-2. Click "Verify Payment"
-3. Edge function `verify-payment` should:
-   - Query Paymob API for transaction status
-   - Update order if payment actually succeeded
-   - Create `payment_events` entry (idempotency)
+1. In `/admin/orders`, find the COD order
+2. Advance it to `delivered` via the status dropdown
+3. `update_order_status` should:
+   - Lock the transition and release any held inventory on cancel/refund
+   - Send the customer the order-delivered email
 
 **Expected**:
-- Status updated to confirmed
-- Payment status → paid
-- Confirmation email sent
-- No duplicate if webhook later arrives (idempotency via `payment_events`)
+- Status updated to `delivered`
+- Payment status stays `pending` until confirmed separately (COD is
+  collected by the courier — there is no payment provider to query)
+- Delivered email sent; nothing is double-applied (idempotent by design)
 
 ---
 
@@ -545,12 +529,12 @@ LIMIT 1;
 
 ---
 
-### Test Case 5.2: Order Confirmation (Card - After Payment)
+### Test Case 5.2: Order Confirmation Timing (COD)
 
-**Trigger**: Complete card payment successfully
+**Trigger**: Place COD order
 **Expected Email**:
-- Same as above, but ONLY sent AFTER payment webhook confirms success
-- NOT sent at checkout, before payment
+- Sent once at order creation (COD is the only payment method)
+- Sender: `NERVE <orders@yourdomain.com>`
 
 ---
 
@@ -617,25 +601,24 @@ SELECT place_order(...);
 
 ---
 
-### Test Case 6.3: HMAC Webhook Verification
+### Test Case 6.3: Admin Function Auth
 
-**Objective**: Verify webhook rejects tampered requests.
+**Objective**: Verify admin-only functions reject unauthorized callers.
 
 **Setup**: Use a tool like Postman or curl
 
-**Test 6.3a: Valid HMAC**
-1. Construct a valid Paymob webhook payload
-2. Calculate correct HMAC
-3. Send to webhook URL
-4. Should process successfully
+**Test 6.3a: Authenticated Admin Call**
+1. Generate a valid admin JWT (sign in as an admin user)
+2. Send a valid `update-order-status` request with an admin token
+3. Should succeed
 
-**Test 6.3b: Invalid HMAC**
-5. Same payload, but tamper with `amount_cents`
-6. Send to webhook
-7. Should REJECT with "Invalid HMAC" error
-8. Order should NOT be updated
+**Test 6.3b: Tampered / Unauthorized Call**
+4. Call without a token or with a non-admin token
+5. Send to the function URL
+6. Should REJECT with "Admin access required" (403)
+7. Order should NOT be updated
 
-**This is critical for payment security.**
+**This is critical for order-integrity security.**
 
 ---
 
@@ -733,15 +716,16 @@ CREATE INDEX IF NOT EXISTS idx_product_inventory_product_id ON product_inventory
 
 ### Test Case 8.1: Network Failures
 
-**Test 8.1a: Failed Webhook Delivery**
-1. Simulate Paymob webhook failing to reach your endpoint
-2. Customer completes payment
-3. Order stuck in `pending`
-4. Admin uses "Verify Payment" → should recover
+**Test 8.1a: Failed Edge Function Call**
+1. Cancel the power/network right before the frontend invokes
+   `create-order`
+2. Order is not created; the checkout stays on the form
+3. Retrying re-attempts creation — no phantom order
 
-**Test 8.1b: Duplicate Webhook**
-5. Paymob retries webhook (same transaction)
-6. Should be idempotent (no duplicate email/status change)
+**Test 8.1b: Duplicate Submission**
+4. Double-click "Place Order" at checkout
+5. Should create one order, not two (function validates and the order
+   number/id is unique)
 
 ---
 
@@ -800,23 +784,20 @@ Before flipping the switch to production:
 
 ### Environment Configuration
 - [ ] All production environment variables set in Vercel
-- [ ] Paymob switched from sandbox to live credentials
 - [ ] Resend verified sending domain configured
 - [ ] All Edge Function secrets set (`supabase secrets list` to verify)
 - [ ] Supabase project on appropriate tier (not paused free tier)
 
 ### Database
-- [ ] All 3 migrations run successfully (schema.sql, 002, 003)
+- [ ] All migrations run successfully (`supabase db push --include-all`)
 - [ ] At least one admin user created in `admin_users`
 - [ ] Seed data loaded (or real products added)
 - [ ] RLS enabled on all tables (query from section 1)
 - [ ] Performance indexes created (section 7.2)
 
 ### Payment Setup
-- [ ] Paymob webhook URL configured in Paymob dashboard
-- [ ] Test card payment completed successfully end-to-end
-- [ ] HMAC verification confirmed working
-- [ ] COD limits tested and working
+- [ ] COD checkout tested end-to-end (guest + signed-in)
+- [ ] COD limits tested and working (15k cap, 3 open orders, sign-in required)
 
 ### Email Setup
 - [ ] Resend domain verified
@@ -839,7 +820,7 @@ Before flipping the switch to production:
 - [ ] Error tracking set up (Sentry or similar)
 - [ ] Supabase alerts configured (database CPU, storage)
 - [ ] Uptime monitoring (UptimeRobot or Vercel's)
-- [ ] Payment failure alerts (check Edge Function logs daily initially)
+- [ ] Order-failure alerts (check Edge Function logs daily initially)
 
 ### Legal & Compliance
 - [ ] Privacy Policy published and linked in footer
@@ -897,13 +878,13 @@ These are acceptable trade-offs for v1, but document them:
 These tests MUST pass, no exceptions:
 
 1. ✅ COD order completes and creates order in database
-2. ✅ Card payment completes and webhook updates order
+2. ✅ Order confirmation email is sent on placement
 3. ✅ Out-of-stock orders are rejected
 4. ✅ Concurrent orders don't oversell inventory
 5. ✅ Admin panel loads and shows data (tests migration 003)
 6. ✅ Cancelling order releases inventory
 7. ✅ RLS blocks users from accessing others' data
-8. ✅ HMAC verification rejects tampered webhooks
+8. ✅ Admin-only Edge Functions reject unauthorized callers
 
 If ANY of these fail, stop and fix before proceeding.
 
@@ -913,8 +894,8 @@ If ANY of these fail, stop and fix before proceeding.
 
 - **Supabase Logs**: Project > Logs > Function Logs
 - **Vercel Logs**: Project > Deployments > Logs
-- **Paymob Dashboard**: Transactions > View Details
 - **Resend Dashboard**: Emails > Logs
+- **Supabase Database**: Project > SQL Editor (inspect orders/stock directly)
 
 ---
 

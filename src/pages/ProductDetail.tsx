@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useToast } from '../context/ToastContext';
-import { useSEO } from '../lib/seo';
+import { useSEO, useStructuredData } from '../lib/seo';
 import ProductCard from '../components/ProductCard';
 import SizeGuideModal from '../components/SizeGuideModal';
 import Skeleton from '../components/Skeleton';
@@ -54,6 +54,37 @@ export default function ProductDetail() {
     brand: 'NERVE',
     availability: product && product.sizes.some(s => s.inStock) ? 'InStock' : 'OutOfStock',
   });
+
+  useStructuredData(
+    product
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: product.name,
+          description: product.description,
+          image:
+            product.gallery.length > 0
+              ? product.gallery
+              : [product.colors[0]?.image].filter(Boolean),
+          brand: { '@type': 'Brand', name: 'NERVE' },
+          offers: {
+            '@type': 'Offer',
+            price: product.price,
+            priceCurrency: 'EGP',
+            availability: product.sizes.some(s => s.inStock)
+              ? 'https://schema.org/InStock'
+              : 'https://schema.org/OutOfStock',
+            seller: { '@type': 'Organization', name: 'NERVE' },
+          },
+        }
+      : {
+          '@context': 'https://schema.org',
+          '@type': 'Organization',
+          name: 'NERVE',
+          url: 'https://nerve-store.com',
+        },
+    'product-structured-data',
+  );
 
   useEffect(() => {
     if (!slug) return;

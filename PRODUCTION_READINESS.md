@@ -3,13 +3,13 @@
 ## What's Code-Complete (Ready to Deploy)
 - [x] Frontend React/TypeScript build passing
 - [x] Database schema with 16 tables and RLS policies
-- [x] Edge Functions deployed (create-order, paymob-webhook, etc.)
+- [x] Edge Functions deployed (create-order, email, restock, etc.)
 - [x] Customer authentication (Supabase Auth)
 - [x] Payment integration (Cash on Delivery)
 
 ## What Requires External Action (HUMAN DEPLOYMENT REQUIRED)
 - [ ] Create production Supabase project
-- [ ] Run database migrations (002, 003, 006)
+- [ ] Run `supabase db push --include-all` (migrations 001-011)
 - [ ] Deploy Edge Functions to production
 - [ ] Set Edge Function secrets (RESEND_*, STORE_URL)
 - [ ] Configure Vercel deployment
