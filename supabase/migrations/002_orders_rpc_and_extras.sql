@@ -20,7 +20,7 @@ COMMENT ON COLUMN products.compare_at_price IS 'Compare-at price in whole EGP.';
 -- NEWSLETTER SUBSCRIBERS
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS newsletter_subscribers (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email TEXT UNIQUE NOT NULL,
   is_active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -42,7 +42,7 @@ CREATE POLICY "Admins can view subscribers" ON newsletter_subscribers FOR SELECT
 -- CONTACT MESSAGES
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS contact_messages (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   email TEXT NOT NULL,
   subject TEXT NOT NULL,
@@ -352,3 +352,4 @@ CREATE TRIGGER on_auth_user_created
 DROP POLICY IF EXISTS "Users can insert own profile" ON customers;
 CREATE POLICY "Users can insert own profile" ON customers
   FOR INSERT WITH CHECK (auth.uid() = id);
+

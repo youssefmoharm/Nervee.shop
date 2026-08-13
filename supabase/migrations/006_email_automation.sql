@@ -19,7 +19,7 @@ CREATE INDEX IF NOT EXISTS newsletter_subscribers_is_active_idx ON newsletter_su
 -- EMAIL LOGS (for tracking and analytics)
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS email_logs (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   recipient_email TEXT NOT NULL,
   email_type TEXT NOT NULL, -- 'welcome', 'cart_abandonment', 'back_in_stock', 'order_confirmation', 'order_shipped', 'order_delivered'
   subject TEXT NOT NULL,
@@ -56,7 +56,7 @@ CREATE INDEX IF NOT EXISTS back_in_stock_requests_is_active_idx ON back_in_stock
 -- CART ABANDONMENT TRACKING
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS cart_abandonment_tracking (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_email TEXT NOT NULL,
   cart_items JSONB NOT NULL, -- stores the abandoned cart contents
   cart_value INTEGER NOT NULL, -- in EGP cents
@@ -251,3 +251,4 @@ $$ LANGUAGE plpgsql;
 CREATE INDEX IF NOT EXISTS back_in_stock_requests_active_idx ON back_in_stock_requests(is_active, notified_at);
 CREATE INDEX IF NOT EXISTS cart_abandonment_pending_emails_idx ON cart_abandonment_tracking(email_sent_at, recovered_at, last_activity_at);
 CREATE INDEX IF NOT EXISTS email_logs_recent_idx ON email_logs(created_at DESC);
+
