@@ -1,6 +1,6 @@
 /**
  * Sentry Error Tracking Configuration
- * 
+ *
  * Setup:
  * 1. Create account at sentry.io
  * 2. Create new project (React)
@@ -8,16 +8,19 @@
  * 4. Add environment: VITE_ENV=development|production
  */
 
-import * as Sentry from '@sentry/react'
+import * as Sentry from '@sentry/react';
 
 export function initSentry() {
-  const dsn = import.meta.env.VITE_SENTRY_DSN
-  const environment = import.meta.env.VITE_ENV || 'development'
+  const dsn = import.meta.env.VITE_SENTRY_DSN;
+  const environment = import.meta.env.VITE_ENV || 'development';
 
   if (!dsn) {
-    console.warn('Sentry DSN not configured. Error tracking disabled.')
-    return
+    console.warn('Sentry DSN not configured. Error tracking disabled.');
+    setSentryEnabled(false);
+    return;
   }
+
+  setSentryEnabled(true);
 
   Sentry.init({
     dsn,
@@ -27,11 +30,11 @@ export function initSentry() {
     beforeSend(event) {
       // Filter out cancelled network requests
       if (event.exception?.values?.[0]?.type === 'AbortError') {
-        return null
+        return null;
       }
-      return event
+      return event;
     },
-  })
+  });
 }
 
 /**
@@ -40,7 +43,7 @@ export function initSentry() {
 export function trackError(error: Error, context?: Record<string, any>) {
   Sentry.captureException(error, {
     contexts: { custom: context },
-  })
+  });
 }
 
 /**
@@ -51,7 +54,7 @@ export function trackPerformance(name: string, value: number) {
     message: `Performance: ${name}`,
     data: { value },
     level: 'info',
-  })
+  });
 }
 
 /**
@@ -61,14 +64,14 @@ export function setUserContext(userId: string, email?: string) {
   Sentry.setUser({
     id: userId,
     email,
-  })
+  });
 }
 
 /**
  * Clear user context on logout
  */
 export function clearUserContext() {
-  Sentry.setUser(null)
+  Sentry.setUser(null);
 }
 
 /**
@@ -78,5 +81,43 @@ export function trackEvent(name: string, data?: Record<string, any>) {
   Sentry.captureMessage(name, {
     level: 'info',
     extra: data,
-  })
+  });
+}
+
+let sentryEnabled = false;
+
+export function isSentryEnabled() {
+  return sentryEnabled;
+}
+
+/**
+ * Central error logger. Always logs to the console for local debugging, and
+ * forwards to Sentry when VITE_SENTRY_DSN is configured. Use this instead of
+ * bare `console.error` in production code paths.
+ */
+export function logError(message: unknown, error?: unknown, context?: Record<string, any>) {
+  // Always keep a console trace for local debugging.
+  if (error) {
+    console.error(message, error);
+  } else {
+    console.error(message);
+  }
+
+  if (!sentryEnabled) return;
+
+  const err = error instanceof Error ? error : message instanceof Error ? message : undefined;
+  if (err) {
+    Sentry.captureException(err, {
+      contexts: { custom: context ?? {} },
+    });
+  } else {
+    Sentry.captureMessage(String(message), {
+      level: 'warning',
+      extra: { error, context },
+    });
+  }
+}
+
+export function setSentryEnabled(enabled: boolean) {
+  sentryEnabled = enabled;
 }

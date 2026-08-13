@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS guest_orders (
 ALTER TABLE guest_orders ENABLE ROW LEVEL SECURITY;
 
 -- Public can view guest order by verifying email + order_number + token
+DROP POLICY IF EXISTS "Public can view guest order by email/token" ON guest_orders;
 CREATE POLICY "Public can view guest order by email/token" ON guest_orders FOR SELECT
   USING (
     (email = (SELECT NULLIF(current_setting('request.jwt.claims', true)::json->>'email', 'null')) 
@@ -50,10 +51,12 @@ CREATE TABLE IF NOT EXISTS product_reviews (
 ALTER TABLE product_reviews ENABLE ROW LEVEL SECURITY;
 
 -- Authenticated users can CRUD own reviews
+DROP POLICY IF EXISTS "Authenticated users can CRUD own reviews" ON product_reviews;
 CREATE POLICY "Authenticated users can CRUD own reviews" ON product_reviews FOR ALL
   USING (auth.uid() = customer_id);
 
 -- Public can view all reviews
+DROP POLICY IF EXISTS "Public can view all reviews" ON product_reviews;
 CREATE POLICY "Public can view all reviews" ON product_reviews FOR SELECT
   USING (true);
 

@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { logError } from '../lib/sentry';
 import type { CartLine } from '../types';
 
 export interface CheckoutInfo {
@@ -72,7 +73,7 @@ export const orderService = {
 
       return { order: data.order, error: null };
     } catch (err) {
-      console.error('placeOrder failed:', err);
+      logError('placeOrder failed:', err);
       return { order: null, error: 'Network error. Please check your connection and try again.' };
     }
   },
@@ -84,7 +85,7 @@ export const orderService = {
       .select('*')
       .order('created_at', { ascending: false });
     if (error) {
-      console.error('Error fetching orders:', error);
+      logError('Error fetching orders:', error);
       return [];
     }
     return data ?? [];

@@ -101,39 +101,43 @@ LIMIT 10;
 
 -- ============================================================================
 -- TEST DATA & MANUAL TESTING
+-- NOTE: These inserts are for local/manual verification only. They are
+-- commented out because they reference placeholder product IDs and ON CONFLICT
+-- targets that do not exist in a clean database, which would break
+-- `supabase db push` (CI/Preview). Uncomment and adjust for manual testing.
 -- ============================================================================
 
 -- 8. Insert test newsletter subscriber
-INSERT INTO newsletter_subscribers (email, first_name, is_active)
-VALUES ('test-newsletter@example.com', 'John', true)
-ON CONFLICT (email) DO UPDATE SET is_active = true;
+-- INSERT INTO newsletter_subscribers (email, first_name, is_active)
+-- VALUES ('test-newsletter@example.com', 'John', true)
+-- ON CONFLICT (email) DO UPDATE SET is_active = true;
 
 -- 9. Insert test back-in-stock request
-INSERT INTO back_in_stock_requests (product_id, customer_email, size, is_active)
-VALUES ('product-001', 'test-backstock@example.com', 'M', true)
-ON CONFLICT (product_id, customer_email, size) DO UPDATE SET is_active = true;
+-- INSERT INTO back_in_stock_requests (product_id, customer_email, size, is_active)
+-- VALUES ('product-001', 'test-backstock@example.com', 'M', true)
+-- ON CONFLICT (product_id, customer_email, size) DO UPDATE SET is_active = true;
 
 -- 10. Insert test cart abandonment
-INSERT INTO cart_abandonment_tracking (customer_email, cart_items, cart_value, last_activity_at)
-VALUES (
-  'test-cart@example.com',
-  '[
-    {
-      "id": "product-001",
-      "name": "Classic T-Shirt",
-      "size": "M",
-      "color": "Black",
-      "quantity": 2,
-      "price": 500,
-      "image": "https://example.com/shirt.jpg"
-    }
-  ]'::jsonb,
-  1000,
-  NOW() - INTERVAL '25 hours'  -- More than 24 hours ago for abandonment detection
-)
-ON CONFLICT (customer_email) DO UPDATE SET 
-  last_activity_at = NOW() - INTERVAL '25 hours',
-  email_sent_at = NULL;  -- Reset to allow re-sending
+-- INSERT INTO cart_abandonment_tracking (customer_email, cart_items, cart_value, last_activity_at)
+-- VALUES (
+--   'test-cart@example.com',
+--   '[
+--     {
+--       "id": "product-001",
+--       "name": "Classic T-Shirt",
+--       "size": "M",
+--       "color": "Black",
+--       "quantity": 2,
+--       "price": 500,
+--       "image": "https://example.com/shirt.jpg"
+--     }
+--   ]'::jsonb,
+--   1000,
+--   NOW() - INTERVAL '25 hours'  -- More than 24 hours ago for abandonment detection
+-- )
+-- ON CONFLICT (customer_email) DO UPDATE SET 
+--   last_activity_at = NOW() - INTERVAL '25 hours',
+--   email_sent_at = NULL;  -- Reset to allow re-sending
 
 -- ============================================================================
 

@@ -6,6 +6,7 @@
  */
 
 import { supabase } from './supabase';
+import { logError } from './sentry';
 import type { CartLine } from '../types';
 
 interface EmailTemplate {
@@ -63,13 +64,13 @@ class EmailAutomationService {
 
       if (!response.ok) {
         const error = await response.json();
-        console.error('Email send failed:', error);
+        logError('Email send failed:', error);
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Failed to call send-email function:', error);
+      logError('Failed to call send-email function:', error);
       return false;
     }
   }
@@ -108,7 +109,7 @@ class EmailAutomationService {
 
       return success;
     } catch (error) {
-      console.error('Cart abandonment email failed:', error);
+      logError('Cart abandonment email failed:', error);
       this.trackEmailEvent('cart_abandonment_failed', {
         customer_email: data.customerEmail,
         error: (error as Error).message,
@@ -131,7 +132,7 @@ class EmailAutomationService {
 
       return success;
     } catch (error) {
-      console.error('Welcome email failed:', error);
+      logError('Welcome email failed:', error);
       return false;
     }
   }
@@ -154,7 +155,7 @@ class EmailAutomationService {
 
       return success;
     } catch (error) {
-      console.error('Back in stock email failed:', error);
+      logError('Back in stock email failed:', error);
       return false;
     }
   }
@@ -182,11 +183,11 @@ class EmailAutomationService {
             .eq('email', data.email);
 
           if (updateError) {
-            console.error('Failed to reactivate subscription:', updateError);
+            logError('Failed to reactivate subscription:', updateError);
             return false;
           }
         } else {
-          console.error('Failed to add to newsletter:', insertError);
+          logError('Failed to add to newsletter:', insertError);
           return false;
         }
       }
@@ -195,7 +196,7 @@ class EmailAutomationService {
       await this.sendWelcomeEmail(data.email, data.firstName);
       return true;
     } catch (error) {
-      console.error('Newsletter subscription failed:', error);
+      logError('Newsletter subscription failed:', error);
       return false;
     }
   }
@@ -218,7 +219,7 @@ class EmailAutomationService {
         .single();
 
       if (error) {
-        console.error('Failed to request back-in-stock notification:', error);
+        logError('Failed to request back-in-stock notification:', error);
         return false;
       }
 
@@ -230,7 +231,7 @@ class EmailAutomationService {
 
       return true;
     } catch (error) {
-      console.error('Back-in-stock request failed:', error);
+      logError('Back-in-stock request failed:', error);
       return false;
     }
   }
@@ -253,10 +254,10 @@ class EmailAutomationService {
         .eq('customer_email', customerEmail);
 
       if (error) {
-        console.error('Failed to record cart abandonment:', error);
+        logError('Failed to record cart abandonment:', error);
       }
     } catch (error) {
-      console.error('Error recording cart abandonment:', error);
+      logError('Error recording cart abandonment:', error);
     }
   }
 
@@ -269,14 +270,14 @@ class EmailAutomationService {
       });
 
       if (token.error) {
-        console.error('Failed to create unsubscribe token:', token.error);
+        logError('Failed to create unsubscribe token:', token.error);
         return ''; // Fallback to empty link if token creation fails
       }
 
       const storeUrl = import.meta.env.VITE_APP_URL || 'https://nerve-store.com';
       return `${storeUrl}/unsubscribe?token=${token.data}`;
     } catch (error) {
-      console.error('Error getting unsubscribe link:', error);
+      logError('Error getting unsubscribe link:', error);
       return '';
     }
   }
@@ -290,7 +291,7 @@ class EmailAutomationService {
 
       return data === true;
     } catch (error) {
-      console.error('Error checking email status:', error);
+      logError('Error checking email status:', error);
       return false;
     }
   }
@@ -316,10 +317,10 @@ class EmailAutomationService {
       );
 
       if (error) {
-        console.error('Failed to track cart activity:', error);
+        logError('Failed to track cart activity:', error);
       }
     } catch (error) {
-      console.error('Error tracking cart activity:', error);
+      logError('Error tracking cart activity:', error);
     }
   }
 
@@ -331,10 +332,10 @@ class EmailAutomationService {
       });
 
       if (error) {
-        console.error('Failed to mark cart as recovered:', error);
+        logError('Failed to mark cart as recovered:', error);
       }
     } catch (error) {
-      console.error('Error marking cart as recovered:', error);
+      logError('Error marking cart as recovered:', error);
     }
   }
 

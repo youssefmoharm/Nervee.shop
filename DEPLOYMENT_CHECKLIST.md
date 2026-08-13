@@ -413,6 +413,40 @@ After deployment, verify:
 
 ---
 
+## Database Backup & Restore
+
+Supabase hosts your Postgres database, but you own the data. Do NOT rely on
+the hosted region alone — configure at least one off-site copy.
+
+### Recommended setup (weekly, automated)
+1. Enable the built-in daily backups in Supabase Dashboard
+   (Project Settings > Database > Backups). Keeps 7 daily + weekly snapshots.
+2. Add a scheduled off-site export (cron / GitHub Action) that runs weekly and
+   stores the dump somewhere outside Supabase (S3, GitHub releases, or private
+   storage):
+   ```bash
+   # Requires SUPABASE_ACCESS_TOKEN + SUPABASE_PROJECT_REF (GitHub secrets)
+   supabase db dump --project-ref $SUPABASE_PROJECT_REF -f supabase-backup.sql
+   ```
+3. Test a restore at least quarterly on a throwaway project:
+   ```bash
+   supabase db push --db-url <scratch-db-url> --include-all
+   ```
+4. For the edge functions' secrets (RESEND_API_KEY, STORE_URL, etc.), keep a
+   password-managed copy — they are not part of the DB dump.
+
+### RPO / RTO targets
+- **RPO (max data loss):** 24 h (daily backup) — tighten to hourly if order
+  volume grows.
+- **RTO (max downtime):** 2–4 h from the off-site dump.
+
+### Known pitfalls
+- `supabase db dump` does NOT back up storage buckets (product images).
+  Re-upload those from originals or snapshot the `storage.objects` rows.
+- Secrets and env vars live in the Dashboard / GitHub, not the database.
+
+---
+
 ## Sign-Off
 
 When complete, checkmark these:

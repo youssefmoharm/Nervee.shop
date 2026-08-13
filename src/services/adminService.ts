@@ -1,3 +1,4 @@
+import { logError } from '../lib/sentry';
 import { supabase } from '../lib/supabase';
 
 export const adminService = {
@@ -36,7 +37,7 @@ export const adminService = {
     let query = supabase.from('orders').select('*').order('created_at', { ascending: false });
     if (status) query = query.eq('status', status);
     const { data, error } = await query;
-    if (error) console.error(error);
+    if (error) logError(error);
     return data ?? [];
   },
 
@@ -59,7 +60,7 @@ export const adminService = {
       body: { productId, size },
     });
     if (error) {
-      console.error('process-restock failed:', error);
+      logError('process-restock failed:', error);
       return;
     }
     if (data?.notified)
@@ -73,7 +74,7 @@ export const adminService = {
       .from('customers')
       .select('*')
       .order('created_at', { ascending: false });
-    if (error) console.error(error);
+    if (error) logError(error);
     return data ?? [];
   },
 
@@ -83,7 +84,7 @@ export const adminService = {
       .select('*, customer_addresses(*)')
       .eq('id', id)
       .maybeSingle();
-    if (error) console.error(error);
+    if (error) logError(error);
     return data ?? null;
   },
 
@@ -93,7 +94,7 @@ export const adminService = {
       .select('*')
       .eq('customer_id', customerId)
       .order('created_at', { ascending: false });
-    if (error) console.error(error);
+    if (error) logError(error);
     return data ?? [];
   },
 
@@ -102,7 +103,7 @@ export const adminService = {
       .from('products')
       .select('*, product_colors(*), product_inventory(*)')
       .order('created_at', { ascending: false });
-    if (error) console.error(error);
+    if (error) logError(error);
     return data ?? [];
   },
 
@@ -137,7 +138,7 @@ export const adminService = {
       .from('discount_codes')
       .select('*')
       .order('created_at', { ascending: false });
-    if (error) console.error(error);
+    if (error) logError(error);
     return data ?? [];
   },
 
@@ -147,7 +148,7 @@ export const adminService = {
       .from('contact_messages')
       .select('*')
       .order('created_at', { ascending: false });
-    if (error) console.error(error);
+    if (error) logError(error);
     return data ?? [];
   },
 
@@ -162,7 +163,7 @@ export const adminService = {
       .from('newsletter_subscribers')
       .select('*')
       .order('created_at', { ascending: false });
-    if (error) console.error(error);
+    if (error) logError(error);
     return data ?? [];
   },
 

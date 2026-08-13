@@ -1,25 +1,26 @@
-import { Component, ReactNode } from 'react'
-import { AlertTriangle } from 'lucide-react'
+import { Component, ReactNode } from 'react';
+import { AlertTriangle } from 'lucide-react';
+import { logError } from '../lib/sentry';
 
 interface Props {
-  children: ReactNode
-  fallback?: ReactNode
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void
+  children: ReactNode;
+  fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
 }
 
 interface State {
-  hasError: boolean
-  error: Error | null
+  hasError: boolean;
+  error: Error | null;
 }
 
 /**
  * Error Boundary component to catch React errors and prevent full app crashes.
- * 
+ *
  * Usage:
  * <ErrorBoundary>
  *   <YourComponent />
  * </ErrorBoundary>
- * 
+ *
  * With custom fallback:
  * <ErrorBoundary fallback={<CustomErrorUI />}>
  *   <YourComponent />
@@ -27,34 +28,31 @@ interface State {
  */
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
-    super(props)
-    this.state = { hasError: false, error: null }
+    super(props);
+    this.state = { hasError: false, error: null };
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error }
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log to console in development
-    console.error('Error Boundary caught an error:', error, errorInfo)
+    // Log locally and forward to Sentry when VITE_SENTRY_DSN is configured
+    logError('Error Boundary caught an error:', error, {
+      react: { componentStack: errorInfo.componentStack },
+    });
 
     // Call custom error handler if provided (e.g., send to Sentry)
     if (this.props.onError) {
-      this.props.onError(error, errorInfo)
+      this.props.onError(error, errorInfo);
     }
-
-    // In production, you would send this to your error tracking service:
-    // if (import.meta.env.PROD) {
-    //   Sentry.captureException(error, { contexts: { react: { componentStack: errorInfo.componentStack } } })
-    // }
   }
 
   render() {
     if (this.state.hasError) {
       // Use custom fallback if provided
       if (this.props.fallback) {
-        return this.props.fallback
+        return this.props.fallback;
       }
 
       // Default error UI
@@ -97,10 +95,10 @@ export class ErrorBoundary extends Component<Props, State> {
             )}
           </div>
         </div>
-      )
+      );
     }
 
-    return this.props.children
+    return this.props.children;
   }
 }
 
@@ -109,25 +107,27 @@ export class ErrorBoundary extends Component<Props, State> {
  */
 export class SectionErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
-    super(props)
-    this.state = { hasError: false, error: null }
+    super(props);
+    this.state = { hasError: false, error: null };
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error }
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Section Error Boundary caught:', error, errorInfo)
+    logError('Section Error Boundary caught:', error, {
+      react: { componentStack: errorInfo.componentStack },
+    });
     if (this.props.onError) {
-      this.props.onError(error, errorInfo)
+      this.props.onError(error, errorInfo);
     }
   }
 
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
-        return this.props.fallback
+        return this.props.fallback;
       }
 
       return (
@@ -144,9 +144,9 @@ export class SectionErrorBoundary extends Component<Props, State> {
             Refresh Page
           </button>
         </div>
-      )
+      );
     }
 
-    return this.props.children
+    return this.props.children;
   }
 }
