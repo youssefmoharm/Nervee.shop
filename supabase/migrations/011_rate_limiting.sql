@@ -12,7 +12,7 @@
 -- RATE LIMIT REQUESTS TABLE
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS rate_limit_requests (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   identifier TEXT NOT NULL,  -- IP address or user ID
   window_start TIMESTAMPTZ NOT NULL,
   request_count INTEGER DEFAULT 1,
@@ -80,3 +80,4 @@ $$;
 -- Allow service role to call this function
 REVOKE ALL ON FUNCTION check_rate_limit FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION check_rate_limit TO authenticated, service_role;
+

@@ -17,7 +17,7 @@
 -- UNSUBSCRIBE TOKENS
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS unsubscribe_tokens (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email TEXT NOT NULL,
   email_type TEXT,                -- NULL means "all emails"
   token TEXT UNIQUE NOT NULL,
@@ -36,7 +36,7 @@ ALTER TABLE unsubscribe_tokens ENABLE ROW LEVEL SECURITY;
 -- UNSUBSCRIBE AUDIT LOG
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS unsubscribe_audit_log (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email TEXT NOT NULL,
   unsubscribe_type TEXT NOT NULL DEFAULT 'all',
   unsubscribe_method TEXT NOT NULL DEFAULT 'link', -- 'link', 'feedback', 'admin', 'resubscribe'
@@ -167,3 +167,4 @@ $$;
 -- resolves the caller by token, never trusting a client-supplied email.
 REVOKE ALL ON FUNCTION process_unsubscribe(TEXT, TEXT, TEXT, TEXT) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION process_unsubscribe(TEXT, TEXT, TEXT, TEXT) TO service_role;
+

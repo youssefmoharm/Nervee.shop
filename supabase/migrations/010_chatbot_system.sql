@@ -5,7 +5,7 @@
 -- CHAT CONVERSATIONS TABLE
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS chat_conversations (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL, -- For guests
   customer_name TEXT,
@@ -40,7 +40,7 @@ CREATE INDEX IF NOT EXISTS chat_conversations_created_at_idx ON chat_conversatio
 -- CHAT MESSAGES TABLE
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS chat_messages (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   conversation_id UUID REFERENCES chat_conversations(id) ON DELETE CASCADE NOT NULL,
   
   -- Message details
@@ -68,7 +68,7 @@ CREATE INDEX IF NOT EXISTS chat_messages_created_at_idx ON chat_messages(created
 -- SUPPORT TICKETS TABLE
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS support_tickets (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   ticket_number TEXT UNIQUE NOT NULL,
   conversation_id UUID REFERENCES chat_conversations(id) ON DELETE SET NULL,
   
@@ -109,7 +109,7 @@ CREATE INDEX IF NOT EXISTS support_tickets_ticket_number_idx ON support_tickets(
 -- TICKET RESPONSES TABLE
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS ticket_responses (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   ticket_id UUID REFERENCES support_tickets(id) ON DELETE CASCADE NOT NULL,
   
   -- Response info
@@ -137,7 +137,7 @@ CREATE INDEX IF NOT EXISTS ticket_responses_created_at_idx ON ticket_responses(c
 -- AI CONTEXT CACHE (for order/customer lookups)
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS ai_context_cache (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   conversation_id UUID REFERENCES chat_conversations(id) ON DELETE CASCADE,
   
   -- What we know about the customer
@@ -408,3 +408,4 @@ $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS conversation_update_on_message ON chat_messages;
 CREATE TRIGGER conversation_update_on_message AFTER INSERT ON chat_messages
   FOR EACH ROW EXECUTE FUNCTION update_conversation_on_message();
+

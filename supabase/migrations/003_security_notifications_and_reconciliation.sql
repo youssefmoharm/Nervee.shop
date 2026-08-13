@@ -44,7 +44,7 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS tracking_url TEXT;
 -- Back-in-stock signups
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS back_in_stock_requests (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email TEXT NOT NULL,
   product_id TEXT REFERENCES products(id) ON DELETE CASCADE,
   size TEXT NOT NULL,
@@ -348,3 +348,4 @@ $$;
 
 REVOKE ALL ON FUNCTION update_order_status FROM PUBLIC, authenticated, anon;
 GRANT EXECUTE ON FUNCTION update_order_status TO service_role;
+
