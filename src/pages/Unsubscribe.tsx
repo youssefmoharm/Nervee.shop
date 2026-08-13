@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { logError } from '../lib/sentry';
 
 type Status = 'loading' | 'success' | 'error' | 'resubscribe';
 
@@ -57,7 +58,7 @@ export default function Unsubscribe() {
         setStatus('error');
       }
     } catch (error) {
-      console.error('Unsubscribe error:', error);
+      logError('Unsubscribe error:', error);
       setResult({
         success: false,
         error: 'Something went wrong. Please try again later.',
@@ -79,13 +80,13 @@ export default function Unsubscribe() {
       );
 
       if (error) {
-        console.error('Resubscribe error:', error);
+        logError('Resubscribe error:', error);
         return;
       }
 
       setStatus('resubscribe');
     } catch (err) {
-      console.error('Resubscribe failed:', err);
+      logError('Resubscribe failed:', err);
     }
   };
 
@@ -103,7 +104,7 @@ export default function Unsubscribe() {
       // Show thank you after feedback
       setFeedback('');
     } catch (err) {
-      console.error('Feedback error:', err);
+      logError('Feedback error:', err);
     }
   };
 

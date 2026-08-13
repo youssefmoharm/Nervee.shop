@@ -85,6 +85,12 @@ function StorefrontChrome({
   return (
     <>
       {loading && <Loader onDone={() => setLoading(false)} />}
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:bg-paper focus:text-navy focus:px-4 focus:py-2 focus:font-semibold"
+      >
+        Skip to content
+      </a>
       <ScrollToTop />
       <Header onSearch={() => setSearchOpen(true)} />
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />

@@ -45,7 +45,7 @@ async function mockPlaceOrder(params: any) {
     return { data: null, error: { message: 'Invalid delivery method' } };
   }
 
-  if (!['cod', 'paymob'].includes(p_payment_provider)) {
+  if (!['cod'].includes(p_payment_provider)) {
     return { data: null, error: { message: 'Invalid payment provider' } };
   }
 
@@ -150,41 +150,6 @@ async function mockPlaceOrder(params: any) {
   }
 
   const total = Math.max(subtotal + shipping - discount, 0);
-
-  // COD validation
-  if (p_payment_provider === 'cod') {
-    if (!p_customer_id) {
-      return {
-        data: null,
-        error: {
-          message:
-            'Please sign in to place a Cash on Delivery order. Guests can still check out by card.',
-        },
-      };
-    }
-
-    if (total > 15000) {
-      return {
-        data: null,
-        error: {
-          message:
-            'Orders over EGP 15000 must be paid by card — please select Card payment to continue.',
-        },
-      };
-    }
-
-    // Mock COD order limit check
-    const mockCODOrders = 2; // Simulate 2 existing pending COD orders
-    if (mockCODOrders >= 3) {
-      return {
-        data: null,
-        error: {
-          message:
-            'You have 3 unpaid Cash on Delivery orders already. Please wait for one to be delivered (or contact us) before placing another.',
-        },
-      };
-    }
-  }
 
   // Return successful order
   const mockOrder = {
@@ -440,7 +405,7 @@ describe('Database - place_order Function', () => {
   });
 
   describe('COD Validation', () => {
-    it('requires customer for COD orders', async () => {
+    it('allows guest COD orders', async () => {
       const params = {
         ...validOrderParams,
         p_customer_id: null,
@@ -448,11 +413,12 @@ describe('Database - place_order Function', () => {
 
       const { data, error } = await mockSupabase.rpc('place_order', params);
 
-      expect(data).toBeNull();
-      expect(error?.message).toContain('Please sign in to place a Cash on Delivery order');
+      expect(error).toBeNull();
+      expect(data).toHaveProperty('id');
+      expect(data?.payment_provider).toBe('cod');
     });
 
-    it('rejects large COD orders', async () => {
+    it('accepts large COD orders', async () => {
       const params = {
         ...validOrderParams,
         p_items: [
@@ -462,38 +428,16 @@ describe('Database - place_order Function', () => {
 
       const { data, error } = await mockSupabase.rpc('place_order', params);
 
-      expect(data).toBeNull();
-      expect(error?.message).toContain('Orders over EGP 15000 must be paid by card');
+      expect(error).toBeNull();
+      expect(data).toHaveProperty('id');
     });
   });
 
-  describe('Card Payment', () => {
-    it('allows guest card payments', async () => {
-      const params = {
-        ...validOrderParams,
-        p_customer_id: null,
-        p_payment_provider: 'paymob',
-      };
+  describe('Payment Provider', () => {
+    it('records the COD payment provider', async () => {
+      const { data } = await mockSupabase.rpc('place_order', validOrderParams);
 
-      const { data, error } = await mockSupabase.rpc('place_order', params);
-
-      expect(error).toBeNull();
-      expect(data).toHaveProperty('id');
-    });
-
-    it('allows large card orders', async () => {
-      const params = {
-        ...validOrderParams,
-        p_payment_provider: 'paymob',
-        p_items: [
-          { product_id: 'product-1', color: 'Blue', size: 'M', quantity: 35, image: 'test.jpg' },
-        ],
-      };
-
-      const { data, error } = await mockSupabase.rpc('place_order', params);
-
-      expect(error).toBeNull();
-      expect(data).toHaveProperty('id');
+      expect(data?.payment_provider).toBe('cod');
     });
   });
 });

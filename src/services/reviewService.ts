@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { logError } from '../lib/sentry';
 import type { ProductReview } from '../types';
 
 export interface ReviewInput {
@@ -40,7 +41,7 @@ export const reviewService = {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching reviews:', error);
+        logError('Error fetching reviews:', error);
         return { reviews: [], error: error.message };
       }
 
@@ -60,7 +61,7 @@ export const reviewService = {
 
       return { reviews, error: null };
     } catch (err) {
-      console.error('reviewService.getByProduct failed:', err);
+      logError('reviewService.getByProduct failed:', err);
       return { reviews: [], error: 'Network error. Please try again.' };
     }
   },
@@ -96,7 +97,7 @@ export const reviewService = {
         error: null,
       };
     } catch (err) {
-      console.error('reviewService.getStats failed:', err);
+      logError('reviewService.getStats failed:', err);
       return { stats: null, error: 'Network error. Please try again.' };
     }
   },
@@ -129,7 +130,7 @@ export const reviewService = {
         .single();
 
       if (error) {
-        console.error('Error creating review:', error);
+        logError('Error creating review:', error);
         if (error.message.includes('duplicate key')) {
           return { success: false, error: 'You have already reviewed this product' };
         }
@@ -138,7 +139,7 @@ export const reviewService = {
 
       return { success: true, review: data as ProductReview, error: null };
     } catch (err) {
-      console.error('reviewService.create failed:', err);
+      logError('reviewService.create failed:', err);
       return { success: false, error: 'Network error. Please try again.' };
     }
   },
@@ -179,13 +180,13 @@ export const reviewService = {
         .eq('id', reviewId);
 
       if (error) {
-        console.error('Error updating review:', error);
+        logError('Error updating review:', error);
         return { success: false, error: error.message };
       }
 
       return { success: true, error: null };
     } catch (err) {
-      console.error('reviewService.update failed:', err);
+      logError('reviewService.update failed:', err);
       return { success: false, error: 'Network error. Please try again.' };
     }
   },
@@ -219,13 +220,13 @@ export const reviewService = {
       const { error } = await supabase.from('product_reviews').delete().eq('id', reviewId);
 
       if (error) {
-        console.error('Error deleting review:', error);
+        logError('Error deleting review:', error);
         return { success: false, error: error.message };
       }
 
       return { success: true, error: null };
     } catch (err) {
-      console.error('reviewService.delete failed:', err);
+      logError('reviewService.delete failed:', err);
       return { success: false, error: 'Network error. Please try again.' };
     }
   },
@@ -242,13 +243,13 @@ export const reviewService = {
       const { error } = await supabase.rpc('verify_review_purchase', { p_review_id: reviewId });
 
       if (error) {
-        console.error('Error verifying purchase:', error);
+        logError('Error verifying purchase:', error);
         return { success: false, error: error.message };
       }
 
       return { success: true, error: null };
     } catch (err) {
-      console.error('reviewService.verifyPurchase failed:', err);
+      logError('reviewService.verifyPurchase failed:', err);
       return { success: false, error: 'Network error. Please try again.' };
     }
   },
