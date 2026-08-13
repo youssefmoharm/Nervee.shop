@@ -4,6 +4,7 @@ import { Check, ChevronLeft, Loader2, Truck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { orderService } from '../services/orderService';
+import { useSEO } from '../lib/seo';
 import { EGYPT_GOVERNORATES } from '../data/governorates';
 import { estimateShippingCost, getCheckoutSummary } from '../lib/checkout';
 
@@ -38,6 +39,11 @@ const initialForm: FormState = {
 };
 
 export default function Checkout() {
+  useSEO({
+    title: 'Checkout | NERVE',
+    description:
+      'Complete your NERVE order. Cash on delivery across Egypt — payment is due to the courier when your order arrives.',
+  });
   const { lines, subtotal, clear } = useCart();
   const { user } = useAuth();
   const [step, setStep] = useState<Step>(1);

@@ -29,7 +29,7 @@ A production-ready e-commerce platform for NERVE, an Egyptian fashion concept st
 **Backend & Infrastructure:**
 - Supabase (PostgreSQL, Auth, Storage)
 - Supabase Edge Functions (Deno)
-- Paymob (Egyptian payments)
+- Cash on Delivery (COD) checkout across Egypt
 - Resend (transactional email)
 - Vercel (hosting)
 
@@ -155,8 +155,7 @@ See [SECURITY_IMPLEMENTATION.md](./SECURITY_IMPLEMENTATION.md) for full details.
    ```
 
 2. Add environment variables in Vercel dashboard
-3. Update Paymob webhook URL to your Vercel domain
-4. Run [PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md) checklist
+3. Run [PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md) checklist
 
 ## Testing
 

@@ -2,11 +2,17 @@
 import { useSearchParams } from 'react-router-dom';
 import { Loader2, Check, Mail } from 'lucide-react';
 import { guestOrderService } from '../services/guestOrderService';
+import { useSEO } from '../lib/seo';
 import type { GuestOrder } from '../types';
 
 type Step = 'search' | 'loading' | 'success' | 'not-found' | 'error';
 
 export default function GuestOrder() {
+  useSEO({
+    title: 'Track Your Order | NERVE',
+    description:
+      'Look up your NERVE order by email and order number. Cash on delivery across Egypt.',
+  });
   const [searchParams] = useSearchParams();
   const [step, setStep] = useState<Step>('search');
   const [order, setOrder] = useState<GuestOrder | null>(null);

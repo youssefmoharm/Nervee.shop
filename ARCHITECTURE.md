@@ -72,10 +72,9 @@ the browser at any point in this chain.
 - **Database + Auth + Storage:** Supabase project (migrations run via SQL
   Editor or `supabase db push`).
 - **Edge Functions:** `supabase functions deploy create-order`,
-  `verify-payment`, `update-order-status`, and `process-restock` (default
-  JWT verification), plus `paymob-webhook --no-verify-jwt` (Paymob calls
-  this directly; its HMAC check authenticates the request instead). Secrets
-  set via `supabase secrets set` — see `SETUP.md`.
+  `update-order-status`, `send-email`, `process-restock`, and the rest
+  under `supabase/functions/` (default JWT verification). Secrets set via
+  `supabase secrets set` — see `SETUP.md`.
 - No separate backend host (Render/Railway) is needed with this architecture.
 
 ## Guest Order Tracking System
@@ -225,10 +224,9 @@ ecommerce.purchase('NRV-123456', 1497, 'NERVE10', 0, 0)
 - **Database + Auth + Storage:** Supabase project (migrations run via SQL
   Editor or `supabase db push`).
 - **Edge Functions:** `supabase functions deploy create-order`,
-  `verify-payment`, `update-order-status`, and `process-restock` (default
-  JWT verification), plus `paymob-webhook --no-verify-jwt` (Paymob calls
-  this directly; its HMAC check authenticates the request instead). Secrets
-  set via `supabase secrets set` — see `SETUP.md`.
+  `update-order-status`, `send-email`, `process-restock`, and the rest
+  under `supabase/functions/` (default JWT verification). Secrets set via
+  `supabase secrets set` — see `SETUP.md`.
 - No separate backend host (Render/Railway) is needed with this architecture.
 
 ---

@@ -1,6 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { Loader2 } from 'lucide-react';
 import { contactService } from '../services/contactService';
+import { useSEO } from '../lib/seo';
 
 function Shell({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -14,6 +15,11 @@ function Shell({ title, children }: { title: string; children: ReactNode }) {
 }
 
 export function Contact() {
+  useSEO({
+    title: 'Contact Us | NERVE',
+    description:
+      'Get in touch with NERVE. Questions about your order, shipping, or returns? Our team is here to help.',
+  });
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
@@ -105,6 +111,11 @@ export function Contact() {
 }
 
 export function Shipping() {
+  useSEO({
+    title: 'Shipping & Delivery | NERVE',
+    description:
+      'Standard and express delivery across Egypt. Free standard shipping on orders over EGP 2,000. Cash on delivery available.',
+  });
   return (
     <Shell title="Shipping">
       <p>Standard delivery: 2–5 business days across Egypt. Free on orders over EGP 2,000.</p>
@@ -118,6 +129,11 @@ export function Shipping() {
 }
 
 export function Returns() {
+  useSEO({
+    title: 'Returns & Exchanges | NERVE',
+    description:
+      'Unworn items with tags can be returned within 14 days of delivery for a full refund. See our returns policy.',
+  });
   return (
     <Shell title="Returns">
       <p>
@@ -131,6 +147,11 @@ export function Returns() {
 }
 
 export function Privacy() {
+  useSEO({
+    title: 'Privacy Policy | NERVE',
+    description:
+      'How NERVE collects, uses, and protects your personal information. Read our privacy policy.',
+  });
   return (
     <Shell title="Privacy Policy">
       <p>
@@ -177,6 +198,10 @@ export function Privacy() {
 }
 
 export function Terms() {
+  useSEO({
+    title: 'Terms of Service | NERVE',
+    description: 'The terms governing use of nerve-store.com and purchases from NERVE.',
+  });
   return (
     <Shell title="Terms of Service">
       <p>

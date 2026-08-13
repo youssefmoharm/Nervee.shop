@@ -3,10 +3,16 @@ import { Link } from 'react-router-dom';
 import { Lock, Minus, Plus, ShieldCheck, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { productService } from '../services/productService';
+import { useSEO } from '../lib/seo';
 import type { Product } from '../types';
 import ProductCard from '../components/ProductCard';
 
 export default function Cart() {
+  useSEO({
+    title: 'Your Cart | NERVE',
+    description:
+      'Review the pieces in your NERVE cart. Cash on delivery across Egypt — no card needed.',
+  });
   const { lines, removeLine, updateQuantity, subtotal } = useCart();
   const [promo, setPromo] = useState('');
   const [promoStatus, setPromoStatus] = useState<'idle' | 'applied' | 'invalid'>('idle');
