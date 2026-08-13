@@ -22,22 +22,27 @@ GRANT USAGE ON SCHEMA cron TO postgres;
 
 -- Job 1: Process abandoned carts every 4 hours
 -- Finds carts inactive for 24+ hours and sends recovery emails
-SELECT cron.schedule(
-  'process_abandoned_carts',
-  '0 */4 * * *', -- Run at 00:00, 04:00, 08:00, 12:00, 16:00, 20:00 UTC
-  $$
-  SELECT
-    net.http_post(
-      url:='https://' || current_setting('app.settings.supabase_url') || '/functions/v1/process-abandoned-carts',
-      headers:=jsonb_build_object(
-        'Authorization', 'Bearer ' || current_setting('app.settings.supabase_service_role_key'),
-        'Content-Type', 'application/json'
-      ),
-      body:='{}'::jsonb,
-      timeout_milliseconds:=60000
-    ) as request_id;
-  $$
-);
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
+    PERFORM cron.schedule(
+      'process_abandoned_carts',
+      '0 */4 * * *', -- Run at 00:00, 04:00, 08:00, 12:00, 16:00, 20:00 UTC
+      $$
+      SELECT
+        net.http_post(
+          url:='https://' || current_setting('app.settings.supabase_url') || '/functions/v1/process-abandoned-carts',
+          headers:=jsonb_build_object(
+            'Authorization', 'Bearer ' || current_setting('app.settings.supabase_service_role_key'),
+            'Content-Type', 'application/json'
+          ),
+          body:='{}'::jsonb,
+          timeout_milliseconds:=60000
+        ) as request_id;
+      $$
+    );
+  END IF;
+END $$;
 
 -- Optional: Job 2: Send daily digest emails to newsletter subscribers
 -- (Not enabled by default - uncomment if you want daily emails)
@@ -60,24 +65,34 @@ SELECT cron.schedule(
 
 -- Optional: Job 3: Cleanup old email logs (keep last 90 days)
 -- (Runs weekly to save storage)
-SELECT cron.schedule(
-  'cleanup_old_email_logs',
-  '0 3 * * 1', -- Run at 03:00 UTC on Mondays
-  $$
-  DELETE FROM email_logs WHERE created_at < NOW() - INTERVAL '90 days';
-  $$
-);
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
+    PERFORM cron.schedule(
+      'cleanup_old_email_logs',
+      '0 3 * * 1', -- Run at 03:00 UTC on Mondays
+      $$
+      DELETE FROM email_logs WHERE created_at < NOW() - INTERVAL '90 days';
+      $$
+    );
+  END IF;
+END $$;
 
 -- Optional: Job 4: Cleanup old cart abandonment tracking (keep last 30 days)
-SELECT cron.schedule(
-  'cleanup_old_cart_tracking',
-  '0 4 * * 1', -- Run at 04:00 UTC on Mondays
-  $$
-  DELETE FROM cart_abandonment_tracking 
-  WHERE created_at < NOW() - INTERVAL '30 days'
-    AND (recovered_at IS NOT NULL OR email_sent_at IS NOT NULL);
-  $$
-);
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
+    PERFORM cron.schedule(
+      'cleanup_old_cart_tracking',
+      '0 4 * * 1', -- Run at 04:00 UTC on Mondays
+      $$
+      DELETE FROM cart_abandonment_tracking 
+      WHERE created_at < NOW() - INTERVAL '30 days'
+        AND (recovered_at IS NOT NULL OR email_sent_at IS NOT NULL);
+      $$
+    );
+  END IF;
+END $$;
 
 -- ============================================================================
 -- VIEW SCHEDULED JOBS (for debugging)

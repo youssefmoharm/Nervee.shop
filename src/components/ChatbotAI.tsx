@@ -1,6 +1,7 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, User, Bot, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { logError } from '../lib/sentry';
 import { useToast } from '../context/ToastContext';
 
 interface Message {
@@ -115,7 +116,7 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
         setMessages(prev => [...prev, escalationMsg]);
       }
     } catch (error) {
-      console.error('Chat error:', error);
+      logError('Chat error:', error);
       showToast('Failed to send message. Please try again.', 'error');
 
       const errorMsg: Message = {
@@ -175,7 +176,7 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
       };
       setMessages(prev => [...prev, ticketMsg]);
     } catch (error) {
-      console.error('Ticket creation error:', error);
+      logError('Ticket creation error:', error);
       showToast('Failed to create support ticket. Please try again.', 'error');
     } finally {
       setIsLoading(false);

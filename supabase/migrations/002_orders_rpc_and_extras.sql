@@ -29,9 +29,11 @@ CREATE TABLE IF NOT EXISTS newsletter_subscribers (
 ALTER TABLE newsletter_subscribers ENABLE ROW LEVEL SECURITY;
 
 -- Anyone can subscribe (insert), nobody can read/list from the client.
+DROP POLICY IF EXISTS "Anyone can subscribe" ON newsletter_subscribers;
 CREATE POLICY "Anyone can subscribe" ON newsletter_subscribers FOR INSERT
   WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Admins can view subscribers" ON newsletter_subscribers;
 CREATE POLICY "Admins can view subscribers" ON newsletter_subscribers FOR SELECT USING (
   auth.uid() IN (SELECT user_id FROM admin_users)
 );
@@ -53,12 +55,15 @@ CREATE TABLE IF NOT EXISTS contact_messages (
 
 ALTER TABLE contact_messages ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Anyone can send a message" ON contact_messages;
 CREATE POLICY "Anyone can send a message" ON contact_messages FOR INSERT
   WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Admins can view messages" ON contact_messages;
 CREATE POLICY "Admins can view messages" ON contact_messages FOR SELECT USING (
   auth.uid() IN (SELECT user_id FROM admin_users)
 );
+DROP POLICY IF EXISTS "Admins can update messages" ON contact_messages;
 CREATE POLICY "Admins can update messages" ON contact_messages FOR UPDATE USING (
   auth.uid() IN (SELECT user_id FROM admin_users)
 );

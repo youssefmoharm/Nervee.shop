@@ -3,25 +3,22 @@
 
 -- ============================================================================
 -- NEWSLETTER SUBSCRIBERS
+-- (table created by migration 002 — extend it here with the email-automation
+--  columns instead of re-creating it)
 -- ============================================================================
-CREATE TABLE newsletter_subscribers (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  email TEXT UNIQUE NOT NULL,
-  first_name TEXT,
-  is_active BOOLEAN DEFAULT TRUE,
-  subscribed_at TIMESTAMPTZ DEFAULT NOW(),
-  unsubscribed_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+ALTER TABLE newsletter_subscribers
+  ADD COLUMN IF NOT EXISTS first_name TEXT,
+  ADD COLUMN IF NOT EXISTS subscribed_at TIMESTAMPTZ DEFAULT NOW(),
+  ADD COLUMN IF NOT EXISTS unsubscribed_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 
-CREATE INDEX newsletter_subscribers_email_idx ON newsletter_subscribers(email);
-CREATE INDEX newsletter_subscribers_is_active_idx ON newsletter_subscribers(is_active);
+CREATE INDEX IF NOT EXISTS newsletter_subscribers_email_idx ON newsletter_subscribers(email);
+CREATE INDEX IF NOT EXISTS newsletter_subscribers_is_active_idx ON newsletter_subscribers(is_active);
 
 -- ============================================================================
 -- EMAIL LOGS (for tracking and analytics)
 -- ============================================================================
-CREATE TABLE email_logs (
+CREATE TABLE IF NOT EXISTS email_logs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   recipient_email TEXT NOT NULL,
   email_type TEXT NOT NULL, -- 'welcome', 'cart_abandonment', 'back_in_stock', 'order_confirmation', 'order_shipped', 'order_delivered'
@@ -36,34 +33,29 @@ CREATE TABLE email_logs (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX email_logs_recipient_idx ON email_logs(recipient_email);
-CREATE INDEX email_logs_email_type_idx ON email_logs(email_type);
-CREATE INDEX email_logs_status_idx ON email_logs(status);
-CREATE INDEX email_logs_sent_at_idx ON email_logs(sent_at);
+CREATE INDEX IF NOT EXISTS email_logs_recipient_idx ON email_logs(recipient_email);
+CREATE INDEX IF NOT EXISTS email_logs_email_type_idx ON email_logs(email_type);
+CREATE INDEX IF NOT EXISTS email_logs_status_idx ON email_logs(status);
+CREATE INDEX IF NOT EXISTS email_logs_sent_at_idx ON email_logs(sent_at);
 
 -- ============================================================================
--- BACK IN STOCK REQUESTS (for tracking who wants to be notified)
+-- BACK IN STOCK REQUESTS
+-- (table created by migration 003 — extend it with the email-automation
+--  columns instead of re-creating it)
 -- ============================================================================
-CREATE TABLE back_in_stock_requests (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  product_id TEXT REFERENCES products(id) ON DELETE CASCADE,
-  customer_email TEXT NOT NULL,
-  size TEXT,
-  requested_at TIMESTAMPTZ DEFAULT NOW(),
-  notified_at TIMESTAMPTZ,
-  is_active BOOLEAN DEFAULT TRUE,
-  
-  UNIQUE(product_id, customer_email, size)
-);
+ALTER TABLE back_in_stock_requests
+  ADD COLUMN IF NOT EXISTS customer_email TEXT,
+  ADD COLUMN IF NOT EXISTS requested_at TIMESTAMPTZ DEFAULT NOW(),
+  ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
 
-CREATE INDEX back_in_stock_requests_product_id_idx ON back_in_stock_requests(product_id);
-CREATE INDEX back_in_stock_requests_email_idx ON back_in_stock_requests(customer_email);
-CREATE INDEX back_in_stock_requests_is_active_idx ON back_in_stock_requests(is_active);
+CREATE INDEX IF NOT EXISTS back_in_stock_requests_product_id_idx ON back_in_stock_requests(product_id);
+CREATE INDEX IF NOT EXISTS back_in_stock_requests_email_idx ON back_in_stock_requests(email);
+CREATE INDEX IF NOT EXISTS back_in_stock_requests_is_active_idx ON back_in_stock_requests(is_active);
 
 -- ============================================================================
 -- CART ABANDONMENT TRACKING
 -- ============================================================================
-CREATE TABLE cart_abandonment_tracking (
+CREATE TABLE IF NOT EXISTS cart_abandonment_tracking (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   customer_email TEXT NOT NULL,
   cart_items JSONB NOT NULL, -- stores the abandoned cart contents
@@ -76,9 +68,9 @@ CREATE TABLE cart_abandonment_tracking (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX cart_abandonment_customer_email_idx ON cart_abandonment_tracking(customer_email);
-CREATE INDEX cart_abandonment_email_sent_at_idx ON cart_abandonment_tracking(email_sent_at);
-CREATE INDEX cart_abandonment_recovered_at_idx ON cart_abandonment_tracking(recovered_at);
+CREATE INDEX IF NOT EXISTS cart_abandonment_customer_email_idx ON cart_abandonment_tracking(customer_email);
+CREATE INDEX IF NOT EXISTS cart_abandonment_email_sent_at_idx ON cart_abandonment_tracking(email_sent_at);
+CREATE INDEX IF NOT EXISTS cart_abandonment_recovered_at_idx ON cart_abandonment_tracking(recovered_at);
 
 -- ============================================================================
 -- ENABLE RLS
@@ -93,33 +85,41 @@ ALTER TABLE cart_abandonment_tracking ENABLE ROW LEVEL SECURITY;
 -- ============================================================================
 
 -- Newsletter subscribers: users can view/update their own, admins can do everything
+DROP POLICY IF EXISTS "Users can view own newsletter subscription" ON newsletter_subscribers;
 CREATE POLICY "Users can view own newsletter subscription" ON newsletter_subscribers FOR SELECT USING (
   email = (SELECT email FROM auth.users WHERE id = auth.uid())
 );
 
+DROP POLICY IF EXISTS "Public can insert newsletter subscription" ON newsletter_subscribers;
 CREATE POLICY "Public can insert newsletter subscription" ON newsletter_subscribers FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Admins can view all newsletter subscribers" ON newsletter_subscribers;
 CREATE POLICY "Admins can view all newsletter subscribers" ON newsletter_subscribers FOR SELECT USING (
   auth.uid() IN (SELECT user_id FROM admin_users)
 );
 
+DROP POLICY IF EXISTS "Admins can update newsletter subscribers" ON newsletter_subscribers;
 CREATE POLICY "Admins can update newsletter subscribers" ON newsletter_subscribers FOR UPDATE USING (
   auth.uid() IN (SELECT user_id FROM admin_users)
 );
 
 -- Email logs: admins only (service role writes via Edge Functions)
+DROP POLICY IF EXISTS "Admins can view email logs" ON email_logs;
 CREATE POLICY "Admins can view email logs" ON email_logs FOR SELECT USING (
   auth.uid() IN (SELECT user_id FROM admin_users)
 );
 
 -- Back in stock requests: users can CRUD their own, service role can read
+DROP POLICY IF EXISTS "Users can view own back in stock requests" ON back_in_stock_requests;
 CREATE POLICY "Users can view own back in stock requests" ON back_in_stock_requests FOR SELECT USING (
   customer_email = (SELECT email FROM auth.users WHERE id = auth.uid()) OR
   auth.uid() IN (SELECT user_id FROM admin_users)
 );
 
+DROP POLICY IF EXISTS "Users can insert back in stock requests" ON back_in_stock_requests;
 CREATE POLICY "Users can insert back in stock requests" ON back_in_stock_requests FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Users can delete own back in stock requests" ON back_in_stock_requests;
 CREATE POLICY "Users can delete own back in stock requests" ON back_in_stock_requests FOR DELETE USING (
   customer_email = (SELECT email FROM auth.users WHERE id = auth.uid())
 );
@@ -132,10 +132,12 @@ CREATE POLICY "Users can delete own back in stock requests" ON back_in_stock_req
 -- ============================================================================
 
 -- Function to automatically update updated_at on newsletter_subscribers
+DROP TRIGGER IF EXISTS update_newsletter_subscribers_updated_at ON newsletter_subscribers;
 CREATE TRIGGER update_newsletter_subscribers_updated_at BEFORE UPDATE ON newsletter_subscribers
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Function to automatically update updated_at on cart_abandonment_tracking
+DROP TRIGGER IF EXISTS update_cart_abandonment_tracking_updated_at ON cart_abandonment_tracking;
 CREATE TRIGGER update_cart_abandonment_tracking_updated_at BEFORE UPDATE ON cart_abandonment_tracking
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -246,6 +248,6 @@ $$ LANGUAGE plpgsql;
 -- ============================================================================
 -- INDEXES FOR COMMON QUERIES
 -- ============================================================================
-CREATE INDEX back_in_stock_requests_active_idx ON back_in_stock_requests(is_active, notified_at);
-CREATE INDEX cart_abandonment_pending_emails_idx ON cart_abandonment_tracking(email_sent_at, recovered_at, last_activity_at);
-CREATE INDEX email_logs_recent_idx ON email_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS back_in_stock_requests_active_idx ON back_in_stock_requests(is_active, notified_at);
+CREATE INDEX IF NOT EXISTS cart_abandonment_pending_emails_idx ON cart_abandonment_tracking(email_sent_at, recovered_at, last_activity_at);
+CREATE INDEX IF NOT EXISTS email_logs_recent_idx ON email_logs(created_at DESC);

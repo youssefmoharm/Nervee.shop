@@ -46,6 +46,7 @@ export default function Home() {
         <img
           src="https://picsum.photos/seed/nerve-hero-2026/1800/2400"
           alt="NERVE new season campaign"
+          fetchPriority="high"
           className="absolute inset-0 w-full h-full object-cover opacity-70"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/30 to-navy/10" />
@@ -140,6 +141,8 @@ export default function Home() {
                 <img
                   src={c.image}
                   alt={c.name}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-navy/90 via-navy/10 to-transparent" />
@@ -170,6 +173,8 @@ export default function Home() {
                 <img
                   src={`https://picsum.photos/seed/${c.seed}/500/650`}
                   alt={c.name}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-navy/0 group-hover:bg-navy/30 transition-colors" />
@@ -210,6 +215,8 @@ export default function Home() {
                 <img
                   src={`https://picsum.photos/seed/${g}/500/500`}
                   alt="Community post"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
               </a>

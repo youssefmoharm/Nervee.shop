@@ -4,7 +4,7 @@
 -- ============================================================================
 -- CHAT CONVERSATIONS TABLE
 -- ============================================================================
-CREATE TABLE chat_conversations (
+CREATE TABLE IF NOT EXISTS chat_conversations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL, -- For guests
@@ -31,15 +31,15 @@ CREATE TABLE chat_conversations (
   CONSTRAINT valid_topic CHECK (topic IN ('orders', 'shipping', 'returns', 'products', 'billing', 'other'))
 );
 
-CREATE INDEX chat_conversations_user_id_idx ON chat_conversations(user_id);
-CREATE INDEX chat_conversations_email_idx ON chat_conversations(email);
-CREATE INDEX chat_conversations_status_idx ON chat_conversations(status);
-CREATE INDEX chat_conversations_created_at_idx ON chat_conversations(created_at DESC);
+CREATE INDEX IF NOT EXISTS chat_conversations_user_id_idx ON chat_conversations(user_id);
+CREATE INDEX IF NOT EXISTS chat_conversations_email_idx ON chat_conversations(email);
+CREATE INDEX IF NOT EXISTS chat_conversations_status_idx ON chat_conversations(status);
+CREATE INDEX IF NOT EXISTS chat_conversations_created_at_idx ON chat_conversations(created_at DESC);
 
 -- ============================================================================
 -- CHAT MESSAGES TABLE
 -- ============================================================================
-CREATE TABLE chat_messages (
+CREATE TABLE IF NOT EXISTS chat_messages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   conversation_id UUID REFERENCES chat_conversations(id) ON DELETE CASCADE NOT NULL,
   
@@ -60,14 +60,14 @@ CREATE TABLE chat_messages (
   CONSTRAINT valid_confidence CHECK (ai_confidence >= 0 AND ai_confidence <= 1)
 );
 
-CREATE INDEX chat_messages_conversation_id_idx ON chat_messages(conversation_id);
-CREATE INDEX chat_messages_sender_idx ON chat_messages(sender);
-CREATE INDEX chat_messages_created_at_idx ON chat_messages(created_at DESC);
+CREATE INDEX IF NOT EXISTS chat_messages_conversation_id_idx ON chat_messages(conversation_id);
+CREATE INDEX IF NOT EXISTS chat_messages_sender_idx ON chat_messages(sender);
+CREATE INDEX IF NOT EXISTS chat_messages_created_at_idx ON chat_messages(created_at DESC);
 
 -- ============================================================================
 -- SUPPORT TICKETS TABLE
 -- ============================================================================
-CREATE TABLE support_tickets (
+CREATE TABLE IF NOT EXISTS support_tickets (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   ticket_number TEXT UNIQUE NOT NULL,
   conversation_id UUID REFERENCES chat_conversations(id) ON DELETE SET NULL,
@@ -98,17 +98,17 @@ CREATE TABLE support_tickets (
   CONSTRAINT valid_priority CHECK (priority IN ('urgent', 'normal', 'low'))
 );
 
-CREATE INDEX support_tickets_user_id_idx ON support_tickets(user_id);
-CREATE INDEX support_tickets_email_idx ON support_tickets(email);
-CREATE INDEX support_tickets_status_idx ON support_tickets(status);
-CREATE INDEX support_tickets_priority_idx ON support_tickets(priority);
-CREATE INDEX support_tickets_created_at_idx ON support_tickets(created_at DESC);
-CREATE INDEX support_tickets_ticket_number_idx ON support_tickets(ticket_number);
+CREATE INDEX IF NOT EXISTS support_tickets_user_id_idx ON support_tickets(user_id);
+CREATE INDEX IF NOT EXISTS support_tickets_email_idx ON support_tickets(email);
+CREATE INDEX IF NOT EXISTS support_tickets_status_idx ON support_tickets(status);
+CREATE INDEX IF NOT EXISTS support_tickets_priority_idx ON support_tickets(priority);
+CREATE INDEX IF NOT EXISTS support_tickets_created_at_idx ON support_tickets(created_at DESC);
+CREATE INDEX IF NOT EXISTS support_tickets_ticket_number_idx ON support_tickets(ticket_number);
 
 -- ============================================================================
 -- TICKET RESPONSES TABLE
 -- ============================================================================
-CREATE TABLE ticket_responses (
+CREATE TABLE IF NOT EXISTS ticket_responses (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   ticket_id UUID REFERENCES support_tickets(id) ON DELETE CASCADE NOT NULL,
   
@@ -129,14 +129,14 @@ CREATE TABLE ticket_responses (
   CONSTRAINT valid_sender_type CHECK (sender_type IN ('customer', 'admin'))
 );
 
-CREATE INDEX ticket_responses_ticket_id_idx ON ticket_responses(ticket_id);
-CREATE INDEX ticket_responses_sender_type_idx ON ticket_responses(sender_type);
-CREATE INDEX ticket_responses_created_at_idx ON ticket_responses(created_at DESC);
+CREATE INDEX IF NOT EXISTS ticket_responses_ticket_id_idx ON ticket_responses(ticket_id);
+CREATE INDEX IF NOT EXISTS ticket_responses_sender_type_idx ON ticket_responses(sender_type);
+CREATE INDEX IF NOT EXISTS ticket_responses_created_at_idx ON ticket_responses(created_at DESC);
 
 -- ============================================================================
 -- AI CONTEXT CACHE (for order/customer lookups)
 -- ============================================================================
-CREATE TABLE ai_context_cache (
+CREATE TABLE IF NOT EXISTS ai_context_cache (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   conversation_id UUID REFERENCES chat_conversations(id) ON DELETE CASCADE,
   
@@ -156,9 +156,9 @@ CREATE TABLE ai_context_cache (
   CONSTRAINT valid_ttl CHECK (ttl > 0)
 );
 
-CREATE INDEX ai_context_cache_conversation_id_idx ON ai_context_cache(conversation_id);
-CREATE INDEX ai_context_cache_customer_id_idx ON ai_context_cache(customer_id);
-CREATE INDEX ai_context_cache_last_updated_idx ON ai_context_cache(last_updated DESC);
+CREATE INDEX IF NOT EXISTS ai_context_cache_conversation_id_idx ON ai_context_cache(conversation_id);
+CREATE INDEX IF NOT EXISTS ai_context_cache_customer_id_idx ON ai_context_cache(customer_id);
+CREATE INDEX IF NOT EXISTS ai_context_cache_last_updated_idx ON ai_context_cache(last_updated DESC);
 
 -- ============================================================================
 -- ENABLE RLS
@@ -174,26 +174,31 @@ ALTER TABLE ai_context_cache ENABLE ROW LEVEL SECURITY;
 -- ============================================================================
 
 -- Chat conversations: users see own, admins see all
+DROP POLICY IF EXISTS "Users can see own conversations" ON chat_conversations;
 CREATE POLICY "Users can see own conversations" ON chat_conversations FOR SELECT USING (
   user_id = auth.uid() OR auth.uid() IN (SELECT user_id FROM admin_users)
 );
 
 -- Chat messages: users see own conversation messages, admins see all
+DROP POLICY IF EXISTS "Users can see own messages" ON chat_messages;
 CREATE POLICY "Users can see own messages" ON chat_messages FOR SELECT USING (
   conversation_id IN (SELECT id FROM chat_conversations WHERE user_id = auth.uid())
   OR auth.uid() IN (SELECT user_id FROM admin_users)
 );
 
 -- Support tickets: users see own, admins see all
+DROP POLICY IF EXISTS "Users can see own tickets" ON support_tickets;
 CREATE POLICY "Users can see own tickets" ON support_tickets FOR SELECT USING (
   user_id = auth.uid() OR auth.uid() IN (SELECT user_id FROM admin_users)
 );
 
+DROP POLICY IF EXISTS "Users can create own tickets" ON support_tickets;
 CREATE POLICY "Users can create own tickets" ON support_tickets FOR INSERT WITH CHECK (
   user_id = auth.uid() OR user_id IS NULL
 );
 
 -- Ticket responses: users see own tickets, admins see all
+DROP POLICY IF EXISTS "Users can see ticket responses" ON ticket_responses;
 CREATE POLICY "Users can see ticket responses" ON ticket_responses FOR SELECT USING (
   ticket_id IN (SELECT id FROM support_tickets WHERE user_id = auth.uid())
   OR auth.uid() IN (SELECT user_id FROM admin_users)
@@ -375,10 +380,12 @@ ORDER BY priority DESC, created_at ASC;
 -- ============================================================================
 
 -- Update updated_at on support_tickets
+DROP TRIGGER IF EXISTS update_support_tickets_updated_at ON support_tickets;
 CREATE TRIGGER update_support_tickets_updated_at BEFORE UPDATE ON support_tickets
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Update updated_at on ticket_responses
+DROP TRIGGER IF EXISTS update_ticket_responses_updated_at ON ticket_responses;
 CREATE TRIGGER update_ticket_responses_updated_at BEFORE UPDATE ON ticket_responses
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -398,5 +405,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS conversation_update_on_message ON chat_messages;
 CREATE TRIGGER conversation_update_on_message AFTER INSERT ON chat_messages
   FOR EACH ROW EXECUTE FUNCTION update_conversation_on_message();

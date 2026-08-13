@@ -40,7 +40,7 @@ const FAQ_RESPONSES: Record<string, string> = {
 
   // Orders & Payment
   payment:
-    'We accept credit/debit cards through Paymob and cash on delivery (COD) for orders under EGP 2000.',
+    'We accept Cash on Delivery (COD) across Egypt. Payment is made in full to the courier when your order arrives.',
   order:
     'You can view and manage your orders from your account page. Order confirmation is sent to your email.',
   cancel:

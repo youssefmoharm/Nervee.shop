@@ -27,10 +27,13 @@ CREATE INDEX IF NOT EXISTS rate_limit_requests_window_idx ON rate_limit_requests
 ALTER TABLE rate_limit_requests ENABLE ROW LEVEL SECURITY;
 
 -- Only service role can access (not exposed to clients)
+DROP POLICY IF EXISTS "Service role can view" ON rate_limit_requests;
 CREATE POLICY "Service role can view" ON rate_limit_requests FOR SELECT
   USING (auth.role() = 'service_role');
+DROP POLICY IF EXISTS "Service role can insert" ON rate_limit_requests;
 CREATE POLICY "Service role can insert" ON rate_limit_requests FOR INSERT
   WITH CHECK (auth.role() = 'service_role');
+DROP POLICY IF EXISTS "Service role can update" ON rate_limit_requests;
 CREATE POLICY "Service role can update" ON rate_limit_requests FOR UPDATE
   USING (auth.role() = 'service_role');
 
