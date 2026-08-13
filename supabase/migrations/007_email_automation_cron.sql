@@ -29,16 +29,15 @@ BEGIN
       'process_abandoned_carts',
       '0 */4 * * *', -- Run at 00:00, 04:00, 08:00, 12:00, 16:00, 20:00 UTC
       $$
-      SELECT
-        net.http_post(
-          url:='https://' || current_setting('app.settings.supabase_url') || '/functions/v1/process-abandoned-carts',
-          headers:=jsonb_build_object(
-            'Authorization', 'Bearer ' || current_setting('app.settings.supabase_service_role_key'),
-            'Content-Type', 'application/json'
-          ),
-          body:='{}'::jsonb,
-          timeout_milliseconds:=60000
-        ) as request_id;
+      SELECT net.http_post(
+        url:='https://' || current_setting('app.settings.supabase_url') || '/functions/v1/process-abandoned-carts',
+        headers:=jsonb_build_object(
+          'Authorization', 'Bearer ' || current_setting('app.settings.supabase_service_role_key'),
+          'Content-Type', 'application/json'
+        ),
+        body:='{}'::jsonb,
+        timeout_milliseconds:=60000
+      );
       $$
     );
   END IF;
@@ -46,22 +45,26 @@ END $$;
 
 -- Optional: Job 2: Send daily digest emails to newsletter subscribers
 -- (Not enabled by default - uncomment if you want daily emails)
--- SELECT cron.schedule(
---   'send_daily_newsletter',
---   '0 9 * * *', -- Run at 09:00 UTC daily
---   $$
---   SELECT
---     net.http_post(
---       url:='https://' || current_setting('app.settings.supabase_url') || '/functions/v1/send-daily-newsletter',
---       headers:=jsonb_build_object(
---         'Authorization', 'Bearer ' || current_setting('app.settings.supabase_service_role_key'),
---         'Content-Type', 'application/json'
---       ),
---       body:='{}'::jsonb,
---       timeout_milliseconds:=300000
---     ) as request_id;
---   $$
--- );
+-- DO $$
+-- BEGIN
+--   IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
+--     PERFORM cron.schedule(
+--       'send_daily_newsletter',
+--       '0 9 * * *', -- Run at 09:00 UTC daily
+--       $$
+--       SELECT net.http_post(
+--         url:='https://' || current_setting('app.settings.supabase_url') || '/functions/v1/send-daily-newsletter',
+--         headers:=jsonb_build_object(
+--           'Authorization', 'Bearer ' || current_setting('app.settings.supabase_service_role_key'),
+--           'Content-Type', 'application/json'
+--         ),
+--         body:='{}'::jsonb,
+--         timeout_milliseconds:=300000
+--       );
+--       $$
+--     );
+--   END IF;
+-- END $$;
 
 -- Optional: Job 3: Cleanup old email logs (keep last 90 days)
 -- (Runs weekly to save storage)
