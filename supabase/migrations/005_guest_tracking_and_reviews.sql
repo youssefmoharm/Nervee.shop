@@ -9,7 +9,7 @@
 -- GUEST ORDERS (for guest checkout tracking)
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS guest_orders (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email TEXT NOT NULL,
   order_number TEXT UNIQUE NOT NULL,
   verification_token TEXT UNIQUE NOT NULL,
@@ -36,7 +36,7 @@ CREATE INDEX IF NOT EXISTS guest_orders_order_number_idx ON guest_orders(order_n
 -- PRODUCT REVIEWS
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS product_reviews (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id TEXT REFERENCES products(id) ON DELETE CASCADE,
   customer_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
@@ -117,3 +117,4 @@ $$;
 
 REVOKE ALL ON FUNCTION verify_review_purchase FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION verify_review_purchase TO authenticated;
+

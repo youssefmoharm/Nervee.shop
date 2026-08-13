@@ -4,8 +4,9 @@
 -- project (all statements are idempotent: IF NOT EXISTS / OR REPLACE /
 -- DROP ... IF EXISTS), which makes re-runs safe.
 
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Enable UUID extension (optional - for compatibility)
+-- Note: We use gen_random_uuid() instead which is always available in Supabase
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 
 -- ============================================================================
 -- COLLECTIONS
@@ -59,7 +60,7 @@ CREATE INDEX IF NOT EXISTS products_search_idx ON products USING gin(
 -- PRODUCT COLORS
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS product_colors (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id TEXT REFERENCES products(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   hex TEXT NOT NULL,
@@ -74,7 +75,7 @@ CREATE TABLE IF NOT EXISTS product_colors (
 -- PRODUCT SIZES & INVENTORY
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS product_inventory (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id TEXT REFERENCES products(id) ON DELETE CASCADE,
   size TEXT NOT NULL,
   in_stock BOOLEAN DEFAULT TRUE,
@@ -104,7 +105,7 @@ CREATE TABLE IF NOT EXISTS customers (
 -- CUSTOMER ADDRESSES
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS customer_addresses (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
   label TEXT,
   address TEXT NOT NULL,
@@ -120,7 +121,7 @@ CREATE TABLE IF NOT EXISTS customer_addresses (
 -- ORDERS
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS orders (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_number TEXT UNIQUE NOT NULL,
   customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
 
@@ -172,7 +173,7 @@ CREATE INDEX IF NOT EXISTS orders_status_idx ON orders(status);
 -- ORDER ITEMS
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS order_items (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
   product_id TEXT REFERENCES products(id) ON DELETE SET NULL,
 
@@ -193,7 +194,7 @@ CREATE TABLE IF NOT EXISTS order_items (
 -- DISCOUNT CODES
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS discount_codes (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   code TEXT UNIQUE NOT NULL,
   description TEXT,
 
@@ -218,14 +219,14 @@ CREATE TABLE IF NOT EXISTS discount_codes (
 -- CARTS (for logged-in users)
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS carts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_id UUID REFERENCES customers(id) ON DELETE CASCADE UNIQUE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS cart_items (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   cart_id UUID REFERENCES carts(id) ON DELETE CASCADE,
   product_id TEXT REFERENCES products(id) ON DELETE CASCADE,
   color TEXT NOT NULL,
@@ -241,13 +242,13 @@ CREATE TABLE IF NOT EXISTS cart_items (
 -- WISHLISTS (for logged-in users)
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS wishlists (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_id UUID REFERENCES customers(id) ON DELETE CASCADE UNIQUE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS wishlist_items (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   wishlist_id UUID REFERENCES wishlists(id) ON DELETE CASCADE,
   product_id TEXT REFERENCES products(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -260,7 +261,7 @@ CREATE TABLE IF NOT EXISTS wishlist_items (
 -- NOTE: re-created by migration 005 (IF NOT EXISTS keeps this harmless)
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS guest_orders (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email TEXT NOT NULL,
   order_number TEXT UNIQUE NOT NULL,
   verification_token TEXT UNIQUE NOT NULL,
@@ -275,7 +276,7 @@ CREATE INDEX IF NOT EXISTS guest_orders_token_idx ON guest_orders(verification_t
 -- NOTE: re-created by migration 005 (IF NOT EXISTS keeps this harmless)
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS product_reviews (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id TEXT REFERENCES products(id) ON DELETE CASCADE,
   customer_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
