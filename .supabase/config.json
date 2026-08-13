@@ -1,0 +1,41 @@
+{
+    "db": {
+        "seed": {
+            "sql_paths": [
+                "./supabase/seed.sql"
+            ]
+        }
+    },
+    "functions": [
+        {
+            "key": "create-order",
+            "name": "create-order",
+            "file": "./supabase/functions/create-order"
+        },
+        {
+            "key": "send-email",
+            "name": "send-email",
+            "file": "./supabase/functions/send-email"
+        },
+        {
+            "key": "handle-unsubscribe",
+            "name": "handle-unsubscribe",
+            "file": "./supabase/functions/handle-unsubscribe"
+        },
+        {
+            "key": "process-abandoned-carts",
+            "name": "process-abandoned-carts",
+            "file": "./supabase/functions/process-abandoned-carts"
+        },
+        {
+            "key": "update-order-status",
+            "name": "update-order-status",
+            "file": "./supabase/functions/update-order-status"
+        },
+        {
+            "key": "process-restocks",
+            "name": "process-restocks",
+            "file": "./supabase/functions/process-restocks"
+        }
+    ]
+}
