@@ -82,8 +82,8 @@ Run these next, in order, the same way (new query in SQL Editor, paste, Run):
 - COD abuse limits (sign-in required, max 3 open unpaid COD orders per
   customer, EGP 15,000 order cap), enforced inside `place_order` itself so
   they can't be bypassed by calling the database function directly.
-- A `payment_events` table for webhook idempotency, so a redelivered Paymob
-  callback can't double-apply a payment or send a duplicate email.
+- A `payment_events` table, kept for audit/idiom even though the COD-only
+  checkout doesn't produce webhook callbacks any longer.
 - `back_in_stock_requests` table for the "Notify Me" flow on sold-out sizes.
 - `update_order_status()` — the only way an order's status changes after
   creation; automatically releases held inventory back to stock when an
@@ -224,92 +224,50 @@ After schema is set up, create an admin account:
 
 ## Payment Integration
 
-Card payments and Cash on Delivery are both already wired up in the app —
-this section is about supplying your real Paymob credentials so card
-payments go live. **None of these values go in the frontend `.env`** —
-Paymob's secret key and HMAC secret must never reach the browser. They're
-set as Supabase Edge Function secrets instead (step 4).
+The store is **Cash on Delivery only** — no card payment provider is wired
+into checkout. Order confirmation is sent by email (see below), and payment
+is collected in full by the courier on delivery. No payment secrets exist on
+the frontend because nothing card-related is processed client-side.
 
-### 1. Create Paymob Account
-1. Sign up at [paymob.com](https://paymob.com)
-2. Complete business verification
-3. Get account approved (usually 1-2 business days)
+### If you add an online card provider later (e.g. Paymob or Stripe)
 
-### 2. Get API Credentials
-1. Log in to the Paymob dashboard
-2. Go to **Settings** → **Account Info** and copy:
-   - **API Key**
-   - **HMAC** secret
-3. Go to **Developers** → **Payment Integrations**, create/open your "Online
-   Card" integration, and copy its **Integration ID**
-4. Under the same integration, copy the **Iframe ID**
-
-### 3. Set the Webhook URL
-
-In the integration's callback settings, set the "Transaction processed"
-callback to:
-```
-https://<your-project-ref>.supabase.co/functions/v1/paymob-webhook
-```
-
-### 4. Deploy the Edge Functions and Set Secrets
+`orderService.placeOrder()` and the `create-order` Edge Function are the only
+places that know about the payment method — add a `paymentMethod: 'card'`
+branch in `supabase/functions/create-order/index.ts` alongside the existing
+COD path, following the same "create a session, return a redirect/client
+secret" shape, without touching the checkout UI's structure. Provider
+secrets (never `VITE_`-prefixed) must live as Edge Function secrets:
 
 ```bash
-# Install the Supabase CLI if you haven't: npm install -g supabase
-supabase login
-supabase link --project-ref <your-project-ref>
-
-supabase functions deploy create-order
-
-supabase functions deploy update-order-status
-supabase functions deploy process-restock
-
-supabase secrets set PAYMOB_API_KEY=your_paymob_api_key
-supabase secrets set PAYMOB_INTEGRATION_ID_CARD=your_integration_id
-supabase secrets set PAYMOB_IFRAME_ID=your_iframe_id
-supabase secrets set PAYMOB_HMAC_SECRET=your_hmac_secret
-supabase secrets set RESEND_API_KEY=your_resend_api_key
-supabase secrets set RESEND_FROM_EMAIL="NERVE <orders@yourdomain.com>"
-supabase secrets set STORE_URL=https://your-production-domain.com
+supabase secrets set <PROVIDER>_API_KEY=your_key
+supabase secrets set <PROVIDER>_HMAC_SECRET=your_hmac_secret
 ```
 
-`verify-payment`, `update-order-status`, and `process-restock` are
-admin-only — they check the caller's JWT against `admin_users` themselves
-(via `requireAdmin` in `supabase/functions/_shared/admin.ts`), so they're
-deployed with the default JWT verification (no `--no-verify-jwt` flag).
-Only `paymob-webhook` needs that flag, since Paymob calls it directly
-without a Supabase session — its HMAC check is what authenticates the
-request instead.
+A webhook handler authenticates server-side via its HMAC signature and must
+be deployed with `--no-verify-jwt` (the provider calls it without a Supabase
+session).
+
+### Set Up Transactional Email (Resend)
 
 `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are injected automatically —
 you don't set those.
 
-### 4b. Set Up Transactional Email (Resend)
-
-1. Create a free account at [resend.com](https://resend.com)
-2. Verify a sending domain (Resend won't send from an unverified domain —
+1. Find the `send-email` Edge Function under `supabase/functions/`
+2. Create a free account at [resend.com](https://resend.com)
+3. Verify a sending domain (Resend won't send from an unverified domain —
    you can use their `onboarding@resend.dev` sender for testing before you do)
-3. Create an API key and set it as shown above
-4. Test: place a Cash on Delivery order and confirm the order-received email
+4. Create an API key and set it as an Edge Function secret:
+   ```bash
+   supabase functions deploy send-email
+   supabase secrets set RESEND_API_KEY=your_resend_api_key
+   supabase secrets set RESEND_FROM_EMAIL="NERVE <orders@yourdomain.com>"
+   supabase secrets set STORE_URL=https://your-production-domain.com
+   ```
+5. Test: place a Cash on Delivery order and confirm the order-received email
    arrives. If `RESEND_API_KEY` isn't set, emails are silently skipped (logged
    to the function's logs) rather than blocking checkout — so the store
    still works end-to-end without email configured, you just won't get
    receipts until you add the key.
-
-### 5. Test in Paymob's Sandbox
-
-Use Paymob's test integration/cards before switching to live credentials.
-Until you've done this, **Cash on Delivery still works end-to-end** (order
-creation doesn't depend on Paymob at all), so the store isn't blocked on
-payment setup.
-
-### Adding a Second Provider (e.g. Stripe, for international cards)
-
-`orderService.placeOrder()` and the `create-order` Edge Function are the
-only places that know about Paymob specifically — add a `paymentMethod:
-'stripe'` branch in `create-order/index.ts` alongside the existing Paymob
-branch, following the same "create a session, return a redirect/client
-secret" shape, without touching the checkout UI's structure.
 
 ---
 
@@ -329,10 +287,6 @@ Edit `.env` with your actual credentials:
 # Supabase Configuration
 VITE_SUPABASE_URL=https://xxxxx.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-
-# Payment Provider (Paymob)
-VITE_PAYMOB_PUBLIC_KEY=your_paymob_public_key_here
-VITE_PAYMOB_IFRAME_ID=your_paymob_iframe_id_here
 
 # Environment
 VITE_ENV=development
@@ -437,9 +391,9 @@ In Vercel dashboard:
 2. Add all variables from `.env`:
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
-   - `VITE_PAYMOB_PUBLIC_KEY`
-   - `VITE_PAYMOB_IFRAME_ID`
    - `VITE_ENV` (set to `production`)
+   - Optional observability: `VITE_SENTRY_DSN`, `VITE_GA_ID`,
+     `VITE_META_PIXEL_ID` (omit for now — the app no-ops without them)
 
 #### 4. Deploy
 
@@ -544,9 +498,11 @@ After basic setup is complete:
 **Problem:** Payment form not submitting, errors on checkout
 
 **Solution:**
-1. Check email configuration
-3. Use test card numbers from Paymob docs
-4. Check webhook endpoint is accessible (use ngrok for local testing)
+1. Check email configuration (COD orders are confirmed by email — if
+   `RESEND_API_KEY` is unset, receipts are silently skipped and checkout
+   can look "broken")
+2. For a future online card provider, verify the webhook endpoint is
+   accessible (use ngrok for local testing)
 
 ---
 
@@ -554,7 +510,7 @@ After basic setup is complete:
 
 For issues specific to:
 - **Supabase:** [Supabase Docs](https://supabase.com/docs) or [Discord](https://discord.supabase.com)
-- **Paymob:** Contact Paymob support or check [documentation](https://docs.paymob.com)
+- **Resend:** [Resend Docs](https://resend.com/docs) or support in the dashboard
 - **NERVE App:** Check GitHub issues or contact the development team
 
 ---
@@ -566,7 +522,6 @@ Before going live:
 - [ ] All environment variables are set in production
 - [ ] RLS policies are enabled and tested (they are, by default, in `schema.sql` + migration 002)
 - [ ] `place_order()` re-checked against real concurrent-checkout load, not just single-request testing
-- [ ] Payment webhooks validate signatures (`paymob-webhook` already does — confirm the HMAC field list against Paymob's current docs)
 - [ ] HTTPS is enforced (Vercel does this automatically)
 - [ ] Sensitive routes require authentication (`ProtectedRoute`/`AdminRoute` — client-side UX only; the real enforcement is RLS + `place_order`/Edge Functions)
 - [ ] Admin panel is gated by `admin_users` table check (both in the UI guard and in every RLS policy — never trust the UI guard alone)
@@ -575,9 +530,8 @@ Before going live:
 - [ ] SQL injection prevention (Supabase client + parameterized RPC args handle this)
 - [ ] XSS prevention (React handles this by default)
 - [ ] CORS is configured correctly on the Edge Functions
-- [ ] No API keys in client-side code (Paymob secret/HMAC live only in Edge Function secrets — verify nothing with a `VITE_` prefix holds a real secret)
-- [ ] Database backups are enabled (Supabase auto-backs up daily)
-- [ ] Paymob is switched from sandbox to live credentials only after a full test-mode checkout succeeds end-to-end
+- [ ] No API keys in client-side code (nothing sensitive should have a `VITE_` prefix — only the anon key/Supabase URL belong there)
+- [ ] Database backups are enabled (Supabase auto-backs up daily; see DEPLOYMENT_CHECKLIST.md for the off-site dump rotation)
 
 ---
 
