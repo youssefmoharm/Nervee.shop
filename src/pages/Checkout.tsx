@@ -67,7 +67,10 @@ export default function Checkout() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Enter a valid email.';
     if (!form.firstName.trim()) e.firstName = 'Required.';
     if (!form.lastName.trim()) e.lastName = 'Required.';
-    if (!/^[0-9+ ]{8,}$/.test(form.phone)) e.phone = 'Enter a valid phone number.';
+    // Validate Egyptian phone numbers: +201xxxxxxxxx or 01xxxxxxxxx (10 digits after 0 or 1)
+    const phoneRegex = /^(\+201|01)[0-9]{8}$/;
+    if (!phoneRegex.test(form.phone.replace(/\s/g, '')))
+      e.phone = 'Enter a valid Egyptian phone number (e.g., 01012345678).';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
