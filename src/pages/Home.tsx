@@ -195,19 +195,19 @@ export default function Home() {
           <div className="flex items-end justify-between mb-10">
             <h2 className="nv-heading text-4xl md:text-6xl">Nerve in the Wild</h2>
             <a
-              href="https://instagram.com/nerve_store"
+              href="https://www.instagram.com/gothennerve58/"
               target="_blank"
               rel="noreferrer"
               className="hidden sm:inline-flex nv-eyebrow items-center gap-2 hover:opacity-60"
             >
-              @nerve <ArrowRight size={14} />
+              @gothennerve58 <ArrowRight size={14} />
             </a>
           </div>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-1.5">
             {gallery.map(g => (
               <a
                 key={g}
-                href="https://instagram.com/nerve_store"
+                href="https://www.instagram.com/gothennerve58/"
                 target="_blank"
                 rel="noreferrer"
                 className="group aspect-square overflow-hidden block"
