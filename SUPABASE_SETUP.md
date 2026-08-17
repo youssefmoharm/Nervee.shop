@@ -20,7 +20,7 @@ supabase login
 
 ## Step 2: Link Project to Local Development
 
-The project is already linked to the Supabase project `Nerve` (ref: `tlzsipeyxrkvpjfcyssw`).
+The project is already linked to the Supabase project `Nerve` (ref: `gfmxvvjqlhrnmidutjwx`).
 
 To verify linking:
 ```bash
@@ -67,7 +67,7 @@ Functions included:
 
 ✅ **Linked to Supabase Project:**
 - Project Name: `Nerve`
-- Project Ref: `tlzsipeyxrkvpjfcyssw`
+- Project Ref: `gfmxvvjqlhrnmidutjwx`
 - Region: North EU (Stockholm)
 
 ✅ **Configuration Files:**
@@ -107,7 +107,7 @@ supabase logs
 
 Add to `.env`:
 ```
-VITE_SUPABASE_URL=https://tlzsipeyxrkvpjfcyssw.supabase.co
+VITE_SUPABASE_URL=https://gfmxvvjqlhrnmidutjwx.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
@@ -132,7 +132,7 @@ supabase db push --linked
 ### "Cannot find project ref"
 ```bash
 # Re-link the project
-supabase link --project-ref tlzsipeyxrkvpjfcyssw
+supabase link --project-ref gfmxvvjqlhrnmidutjwx
 
 # Or list available projects
 supabase projects list
@@ -174,7 +174,7 @@ supabase functions deploy --debug
 
 ```bash
 # View project details
-supabase projects describe tlzsipeyxrkvpjfcyssw
+supabase projects describe gfmxvvjqlhrnmidutjwx
 
 # Pull remote database schema
 supabase db pull
@@ -196,7 +196,7 @@ supabase stop
 supabase db reset
 
 # Open Supabase dashboard
-supabase projects describe tlzsipeyxrkvpjfcyssw --output json
+supabase projects describe gfmxvvjqlhrnmidutjwx --output json
 ```
 
 ## Additional Resources
