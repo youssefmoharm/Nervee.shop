@@ -71,6 +71,8 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.your_removed_credential_here}`,
+          apikey: import.meta.env.your_removed_credential_here,
         },
         body: JSON.stringify({
           conversationId,
