@@ -82,6 +82,11 @@ export default function ProductDetail() {
           '@type': 'Organization',
           name: 'NERVE',
           url: 'https://nerve-store.com',
+          sameAs: [
+            'https://www.instagram.com/gothennerve58/',
+            'https://www.tiktok.com/@user795916160817',
+            'https://www.linkedin.com/in/nerve-shop-b67623429',
+          ],
         },
     'product-structured-data',
   );
