@@ -37,7 +37,7 @@ export function BackInStock() {
       setProduct(data);
     } catch (err) {
       // Fallback - we'll show generic product info
-      setProduct({ name: 'This Product', id });
+      setProduct({ name: 'This Product', id, price: 0, category: '', image: '' });
     }
   };
 
