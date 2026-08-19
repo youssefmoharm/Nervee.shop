@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 import { useSEO } from '../lib/seo';
 import { guestOrderService } from '../services/guestOrderService';
+import type { GuestOrder } from '../types';
 import { Loader2 } from 'lucide-react';
 
 export function TrackOrder() {
@@ -11,9 +12,7 @@ export function TrackOrder() {
   const [email, setEmail] = useState(searchParams.get('email') || '');
   const [orderNumber, setOrderNumber] = useState(searchParams.get('orderNumber') || '');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [order, setOrder] = useState<{ id: string; status: string; created_at?: string } | null>(
-    null,
-  );
+  const [order, setOrder] = useState<GuestOrder | null>(null);
 
   useSEO({
     title: 'Track Your Order | NERVE',
