@@ -33,11 +33,12 @@ export default function Loader({ onDone }: { onDone: () => void }) {
         <img
           src="/assets/images/nervee logo.png"
           alt="NERVE"
-          className="h-16 md:h-20 w-auto brightness-0 invert mx-auto mb-4"
+          className="h-16 md:h-20 w-auto mx-auto mb-4"
           onError={e => {
             // Fallback to text logo if image fails to load
             e.currentTarget.style.display = 'none';
-            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+            const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+            if (fallback) fallback.classList.remove('hidden');
           }}
         />
         <h1 className="nv-heading text-white text-5xl md:text-7xl tracking-wide text-center hidden">
