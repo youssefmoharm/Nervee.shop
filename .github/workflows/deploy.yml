@@ -17,3 +17,12 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel-args: '--prod'
+
+# NOTE: This deploys via a VERCEL REMOTE BUILD, which only reads environment
+# variables configured in the Vercel project dashboard (Settings -> Environment
+# Variables -> Production). Without those, the frontend falls back to mock data
+# ("Checkout requires Supabase to be configured").
+#
+# Set BOTH of these as Production env vars in the Vercel dashboard:
+#   VITE_SUPABASE_URL     = https://gfmxvvjqlhrnmidutjwx.supabase.co
+#   VITE_SUPABASE_ANON_KEY = sb_publishable_6zkBS2alnvDPd0pSqVJBkQ_76y60UBW

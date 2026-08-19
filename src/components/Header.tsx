@@ -48,8 +48,18 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
       >
         <div className="mx-auto max-w-[1600px] px-5 md:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
-            <Link to="/" className="nv-heading text-2xl md:text-3xl tracking-wide">
-              NERVE
+            <Link to="/" className="flex items-center">
+              <img
+                src="/assets/images/nervee logo.png"
+                alt="NERVE"
+                className="h-8 md:h-10 w-auto brightness-0 invert"
+                onError={e => {
+                  // Fallback to text logo if image fails to load
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <span className="nv-heading text-2xl md:text-3xl tracking-wide hidden">NERVE</span>
             </Link>
 
             <nav className="hidden lg:flex items-center gap-10">
@@ -123,7 +133,19 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
         }`}
       >
         <div className="flex items-center justify-between h-16 px-5 border-b border-white/10">
-          <span className="nv-heading text-2xl">NERVE</span>
+          <div className="flex items-center">
+            <img
+              src="/assets/images/nervee logo.png"
+              alt="NERVE"
+              className="h-6 w-auto brightness-0 invert"
+              onError={e => {
+                // Fallback to text logo if image fails to load
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+            <span className="nv-heading text-2xl hidden">NERVE</span>
+          </div>
           <button aria-label="Close menu" onClick={() => setMobileOpen(false)} className="p-2">
             <X size={24} />
           </button>
@@ -141,8 +163,30 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
           ))}
         </nav>
         <div className="px-6 mt-4 flex gap-6 nv-eyebrow text-silver">
-          <span>Instagram</span>
-          <span>TikTok</span>
+          <a
+            href="https://www.instagram.com/gotthenerve58/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white transition-colors"
+          >
+            Instagram
+          </a>
+          <a
+            href="https://www.tiktok.com/@user795916160817"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white transition-colors"
+          >
+            TikTok
+          </a>
+          <a
+            href="https://www.linkedin.com/in/nerve-shop-b67623429"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white transition-colors"
+          >
+            LinkedIn
+          </a>
         </div>
       </div>
     </>
