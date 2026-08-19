@@ -303,6 +303,34 @@ export function validateUUID(id: string, fieldName: string): ValidationError[] {
 }
 
 /**
+ * Validate product ID (TEXT primary key, e.g. "p-001")
+ */
+export function validateProductId(id: string): ValidationError[] {
+  const errors: ValidationError[] = []
+
+  if (!id || typeof id !== 'string') {
+    errors.push({ field: 'productId', message: 'Product ID is required' })
+    return errors
+  }
+
+  if (id.trim().length === 0) {
+    errors.push({ field: 'productId', message: 'Product ID cannot be empty' })
+    return errors
+  }
+
+  if (id.length > 50) {
+    errors.push({ field: 'productId', message: 'Product ID too long (max 50 characters)' })
+  }
+
+  const idRegex = /^[a-zA-Z0-9_-]+$/
+  if (!idRegex.test(id)) {
+    errors.push({ field: 'productId', message: 'Product ID contains invalid characters' })
+  }
+
+  return errors
+}
+
+/**
  * Validate cart items array
  */
 export function validateCartItems(items: any): ValidationError[] {
@@ -329,16 +357,17 @@ export function validateCartItems(items: any): ValidationError[] {
       return
     }
     
-    const productIdErrors = validateUUID(item.productId, `items[${index}].productId`)
-    const colorErrors = validateColor(item.color)
-    const sizeErrors = validateSize(item.size)
-    const quantityErrors = validateQuantity(item.quantity)
+    const prefix = `items[${index}].`
+    const productIdErrors = validateProductId(item.productId).map(e => ({ ...e, field: prefix + e.field }))
+    const colorErrors = validateColor(item.color).map(e => ({ ...e, field: prefix + e.field }))
+    const sizeErrors = validateSize(item.size).map(e => ({ ...e, field: prefix + e.field }))
+    const quantityErrors = validateQuantity(item.quantity).map(e => ({ ...e, field: prefix + e.field }))
     
     errors.push(
-      ...productIdErrors.map(e => ({ ...e, field: `items[${index}].${e.field}` })),
-      ...colorErrors.map(e => ({ ...e, field: `items[${index}].${e.field}` })),
-      ...sizeErrors.map(e => ({ ...e, field: `items[${index}].${e.field}` })),
-      ...quantityErrors.map(e => ({ ...e, field: `items[${index}].${e.field}` }))
+      ...productIdErrors,
+      ...colorErrors,
+      ...sizeErrors,
+      ...quantityErrors
     )
   })
   

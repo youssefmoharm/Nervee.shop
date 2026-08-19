@@ -28,13 +28,15 @@ const Shop = lazy(() => import('./pages/Shop'));
 const ProductDetail = lazy(() => import('./pages/ProductDetail'));
 import Collections from './pages/Collections';
 import CollectionDetail from './pages/CollectionDetail';
-import About from './pages/About';
+import { About } from './pages/About';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import GuestOrder from './pages/GuestOrder';
 import NotFound from './pages/NotFound';
 import { Contact, Shipping, Returns, Privacy, Terms } from './pages/InfoPages';
 import Unsubscribe from './pages/Unsubscribe';
+import { Newsletter } from './pages/Newsletter';
+import { TrackOrder } from './pages/TrackOrder';
 
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
@@ -148,6 +150,8 @@ export default function App() {
       <Route path="/about" element={<About />} />
       <Route path="/cart" element={<Cart />} />
       <Route path="/checkout" element={<Checkout />} />
+      <Route path="/newsletter" element={<Newsletter />} />
+      <Route path="/track-order" element={<TrackOrder />} />
 
       <Route path="/guest-order" element={<GuestOrder />} />
       <Route path="/contact" element={<Contact />} />
