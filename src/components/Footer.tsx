@@ -1,128 +1,153 @@
 import { Link } from 'react-router-dom';
-import Checkerboard from './Checkerboard';
+import { Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
+
+const NAV_LINKS = [
+  { name: 'Shop', href: '/shop' },
+  { name: 'Collections', href: '/collections' },
+  { name: 'About', href: '/about' },
+  { name: 'Contact', href: '/contact' },
+  { name: 'Newsletter', href: '/newsletter' },
+];
+
+const INFO_LINKS = [
+  { name: 'Shipping', href: '/shipping' },
+  { name: 'Returns', href: '/returns' },
+  { name: 'Privacy', href: '/privacy' },
+  { name: 'Terms', href: '/terms' },
+];
 
 export default function Footer() {
   return (
-    <footer className="bg-navy pt-16 md:pt-20">
-      <div className="mx-auto max-w-[1600px] px-5 md:px-8 grid grid-cols-2 md:grid-cols-5 gap-10 pb-14">
-        <div className="col-span-2">
-          <span className="nv-heading text-4xl md:text-5xl">NERVE</span>
-          <p className="nv-eyebrow text-silver mt-3">Cool but Chic</p>
-          <p className="text-sm text-silver/80 mt-6 max-w-xs leading-relaxed">
-            A contemporary concept store built around individuality, movement, and the pieces that
-            become part of your everyday identity.
-          </p>
-        </div>
-
-        <div>
-          <h4 className="nv-eyebrow text-silver mb-4">Shop</h4>
-          <ul className="space-y-2.5 text-sm">
-            <li>
-              <Link to="/shop" className="hover:text-silver transition-colors">
-                Shop All
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/shop?category=New%20Arrivals"
-                className="hover:text-silver transition-colors"
-              >
-                New Drop
-              </Link>
-            </li>
-            <li>
-              <Link to="/collections" className="hover:text-silver transition-colors">
-                Collections
-              </Link>
-            </li>
-            <li>
-              <Link to="/about" className="hover:text-silver transition-colors">
-                About
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        <div>
-          <h4 className="nv-eyebrow text-silver mb-4">Customer Care</h4>
-          <ul className="space-y-2.5 text-sm">
-            <li>
-              <Link to="/contact" className="hover:text-silver transition-colors">
-                Contact
-              </Link>
-            </li>
-            <li>
-              <Link to="/shipping" className="hover:text-silver transition-colors">
-                Shipping
-              </Link>
-            </li>
-            <li>
-              <Link to="/returns" className="hover:text-silver transition-colors">
-                Returns
-              </Link>
-            </li>
-            <li>
-              <Link to="/privacy" className="hover:text-silver transition-colors">
-                Privacy Policy
-              </Link>
-            </li>
-            <li>
-              <Link to="/terms" className="hover:text-silver transition-colors">
-                Terms of Service
-              </Link>
-            </li>
-            <li>
-              <Link to="/cart" className="hover:text-silver transition-colors">
-                My Bag
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        <div>
-          <h4 className="nv-eyebrow text-silver mb-4">Follow</h4>
-          <ul className="space-y-2.5 text-sm">
-            <li>
-              <a
-                href="https://www.instagram.com/gothennerve58/"
-                target="_blank"
-                rel="noreferrer"
-                className="hover:text-silver transition-colors"
-              >
-                Instagram
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://www.tiktok.com/@user795916160817"
-                target="_blank"
-                rel="noreferrer"
-                className="hover:text-silver transition-colors"
-              >
-                TikTok
-              </a>
-            </li>
-            <li>
+    <footer className="bg-white border-t border-navy/10">
+      <div className="mx-auto max-w-7xl px-5 md:px-8 py-12">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
+          {/* Brand */}
+          <div className="space-y-4">
+            <div className="flex items-center">
+              <img
+                src="/assets/images/nervee logo.png"
+                alt="NERVE"
+                className="h-8 w-auto"
+                onError={e => {
+                  // Fallback to text logo if image fails to load
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <h2 className="nv-heading text-2xl text-navy hidden">NERVE</h2>
+            </div>
+            <p className="text-sm text-navy/60">
+              Premium streetwear for the bold and the beautiful. Egyptian design, global standards.
+            </p>
+            <div className="flex items-center gap-3">
               <a
                 href="https://www.linkedin.com/in/nerve-shop-b67623429"
                 target="_blank"
-                rel="noreferrer"
-                className="hover:text-silver transition-colors"
+                rel="noopener noreferrer"
+                className="text-navy/60 hover:text-navy transition-colors"
+                aria-label="LinkedIn"
               >
-                LinkedIn
+                <Linkedin size={20} />
               </a>
-            </li>
-          </ul>
-        </div>
-      </div>
+              <a
+                href="https://www.tiktok.com/@user795916160817"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-navy/60 hover:text-navy transition-colors"
+                aria-label="TikTok"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
+                </svg>
+              </a>
+              <a
+                href="https://www.instagram.com/gotthenerve58/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-navy/60 hover:text-navy transition-colors"
+                aria-label="Instagram"
+              >
+                <Instagram size={20} />
+              </a>
+            </div>
+          </div>
 
-      <div className="border-t border-white/10 py-5">
-        <div className="mx-auto max-w-[1600px] px-5 md:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-silver/70">
-          <span>&copy; {new Date().getFullYear()} NERVE Concept Store — EST 2026</span>
-          <span>Based in everyone&apos;s closet.</span>
+          {/* Links */}
+          <div>
+            <h3 className="nv-heading text-lg mb-4">Shop</h3>
+            <ul className="space-y-2 text-sm text-navy/60">
+              {NAV_LINKS.map(link => (
+                <li key={link.name}>
+                  <Link to={link.href} className="hover:text-navy transition-colors">
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="nv-heading text-lg mb-4">Help</h3>
+            <ul className="space-y-2 text-sm text-navy/60">
+              {INFO_LINKS.map(link => (
+                <li key={link.name}>
+                  <Link to={link.href} className="hover:text-navy transition-colors">
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h3 className="nv-heading text-lg mb-4">Contact</h3>
+            <ul className="space-y-2 text-sm text-navy/60">
+              <li className="flex items-center gap-2">
+                <Mail size={16} />
+                <a
+                  href="mailto:hello@nerve-store.com"
+                  className="hover:text-navy transition-colors"
+                >
+                  hello@nerve-store.com
+                </a>
+              </li>
+              <li className="flex items-center gap-2">
+                <Phone size={16} />
+                <span>+20 100 000 0000</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <MapPin size={16} />
+                <span>Cairo, Egypt</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="mt-12 pt-8 border-t border-navy/10 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-navy/40">
+            © {new Date().getFullYear()} NERVE. All rights reserved.
+          </p>
+          <p className="text-sm text-navy/60">
+            Made with{' '}
+            <a
+              href="https://youssefmoharmportfolio.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-navy transition-colors underline"
+            >
+              moharm
+            </a>{' '}
+            in Egypt
+          </p>
         </div>
       </div>
-      <Checkerboard height={10} />
     </footer>
   );
 }

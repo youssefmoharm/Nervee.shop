@@ -18,8 +18,19 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <div className="bg-white text-navy min-h-screen">
       <header className="bg-navy text-white h-16 flex items-center px-6 justify-between">
-        <Link to="/" className="nv-heading text-xl tracking-wide">
-          NERVE <span className="nv-eyebrow text-silver ml-2 text-[10px]">ADMIN</span>
+        <Link to="/" className="flex items-center">
+          <img
+            src="/assets/images/nervee logo.png"
+            alt="NERVE"
+            className="h-6 w-auto brightness-0 invert mr-2"
+            onError={e => {
+              // Fallback to text logo if image fails to load
+              e.currentTarget.style.display = 'none';
+              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+            }}
+          />
+          <span className="nv-heading text-xl tracking-wide hidden">NERVE</span>
+          <span className="nv-eyebrow text-silver ml-2 text-[10px]">ADMIN</span>
         </Link>
         <button
           onClick={() => signOut()}

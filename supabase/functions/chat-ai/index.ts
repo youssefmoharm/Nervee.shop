@@ -1,16 +1,20 @@
 // supabase/functions/chat-ai/index.ts
 //
-// AI-powered chatbot using OpenAI GPT-4
-// Handles conversations, order tracking, and intelligent responses
-// Escalates to human support when needed
+// AI-powered chatbot using Google Gemini (generative language API).
+// Handles conversations, order tracking, and intelligent responses.
+// Escalates to human support when needed.
+//
+// Requires the GEMINI_API_KEY secret (set as OPENAI_API_KEY for backwards-
+// compatibility with the existing secret name).
 
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
 import { corsHeaders } from '../_shared/cors.ts'
 import { PerformanceTimer, logEvent } from '../_shared/monitoring.ts'
 
-const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
-const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions'
+const GEMINI_API_KEY = Deno.env.get('OPENAI_API_KEY')
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta'
+const GEMINI_MODEL = 'gemini-3.6-flash'
 
 interface ChatRequest {
     conversationId?: string
@@ -40,7 +44,7 @@ serve(async (req) => {
     }
 
     try {
-        if (!OPENAI_API_KEY) {
+        if (!GEMINI_API_KEY) {
             console.error('OPENAI_API_KEY not set')
             timer.end()
             return json({ error: 'AI service not configured' }, 500)
@@ -51,7 +55,13 @@ serve(async (req) => {
             Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
         )
 
-        const body = (await req.json()) as ChatRequest
+        let body: ChatRequest
+        try {
+            body = (await req.json()) as ChatRequest
+        } catch (e) {
+            timer.end()
+            return json({ error: 'Invalid request body' }, 400)
+        }
         const { conversationId, email, customerName, message } = body
 
         if (!email || !message) {
@@ -96,7 +106,7 @@ serve(async (req) => {
             .order('created_at', { ascending: true })
             .limit(10)
 
-        // Build messages for OpenAI
+        // Build messages for Gemini
         const conversationHistory = [
             ...((messages || []).map((m) => ({
                 role: m.sender === 'user' ? 'user' : 'assistant',
@@ -105,7 +115,7 @@ serve(async (req) => {
             { role: 'user', content: message },
         ]
 
-        // Call OpenAI API
+        // Call the Gemini API
         const aiResponse = await callOpenAI(systemPrompt, conversationHistory)
 
         if (!aiResponse) {
@@ -135,7 +145,7 @@ serve(async (req) => {
                 conversation_id: conversation,
                 sender: 'ai',
                 content: cleanedResponse,
-                ai_model: 'gpt-4',
+                ai_model: GEMINI_MODEL,
                 ai_confidence: 0.85,
                 tokens_used: tokensUsed,
             },
@@ -172,7 +182,7 @@ serve(async (req) => {
             suggestedTicketTopic: topic,
         } as ChatResponse)
     } catch (err) {
-        console.error('Chat AI error:', err)
+        console.error('Chat AI error:', err instanceof Error ? { msg: err.message, stack: err.stack } : String(err))
         timer.end()
         return json({ error: 'Failed to process message', details: (err as Error).message }, 500)
     }
@@ -218,43 +228,67 @@ For order tracking: Use the provided order context to give specific status updat
 For complex issues: Suggest escalating to human support with [ESCALATE] marker.`
 }
 
-// Call OpenAI API
+// Call the Gemini API. Messages are translated from the OpenAI-style
+// {role, content} shape used upstream into Gemini's {role, parts:[{text}]}
+// shape. `system` role is sent via systemInstruction; user/assistant become
+// chat turns.
 async function callOpenAI(
     systemPrompt: string,
     messages: Array<{ role: string; content: string }>
 ): Promise<{ response: string; tokensUsed: number } | null> {
     try {
-        const response = await fetch(OPENAI_API_URL, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${OPENAI_API_KEY}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                model: 'gpt-4',
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    ...messages,
-                ],
-                temperature: 0.7,
-                max_tokens: 500,
-            }),
-        })
+        const contents = messages
+            .filter(m => m.role !== 'system')
+            .map(m => ({
+                role: m.role === 'assistant' ? 'model' : 'user',
+                parts: [{ text: m.content }],
+            }))
+
+        const response = await fetch(
+            `${GEMINI_API_URL}/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    system_instruction: { parts: [{ text: systemPrompt }] },
+                    contents,
+                    generationConfig: {
+                        temperature: 0.7,
+                        maxOutputTokens: 500,
+                    },
+                }),
+            }
+        )
 
         if (!response.ok) {
             const error = await response.text()
-            console.error('OpenAI error:', error)
+            console.error('Gemini error:', error)
             return null
         }
 
-        const data = await response.json()
+        const raw = await response.text()
+        let data: any
+        try {
+            data = JSON.parse(raw)
+        } catch (e) {
+            console.error('GEMINI_RAW_BODY status', response.status, 'body_starts', JSON.stringify(raw.slice(0, 200)))
+            throw new Error(`Gemini returned non-JSON (HTTP ${response.status}): ${raw.slice(0, 200)}`)
+        }
+
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text
+        if (!text) {
+            console.error('Gemini: no response text', JSON.stringify(data).slice(0, 500))
+            return null
+        }
 
         return {
-            response: data.choices[0].message.content,
-            tokensUsed: data.usage.total_tokens,
+            response: text,
+            tokensUsed: data.usageMetadata?.totalTokenCount ?? 0,
         }
     } catch (err) {
-        console.error('OpenAI API call failed:', err)
+        console.error('Gemini API call failed:', err)
         return null
     }
 }

@@ -1,96 +1,105 @@
-import Checkerboard from '../components/Checkerboard';
-import Newsletter from '../components/Newsletter';
-import { useSEO, seoHelpers } from '../lib/seo';
+import { useSEO } from '../lib/seo';
 
-export default function About() {
-  useSEO(
-    seoHelpers.category(
-      'About',
-      'Meet NERVE — a contemporary Egyptian concept store built around individuality, movement, and pieces that become part of your everyday identity. Cool but chic.',
-    ),
-  );
+export function About() {
+  useSEO({
+    title: 'About Us | NERVE',
+    description:
+      'Learn about NERVE - your premier destination for premium streetwear and fashion in Egypt.',
+  });
 
   return (
-    <div className="bg-navy">
-      <section className="pt-32 md:pt-44 pb-16 px-5 md:px-8">
-        <div className="mx-auto max-w-[1600px]">
-          <p className="nv-eyebrow text-silver mb-4">Our Story — EST 2026</p>
-          <h1 className="nv-heading text-[15vw] sm:text-[10vw] md:text-8xl leading-[0.88]">
-            COOL BUT
-            <br />
-            CHIC.
-          </h1>
-        </div>
-      </section>
+    <div className="bg-white text-navy min-h-screen pt-32 pb-24 px-5 md:px-8">
+      <div className="mx-auto max-w-4xl">
+        <h1 className="nv-heading text-5xl mb-12 text-center">About NERVE</h1>
 
-      <div className="grid md:grid-cols-2">
-        <div className="aspect-[4/3] md:aspect-auto">
-          <img
-            src="https://picsum.photos/seed/nerve-about-1/1000/1200"
-            alt="NERVE campaign"
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div className="bg-white text-navy flex items-center px-5 md:px-16 py-16">
-          <p className="nv-heading text-2xl md:text-4xl leading-tight max-w-lg">
-            NERVE is a contemporary concept store built around individuality, movement, and the
-            pieces that become part of your everyday identity.
-          </p>
+        <div className="prose prose-navy max-w-none">
+          <section className="mb-12">
+            <h2 className="text-navy font-semibold text-2xl mb-6">Who We Are</h2>
+            <p className="text-xl leading-relaxed mb-6">
+              NERVE is Egypt&apos;s premier destination for premium streetwear and contemporary
+              fashion. Founded with a passion for quality, design, and authenticity, we&apos;re
+              committed to delivering exceptional products and experiences to our customers.
+            </p>
+            <p className="text-xl leading-relaxed">
+              We believe that fashion is more than just clothing—it&apos;s a form of
+              self-expression, a way to connect with others, and a statement about who you are.
+            </p>
+          </section>
+
+          <section className="mb-12">
+            <h2 className="text-navy font-semibold text-2xl mb-6">What We Do</h2>
+            <p className="text-lg leading-relaxed mb-6">
+              We curate a collection of high-quality streetwear, casual essentials, and premium
+              accessories that blend contemporary design with Egyptian craftsmanship.
+            </p>
+            <p className="text-lg leading-relaxed">
+              From limited edition drops to timeless essentials, every piece in our collection is
+              designed to make a statement and stand the test of time.
+            </p>
+          </section>
+
+          <section className="mb-12">
+            <h2 className="text-navy font-semibold text-2xl mb-6">Our Mission</h2>
+            <div className="grid md:grid-cols-2 gap-8 mt-8">
+              <div>
+                <h3 className="font-semibold text-lg mb-3 text-navy/80">Quality First</h3>
+                <p className="text-navy/70">
+                  We source only the finest materials and work with trusted manufacturers who share
+                  our commitment to quality.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-3 text-navy/80">Customer Focus</h3>
+                <p className="text-navy/70">
+                  Your satisfaction is our priority. We&apos;re here to help with any questions,
+                  concerns, or feedback you might have.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-3 text-navy/80">Authenticity</h3>
+                <p className="text-navy/70">
+                  We stay true to our roots and values, creating products that reflect our heritage
+                  while embracing contemporary trends.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-3 text-navy/80">Sustainability</h3>
+                <p className="text-navy/70">
+                  We&apos;re committed to reducing our environmental impact and supporting ethical
+                  manufacturing practices.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section className="mb-12">
+            <h2 className="text-navy font-semibold text-2xl mb-6">Our Story</h2>
+            <p className="text-lg leading-relaxed mb-6">
+              Started in 2024, NERVE was born from a simple idea: to create a fashion brand that
+              combines international trends with local craftsmanship, offering Egyptian customers
+              premium streetwear that reflects their identity.
+            </p>
+            <p className="text-lg leading-relaxed">
+              Today, we&apos;re proud to serve thousands of satisfied customers across Egypt and the
+              Middle East, with a growing community of fashion enthusiasts who share our passion for
+              quality and style.
+            </p>
+          </section>
+
+          <section className="mb-12 text-center">
+            <h2 className="text-navy font-semibold text-2xl mb-6">Get In Touch</h2>
+            <p className="text-lg leading-relaxed mb-8">
+              Have questions, suggestions, or want to collaborate? We&apos;d love to hear from you.
+            </p>
+            <a
+              href="/contact"
+              className="inline-block bg-navy text-white nv-eyebrow px-8 py-3.5 hover:bg-navy-2 transition-colors"
+            >
+              Contact Us
+            </a>
+          </section>
         </div>
       </div>
-
-      <Checkerboard />
-
-      <section className="px-5 md:px-8 py-20 md:py-28">
-        <div className="mx-auto max-w-4xl grid md:grid-cols-2 gap-10 md:gap-16">
-          <div>
-            <span className="nv-eyebrow text-silver">01 — Philosophy</span>
-            <p className="nv-edit text-lg md:text-xl mt-4 leading-relaxed">
-              Based in everyone&apos;s closet — NERVE was built on the idea that the best pieces
-              aren&apos;t the loudest. They&apos;re the ones you reach for without thinking, that
-              move the way you move, and still look sharp doing it.
-            </p>
-          </div>
-          <div>
-            <span className="nv-eyebrow text-silver">02 — Approach</span>
-            <p className="nv-edit text-lg md:text-xl mt-4 leading-relaxed">
-              Every drop is small, considered, and made to last past the season. We design at the
-              intersection of streetwear energy and chic, curated fashion — cool without trying,
-              chic without apology.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-1 px-1">
-        {[
-          'nerve-about-2',
-          'nerve-about-3',
-          'nerve-about-4',
-          'nerve-about-5',
-          'nerve-about-6',
-          'nerve-about-7',
-        ].map(s => (
-          <div key={s} className="aspect-square overflow-hidden">
-            <img
-              src={`https://picsum.photos/seed/${s}/700/700`}
-              alt="NERVE editorial"
-              className="w-full h-full object-cover"
-            />
-          </div>
-        ))}
-      </div>
-
-      <Checkerboard invert />
-
-      <section className="px-5 md:px-8 py-20 md:py-28 text-center">
-        <p className="nv-eyebrow text-silver mb-4">Est. 2026 — Alexandria</p>
-        <h2 className="nv-heading text-4xl md:text-6xl max-w-3xl mx-auto">
-          A concept store for the ones who wear it their own way.
-        </h2>
-      </section>
-
-      <Newsletter />
     </div>
   );
 }

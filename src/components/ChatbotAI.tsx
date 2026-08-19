@@ -224,7 +224,7 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
             )}
             <div
               className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
-                message.sender === 'user' ? 'bg-navy text-white' : 'bg-gray-100 text-navy'
+                message.sender === 'user' ? 'bg-navy text-white' : 'bg-gray-100 text-black'
               }`}
             >
               <p className="whitespace-pre-wrap">{message.text}</p>
@@ -309,7 +309,7 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
             value={inputText}
             onChange={e => setInputText(e.target.value)}
             placeholder="Ask me anything..."
-            className="flex-1 border border-navy/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-navy"
+            className="flex-1 border border-navy/20 rounded-lg px-3 py-2 text-sm text-black focus:outline-none focus:border-navy"
             disabled={isLoading}
           />
           <button

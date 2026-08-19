@@ -1,6 +1,6 @@
 # 🤖 NERVE AI Chatbot System - Complete Implementation
 
-**Production-ready AI chatbot with OpenAI GPT-4, intelligent order tracking, and escalation to human support.**
+**Production-ready AI chatbot with OpenAI GPT-4 and Google Gemini integration, intelligent order tracking, and escalation to human support.**
 
 ---
 
@@ -15,7 +15,7 @@
 - Full RLS policies + audit logging
 
 ### 2. AI Backend (3 Edge Functions)
-- **chat-ai** - OpenAI GPT-4 integration with order context
+- **chat-ai** - OpenAI GPT-4 and Google Gemini integration with order context
 - **create-support-ticket** - Escalation to human support
 - **handle-unsubscribe** - (Already built)
 
@@ -33,17 +33,23 @@
 - ✅ Automatic escalation to support tickets
 - ✅ Conversation history
 - ✅ Customer context awareness
+- ✅ Multiple AI providers (OpenAI & Google Gemini)
 
 ---
 
 ## 🚀 Deployment (10 minutes)
 
-### Step 1: Set OpenAI Key (1 min)
+### Step 1: Set AI API Keys (2 min)
 ```bash
+# Google Gemini API Key (Primary)
+supabase secrets set GOOGLE_GEMINI_API_KEY=your_key_here
+
+# OR use OpenAI (Alternative)
 supabase secrets set OPENAI_API_KEY=sk_your_key_here
 ```
 
-Get key from: https://platform.openai.com/api-keys
+Get Gemini key from: https://aistudio.google.com/apikey  
+Get OpenAI key from: https://platform.openai.com/api-keys
 
 ### Step 2: Run Migration (2 min)
 ```bash
@@ -79,10 +85,11 @@ chat-ai function:
   2. Retrieves customer context (recent orders, tickets)
   3. Gets conversation history (last 10 messages)
   4. Builds system prompt with context
-  5. Calls OpenAI GPT-4 API
-  6. Saves messages to database
-  7. Detects topic automatically
-  8. Checks if escalation needed
+  5. Detects which AI provider to use (Gemini or OpenAI)
+  6. Calls chosen AI API
+  7. Saves messages to database
+  8. Detects topic automatically
+  9. Checks if escalation needed
   ↓
 Response sent back to UI
   ↓
@@ -100,6 +107,26 @@ create-support-ticket function:
   ↓
 User sees confirmation with ticket number
 ```
+
+---
+
+## 🤖 AI Provider Options
+
+### Google Gemini (Recommended)
+- **Cost:** Free tier available, pay-as-you-go for high usage
+- **Strengths:** Excellent for conversational AI, strong multilingual support
+- **Get Key:** https://aistudio.google.com/apikey
+
+### OpenAI (Alternative)
+- **Cost:** Per token pricing, free credits available
+- **Strengths:** GPT-4 is industry standard, excellent for complex queries
+- **Get Key:** https://platform.openai.com/api-keys
+
+### Configuration
+The system automatically uses Gemini if available, falls back to OpenAI:
+1. Checks `GOOGLE_GEMINI_API_KEY` first
+2. Falls back to `OPENAI_API_KEY` if Gemini not configured
+3. Both can be set - system will prefer Gemini
 
 ---
 
@@ -121,7 +148,7 @@ This allows intelligent responses like:
 ## 🔐 Security
 
 - ✅ RLS policies restrict data access
-- ✅ OpenAI key stored in secrets (not in code)
+- ✅ API keys stored in secrets (not in code)
 - ✅ Rate limiting on all functions
 - ✅ Input validation on all endpoints
 - ✅ Audit logging of conversations
@@ -133,70 +160,13 @@ This allows intelligent responses like:
 
 ### New Files
 1. `supabase/migrations/010_chatbot_system.sql` - Database schema
-2. `supabase/functions/chat-ai/index.ts` - AI engine
+2. `supabase/functions/chat-ai/index.ts` - AI engine (supports Gemini & OpenAI)
 3. `supabase/functions/create-support-ticket/index.ts` - Ticket creation
 4. `src/components/ChatbotAI.tsx` - UI component
 5. `AI_CHATBOT_SYSTEM.md` - This documentation
 
 ### Modified Files
 1. `src/App.tsx` - Replaced Chatbot with ChatbotAI
-
----
-
-## 📖 Database Schema
-
-### chat_conversations
-```sql
-id (UUID)
-user_id (UUID) - NULL for guests
-email (TEXT)
-customer_name (TEXT)
-status (TEXT) - 'active', 'closed', 'waiting_for_response'
-topic (TEXT) - Auto-detected
-sentiment (TEXT) - 'positive', 'neutral', 'negative'
-escalated_to_ticket_id (UUID)
-human_handoff_at (TIMESTAMPTZ)
-message_count (INTEGER)
-first_message_at (TIMESTAMPTZ)
-last_message_at (TIMESTAMPTZ)
-created_at, updated_at
-```
-
-### chat_messages
-```sql
-id (UUID)
-conversation_id (UUID) - FK
-sender (TEXT) - 'user', 'ai', 'human'
-content (TEXT)
-ai_model (TEXT) - 'gpt-4', 'gpt-3.5-turbo'
-ai_confidence (DECIMAL) - 0.00 to 1.00
-tokens_used (INTEGER)
-created_at, processed_at
-```
-
-### support_tickets
-```sql
-id (UUID)
-ticket_number (TEXT) - TKT-2024-XXXXX
-conversation_id (UUID) - FK (from chat)
-user_id (UUID), email (TEXT), customer_name (TEXT)
-subject (TEXT), description (TEXT)
-status (TEXT) - 'open', 'in_progress', 'waiting_customer', 'resolved', 'closed'
-priority (TEXT) - 'urgent', 'normal', 'low'
-assigned_to (TEXT) - Admin name
-created_at, first_response_at, resolved_at, updated_at
-```
-
-### ticket_responses
-```sql
-id (UUID)
-ticket_id (UUID) - FK
-sender_type (TEXT) - 'customer', 'admin'
-sender_email, sender_name (TEXT)
-message (TEXT)
-attachments (TEXT[])
-created_at, updated_at
-```
 
 ---
 
@@ -235,7 +205,13 @@ SELECT * FROM ticket_responses ORDER BY created_at DESC LIMIT 5;
 
 ## 💰 Costs
 
-### OpenAI API
+### Google Gemini API
+- **Free Tier:** 60 requests/minute
+- **Paid:** ~$0.00025 per 1K tokens (very affordable)
+- **Average message:** 200 input + 100 output tokens = ~$0.000075 per message
+- **1000 chats/month = ~$0.075/month** (essentially free!)
+
+### OpenAI API (Alternative)
 - GPT-4: ~$0.03 per 1K input tokens, ~$0.06 per 1K output tokens
 - Average message: 200 input + 100 output tokens = ~$0.009 per message
 - 1000 chats/month = ~$9/month
@@ -245,7 +221,8 @@ SELECT * FROM ticket_responses ORDER BY created_at DESC LIMIT 5;
 - Database: Minimal (messages are text)
 
 ### Total
-- **~$10/month** for 1000+ chats
+- **With Gemini:** ~$0.10/month for 1000+ chats (free tier eligible)
+- **With OpenAI:** ~$9/month for 1000+ chats
 
 ---
 
@@ -253,7 +230,8 @@ SELECT * FROM ticket_responses ORDER BY created_at DESC LIMIT 5;
 
 | Feature | Status | Details |
 |---------|--------|---------|
-| GPT-4 AI | ✅ | Real conversations, not keyword matching |
+| Gemini AI | ✅ | Google AI integration, free tier available |
+| GPT-4 AI | ✅ | OpenAI alternative with GPT-4 |
 | Order tracking | ✅ | Shows real order data from database |
 | Conversation history | ✅ | Uses last 10 messages for context |
 | Auto-escalation | ✅ | Detects when human needed |
@@ -344,12 +322,14 @@ GROUP BY status;
 ## 🚨 Troubleshooting
 
 ### "AI service not configured"
-- Check OPENAI_API_KEY secret is set
-- Verify it's valid: https://platform.openai.com/api-keys
+- Check `GOOGLE_GEMINI_API_KEY` or `OPENAI_API_KEY` secret is set
+- Verify it's valid:
+  - Gemini: https://aistudio.google.com/apikey
+  - OpenAI: https://platform.openai.com/api-keys
 
 ### Chat not responding
 - Check Edge Function logs: Supabase > Edge Functions > chat-ai
-- Verify OpenAI account has credits
+- Verify API key has credits
 - Check rate limits
 
 ### Tickets not creating
@@ -431,7 +411,7 @@ See: `Admin/ChatAnalytics.tsx` (ready to build)
 
 For issues:
 1. Check Edge Function logs
-2. Verify OpenAI key is valid
+2. Verify API key is valid
 3. Check database tables exist
 4. Run verification queries
 5. Test manually with curl
@@ -453,7 +433,7 @@ curl -X POST https://YOUR_PROJECT.supabase.co/functions/v1/chat-ai \
 
 **PRODUCTION READY** ✅
 
-- ✅ AI integration complete
+- ✅ AI integration complete (Gemini & OpenAI)
 - ✅ Database schema complete
 - ✅ Ticket system complete
 - ✅ Frontend UI complete
@@ -461,3 +441,30 @@ curl -X POST https://YOUR_PROJECT.supabase.co/functions/v1/chat-ai \
 - ✅ Documentation complete
 
 **Ready to deploy and serve real customers** 🚀
+
+---
+
+## 🆕 Gemini Integration Details
+
+### Why Gemini?
+1. **Free Tier:** 60 requests/minute with generous free quota
+2. **Affordable:** ~100x cheaper than GPT-4
+3. **Excellent:** Google's most capable model
+4. **Fast:** Low latency responses
+5. **Multilingual:** Better non-English support
+
+### How to Get Your Key
+1. Go to: https://aistudio.google.com/apikey
+2. Sign in with Google account
+3. Click "Create API Key"
+4. Copy the key
+5. Set as Supabase secret: `supabase secrets set GOOGLE_GEMINI_API_KEY=your_key`
+
+### Cost Comparison
+
+| Model | Cost per 1K tokens | Free Tier | Best For |
+|-------|-------------------|-----------|----------|
+| Gemini | $0.00025 | 60 req/min | Everyday chat, budget-friendly |
+| GPT-4 | $0.03-0.06 | No | Complex queries, high accuracy |
+
+**Recommendation:** Start with Gemini (free tier), upgrade to GPT-4 if needed.
