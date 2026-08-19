@@ -21,11 +21,6 @@ export default function Loader({ onDone }: { onDone: () => void }) {
       }`}
     >
       <div
-        className={`nv-checker w-24 h-8 mb-6 transition-all duration-500 ${
-          phase === 'grid' ? 'opacity-100 scale-100' : 'opacity-40 scale-90'
-        }`}
-      />
-      <div
         className={`transition-all duration-700 ${
           phase !== 'grid' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
         }`}
