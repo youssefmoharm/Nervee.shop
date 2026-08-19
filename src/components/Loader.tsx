@@ -31,7 +31,7 @@ export default function Loader({ onDone }: { onDone: () => void }) {
         }`}
       >
         <img
-          src="/assets/images/nervee logo.png"
+          src="/assets/images/nerve final logo.png"
           alt="NERVE"
           className="h-16 md:h-20 w-auto mx-auto mb-4"
           onError={e => {
