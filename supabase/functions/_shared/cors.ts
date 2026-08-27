@@ -27,27 +27,49 @@ function isAllowedOrigin(origin: string | null): boolean {
 
 export function getCorsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get('origin')
-  const allowedOrigin = origin && isAllowedOrigin(origin) ? origin : ''
 
-  // If no origin header (server-to-server / edge-to-edge calls with
-  // service_role JWT), return permissive CORS — the auth check is the
-  // real gate. Browser calls always have an origin.
-  const allowOrigin = origin ? allowedOrigin || '' : '*'
+  // Three distinct cases, handled explicitly so a disallowed origin can
+  // never silently fall through to '*':
+  //   1. No Origin header at all -> server-to-server / edge-to-edge call
+  //      (service_role JWT is the real gate here) -> '*' is intentional.
+  //   2. Origin header present and allowlisted -> echo that exact origin.
+  //   3. Origin header present but NOT allowlisted -> omit the header
+  //      entirely so the browser blocks the response. Do NOT fall back
+  //      to '*' — that would defeat the allowlist.
+  let allowOrigin: string
+  if (!origin) {
+    allowOrigin = '*'
+  } else if (isAllowedOrigin(origin)) {
+    allowOrigin = origin
+  } else {
+    allowOrigin = ''
+  }
 
-  return {
-    'Access-Control-Allow-Origin': allowOrigin || '*',
+  const headers: Record<string, string> = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin',
   }
+
+  // Only set Access-Control-Allow-Origin when we actually have a value to
+  // grant. An empty string is not a valid header value and, more
+  // importantly, must never be coerced back into '*' by a caller.
+  if (allowOrigin) {
+    headers['Access-Control-Allow-Origin'] = allowOrigin
+  }
+
+  return headers
 }
 
-// Backwards compat: existing handlers do `headers: corsHeaders`. Keep a
-// permissive default for build-time import but prefer getCorsHeaders(req)
-// at request time.
+// Backwards compat: a few handlers reference this static export directly
+// (e.g. as a fallback default) instead of calling getCorsHeaders(req) at
+// request time. It intentionally does NOT include Access-Control-Allow-Origin
+// — callers must not treat "no origin key present" as "use '*'". Any code
+// doing `Object.keys(headers).length ? headers : { 'Access-Control-Allow-Origin': '*' }`
+// is itself the bug (see per-function fixes) since this object always has
+// keys but should never grant a wildcard origin.
 export const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
 }

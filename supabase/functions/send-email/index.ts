@@ -164,7 +164,7 @@ serve(async (req) => {
 })
 
 function json(body: unknown, status = 200, headers: Record<string, string> = {}) {
-  const cors = Object.keys(headers).length ? headers : { 'Access-Control-Allow-Origin': '*' }
+  const cors = headers
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...cors, 'Content-Type': 'application/json' },

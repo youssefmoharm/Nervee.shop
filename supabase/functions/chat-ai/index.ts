@@ -381,7 +381,7 @@ function detectTopic(userMessage: string, aiResponse: string): string {
 }
 
 function json(body: unknown, status = 200, extraHeaders: Record<string, string> = {}) {
-  const h = Object.keys(extraHeaders).length ? extraHeaders : { 'Access-Control-Allow-Origin': '*' }
+  const h = extraHeaders
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...h, 'Content-Type': 'application/json' },
