@@ -3,6 +3,7 @@ import { MessageCircle, X, Send, User, Bot, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { logError } from '../lib/sentry';
 import { useToast } from '../context/ToastContext';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../lib/supabase';
 
 interface Message {
   id: string;
@@ -67,12 +68,12 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
 
     try {
       // Call AI chat function
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-ai`, {
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/chat-ai`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          apikey: SUPABASE_ANON_KEY,
         },
         body: JSON.stringify({
           conversationId,
@@ -142,23 +143,20 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
     try {
       setIsLoading(true);
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-support-ticket`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            conversationId,
-            email: user?.email || 'guest@nerve.com',
-            customerName: user?.user_metadata?.first_name || 'Customer',
-            subject: ticketSubject,
-            description: messages.map(m => `${m.sender}: ${m.text}`).join('\n'),
-            priority: 'normal',
-          }),
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/create-support-ticket`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify({
+          conversationId,
+          email: user?.email || 'guest@nerve.com',
+          customerName: user?.user_metadata?.first_name || 'Customer',
+          subject: ticketSubject,
+          description: messages.map(m => `${m.sender}: ${m.text}`).join('\n'),
+          priority: 'normal',
+        }),
+      });
 
       const data = await response.json();
 

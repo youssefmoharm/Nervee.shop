@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase, SUPABASE_URL } from '../lib/supabase';
 import { logError } from '../lib/sentry';
 
 type Status = 'loading' | 'success' | 'error' | 'resubscribe';
@@ -34,19 +34,16 @@ export default function Unsubscribe() {
 
   const processUnsubscribe = async () => {
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/handle-unsubscribe`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            token,
-            reason: null,
-          }),
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/handle-unsubscribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify({
+          token,
+          reason: null,
+        }),
+      });
 
       const data: UnsubscribeResult = await response.json();
 

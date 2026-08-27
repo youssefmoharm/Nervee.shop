@@ -5,7 +5,7 @@
  * Integrates with Supabase Edge Functions for secure email sending
  */
 
-import { supabase } from './supabase';
+import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase';
 import { logError } from './sentry';
 import type { CartLine } from '../types';
 
@@ -48,12 +48,12 @@ class EmailAutomationService {
     metadata?: Record<string, any>,
   ): Promise<boolean> {
     try {
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`, {
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          apikey: SUPABASE_ANON_KEY,
         },
         body: JSON.stringify({
           to,

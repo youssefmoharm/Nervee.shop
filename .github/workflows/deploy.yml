@@ -1,15 +1,33 @@
 name: Deploy to Vercel
 
+# Deploy only after CI has passed — never push to production on a red build.
 on:
-  push:
+  workflow_run:
+    workflows: ['CI']
+    types: [completed]
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ secrets.VERCEL_TOKEN != '' && secrets.VERCEL_ORG_ID != '' && secrets.VERCEL_PROJECT_ID != '' }}
+    # Only deploy if the triggering CI run succeeded (or manual dispatch).
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    # Extra guard: require Vercel secrets to be set.
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Verify Vercel secrets are configured
+        run: |
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "::error::Missing Vercel secrets (VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID). Configure them in GitHub → Settings → Secrets."
+            exit 1
+          fi
+
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v20
         with:
@@ -18,11 +36,9 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel-args: '--prod'
 
-# NOTE: This deploys via a VERCEL REMOTE BUILD, which only reads environment
-# variables configured in the Vercel project dashboard (Settings -> Environment
-# Variables -> Production). Without those, the frontend falls back to mock data
-# ("Checkout requires Supabase to be configured").
-#
-# Set BOTH of these as Production env vars in the Vercel dashboard:
-#   VITE_SUPABASE_URL     = https://gfmxvvjqlhrnmidutjwx.supabase.co
-#   VITE_SUPABASE_ANON_KEY = sb_publishable_6zkBS2alnvDPd0pSqVJBkQ_76y60UBW
+# NOTE: Vercel's REMOTE BUILD only reads env vars from the Vercel project
+# dashboard (Settings → Environment Variables → Production). Required vars:
+#   VITE_SUPABASE_URL       = https://gfmxvvjqlhrnmidutjwx.supabase.co
+#   VITE_SUPABASE_ANON_KEY  = sb_publishable_6zkBS2alnvDPd0pSqVJBkQ_76y60UBW
+# The production build will intentionally FAIL if these are missing
+# (see src/lib/supabase.ts) — no silent mock fallback in production.

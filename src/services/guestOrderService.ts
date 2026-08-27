@@ -1,5 +1,5 @@
 import { logError } from '../lib/sentry';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../lib/supabase';
 import type { GuestOrder } from '../types';
 
 export interface GuestOrderLookup {
@@ -10,31 +10,40 @@ export interface GuestOrderLookup {
 
 export const guestOrderService = {
   /**
-   * Lookup a guest order by email and order number
+   * Securely lookup a guest order via the verify-guest-order edge function.
+   * Never queries guest_orders directly (RLS is deny-all for anon).
    */
   async lookup(email: string, orderNumber: string, verificationToken?: string) {
-    if (!isSupabaseConfigured) {
-      return { order: null, error: 'Supabase not configured' };
-    }
-
     try {
-      let query = supabase
-        .from('guest_orders')
-        .select('*')
-        .eq('email', email)
-        .eq('order_number', orderNumber);
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/verify-guest-order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          orderNumber: orderNumber.trim().toUpperCase(),
+          token: verificationToken || '',
+        }),
+      });
 
-      if (verificationToken) {
-        query = query.eq('verification_token', verificationToken);
+      const data = await response.json().catch(() => ({} as Record<string, unknown>));
+
+      if (!response.ok) {
+        // Generic message — do not reveal whether order exists
+        const msg =
+          typeof (data as { error?: string }).error === 'string'
+            ? (data as { error: string }).error
+            : 'Order not found. Please check your email and order number.';
+        return { order: null, error: msg };
       }
 
-      const { data, error } = await query.single();
+      const order = (data as { order?: GuestOrder }).order;
+      if (!order) return { order: null, error: 'Order not found' };
 
-      if (error || !data) {
-        return { order: null, error: 'Order not found' };
-      }
-
-      return { order: data as GuestOrder, error: null };
+      return { order: order as GuestOrder, error: null };
     } catch (err) {
       logError('guestOrderService.lookup failed:', err);
       return { order: null, error: 'Network error. Please try again.' };
@@ -42,63 +51,34 @@ export const guestOrderService = {
   },
 
   /**
-   * Create a guest order record
+   * Deprecated: guest orders are now created server-side via place_order.
+   * Kept for backwards compat — logs a warning and returns failure.
    */
-  async create(email: string, orderNumber: string, verificationToken: string) {
-    if (!isSupabaseConfigured) {
-      return { success: false, error: 'Supabase not configured' };
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('guest_orders')
-        .insert({
-          email,
-          order_number: orderNumber,
-          verification_token: verificationToken,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        logError('Error creating guest order:', error);
-        return { success: false, error: error.message };
-      }
-
-      return { success: true, order: data as GuestOrder, error: null };
-    } catch (err) {
-      logError('guestOrderService.create failed:', err);
-      return { success: false, error: 'Network error. Please try again.' };
-    }
+  async create(_email: string, _orderNumber: string, _verificationToken: string) {
+    void _email;
+    void _orderNumber;
+    void _verificationToken;
+    console.warn(
+      'guestOrderService.create is deprecated — orders are created via the create-order edge function.',
+    );
+    return { success: false, error: 'Use checkout to create orders.' };
   },
 
   /**
-   * Send verification link via email
+   * Request a verification link. Currently a no-op placeholder — the order
+   * confirmation email sent by create-order already contains tracking info.
+   * Kept for UI compat.
    */
-  async sendVerificationLink(email: string, orderNumber: string, verificationToken: string) {
-    if (!isSupabaseConfigured) {
-      return { success: false, error: 'Supabase not configured' };
-    }
-
+  async sendVerificationLink(email: string, orderNumber: string, verificationToken?: string) {
     try {
-      // Check if guest order exists
+      // Re-use lookup to verify the order exists before claiming to send a link.
       const { order, error } = await this.lookup(email, orderNumber, verificationToken);
-
       if (error || !order) {
         return { success: false, error: 'Order not found' };
       }
-
-      // Construct verification URL
-      const siteUrl = import.meta.env.VITE_SITE_URL || 'https://your-site.com';
-      const verificationUrl = `${siteUrl}/guest-order?token=${verificationToken}&email=${email}&orderNumber=${orderNumber}`;
-
-      // In production, this would send an actual email via Resend
-      // For now, we'll return the URL that should be sent in email
-      return {
-        success: true,
-        verificationUrl,
-        error: null,
-      };
+      // In production, a dedicated edge function would email the link.
+      // For now, return success without sending — the confirmation email is the source of truth.
+      return { success: true, error: null };
     } catch (err) {
       logError('guestOrderService.sendVerificationLink failed:', err);
       return { success: false, error: 'Network error. Please try again.' };
