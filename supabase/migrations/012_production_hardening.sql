@@ -139,6 +139,7 @@ GRANT SELECT ON product_availability TO anon, authenticated;
 -- get_ai_context: was PUBLIC with email param (IDOR). Now: only the
 -- authenticated user can query their own context; service_role bypasses for
 -- edge function internal calls with verified JWT.
+DROP FUNCTION IF EXISTS get_ai_context(TEXT);
 CREATE OR REPLACE FUNCTION get_ai_context(p_email TEXT)
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -202,8 +203,9 @@ REVOKE ALL ON FUNCTION get_ai_context(TEXT) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION get_ai_context(TEXT) TO authenticated, service_role;
 
 -- create_ticket_from_chat: add explicit ownership check and search_path
+DROP FUNCTION IF EXISTS create_ticket_from_chat(UUID, TEXT, TEXT, TEXT);
 CREATE OR REPLACE FUNCTION create_ticket_from_chat(
-  p_conversation_id UUID, p_subject TEXT, p_description TEXT, p_priority TEXT
+  p_conversation_id UUID, p_subject TEXT, p_description TEXT, p_priority TEXT DEFAULT 'normal'
 )
 RETURNS UUID
 LANGUAGE plpgsql
@@ -278,8 +280,9 @@ REVOKE ALL ON FUNCTION create_ticket_from_chat(UUID, TEXT, TEXT, TEXT) FROM PUBL
 GRANT EXECUTE ON FUNCTION create_ticket_from_chat(UUID, TEXT, TEXT, TEXT) TO authenticated, service_role;
 
 -- update_conversation_metadata: restrict to owner/admin/service_role
+DROP FUNCTION IF EXISTS update_conversation_metadata(UUID, TEXT, TEXT);
 CREATE OR REPLACE FUNCTION update_conversation_metadata(
-  p_conversation_id UUID, p_topic TEXT, p_sentiment TEXT DEFAULT NULL
+  p_conversation_id UUID, p_topic TEXT DEFAULT NULL, p_sentiment TEXT DEFAULT NULL
 )
 RETURNS VOID
 LANGUAGE plpgsql
@@ -315,6 +318,7 @@ REVOKE ALL ON FUNCTION update_conversation_metadata(UUID, TEXT, TEXT) FROM PUBLI
 GRANT EXECUTE ON FUNCTION update_conversation_metadata(UUID, TEXT, TEXT) TO authenticated, service_role;
 
 -- close_conversation: same restriction
+DROP FUNCTION IF EXISTS close_conversation(UUID);
 CREATE OR REPLACE FUNCTION close_conversation(p_conversation_id UUID)
 RETURNS VOID
 LANGUAGE plpgsql
@@ -351,6 +355,7 @@ GRANT EXECUTE ON FUNCTION close_conversation(UUID) TO authenticated, service_rol
 -- ============================================================================
 -- 5. verify_review_purchase — fix IDOR (must be caller's own review)
 -- ============================================================================
+DROP FUNCTION IF EXISTS verify_review_purchase(UUID);
 CREATE OR REPLACE FUNCTION verify_review_purchase(p_review_id UUID)
 RETURNS VOID
 LANGUAGE plpgsql
@@ -425,6 +430,7 @@ END;
 $$;
 
 -- log helpers — add search_path
+DROP FUNCTION IF EXISTS log_email_send(TEXT, TEXT, TEXT, JSONB);
 CREATE OR REPLACE FUNCTION log_email_send(p_recipient_email TEXT, p_email_type TEXT, p_subject TEXT, p_metadata JSONB DEFAULT NULL)
 RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 BEGIN
@@ -485,6 +491,7 @@ GRANT EXECUTE ON FUNCTION mark_cart_abandonment_recovered(TEXT) TO service_role;
 -- but add rate awareness: keep as is, the edge function rate-limits it.
 
 -- should_send_email: keep PUBLIC but add search_path
+DROP FUNCTION IF EXISTS should_send_email(TEXT);
 CREATE OR REPLACE FUNCTION should_send_email(p_email TEXT)
 RETURNS BOOLEAN LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE v_active BOOLEAN;
