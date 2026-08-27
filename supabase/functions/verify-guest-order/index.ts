@@ -145,6 +145,6 @@ serve(async (req) => {
 })
 
 function json(body: unknown, status = 200, headers: Record<string, string> = {}) {
-  const h = Object.keys(headers).length ? headers : { 'Access-Control-Allow-Origin': '*' }
+  const h = headers
   return new Response(JSON.stringify(body), { status, headers: { ...h, 'Content-Type': 'application/json' } })
 }
