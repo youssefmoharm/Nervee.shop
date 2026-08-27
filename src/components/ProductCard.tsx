@@ -45,6 +45,14 @@ export default function ProductCard({ product }: { product: Product }) {
             src={hovered && color.hoverImage ? color.hoverImage : color.image}
             alt={`${product.name} — ${color.name}`}
             loading="lazy"
+            decoding="async"
+            onError={e => {
+              const img = e.currentTarget as HTMLImageElement;
+              if (!img.dataset.fallback) {
+                img.dataset.fallback = '1';
+                img.src = '/placeholder-product.jpg';
+              }
+            }}
             className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.045]"
           />
         </Link>

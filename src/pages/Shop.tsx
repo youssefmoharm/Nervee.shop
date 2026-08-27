@@ -30,6 +30,7 @@ export default function Shop() {
   const [loading, setLoading] = useState(true);
   const [displayCount, setDisplayCount] = useState(12); // Initially show 12 products
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [sort, setSort] = useState<SortOption>('featured');
   const [colors, setColors] = useState<string[]>([]);
   const [sizes, setSizes] = useState<string[]>([]);
@@ -42,9 +43,26 @@ export default function Shop() {
     [category, colors, sizes, priceMax, sort],
   );
 
+  // Debounce search input (300ms) to avoid expensive filtering on every keystroke
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedQuery(searchQuery), 300);
+    return () => clearTimeout(id);
+  }, [searchQuery]);
+
+  // Sync debounced query to URL for shareable links
+  useEffect(() => {
+    const q = debouncedQuery.trim();
+    setParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (q) next.set('q', q);
+      else next.delete('q');
+      return next;
+    });
+  }, [debouncedQuery]);
+
   const suggestions = useMemo(
-    () => getSearchSuggestions(allProducts, searchQuery),
-    [allProducts, searchQuery],
+    () => getSearchSuggestions(allProducts, debouncedQuery),
+    [allProducts, debouncedQuery],
   );
 
   useEffect(() => {
@@ -53,7 +71,7 @@ export default function Shop() {
     setDisplayCount(12); // Reset display count when filters change
     productService.list(filters).then(data => {
       if (mounted) {
-        const visible = filterProducts(data, searchQuery, category, colors, sizes, priceMax);
+        const visible = filterProducts(data, debouncedQuery, category, colors, sizes, priceMax);
         setAllProducts(visible);
         setProducts(visible.slice(0, 12));
         setLoading(false);
@@ -62,7 +80,7 @@ export default function Shop() {
     return () => {
       mounted = false;
     };
-  }, [category, colors, filters, priceMax, searchQuery, sizes]);
+  }, [category, colors, filters, priceMax, debouncedQuery, sizes]);
 
   const toggleColor = (c: string) =>
     setColors(prev => (prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]));
