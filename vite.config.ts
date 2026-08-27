@@ -15,6 +15,7 @@ export default defineConfig({
       '**/*.config.{js,ts,cjs,mjs}',
       'tests/e2e/**',
       'tests/fixtures/**',
+      '**/Nervee.shop/**',
     ],
     coverage: {
       reporter: ['text', 'json', 'html'],
@@ -26,6 +27,7 @@ export default defineConfig({
         'dist/',
         'src/main.tsx',
         'src/vite-env.d.ts',
+        'Nervee.shop/**',
       ],
     },
   },

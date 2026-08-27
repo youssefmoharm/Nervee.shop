@@ -50,7 +50,6 @@ jobs:
           CI: true
         run: npm run test:e2e
         timeout-minutes: 10
-        continue-on-error: true
       
       - name: Upload Playwright Report
         if: always() && hashFiles('playwright-report/**') != ''
