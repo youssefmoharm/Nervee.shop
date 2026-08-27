@@ -1,0 +1,11 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1125" viewBox="0 0 900 1125" role="img" aria-label="Product image coming soon">
+  <rect width="900" height="1125" fill="#f0ede8"/>
+  <g fill="none" stroke="#061735" stroke-width="1.5" opacity="0.15">
+    <rect x="100" y="150" width="700" height="825" rx="4"/>
+    <line x1="100" y1="350" x2="800" y2="350"/>
+    <line x1="100" y1="550" x2="800" y2="550"/>
+    <line x1="100" y1="750" x2="800" y2="750"/>
+  </g>
+  <text x="450" y="520" text-anchor="middle" font-family="system-ui, sans-serif" font-size="22" font-weight="600" fill="#061735" opacity="0.7">NERVE</text>
+  <text x="450" y="555" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" font-weight="400" fill="#061735" opacity="0.45">Image coming soon</text>
+</svg>

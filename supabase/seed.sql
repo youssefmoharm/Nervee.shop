@@ -1,7 +1,15 @@
--- NERVE E-Commerce Seed Data
+-- NERVE E-Commerce Seed Data — DEVELOPMENT SEED (idempotent)
 -- Run this AFTER schema.sql to populate the database with initial data.
 -- All inserts are idempotent (ON CONFLICT DO NOTHING) so it can be re-run
 -- safely on every deploy.
+--
+-- IMAGE ASSETS: All product/collection image URLs below currently use
+-- picsum.photos as GENERATED PLACEHOLDERS for development. They are NOT
+-- production NERVE photography. Before launch, replace every image URL with
+-- real product images hosted in Supabase Storage (bucket: product-images) or
+-- your CDN. The frontend already handles missing images via
+-- ProductCard onError fallback to /placeholder-product.jpg (public/placeholder-product.jpg).
+-- Do NOT ship picsum URLs to production.
 
 -- ============================================================================
 -- SEED COLLECTIONS

@@ -1,12 +1,12 @@
 name: Deploy Supabase
 
+# Only deploy after CI has passed — never push DB changes on a red build.
 on:
+  workflow_run:
+    workflows: ['CI']
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - 'supabase/**'
 
 concurrency:
   group: supabase-deploy
@@ -16,6 +16,7 @@ jobs:
   deploy:
     name: Deploy migrations & edge functions
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     environment: production
     steps:
       - name: Checkout
