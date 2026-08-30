@@ -21,7 +21,7 @@
 
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
-import { corsHeaders } from '../_shared/cors.ts'
+import { getCorsHeaders } from '../_shared/cors.ts'
 import { orderConfirmedEmail, sendEmail } from '../_shared/email.ts'
 import { rateLimit, getRateLimitHeaders } from '../_shared/ratelimit.ts'
 import {
@@ -61,6 +61,7 @@ interface CreateOrderBody {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req)
   const timer = new PerformanceTimer('create-order')
 
   if (req.method === 'OPTIONS') {
@@ -71,7 +72,7 @@ serve(async (req) => {
     // Request size validation
     const sizeErrors = validateRequestSize(req, 50) // 50KB max
     if (sizeErrors.length > 0) {
-      return json({ error: 'Request too large', details: sizeErrors }, 413)
+      return json({ error: 'Request too large', details: sizeErrors }, 413, corsHeaders)
     }
 
     // Rate limiting: 10 orders per minute per IP (adjust as needed)
@@ -109,7 +110,7 @@ serve(async (req) => {
     // Comprehensive input validation
     const validationErrors = validateOrderRequest(body)
     if (validationErrors.length > 0) {
-      return json({ error: 'Validation failed', details: validationErrors }, 400)
+      return json({ error: 'Validation failed', details: validationErrors }, 400, corsHeaders)
     }
 
     // Sanitize text inputs
@@ -151,7 +152,7 @@ serve(async (req) => {
       // cart, etc.) — pass it straight through instead of a generic 500.
       logOrderFailure(error.message, customerId || 'guest', body.items)
       timer.end()
-      return json({ error: error.message }, 400)
+      return json({ error: error.message }, 400, corsHeaders)
     }
 
     logOrderSuccess(order.id, order.order_number, order.total, 'cod')
@@ -169,18 +170,18 @@ serve(async (req) => {
     )
 
     timer.end()
-    return json({ order })
+    return json({ order }, 200, corsHeaders)
   } catch (err) {
     console.error('create-order error:', err)
-    logOrderFailure(err.message, 'unknown', null)
+    logOrderFailure((err as Error).message, 'unknown', null)
     timer.end()
-    return json({ error: 'Something went wrong placing your order. Please try again.' }, 500)
+    return json({ error: 'Something went wrong placing your order. Please try again.' }, 500, getCorsHeaders(req))
   }
 })
 
-function json(body: unknown, status = 200) {
+function json(body: unknown, status = 200, headers: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...headers, 'Content-Type': 'application/json' },
   })
 }

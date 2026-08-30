@@ -6,11 +6,13 @@
 
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
-import { corsHeaders } from '../_shared/cors.ts'
+import { getCorsHeaders } from '../_shared/cors.ts'
 import { PerformanceTimer, logEvent } from '../_shared/monitoring.ts'
 
 serve(async (req) => {
-    const timer = new PerformanceTimer('handle-unsubscribe')
+    
+  const corsHeaders = getCorsHeaders(req)
+const timer = new PerformanceTimer('handle-unsubscribe')
 
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders })
@@ -18,7 +20,7 @@ serve(async (req) => {
 
     if (req.method !== 'POST') {
         timer.end()
-        return json({ error: 'Method not allowed' }, 405)
+        return json({ error: 'Method not allowed' }, 405, corsHeaders)
     }
 
     try {
@@ -32,7 +34,7 @@ serve(async (req) => {
 
         if (!token || typeof token !== 'string') {
             timer.end()
-            return json({ error: 'Token is required' }, 400)
+            return json({ error: 'Token is required' }, 400, corsHeaders)
         }
 
         // Get client info for audit log
@@ -53,7 +55,7 @@ serve(async (req) => {
         if (error) {
             console.error('Unsubscribe error:', error)
             timer.end()
-            return json({ success: false, error: error.message }, 400)
+            return json({ success: false, error: error.message }, 400, corsHeaders)
         }
 
         if (!result.success) {
@@ -64,7 +66,7 @@ serve(async (req) => {
                 data: { reason_given: reason },
             })
             timer.end()
-            return json(result, 400)
+            return json(result, 400, corsHeaders)
         }
 
         logEvent({
@@ -79,17 +81,17 @@ serve(async (req) => {
         })
 
         timer.end()
-        return json(result)
+        return json(result, 200, corsHeaders)
     } catch (err) {
         console.error('Unsubscribe handler error:', err)
         timer.end()
-        return json({ error: 'Failed to process unsubscribe', details: (err as Error).message }, 500)
+        return json({ error: 'Failed to process unsubscribe', details: (err as Error).message }, 500, getCorsHeaders(req))
     }
 })
 
-function json(body: unknown, status = 200) {
+function json(body: unknown, status = 200, headers: Record<string, string> = {}) {
     return new Response(JSON.stringify(body), {
         status,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...headers, 'Content-Type': 'application/json' },
     })
 }

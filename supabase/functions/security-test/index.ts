@@ -13,13 +13,15 @@
 
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
-import { corsHeaders } from '../_shared/cors.ts'
+import { getCorsHeaders } from '../_shared/cors.ts'
 import { requireAdmin } from '../_shared/admin.ts'
 
 const ENV = Deno.env.get('VITE_ENV') || 'production'
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+  
+  const corsHeaders = getCorsHeaders(req)
+if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
@@ -39,7 +41,7 @@ serve(async (req) => {
   try {
     const admin = await requireAdmin(req, supabase)
     if (!admin) {
-      return json({ error: 'Admin access required for security tests.' }, 403)
+      return json({ error: 'Admin access required for security tests.' }, 403, corsHeaders)
     }
 
     const { testSuite } = await req.json()
@@ -66,14 +68,14 @@ serve(async (req) => {
           results.tests.input = await testInputValidation()
           break
         default:
-          return json({ error: 'Invalid test suite specified' }, 400)
+          return json({ error: 'Invalid test suite specified' }, 400, corsHeaders)
       }
     }
 
-    return json(results)
+    return json(results, 200, corsHeaders)
   } catch (err) {
     console.error('Security test error:', err)
-    return json({ error: 'Security test failed', details: err.message }, 500)
+    return json({ error: 'Security test failed', details: err.message }, 500, corsHeaders)
   }
 })
 
@@ -215,9 +217,9 @@ async function testInputValidation() {
   return { passed: tests.every(t => t.passed), tests }
 }
 
-function json(body: unknown, status = 200) {
+function json(body: unknown, status = 200, headers: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...headers, 'Content-Type': 'application/json' },
   })
 }

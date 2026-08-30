@@ -15,7 +15,7 @@
 
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
-import { corsHeaders } from '../_shared/cors.ts'
+import { getCorsHeaders } from '../_shared/cors.ts'
 import { requireAdmin } from '../_shared/admin.ts'
 import {
   sendEmail,
@@ -28,6 +28,8 @@ import {
 const VALID_STATUSES = ['placed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded']
 
 serve(async (req) => {
+  
+  const corsHeaders = getCorsHeaders(req)
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   const supabase = createClient(
@@ -37,11 +39,11 @@ serve(async (req) => {
 
   try {
     const admin = await requireAdmin(req, supabase)
-    if (!admin) return json({ error: 'Admin access required.' }, 403)
+    if (!admin) return json({ error: 'Admin access required.' }, 403, corsHeaders)
 
     const { orderId, status, trackingNumber, trackingUrl } = await req.json()
     if (!orderId || !VALID_STATUSES.includes(status)) {
-      return json({ error: 'orderId and a valid status are required.' }, 400)
+      return json({ error: 'orderId and a valid status are required.' }, 400, corsHeaders)
     }
 
     const { data: order, error } = await supabase.rpc('update_order_status', {
@@ -52,7 +54,7 @@ serve(async (req) => {
     })
 
     if (error || !order) {
-      return json({ error: error?.message ?? 'Could not update this order.' }, 400)
+      return json({ error: error?.message ?? 'Could not update this order.' }, 400, corsHeaders)
     }
 
     const { data: items } = await supabase
@@ -78,16 +80,16 @@ serve(async (req) => {
       // low-signal internal step.
     }
 
-    return json({ order })
+    return json({ order }, 200, corsHeaders)
   } catch (err) {
     console.error('update-order-status error:', err)
-    return json({ error: 'Something went wrong updating this order.' }, 500)
+    return json({ error: 'Something went wrong updating this order.' }, 500, getCorsHeaders(req))
   }
 })
 
-function json(body: unknown, status = 200) {
+function json(body: unknown, status = 200, headers: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...headers, 'Content-Type': 'application/json' },
   })
 }
