@@ -5,6 +5,8 @@
 const PROD_ORIGINS = new Set([
   'https://nerve-store.com',
   'https://www.nerve-store.com',
+  'https://nerveey.shop',
+  'https://www.nerveey.shop',
   'https://nerve-weld.vercel.app',
 ])
 
