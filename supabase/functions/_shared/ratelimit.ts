@@ -141,11 +141,34 @@ export function rateLimit(
 }
 
 /**
- * Get rate limit headers for response
+ * Get rate limit headers for response — supports both signatures:
+ *   getRateLimitHeaders(result)  or  getRateLimitHeaders(identifier, options)
+ * Legacy two-arg calls (ip, options) kept for back-compat with existing functions.
  */
 export function getRateLimitHeaders(
-  result: RateLimitResult | { identifier: string; options: RateLimitOptions }
+  resultOrIdentifier: RateLimitResult | string | { identifier: string; options: RateLimitOptions },
+  maybeOptions?: RateLimitOptions
 ): Record<string, string> {
+  // Two-arg legacy: getRateLimitHeaders(ip, options)
+  if (typeof resultOrIdentifier === 'string' && maybeOptions) {
+    const identifier = resultOrIdentifier
+    const options = maybeOptions
+    const entry = requestCounts.get(identifier)
+    if (!entry) {
+      return {
+        'X-RateLimit-Limit': options.maxRequests.toString(),
+        'X-RateLimit-Remaining': options.maxRequests.toString(),
+        'X-RateLimit-Reset': (Date.now() + options.windowMs).toString(),
+      }
+    }
+    const remaining = Math.max(0, options.maxRequests - entry.count)
+    return {
+      'X-RateLimit-Limit': options.maxRequests.toString(),
+      'X-RateLimit-Remaining': remaining.toString(),
+      'X-RateLimit-Reset': entry.resetAt.toString(),
+    }
+  }
+  const result = resultOrIdentifier as RateLimitResult | { identifier: string; options: RateLimitOptions }
   if ('allowed' in result) {
     // New format with RateLimitResult
     return {

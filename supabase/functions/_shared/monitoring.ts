@@ -186,13 +186,14 @@ export async function monitored<T>(
     return result
   } catch (error) {
     timer.end()
+    const err = error instanceof Error ? error : new Error(String(error))
     logEvent({
       type: 'error',
       category: 'FUNCTION_ERROR',
-      message: `${label} failed: ${error.message}`,
-      data: { error: error.toString() },
+      message: `${label} failed: ${err.message}`,
+      data: { error: err.toString() },
     })
-    if (onError) onError(error)
-    throw error
+    if (onError) onError(err)
+    throw err
   }
 }

@@ -98,7 +98,7 @@ serve(async (req) => {
 
     if (!data || (Array.isArray(data) && data.length === 0)) {
       logEvent({
-        type: 'warn',
+        type: 'warning',
         category: 'GUEST_ORDER',
         message: 'Guest order lookup failed (not found or token mismatch)',
         data: { email, orderNumber: orderNumber.slice(0, 8) + '***' },

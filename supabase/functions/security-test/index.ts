@@ -75,7 +75,7 @@ if (req.method === 'OPTIONS') {
     return json(results, 200, corsHeaders)
   } catch (err) {
     console.error('Security test error:', err)
-    return json({ error: 'Security test failed', details: err.message }, 500, corsHeaders)
+    return json({ error: 'Security test failed', details: (err as Error).message }, 500, corsHeaders)
   }
 })
 
@@ -130,8 +130,8 @@ async function testRLSPolicies(supabase: any) {
     const { data, error } = await anonClient.from('orders').select('*').limit(1)
     tests.push({
       name: 'Anonymous order access blocked',
-      passed: (!data || data.length === 0),
-      details: data?.length > 0 ? 'FAIL: Anonymous user can access orders' : 'Correctly blocked anonymous access'
+      passed: (!data || (data as any[]).length === 0),
+      details: (data as any[])?.length > 0 ? 'FAIL: Anonymous user can access orders' : 'Correctly blocked anonymous access'
     })
   } catch (err) {
     tests.push({
@@ -151,8 +151,8 @@ async function testRLSPolicies(supabase: any) {
     const { data } = await anonClient.from('customers').select('*').limit(1)
     tests.push({
       name: 'Anonymous customer access blocked',
-      passed: (!data || data.length === 0),
-      details: data?.length > 0 ? 'FAIL: Anonymous user can access customer data' : 'Correctly blocked anonymous access'
+      passed: (!data || (data as any[]).length === 0),
+      details: (data as any[])?.length > 0 ? 'FAIL: Anonymous user can access customer data' : 'Correctly blocked anonymous access'
     })
   } catch {
     tests.push({
@@ -172,8 +172,8 @@ async function testRLSPolicies(supabase: any) {
     const { data } = await anonClient.from('payment_events').select('*').limit(1)
     tests.push({
       name: 'Payment events access blocked',
-      passed: (!data || data.length === 0),
-      details: data?.length > 0 ? 'CRITICAL FAIL: Anonymous user can access payment events' : 'Correctly blocked access'
+      passed: (!data || (data as any[]).length === 0),
+      details: (data as any[])?.length > 0 ? 'CRITICAL FAIL: Anonymous user can access payment events' : 'Correctly blocked access'
     })
   } catch {
     tests.push({

@@ -44,12 +44,32 @@ serve(async (req) => {
         return json({ error: 'Missing HMAC' }, 401, corsHeaders)
       }
 
-      // Paymob HMAC: sort relevant fields, concat, HMAC-SHA512
-      // Simplified verification — in production use exact Paymob spec.
+      // Paymob HMAC: ordered concatenation per Paymob docs (https://docs.paymob.com/docs/hmac-calculation)
+      // Concatenate fields in this exact order, then HMAC-SHA512 with HMAC_SECRET.
+      // If Paymob changes field set, this will reject — update PAYMOB_HMAC_FIELDS accordingly.
+      const hmacFields = [
+        'amount_cents', 'created_at', 'currency', 'error_occured', 'has_parent_transaction',
+        'id', 'integration_id', 'is_3d_secure', 'is_auth', 'is_capture', 'is_refunded',
+        'is_standalone_payment', 'is_voided', 'order.id', 'owner', 'pending',
+        'source_data.pan', 'source_data.sub_type', 'source_data.type', 'success',
+      ]
+      function getNested(obj: Record<string, unknown>, path: string): string {
+        const parts = path.split('.')
+        let cur: unknown = obj
+        for (const p of parts) {
+          if (cur && typeof cur === 'object' && p in (cur as Record<string, unknown>)) cur = (cur as Record<string, unknown>)[p]
+          else return ''
+        }
+        if (cur === null || cur === undefined) return ''
+        if (typeof cur === 'boolean') return cur ? 'true' : 'false'
+        return String(cur)
+      }
+      // Paymob sends the transaction under obj / transaction / data.object — support all shapes
+      const root = (body.obj as Record<string, unknown>) ?? (body.transaction as Record<string, unknown>) ?? body
+      const concatenated = hmacFields.map((f) => getNested(root as Record<string, unknown>, f)).join('')
       const encoder = new TextEncoder()
       const key = await crypto.subtle.importKey('raw', encoder.encode(hmacSecret), { name: 'HMAC', hash: 'SHA-512' }, false, ['sign'])
-      const payload = JSON.stringify(body)
-      const sigBuf = await crypto.subtle.sign('HMAC', key, encoder.encode(payload))
+      const sigBuf = await crypto.subtle.sign('HMAC', key, encoder.encode(concatenated))
       const expected = Array.from(new Uint8Array(sigBuf)).map((b) => b.toString(16).padStart(2, '0')).join('')
 
       // Constant-time compare
