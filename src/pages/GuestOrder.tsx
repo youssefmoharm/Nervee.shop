@@ -142,7 +142,23 @@ export default function GuestOrder() {
             </div>
           </div>
 
-          <div className="text-center">
+          {order.status === 'delivered' && (
+            <div className="bg-white border border-navy/10 rounded-xl p-5 mt-6">
+              <h3 className="nv-eyebrow text-sm mb-2">Need to return?</h3>
+              <p className="text-xs text-navy/60 mb-3">
+                Delivered orders can be returned within 14 days. Contact{' '}
+                <a href="mailto:hello@nerveey.shop" className="underline">
+                  hello@nerveey.shop
+                </a>{' '}
+                with your order number and reason — or use the return form in your account if you
+                create one.
+              </p>
+              <a href="/returns" className="text-xs underline">
+                See Returns policy
+              </a>
+            </div>
+          )}
+          <div className="text-center mt-6">
             <a href="/shop" className="inline-block text-navy nv-eyebrow underline">
               Continue Shopping
             </a>
