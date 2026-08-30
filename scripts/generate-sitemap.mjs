@@ -6,7 +6,7 @@
  */
 import { writeFileSync } from 'node:fs';
 
-const STORE_URL = process.env.STORE_URL || process.env.VITE_APP_URL || 'https://nerve-store.com';
+const STORE_URL = process.env.STORE_URL || process.env.VITE_APP_URL || 'https://www.nerveey.shop';
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://gfmxvvjqlhrnmidutjwx.supabase.co';
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_6zkBS2alnvDPd0pSqVJBkQ_76y60UBW';
 
