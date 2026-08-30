@@ -47,6 +47,14 @@ jobs:
 
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
+
+      - name: Use Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Deno check edge functions
+        run: deno check supabase/functions/**/*.ts
       
       - name: Run Playwright E2E
         env:
