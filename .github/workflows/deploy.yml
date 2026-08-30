@@ -6,13 +6,12 @@ on:
     workflows: ['CI']
     types: [completed]
     branches: [main]
-  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # Only deploy if the triggering CI run succeeded (or manual dispatch).
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    # Only deploy if the triggering CI run succeeded — manual dispatch removed to prevent bypass.
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     # Extra guard: require Vercel secrets to be set.
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
