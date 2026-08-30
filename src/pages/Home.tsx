@@ -41,54 +41,14 @@ export default function Home() {
 
   return (
     <>
-      {/* HERO */}
-      <section className="relative h-[100svh] min-h-[560px] flex items-end overflow-hidden bg-navy">
-        <img
-          src="https://picsum.photos/seed/nerve-hero-2026/1800/2400"
-          alt="NERVE new season campaign"
-          fetchPriority="high"
-          className="absolute inset-0 w-full h-full object-cover opacity-70"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/30 to-navy/10" />
-
-        <div className="relative w-full px-5 md:px-8 pb-14 md:pb-20">
-          <div className="mx-auto max-w-[1600px]">
-            <p
-              className="nv-eyebrow text-silver mb-3 animate-fadeUp"
-              style={{ animationDelay: '100ms' }}
-            >
-              New Season · 2026
-            </p>
-            <h1
-              className="nv-heading text-[16vw] sm:text-[13vw] md:text-[9vw] lg:text-[7.5vw] leading-[0.85] animate-fadeUp"
-              style={{ animationDelay: '200ms' }}
-            >
-              COOL BUT
-              <br />
-              CHIC
-            </h1>
-            <div
-              className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mt-8 animate-fadeUp"
-              style={{ animationDelay: '350ms' }}
-            >
-              <p className="text-silver max-w-sm text-sm md:text-base">
-                Based in everyone&apos;s closet. NERVE is a concept store for individuality and
-                movement — the new drop is here.
-              </p>
-              <Link
-                to="/shop?category=New%20Arrivals"
-                className="group inline-flex items-center gap-3 bg-white text-navy px-8 py-4 nv-eyebrow flex-shrink-0 hover:bg-mist transition-colors w-fit"
-              >
-                Shop the Drop
-                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* AUTO-SCROLLING PRODUCT SHOWCASE — like Salty Denim 02/04 */}
-      {!loading && newDrop.length >= 4 && <HeroProductCarousel products={newDrop} />}
+      {/* HERO — auto-scrolling product showcase (Salty-style) at top */}
+      {!loading && newDrop.length >= 4 ? (
+        <HeroProductCarousel products={newDrop} />
+      ) : (
+        <section className="relative h-[100svh] min-h-[560px] flex items-center justify-center bg-navy">
+          <p className="text-white/60">Loading collection…</p>
+        </section>
+      )}
 
       {/* NEW DROP */}
       <section className="bg-white text-navy py-16 md:py-24 px-5 md:px-8">
