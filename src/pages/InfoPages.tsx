@@ -155,8 +155,8 @@ export function Privacy() {
   return (
     <Shell title="Privacy Policy">
       <p>
-        Last updated: 2026. NERVE (we, us) operates nerve-store.com. This page explains what we
-        collect and why.
+        Last updated: August 30, 2026. NERVE (we, us) operates nerve-store.com. This page explains
+        what we collect and why.
       </p>
 
       <h2 className="text-navy font-semibold text-lg pt-2">What we collect</h2>
@@ -205,7 +205,8 @@ export function Terms() {
   return (
     <Shell title="Terms of Service">
       <p>
-        Last updated: 2026. By using nerve-store.com or placing an order, you agree to these terms.
+        Last updated: August 30, 2026. By using nerve-store.com or placing an order, you agree to
+        these terms.
       </p>
 
       <h2 className="text-navy font-semibold text-lg pt-2">Orders & pricing</h2>
