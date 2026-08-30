@@ -12,13 +12,15 @@
 
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
-import { corsHeaders } from '../_shared/cors.ts'
+import { getCorsHeaders } from '../_shared/cors.ts'
 import { requireAdmin } from '../_shared/admin.ts'
 import { sendEmail, backInStockEmail } from '../_shared/email.ts'
 
 const STORE_URL = Deno.env.get('STORE_URL') || 'https://nerve-store.com'
 
 serve(async (req) => {
+  
+  const corsHeaders = getCorsHeaders(req)
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   const supabase = createClient(
@@ -28,10 +30,10 @@ serve(async (req) => {
 
   try {
     const admin = await requireAdmin(req, supabase)
-    if (!admin) return json({ error: 'Admin access required.' }, 403)
+    if (!admin) return json({ error: 'Admin access required.' }, 403, corsHeaders)
 
     const { productId, size } = await req.json()
-    if (!productId || !size) return json({ error: 'productId and size are required.' }, 400)
+    if (!productId || !size) return json({ error: 'productId and size are required.' }, 400, corsHeaders)
 
     const { data: inventory } = await supabase
       .from('product_inventory')
@@ -41,7 +43,7 @@ serve(async (req) => {
       .maybeSingle()
 
     if (!inventory || inventory.stock_quantity <= 0) {
-      return json({ notified: 0, message: 'This size has no stock — nothing to notify.' })
+      return json({ notified: 0, message: 'This size has no stock — nothing to notify.' }, 200, corsHeaders)
     }
 
     const { data: requests } = await supabase
@@ -52,7 +54,7 @@ serve(async (req) => {
       .eq('notified', false)
 
     if (!requests?.length) {
-      return json({ notified: 0, message: 'No one is waiting on this size.' })
+      return json({ notified: 0, message: 'No one is waiting on this size.' }, 200, corsHeaders)
     }
 
     const { data: product } = await supabase
@@ -61,7 +63,7 @@ serve(async (req) => {
       .eq('id', productId)
       .single()
 
-    if (!product) return json({ error: 'Product not found.' }, 404)
+    if (!product) return json({ error: 'Product not found.' }, 404, corsHeaders)
 
     let notified = 0
     for (const request of requests) {
@@ -81,16 +83,16 @@ serve(async (req) => {
       notified++
     }
 
-    return json({ notified })
+    return json({ notified }, 200, corsHeaders)
   } catch (err) {
     console.error('process-restock error:', err)
-    return json({ error: 'Something went wrong processing restock notifications.' }, 500)
+    return json({ error: 'Something went wrong processing restock notifications.' }, 500, getCorsHeaders(req))
   }
 })
 
-function json(body: unknown, status = 200) {
+function json(body: unknown, status = 200, headers: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...headers, 'Content-Type': 'application/json' },
   })
 }

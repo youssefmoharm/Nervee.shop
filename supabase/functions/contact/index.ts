@@ -5,7 +5,7 @@
 
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
-import { corsHeaders } from '../_shared/cors.ts'
+import { getCorsHeaders } from '../_shared/cors.ts'
 import { rateLimit, getRateLimitHeaders } from '../_shared/ratelimit.ts'
 import { 
   validateContactForm, 
@@ -20,7 +20,9 @@ import {
 } from '../_shared/monitoring.ts'
 
 serve(async (req) => {
-  const timer = new PerformanceTimer('contact-form')
+  
+  const corsHeaders = getCorsHeaders(req)
+const timer = new PerformanceTimer('contact-form')
   
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -31,7 +33,7 @@ serve(async (req) => {
     const sizeErrors = validateRequestSize(req, 10) // 10KB max for contact forms
     if (sizeErrors.length > 0) {
       timer.end()
-      return json({ error: 'Request too large', details: sizeErrors }, 413)
+      return json({ error: 'Request too large', details: sizeErrors }, 413, corsHeaders)
     }
 
     // Aggressive rate limiting for contact forms to prevent spam
@@ -60,23 +62,23 @@ serve(async (req) => {
     const action = body.action || 'contact' // 'contact' or 'newsletter'
 
     if (action === 'newsletter') {
-      return await handleNewsletter(supabase, body, timer)
+      return await handleNewsletter(supabase, body, timer, corsHeaders)
     } else {
-      return await handleContact(supabase, body, timer)
+      return await handleContact(supabase, body, timer, corsHeaders)
     }
   } catch (err) {
     console.error('Contact form error:', err)
     timer.end()
-    return json({ error: 'Something went wrong processing your request.' }, 500)
+    return json({ error: 'Something went wrong processing your request.' }, 500, getCorsHeaders(req))
   }
 })
 
-async function handleContact(supabase: any, body: any, timer: PerformanceTimer) {
+async function handleContact(supabase: any, body: any, timer: PerformanceTimer, corsHeaders: Record<string, string>) {
   // Validate contact form data
   const validationErrors = validateContactForm(body)
   if (validationErrors.length > 0) {
     timer.end()
-    return json({ error: 'Validation failed', details: validationErrors }, 400)
+    return json({ error: 'Validation failed', details: validationErrors }, 400, corsHeaders)
   }
 
   // Sanitize inputs
@@ -101,22 +103,22 @@ async function handleContact(supabase: any, body: any, timer: PerformanceTimer) 
   if (error) {
     console.error('Failed to save contact message:', error)
     timer.end()
-    return json({ error: 'Failed to send message. Please try again.' }, 500)
+    return json({ error: 'Failed to send message. Please try again.' }, 500, corsHeaders)
   }
 
   timer.end()
   return json({ 
     success: true, 
     message: 'Thank you for your message. We\'ll get back to you soon!' 
-  })
+  }, 200, corsHeaders)
 }
 
-async function handleNewsletter(supabase: any, body: any, timer: PerformanceTimer) {
+async function handleNewsletter(supabase: any, body: any, timer: PerformanceTimer, corsHeaders: Record<string, string>) {
   // Validate email
   const emailErrors = validateEmail(body.email)
   if (emailErrors.length > 0) {
     timer.end()
-    return json({ error: 'Invalid email address', details: emailErrors }, 400)
+    return json({ error: 'Invalid email address', details: emailErrors }, 400, corsHeaders)
   }
 
   const email = body.email.trim().toLowerCase()
@@ -134,7 +136,7 @@ async function handleNewsletter(supabase: any, body: any, timer: PerformanceTime
       return json({ 
         success: true, 
         message: 'You\'re already subscribed to our newsletter!' 
-      })
+      }, 200, corsHeaders)
     } else {
       // Reactivate subscription
       await supabase
@@ -146,7 +148,7 @@ async function handleNewsletter(supabase: any, body: any, timer: PerformanceTime
       return json({ 
         success: true, 
         message: 'Welcome back! Your newsletter subscription has been reactivated.' 
-      })
+      }, 200, corsHeaders)
     }
   }
 
@@ -161,19 +163,19 @@ async function handleNewsletter(supabase: any, body: any, timer: PerformanceTime
   if (error) {
     console.error('Failed to save newsletter subscription:', error)
     timer.end()
-    return json({ error: 'Failed to subscribe. Please try again.' }, 500)
+    return json({ error: 'Failed to subscribe. Please try again.' }, 500, corsHeaders)
   }
 
   timer.end()
   return json({ 
     success: true, 
     message: 'Thank you for subscribing to our newsletter!' 
-  })
+  }, 200, corsHeaders)
 }
 
-function json(body: unknown, status = 200) {
+function json(body: unknown, status = 200, headers: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...headers, 'Content-Type': 'application/json' },
   })
 }
