@@ -6,6 +6,7 @@ import { productService } from '../services/productService';
 import { collections } from '../data/products';
 import { useSEO, seoHelpers } from '../lib/seo';
 import ProductCard from '../components/ProductCard';
+import HeroProductCarousel from '../components/HeroProductCarousel';
 import Newsletter from '../components/Newsletter';
 import Skeleton from '../components/Skeleton';
 
@@ -85,6 +86,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* AUTO-SCROLLING PRODUCT SHOWCASE — like Salty Denim 02/04 */}
+      {!loading && newDrop.length >= 4 && <HeroProductCarousel products={newDrop} />}
 
       {/* NEW DROP */}
       <section className="bg-white text-navy py-16 md:py-24 px-5 md:px-8">
