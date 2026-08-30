@@ -6,7 +6,6 @@ import { productService } from '../services/productService';
 import { collections } from '../data/products';
 import { useSEO, seoHelpers } from '../lib/seo';
 import ProductCard from '../components/ProductCard';
-import Checkerboard from '../components/Checkerboard';
 import Newsletter from '../components/Newsletter';
 import Skeleton from '../components/Skeleton';
 
@@ -50,7 +49,6 @@ export default function Home() {
           className="absolute inset-0 w-full h-full object-cover opacity-70"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/30 to-navy/10" />
-        <div className="absolute top-20 right-6 md:right-10 nv-checker w-16 h-16 md:w-24 md:h-24 opacity-90" />
 
         <div className="relative w-full px-5 md:px-8 pb-14 md:pb-20">
           <div className="mx-auto max-w-[1600px]">
@@ -87,8 +85,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      <Checkerboard />
 
       {/* NEW DROP */}
       <section className="bg-white text-navy py-16 md:py-24 px-5 md:px-8">
@@ -186,8 +182,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      <Checkerboard invert />
 
       {/* SOCIAL / COMMUNITY */}
       <section className="bg-navy py-16 md:py-24 px-5 md:px-8">
