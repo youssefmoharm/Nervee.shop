@@ -8,6 +8,7 @@ interface BannerItem {
   cta: string;
   link: string;
   discount?: string;
+  image?: string;
 }
 
 interface RotatingBannerProps {
@@ -55,108 +56,114 @@ export default function RotatingBanner({ banners }: RotatingBannerProps) {
 
   return (
     <div
-      className="relative w-full overflow-hidden bg-white text-navy py-3 md:py-4 px-5"
+      className="relative w-full overflow-hidden bg-navy text-white"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="mx-auto max-w-[1600px] flex items-center justify-between">
-        {/* Left: Discount/Title */}
-        <div className="flex-1 min-w-0 mr-6 md:mr-10 animate-fadeIn">
-          {banner.discount && (
-            <div className="flex items-center gap-2 mb-2">
-              <span className="bg-navy text-white text-xs md:text-sm px-2 py-1 uppercase tracking-wider">
-                {banner.discount}
+      {/* Background Image */}
+      {banner.image && (
+        <div className="absolute inset-0 z-0">
+          <img src={banner.image} alt={banner.title} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-navy/90 via-navy/70 to-transparent" />
+        </div>
+      )}
+
+      <div className="relative z-10 w-full py-8 md:py-12 px-5">
+        <div className="mx-auto max-w-[1600px] flex items-center justify-between">
+          {/* Left: Product Info */}
+          <div className="flex-1 min-w-0 mr-6 md:mr-12 animate-fadeIn">
+            {banner.discount && (
+              <div className="flex items-center gap-2 mb-3">
+                <span className="bg-amber-500 text-white text-xs md:text-sm px-3 py-1.5 uppercase tracking-wider font-semibold">
+                  {banner.discount}
+                </span>
+                <span className="text-white/70 text-xs md:text-sm uppercase tracking-widest">
+                  {banner.subtitle}
+                </span>
+              </div>
+            )}
+            <h3 className="nv-heading text-3xl md:text-5xl lg:text-6xl leading-tight mb-3 md:mb-4">
+              {banner.title}
+            </h3>
+            <p className="nv-edit text-lg md:text-2xl text-white/80 font-light mb-6">
+              Now Available
+            </p>
+            <Link
+              to={banner.link}
+              className="inline-flex items-center gap-2 nv-eyebrow px-8 py-4 bg-white text-navy hover:bg-amber-500 hover:text-white transition-all duration-300 uppercase tracking-widest text-base md:text-lg"
+            >
+              {banner.cta} <span className="text-lg">→</span>
+            </Link>
+          </div>
+
+          {/* Right: Indicators & Controls */}
+          <div className="flex items-center gap-6 md:gap-8">
+            {/* Slide Indicators */}
+            <div className="hidden md:flex flex-col items-center gap-3">
+              {banners.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => goToSlide(index)}
+                  className={`transition-all duration-300 rounded-full ${
+                    index === currentIndex
+                      ? 'w-8 h-3 bg-white'
+                      : 'w-3 h-3 bg-white/30 hover:bg-white/50'
+                  }`}
+                  aria-label={`Go to product ${index + 1}`}
+                  aria-current={index === currentIndex}
+                />
+              ))}
+            </div>
+
+            {/* Navigation Arrows */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={goToPrevious}
+                className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all backdrop-blur-sm border border-white/20"
+                aria-label="Previous product"
+              >
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+              <button
+                onClick={goToNext}
+                className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all backdrop-blur-sm border border-white/20"
+                aria-label="Next product"
+              >
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Slide Counter */}
+            <div className="hidden md:flex flex-col items-end gap-1">
+              <span className="text-2xl font-bold text-white">{currentIndex + 1}</span>
+              <span className="text-xs text-white/50 uppercase tracking-widest">
+                OF {banners.length}
               </span>
             </div>
-          )}
-          <h3 className="nv-heading text-xl md:text-3xl lg:text-4xl leading-tight mb-1 md:mb-2">
-            {banner.title}
-          </h3>
-          <p className="nv-edit text-sm md:text-lg text-navy/70 font-light">{banner.subtitle}</p>
-        </div>
-
-        {/* Center: CTA Button */}
-        <div className="hidden md:block flex-shrink-0">
-          <Link
-            to={banner.link}
-            className="inline-flex items-center gap-2 nv-eyebrow px-6 py-3 bg-navy text-white hover:bg-amber-500 hover:text-white transition-all duration-300 uppercase tracking-widest text-sm md:text-base"
-          >
-            {banner.cta}
-          </Link>
-        </div>
-
-        {/* Right: Mobile CTA & Indicators */}
-        <div className="flex items-center gap-4 md:gap-6">
-          {/* Mobile CTA Button */}
-          <Link
-            to={banner.link}
-            className="md:hidden inline-flex nv-eyebrow px-4 py-2 bg-navy text-white uppercase tracking-widest text-xs"
-          >
-            {banner.cta}
-          </Link>
-
-          {/* Slide Indicators */}
-          <div className="hidden md:flex items-center gap-3">
-            {banners.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
-                className={`transition-all duration-300 rounded-full ${
-                  index === currentIndex ? 'w-6 h-1 bg-navy' : 'w-1 h-1 bg-navy/30 hover:bg-navy/50'
-                }`}
-                aria-label={`Go to banner ${index + 1}`}
-                aria-current={index === currentIndex}
-              />
-            ))}
-          </div>
-
-          {/* Navigation Arrows (Desktop) */}
-          <div className="hidden md:flex items-center gap-2">
-            <button
-              onClick={goToPrevious}
-              className="w-8 h-8 rounded-full bg-navy/10 hover:bg-navy/20 flex items-center justify-center transition-colors"
-              aria-label="Previous banner"
-            >
-              <svg
-                className="w-4 h-4 text-navy"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-            <button
-              onClick={goToNext}
-              className="w-8 h-8 rounded-full bg-navy/10 hover:bg-navy/20 flex items-center justify-center transition-colors"
-              aria-label="Next banner"
-            >
-              <svg
-                className="w-4 h-4 text-navy"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-          </div>
-
-          {/* Slide Counter (Mobile) */}
-          <div className="md:hidden">
-            <span className="text-xs text-navy/50">
-              {currentIndex + 1} / {banners.length}
-            </span>
           </div>
         </div>
       </div>

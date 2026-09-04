@@ -22,49 +22,6 @@ const categoryTiles = [
 
 const gallery = ['nw-1', 'nw-2', 'nw-3', 'nw-4', 'nw-5', 'nw-6'];
 
-// Rotating banner data - similar to Salty_eg.com style
-const banners: Array<{
-  id: string;
-  title: string;
-  subtitle: string;
-  cta: string;
-  link: string;
-  discount?: string;
-}> = [
-  {
-    id: 'banner-1',
-    title: 'UPTO 60% OFF',
-    subtitle: 'Limited Time Offers on Select Collections',
-    cta: 'Shop Now',
-    link: '/shop',
-    discount: 'SALE',
-  },
-  {
-    id: 'banner-2',
-    title: 'SALTY DENIM',
-    subtitle: 'Premium Quality Denim Collections',
-    cta: 'Shop Now',
-    link: '/shop?category=Denim',
-    discount: 'NEW',
-  },
-  {
-    id: 'banner-3',
-    title: 'SWIMWEAR',
-    subtitle: 'Coastal Collection Available Now',
-    cta: 'Shop Now',
-    link: '/shop?category=Swimwear',
-    discount: 'SEASONAL',
-  },
-  {
-    id: 'banner-4',
-    title: 'S26 EARLY ACCESS',
-    subtitle: 'Be the first to shop our latest drop',
-    cta: 'Shop Now',
-    link: '/shop',
-    discount: 'EARLY ACCESS',
-  },
-];
-
 export default function Home() {
   useSEO(seoHelpers.home());
   const [newDrop, setNewDrop] = useState<Product[]>([]);
@@ -83,10 +40,28 @@ export default function Home() {
     };
   }, []);
 
+  // Create banner items from products for rotating effect (4 products)
+  const bannerProducts = newDrop.slice(0, 4).map((product, index) => {
+    const color = product.colors[0];
+    return {
+      id: `banner-${product.id}`,
+      title: product.name,
+      subtitle: `${product.category} • ${index + 1} OF 4`,
+      cta: 'Shop Now',
+      link: `/product/${product.slug}`,
+      discount: product.badge || 'NEW',
+      image: color?.image,
+    };
+  });
+
   return (
     <>
-      {/* ROTATING BANNER - Top of page like Salty_eg.com */}
-      <RotatingBanner banners={banners} />
+      {/* ROTATING BANNER - Top of page like Salty_eg.com with 4 products */}
+      {!loading ? (
+        <RotatingBanner banners={bannerProducts} />
+      ) : (
+        <div className="w-full h-32 md:h-48 bg-navy/50 animate-pulse" />
+      )}
 
       {/* HERO — rotating carousel with auto-rotation */}
       {!loading ? (
@@ -96,7 +71,6 @@ export default function Home() {
           <div className="text-white/60 animate-pulse">Loading collection…</div>
         </section>
       )}
-
       {/* NEW DROP */}
       <section className="bg-white text-navy py-16 md:py-24 px-5 md:px-8">
         <div className="mx-auto max-w-[1600px]">
