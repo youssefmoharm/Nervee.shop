@@ -7,6 +7,7 @@ import { collections } from '../data/products';
 import { useSEO, seoHelpers } from '../lib/seo';
 import ProductCard from '../components/ProductCard';
 import RotatingHeroCarousel from '../components/RotatingHeroCarousel';
+import RotatingBanner from '../components/RotatingBanner';
 import Newsletter from '../components/Newsletter';
 import Skeleton from '../components/Skeleton';
 
@@ -20,6 +21,49 @@ const categoryTiles = [
 ];
 
 const gallery = ['nw-1', 'nw-2', 'nw-3', 'nw-4', 'nw-5', 'nw-6'];
+
+// Rotating banner data - similar to Salty_eg.com style
+const banners: Array<{
+  id: string;
+  title: string;
+  subtitle: string;
+  cta: string;
+  link: string;
+  discount?: string;
+}> = [
+  {
+    id: 'banner-1',
+    title: 'UPTO 60% OFF',
+    subtitle: 'Limited Time Offers on Select Collections',
+    cta: 'Shop Now',
+    link: '/shop',
+    discount: 'SALE',
+  },
+  {
+    id: 'banner-2',
+    title: 'SALTY DENIM',
+    subtitle: 'Premium Quality Denim Collections',
+    cta: 'Shop Now',
+    link: '/shop?category=Denim',
+    discount: 'NEW',
+  },
+  {
+    id: 'banner-3',
+    title: 'SWIMWEAR',
+    subtitle: 'Coastal Collection Available Now',
+    cta: 'Shop Now',
+    link: '/shop?category=Swimwear',
+    discount: 'SEASONAL',
+  },
+  {
+    id: 'banner-4',
+    title: 'S26 EARLY ACCESS',
+    subtitle: 'Be the first to shop our latest drop',
+    cta: 'Shop Now',
+    link: '/shop',
+    discount: 'EARLY ACCESS',
+  },
+];
 
 export default function Home() {
   useSEO(seoHelpers.home());
@@ -41,6 +85,9 @@ export default function Home() {
 
   return (
     <>
+      {/* ROTATING BANNER - Top of page like Salty_eg.com */}
+      <RotatingBanner banners={banners} />
+
       {/* HERO — rotating carousel with auto-rotation */}
       {!loading ? (
         <RotatingHeroCarousel products={newDrop} />
