@@ -167,8 +167,8 @@ export default function Unsubscribe() {
             <div className="mt-6 p-4 bg-gray-50 rounded-lg">
               <p className="text-xs text-gray-600">
                 Questions? Contact us at{' '}
-                <a href="mailto:hello@nerve-store.com" className="text-navy font-semibold">
-                  hello@nerve-store.com
+                <a href="mailto:hello@nerveey.shop" className="text-navy font-semibold">
+                  hello@nerveey.shop
                 </a>
               </p>
             </div>
@@ -187,7 +187,7 @@ export default function Unsubscribe() {
             <div className="border-t pt-6 space-y-3">
               <p className="text-sm text-gray-600">Need help?</p>
               <a
-                href="mailto:hello@nerve-store.com"
+                href="mailto:hello@nerveey.shop"
                 className="block w-full bg-navy text-white py-2 rounded-lg hover:bg-navy-2 transition text-center font-medium"
               >
                 Contact Support

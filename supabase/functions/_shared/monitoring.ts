@@ -71,7 +71,7 @@ export function logOrderSuccess(orderId: string, orderNumber: string, total: num
 }
 
 /**
- * Log payment reconciliation
+ * Log payment reconciliation (COD verification)
  */
 export function logPaymentVerification(orderId: string, status: 'success' | 'failed', source: 'webhook' | 'manual') {
   logEvent({
@@ -115,18 +115,6 @@ export function logEmailSuccess(recipient: string, subject: string) {
     category: 'EMAIL',
     message: `Email sent to ${recipient}`,
     data: { subject },
-  })
-}
-
-/**
- * Log HMAC validation failure (security concern)
- */
-export function logHMACFailure(ip: string, payload?: any) {
-  logEvent({
-    type: 'error',
-    category: 'SECURITY',
-    message: `HMAC validation failed from ${ip}`,
-    data: { payload },
   })
 }
 

@@ -122,7 +122,7 @@ serve(async (req) => {
       p_email_type: emailType === 'transactional' || emailType === 'order_confirmation' ? null : emailType,
     })
 
-    const storeUrl = Deno.env.get('STORE_URL') || 'https://nerve-store.com'
+    const storeUrl = Deno.env.get('STORE_URL') || 'https://nerveey.shop'
     const unsubscribeLink = unsubscribeToken.data
       ? `${storeUrl}/unsubscribe?token=${unsubscribeToken.data}`
       : null

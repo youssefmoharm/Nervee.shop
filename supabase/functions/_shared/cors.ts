@@ -3,11 +3,9 @@
 // imports this single source of truth.
 
 const PROD_ORIGINS = new Set([
-  'https://nerve-store.com',
-  'https://www.nerve-store.com',
+
   'https://nerveey.shop',
   'https://www.nerveey.shop',
-  'https://nerve-weld.vercel.app',
 ])
 
 const DEV_ORIGINS = new Set([
@@ -62,16 +60,4 @@ export function getCorsHeaders(req: Request): Record<string, string> {
   }
 
   return headers
-}
-
-// Backwards compat: a few handlers reference this static export directly
-// (e.g. as a fallback default) instead of calling getCorsHeaders(req) at
-// request time. It intentionally does NOT include Access-Control-Allow-Origin
-// — callers must not treat "no origin key present" as "use '*'". Any code
-// doing `Object.keys(headers).length ? headers : { 'Access-Control-Allow-Origin': '*' }`
-// is itself the bug (see per-function fixes) since this object always has
-// keys but should never grant a wildcard origin.
-export const corsHeaders = {
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
 }

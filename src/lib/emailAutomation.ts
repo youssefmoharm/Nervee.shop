@@ -276,7 +276,7 @@ class EmailAutomationService {
         return ''; // Fallback to empty link if token creation fails
       }
 
-      const storeUrl = import.meta.env.VITE_APP_URL || 'https://nerve-store.com';
+      const storeUrl = import.meta.env.VITE_APP_URL || 'https://nerveey.shop';
       return `${storeUrl}/unsubscribe?token=${token.data}`;
     } catch (error) {
       logError('Error getting unsubscribe link:', error);

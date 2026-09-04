@@ -124,7 +124,7 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
 
       const errorMsg: Message = {
         id: (Date.now() + 1).toString(),
-        text: "I'm having trouble responding right now. Please try again or contact us directly at support@nerve-store.com",
+        text: "I'm having trouble responding right now. Please try again or contact us directly at support@nerveey.shop",
         sender: 'bot',
         timestamp: new Date(),
       };

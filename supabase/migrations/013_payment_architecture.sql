@@ -1,24 +1,26 @@
 -- ============================================================================
--- NERVE — Migration 013: Payment Architecture (provider-agnostic)
+-- NERVE — Migration 013: Payment Architecture (COD-only)
 --
--- Adds provider-agnostic payment tracking so NERVE can support COD + Paymob
--- (and future providers) without trusting browser payment state. COD remains the
--- only active method until Paymob credentials are configured.
+-- Adds provider-agnostic payment tracking for COD. NERVE uses Cash on Delivery
+-- only - no online payment gateways. This migration supports COD-only workflow.
+-- ============================================================================
+-- Note: This is a historical migration. Original supported COD+Paymob.
+--       For new deployments, run the COD-only migration (019_cod_only).
 -- ============================================================================
 
 -- Ensure pgcrypto for idempotency keys
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- --------------------------------------------------------------------------
--- PAYMENT ATTEMPTS — idempotent, auditable, provider-agnostic
+-- PAYMENT ATTEMPTS — idempotent, auditable (COD-only)
 -- --------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS payment_attempts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-  provider TEXT NOT NULL CHECK (provider IN ('cod', 'paymob')),
+  provider TEXT NOT NULL CHECK (provider IN ('cod')),
   amount INTEGER NOT NULL CHECK (amount >= 0),
   currency TEXT NOT NULL DEFAULT 'EGP',
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'authorized', 'captured', 'failed', 'cancelled', 'refunded', 'partially_refunded')),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'captured', 'failed', 'cancelled')),
   provider_transaction_id TEXT,
   provider_response JSONB,
   idempotency_key TEXT UNIQUE NOT NULL,
@@ -42,9 +44,6 @@ CREATE POLICY "Users can view own payment attempts" ON payment_attempts FOR SELE
   USING (
     EXISTS (SELECT 1 FROM orders WHERE orders.id = payment_attempts.order_id AND orders.customer_id = auth.uid())
   );
-
--- No anon insert — only service_role via edge functions
--- (no INSERT policy for anon/authenticated)
 
 -- --------------------------------------------------------------------------
 -- REFUNDS — separate from returns, provider-verified
@@ -78,8 +77,8 @@ CREATE POLICY "Users can view own refunds" ON refunds FOR SELECT
 -- --------------------------------------------------------------------------
 -- ORDERS — add columns for payment lifecycle if missing
 -- --------------------------------------------------------------------------
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_provider TEXT CHECK (payment_provider IN ('cod', 'paymob'));
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAULT 'pending' CHECK (payment_status IN ('pending', 'paid', 'failed', 'refunded', 'partially_refunded'));
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_provider TEXT CHECK (payment_provider IN ('cod'));
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAULT 'pending' CHECK (payment_status IN ('pending', 'paid', 'failed', 'refunded'));
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_id TEXT;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS refunded_at TIMESTAMPTZ;

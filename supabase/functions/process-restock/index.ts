@@ -16,10 +16,10 @@ import { getCorsHeaders } from '../_shared/cors.ts'
 import { requireAdmin } from '../_shared/admin.ts'
 import { sendEmail, backInStockEmail } from '../_shared/email.ts'
 
-const STORE_URL = Deno.env.get('STORE_URL') || 'https://nerve-store.com'
+const STORE_URL = Deno.env.get('STORE_URL') || 'https://nerveey.shop'
 
 serve(async (req) => {
-  
+
   const corsHeaders = getCorsHeaders(req)
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 

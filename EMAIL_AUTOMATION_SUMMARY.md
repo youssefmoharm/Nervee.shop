@@ -82,7 +82,7 @@ supabase functions deploy send-back-in-stock --no-verify
 ```bash
 supabase secrets set RESEND_API_KEY=re_xxxxx
 supabase secrets set RESEND_FROM_EMAIL="NERVE <orders@yourdomain.com>"
-supabase secrets set STORE_URL="https://nerve-store.com"
+supabase secrets set STORE_URL="https://nerveey.shop"
 ```
 
 ### 5. Test Email Sending (1 min)

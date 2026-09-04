@@ -108,7 +108,7 @@ serve(async (req) => {
       return json({ error: 'Product not found' }, 404, corsHeaders)
     }
 
-    const storeUrl = Deno.env.get('STORE_URL') || 'https://nerve-store.com'
+    const storeUrl = Deno.env.get('STORE_URL') || 'https://nerveey.shop'
     const productUrl = `${storeUrl}/product/${(product as ProductInfo).slug}`
 
     let successCount = 0

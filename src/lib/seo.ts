@@ -168,8 +168,8 @@ export const DEFAULT_SEO = {
   title: 'NERVE - Cool but Chic | Egyptian Streetwear',
   description:
     "Discover NERVE's collection of modern streetwear. From premium tees to sustainable denim, find your style in our carefully curated Egyptian concept store.",
-  image: 'https://nerve-store.com/nervee-logo-favicon.png',
-  url: 'https://nerve-store.com',
+  image: 'https://nerveey.shop/nervee-logo-favicon.png',
+  url: 'https://nerveey.shop',
   type: 'website' as const,
 };
 

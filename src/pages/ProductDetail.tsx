@@ -81,7 +81,7 @@ export default function ProductDetail() {
           '@context': 'https://schema.org',
           '@type': 'Organization',
           name: 'NERVE',
-          url: 'https://nerve-store.com',
+          url: 'https://nerveey.shop',
           sameAs: [
             'https://www.instagram.com/gothennerve58/',
             'https://www.tiktok.com/@user795916160817',

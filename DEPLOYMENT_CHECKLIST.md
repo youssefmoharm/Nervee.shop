@@ -77,7 +77,7 @@ Go to Supabase Dashboard > Edge Functions
 ```bash
 supabase secrets set RESEND_API_KEY=re_YOUR_KEY_HERE
 supabase secrets set RESEND_FROM_EMAIL="NERVE <orders@yourdomain.com>"
-supabase secrets set STORE_URL="https://nerve-store.com"
+supabase secrets set STORE_URL="https://nerveey.shop"
 ```
 
 ### Verify Secrets

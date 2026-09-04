@@ -227,12 +227,12 @@ function generateConfirmationEmail(ticketNumber: string, subject: string): strin
           </div>
           <p style="color: #666; margin-bottom: 20px;">Our support team will review your ticket and respond within 24 hours.</p>
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${Deno.env.get('STORE_URL') || 'https://nerve-store.com'}/account" style="background: #061735; color: white; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">View Ticket Status</a>
+            <a href="${Deno.env.get('STORE_URL') || 'https://nerveey.shop'}/account" style="background: #061735; color: white; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">View Ticket Status</a>
           </div>
         </div>
         <div style="background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px;">
           <p style="margin: 0;">NERVE - Cool but Chic</p>
-          <p style="margin: 5px 0 0 0;">support@nerve-store.com</p>
+          <p style="margin: 5px 0 0 0;">support@nerveey.shop</p>
         </div>
       </div>
     </body>

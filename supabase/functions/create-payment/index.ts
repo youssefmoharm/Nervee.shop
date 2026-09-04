@@ -1,11 +1,11 @@
 // supabase/functions/create-payment/index.ts
 //
-// Provider-agnostic payment session creation. Currently supports:
-// - cod: no external call, just validates order belongs to caller
-// - paymob: creates Paymob intention (requires PAYMOB_API_KEY + HMAC secrets)
+// Cash on Delivery payment session creation. NERVE uses COD only - no online
+// payment gateways. This function validates the order belongs to the caller
+// and creates a payment attempt record.
 //
 // Never trusts browser-supplied amounts — amount is derived server-side from
-// the order's total. Webhook is the source of truth for paid state.
+// the order's total.
 
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
@@ -37,7 +37,7 @@ serve(async (req) => {
     }
     const userId = userData.user.id
 
-    let body: { orderId?: string; provider?: string; idempotencyKey?: string }
+    let body: { orderId?: string; idempotencyKey?: string }
     try {
       body = await req.json()
     } catch {
@@ -46,16 +46,11 @@ serve(async (req) => {
     }
 
     const orderId = typeof body.orderId === 'string' ? body.orderId.trim() : ''
-    const provider = typeof body.provider === 'string' ? body.provider.trim().toLowerCase() : 'cod'
     const idempotencyKey = typeof body.idempotencyKey === 'string' ? body.idempotencyKey.trim() : crypto.randomUUID()
 
     if (!orderId || !/^[0-9a-f-]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId)) {
       timer.end()
       return json({ error: 'Valid orderId is required' }, 400, corsHeaders)
-    }
-    if (!['cod', 'paymob'].includes(provider)) {
-      timer.end()
-      return json({ error: 'Provider must be cod or paymob' }, 400, corsHeaders)
     }
 
     // Fetch order and verify ownership
@@ -94,52 +89,12 @@ serve(async (req) => {
       return json({ success: true, paymentAttempt: existing, reused: true }, 200, corsHeaders)
     }
 
-    if (provider === 'cod') {
-      // COD does not need external provider — just record attempt
-      const { data: attempt, error: insertError } = await supabase
-        .from('payment_attempts')
-        .insert({
-          order_id: orderId,
-          provider: 'cod',
-          amount: order.total,
-          currency: 'EGP',
-          status: 'pending',
-          idempotency_key: idempotencyKey,
-        })
-        .select()
-        .single()
-
-      if (insertError) {
-        // Unique violation on idempotency_key → concurrent request, return existing
-        if (insertError.code === '23505') {
-          const { data: retry } = await supabase.from('payment_attempts').select('*').eq('idempotency_key', idempotencyKey).maybeSingle()
-          timer.end()
-          return json({ success: true, paymentAttempt: retry, reused: true }, 200, corsHeaders)
-        }
-        throw insertError
-      }
-
-      logEvent({ type: 'info', category: 'PAYMENT', message: 'COD payment attempt created', data: { orderId, attemptId: attempt.id } })
-      timer.end()
-      return json({ success: true, paymentAttempt: attempt }, 200, corsHeaders)
-    }
-
-    // Paymob — only if configured
-    const paymobKey = Deno.env.get('PAYMOB_API_KEY')
-    const paymobHmac = Deno.env.get('PAYMOB_HMAC_SECRET')
-    if (!paymobKey || !paymobHmac) {
-      timer.end()
-      return json({ error: 'Card payments are not configured. Please use Cash on Delivery.' }, 503, corsHeaders)
-    }
-
-    // Paymob intention creation would go here (API call to Paymob).
-    // For now, create a pending attempt and return instructions.
-    // Full integration: call Paymob API, store provider_transaction_id, return clientSecret/paymentUrl.
-    const { data: attempt, error: paymobError } = await supabase
+    // COD only - create payment attempt
+    const { data: attempt, error: insertError } = await supabase
       .from('payment_attempts')
       .insert({
         order_id: orderId,
-        provider: 'paymob',
+        provider: 'cod',
         amount: order.total,
         currency: 'EGP',
         status: 'pending',
@@ -148,19 +103,19 @@ serve(async (req) => {
       .select()
       .single()
 
-    if (paymobError) throw paymobError
+    if (insertError) {
+      // Unique violation on idempotency_key → concurrent request, return existing
+      if (insertError.code === '23505') {
+        const { data: retry } = await supabase.from('payment_attempts').select('*').eq('idempotency_key', idempotencyKey).maybeSingle()
+        timer.end()
+        return json({ success: true, paymentAttempt: retry, reused: true }, 200, corsHeaders)
+      }
+      throw insertError
+    }
 
-    logEvent({ type: 'info', category: 'PAYMENT', message: 'Paymob payment attempt created', data: { orderId, attemptId: attempt.id } })
+    logEvent({ type: 'info', category: 'PAYMENT', message: 'COD payment attempt created', data: { orderId, attemptId: attempt.id } })
     timer.end()
-    return json(
-      {
-        success: true,
-        paymentAttempt: attempt,
-        message: 'Paymob integration pending — complete via webhook',
-      },
-      200,
-      corsHeaders,
-    )
+    return json({ success: true, paymentAttempt: attempt }, 200, corsHeaders)
   } catch (err) {
     console.error('create-payment error:', err)
     timer.end()

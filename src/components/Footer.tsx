@@ -111,11 +111,8 @@ export default function Footer() {
             <ul className="space-y-2 text-sm text-navy/60">
               <li className="flex items-center gap-2">
                 <Mail size={16} />
-                <a
-                  href="mailto:hello@nerve-store.com"
-                  className="hover:text-navy transition-colors"
-                >
-                  hello@nerve-store.com
+                <a href="mailto:hello@nerveey.shop" className="hover:text-navy transition-colors">
+                  hello@nerveey.shop
                 </a>
               </li>
               <li className="flex items-center gap-2">

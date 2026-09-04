@@ -23,7 +23,7 @@ So this is a legitimately far-along v1 storefront, not a scaffold. The gaps belo
 - `place_order()` hard-fails anything that isn't `payment_provider = 'cod'` (migration 003 line 124). The schema has `payment_provider TEXT` and `payment_status TEXT` but there's **no provider integration at all**. Stripe is in the README's "next steps" language, not in the repo.
 - **Severity:** important (limits revenue to Egyptian COD, which is fine for launch in Egypt but caps scale and refund handling).
 - **Files:** `supabase/migrations/003_security_notifications_and_reconciliation.sql:124`, `supabase/functions/create-order/index.ts:138`, `src/lib/checkout.ts`.
-- **What's missing:** a Stripe/Paymob/Fawry integration — creating `payment_sessions`, handling webhooks (status transitions: pending → paid → failed/cancelled), refund/cancellation edge-case logic, and the checkout UI to show "Pay online" vs "Pay on delivery".
+- **What's missing:** COD-only payment flow (Stripe/Paymob/Fawry integration is not planned). The system is designed to only accept Cash on Delivery.
 
 ### 1.2 No order cancellation / return / refund flow for customers
 - Admins can flip status (placed→processing→shipped→delivered), but there's **no customer-facing cancel/return/refund** path. Migration 003 has `cancel_order` and `start_return` functions, but no UI or flow to invoke them. GuestOrder only lets a guest *look up* their order, not cancel it.

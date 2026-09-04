@@ -1,8 +1,11 @@
 // supabase/functions/payment-webhook/index.ts
 //
-// Provider webhook — the ONLY source of truth for payment state.
-// Verifies HMAC/signature, handles idempotency, and transitions order
-// payment_status. Never trusts a browser redirect.
+// COD payment webhook — verifies COD payment was collected on delivery.
+// Updates order payment_status based on physical cash collection.
+// Never trusts a browser redirect.
+//
+// This webhook is called by the admin/courier app when cash is collected
+// upon delivery. It marks the order as paid when payment is received.
 
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
@@ -10,8 +13,6 @@ import { getCorsHeaders } from '../_shared/cors.ts'
 import { PerformanceTimer, logEvent } from '../_shared/monitoring.ts'
 
 serve(async (req) => {
-  // Webhooks are server-to-server, not browser — CORS is permissive but
-  // the HMAC check is the real gate.
   const corsHeaders = getCorsHeaders(req)
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405, corsHeaders)
@@ -19,7 +20,7 @@ serve(async (req) => {
   const timer = new PerformanceTimer('payment-webhook')
 
   try {
-    const provider = req.headers.get('x-payment-provider') || 'paymob'
+    const provider = req.headers.get('x-payment-provider') || 'cod'
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 
     let body: Record<string, unknown>
@@ -30,62 +31,13 @@ serve(async (req) => {
       return json({ error: 'Invalid JSON' }, 400, corsHeaders)
     }
 
-    // ---- HMAC verification (Paymob) ----
-    if (provider === 'paymob') {
-      const hmacSecret = Deno.env.get('PAYMOB_HMAC_SECRET')
-      if (!hmacSecret) {
-        timer.end()
-        return json({ error: 'Webhook not configured' }, 503, corsHeaders)
-      }
-
-      const receivedHmac = req.headers.get('x-paymob-hmac') || (body.hmac as string) || ''
-      if (!receivedHmac) {
-        timer.end()
-        return json({ error: 'Missing HMAC' }, 401, corsHeaders)
-      }
-
-      // Paymob HMAC: ordered concatenation per Paymob docs (https://docs.paymob.com/docs/hmac-calculation)
-      // Concatenate fields in this exact order, then HMAC-SHA512 with HMAC_SECRET.
-      // If Paymob changes field set, this will reject — update PAYMOB_HMAC_FIELDS accordingly.
-      const hmacFields = [
-        'amount_cents', 'created_at', 'currency', 'error_occured', 'has_parent_transaction',
-        'id', 'integration_id', 'is_3d_secure', 'is_auth', 'is_capture', 'is_refunded',
-        'is_standalone_payment', 'is_voided', 'order.id', 'owner', 'pending',
-        'source_data.pan', 'source_data.sub_type', 'source_data.type', 'success',
-      ]
-      function getNested(obj: Record<string, unknown>, path: string): string {
-        const parts = path.split('.')
-        let cur: unknown = obj
-        for (const p of parts) {
-          if (cur && typeof cur === 'object' && p in (cur as Record<string, unknown>)) cur = (cur as Record<string, unknown>)[p]
-          else return ''
-        }
-        if (cur === null || cur === undefined) return ''
-        if (typeof cur === 'boolean') return cur ? 'true' : 'false'
-        return String(cur)
-      }
-      // Paymob sends the transaction under obj / transaction / data.object — support all shapes
-      const root = (body.obj as Record<string, unknown>) ?? (body.transaction as Record<string, unknown>) ?? body
-      const concatenated = hmacFields.map((f) => getNested(root as Record<string, unknown>, f)).join('')
-      const encoder = new TextEncoder()
-      const key = await crypto.subtle.importKey('raw', encoder.encode(hmacSecret), { name: 'HMAC', hash: 'SHA-512' }, false, ['sign'])
-      const sigBuf = await crypto.subtle.sign('HMAC', key, encoder.encode(concatenated))
-      const expected = Array.from(new Uint8Array(sigBuf)).map((b) => b.toString(16).padStart(2, '0')).join('')
-
-      // Constant-time compare
-      if (expected.length !== receivedHmac.length) {
-        timer.end()
-        return json({ error: 'Invalid HMAC' }, 401, corsHeaders)
-      }
-      let diff = 0
-      for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ receivedHmac.charCodeAt(i)
-      if (diff !== 0) {
-        timer.end()
-        return json({ error: 'Invalid HMAC' }, 401, corsHeaders)
-      }
+    // COD only - no HMAC verification needed
+    if (provider !== 'cod') {
+      timer.end()
+      return json({ error: 'Only COD provider is supported.' }, 400, corsHeaders)
     }
 
-    // Extract order/payment identifiers (provider-specific shape)
+    // Extract order/payment identifiers
     const orderId = (body.order_id as string) || (body.orderId as string) || ''
     const providerTxId = (body.transaction_id as string) || (body.id as string) || ''
     const paymentStatus = (body.status as string) || (body.payment_status as string) || ''
@@ -108,13 +60,12 @@ serve(async (req) => {
       }
     }
 
-    // Map provider status to internal status
+    // Map provider status to internal status (COD only: pending -> captured)
     let internalStatus: string = 'pending'
     const s = paymentStatus.toLowerCase()
-    if (['paid', 'captured', 'success', 'completed'].includes(s)) internalStatus = 'captured'
-    else if (['failed', 'declined', 'error'].includes(s)) internalStatus = 'failed'
-    else if (['cancelled', 'canceled'].includes(s)) internalStatus = 'cancelled'
-    else if (['refunded'].includes(s)) internalStatus = 'refunded'
+    if (['paid', 'captured', 'success', 'completed', 'collected'].includes(s)) internalStatus = 'captured'
+    else if (['failed', 'declined', 'error', 'not_collected'].includes(s)) internalStatus = 'failed'
+    else if (['cancelled', 'canceled', 'refunded'].includes(s)) internalStatus = 'cancelled'
 
     // Update payment attempt
     const { data: attempt } = await supabase
@@ -151,7 +102,7 @@ serve(async (req) => {
         order_id: orderId,
         from_status: 'pending',
         to_status: 'paid',
-        reason: `Payment captured via ${provider} webhook`,
+        reason: `COD payment collected via webhook`,
       })
     } else if (internalStatus === 'failed') {
       await supabase.from('orders').update({ payment_status: 'failed' }).eq('id', orderId)
@@ -160,7 +111,7 @@ serve(async (req) => {
     logEvent({
       type: 'info',
       category: 'PAYMENT_WEBHOOK',
-      message: `Webhook processed for order ${orderId}`,
+      message: `COD webhook processed for order ${orderId}`,
       data: { provider, orderId, providerTxId, internalStatus },
     })
 

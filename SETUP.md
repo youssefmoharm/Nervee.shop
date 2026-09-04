@@ -404,7 +404,7 @@ vercel --prod
 #### 5. Configure Custom Domain
 
 1. In Vercel dashboard, go to **Domains**
-2. Add your custom domain (e.g., `nerve-store.com`)
+2. Add your custom domain (e.g., `nerveey.shop`)
 3. Follow DNS configuration instructions
 4. SSL certificate will be provisioned automatically
 

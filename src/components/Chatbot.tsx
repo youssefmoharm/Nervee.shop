@@ -52,7 +52,7 @@ const FAQ_RESPONSES: Record<string, string> = {
   password:
     'You can reset your password from the login page or change it in your account settings.',
   contact:
-    'You can reach us via this chat, email at support@nerve-store.com, or through our contact page.',
+    'You can reach us via this chat, email at support@nerveey.shop, or through our contact page.',
 };
 
 const GREETING_MESSAGES = [
@@ -130,7 +130,7 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
     }
 
     // Default response
-    return "I'd be happy to help! You can ask me about:\n• Order tracking and delivery\n• Size guides and product info\n• Returns and exchanges\n• Payment methods\n\nOr contact our team at support@nerve-store.com for detailed assistance.";
+    return "I'd be happy to help! You can ask me about:\n• Order tracking and delivery\n• Size guides and product info\n• Returns and exchanges\n• Payment methods\n\nOr contact our team at support@nerveey.shop for detailed assistance.";
   };
 
   // Send message

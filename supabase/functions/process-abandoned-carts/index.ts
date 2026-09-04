@@ -87,7 +87,7 @@ serve(async (req) => {
 
     for (const cart of abandonedCarts as AbandonedCart[]) {
       try {
-        const recoveryUrl = `${Deno.env.get('STORE_URL') || 'https://nerve-store.com'}/cart?recovery=true&email=${encodeURIComponent(cart.customer_email)}`
+        const recoveryUrl = `${Deno.env.get('STORE_URL') || 'https://nerveey.shop'}/cart?recovery=true&email=${encodeURIComponent(cart.customer_email)}`
         const html = generateCartAbandonmentEmail(cart, recoveryUrl)
 
         const sendResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-email`, {

@@ -75,7 +75,7 @@ function layout(preheader: string, bodyHtml: string): string {
       </tr>
       <tr>
         <td style="padding:20px 32px;border-top:1px solid #e5e5e5;color:#71717a;font-size:12px;">
-          NERVE — Cool but Chic · hello@nerve-store.com
+          NERVE — Cool but Chic · hello@nerveey.shop
         </td>
       </tr>
     </table>
@@ -134,12 +134,10 @@ export function orderShippedEmail(order: OrderForEmail, items: OrderItemForEmail
     `
     <h1 style="font-size:20px;margin:0 0 8px;">Your Order Has Shipped</h1>
     <p style="font-size:14px;color:#3f3f46;">Hi ${escapeHtml(order.first_name)}, order #${order.order_number} is on its way.</p>
-    ${
-      order.tracking_number
-        ? `<p style="font-size:13px;margin:16px 0;">Tracking number: <strong>${escapeHtml(order.tracking_number)}</strong>${
-            order.tracking_url ? ` — <a href="${order.tracking_url}" style="color:#061735;">Track your package</a>` : ''
-          }</p>`
-        : ''
+    ${order.tracking_number
+      ? `<p style="font-size:13px;margin:16px 0;">Tracking number: <strong>${escapeHtml(order.tracking_number)}</strong>${order.tracking_url ? ` — <a href="${order.tracking_url}" style="color:#061735;">Track your package</a>` : ''
+      }</p>`
+      : ''
     }
     ${itemsTable(items)}
     `
@@ -152,7 +150,7 @@ export function orderDeliveredEmail(order: OrderForEmail) {
     `
     <h1 style="font-size:20px;margin:0 0 8px;">Delivered</h1>
     <p style="font-size:14px;color:#3f3f46;">Hi ${escapeHtml(order.first_name)}, order #${order.order_number} has been delivered. We hope you love it.</p>
-    <p style="font-size:13px;color:#71717a;margin-top:16px;">Something not right? Reply to this email or reach us at hello@nerve-store.com within 14 days for returns/exchanges.</p>
+    <p style="font-size:13px;color:#71717a;margin-top:16px;">Something not right? Reply to this email or reach us at hello@nerveey.shop within 14 days for returns/exchanges.</p>
     `
   )
 }
@@ -163,7 +161,7 @@ export function orderCancelledEmail(order: OrderForEmail) {
     `
     <h1 style="font-size:20px;margin:0 0 8px;">Order Cancelled</h1>
     <p style="font-size:14px;color:#3f3f46;">Hi ${escapeHtml(order.first_name)}, order #${order.order_number} has been cancelled. Any reserved items have been released back into stock.</p>
-    <p style="font-size:13px;color:#71717a;margin-top:16px;">Questions? hello@nerve-store.com</p>
+    <p style="font-size:13px;color:#71717a;margin-top:16px;">Questions? hello@nerveey.shop</p>
     `
   )
 }
