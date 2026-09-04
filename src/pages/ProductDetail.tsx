@@ -1,6 +1,6 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Heart, Loader2, Minus, Plus, RotateCcw, Ruler, Truck, Star } from 'lucide-react';
+import { Heart, Loader2, Minus, Plus, RotateCcw, Ruler, Truck, Star, ZoomIn, Info } from 'lucide-react';
 import type { Product, Size, ProductReview } from '../types';
 import { productService } from '../services/productService';
 import { backInStockService } from '../services/backInStockService';
@@ -14,7 +14,7 @@ import ProductCard from '../components/ProductCard';
 import SizeGuideModal from '../components/SizeGuideModal';
 import Skeleton from '../components/Skeleton';
 
-type Tab = 'description' | 'size' | 'shipping';
+type Tab = 'description' | 'size' | 'shipping' | 'reviews';
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -34,6 +34,7 @@ export default function ProductDetail() {
   const [tab, setTab] = useState<Tab>('description');
   const [sizeError, setSizeError] = useState(false);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
+  const [zoomOpen, setZoomOpen] = useState(false);
   const [notifySize, setNotifySize] = useState<Size | null>(null);
   const [notifyEmail, setNotifyEmail] = useState('');
   const [notifyStatus, setNotifyStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
@@ -42,6 +43,9 @@ export default function ProductDetail() {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewForm, setReviewForm] = useState({ rating: 5, title: '', comment: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [faqOpen, setFaqOpen] = useState(false);
+
+  const zoomRef = useRef<HTMLButtonElement>(null);
 
   useSEO({
     title: product ? `${product.name} | NERVE` : 'NERVE — Cool but Chic',
@@ -58,36 +62,36 @@ export default function ProductDetail() {
   useStructuredData(
     product
       ? {
-          '@context': 'https://schema.org',
-          '@type': 'Product',
-          name: product.name,
-          description: product.description,
-          image:
-            product.gallery.length > 0
-              ? product.gallery
-              : [product.colors[0]?.image].filter(Boolean),
-          brand: { '@type': 'Brand', name: 'NERVE' },
-          offers: {
-            '@type': 'Offer',
-            price: product.price,
-            priceCurrency: 'EGP',
-            availability: product.sizes.some(s => s.inStock)
-              ? 'https://schema.org/InStock'
-              : 'https://schema.org/OutOfStock',
-            seller: { '@type': 'Organization', name: 'NERVE' },
-          },
-        }
-      : {
-          '@context': 'https://schema.org',
-          '@type': 'Organization',
-          name: 'NERVE',
-          url: 'https://nerveey.shop',
-          sameAs: [
-            'https://www.instagram.com/gothennerve58/',
-            'https://www.tiktok.com/@user795916160817',
-            'https://www.linkedin.com/in/nerve-shop-b67623429',
-          ],
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: product.name,
+        description: product.description,
+        image:
+          product.gallery.length > 0
+            ? product.gallery
+            : [product.colors[0]?.image].filter(Boolean),
+        brand: { '@type': 'Brand', name: 'NERVE' },
+        offers: {
+          '@type': 'Offer',
+          price: product.price,
+          priceCurrency: 'EGP',
+          availability: product.sizes.some(s => s.inStock)
+            ? 'https://schema.org/InStock'
+            : 'https://schema.org/OutOfStock',
+          seller: { '@type': 'Organization', name: 'NERVE' },
         },
+      }
+      : {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'NERVE',
+        url: 'https://nerveey.shop',
+        sameAs: [
+          'https://www.instagram.com/gothennerve58/',
+          'https://www.tiktok.com/@user795916160817',
+          'https://www.linkedin.com/in/nerve-shop-b67623429',
+        ],
+      },
     'product-structured-data',
   );
 
@@ -134,6 +138,7 @@ export default function ProductDetail() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [product]);
 
+
   if (loading) {
     return (
       <div className="bg-white min-h-screen pt-24 md:pt-28 px-5 md:px-8">
@@ -172,6 +177,7 @@ export default function ProductDetail() {
 
   const color = product.colors[colorIdx];
   const wished = has(product.id);
+  const inStock = product.sizes.some(s => s.inStock);
 
   const handleAddToBag = () => {
     if (!size) {
@@ -220,12 +226,6 @@ export default function ProductDetail() {
     setSubmittingReview(false);
   };
 
-  const getAverageRating = (reviewList: ProductReview[]) => {
-    if (reviewList.length === 0) return 0;
-    const sum = reviewList.reduce((acc, r) => acc + r.rating, 0);
-    return (sum / reviewList.length).toFixed(1);
-  };
-
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }).map((_, i) => (
       <Star
@@ -235,31 +235,76 @@ export default function ProductDetail() {
           i < rating
             ? 'fill-navy text-navy'
             : i < Math.ceil(rating)
-            ? 'fill-navy text-navy/50'
-            : 'text-navy/20'
+              ? 'fill-navy text-navy/50'
+              : 'text-navy/20'
         }
       />
     ));
   };
 
+  const faqs = [
+    {
+      question: 'How do I know my size?',
+      answer: 'Our fits run true to size. If you are between sizes, we recommend sizing up for a looser fit or down for a more fitted look. Check our Size Guide for detailed measurements.',
+    },
+    {
+      question: 'What is your return policy?',
+      answer: 'We offer free returns within 14 days of delivery on all unworn items with tags attached.',
+    },
+    {
+      question: 'Do you offer international shipping?',
+      answer: 'Currently, we ship to all governorates within Egypt. International shipping is coming soon.',
+    },
+    {
+      question: 'How can I track my order?',
+      answer: 'Once your order ships, you will receive an email with tracking information. You can also track your order on our website using your order number.',
+    },
+  ];
+
   return (
     <div className="bg-white text-navy min-h-screen pt-24 md:pt-28">
       <div className="mx-auto max-w-[1600px] px-5 md:px-8 pb-24">
         <div className="grid md:grid-cols-2 gap-8 md:gap-14">
+          {/* Gallery Section */}
           <div>
-            <div className="aspect-[4/5] bg-mist overflow-hidden mb-3">
-              <img
-                src={product.gallery[activeImage] || color.image}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
+            <div className="aspect-[4/5] bg-mist overflow-hidden mb-3 relative group cursor-zoom-in">
+              <button
+                ref={zoomRef}
+                onClick={() => setZoomOpen(true)}
+                className="w-full h-full relative"
+                aria-label="View larger image"
+              >
+                <img
+                  src={product.gallery[activeImage] || color.image}
+                  alt={product.name}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                />
+              </button>
+              <button
+                aria-label="Zoom image"
+                className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-sm hover:bg-navy hover:text-white transition-colors"
+                onClick={() => setZoomOpen(true)}
+              >
+                <ZoomIn size={18} />
+              </button>
+              <div className="absolute bottom-4 left-4 right-4 flex justify-center gap-2">
+                {product.gallery.map((g, i) => (
+                  <button
+                    key={g + i}
+                    onClick={() => setActiveImage(i)}
+                    className={`h-2 rounded-full transition-all ${i === activeImage ? 'w-8 bg-navy' : 'w-2 bg-white/50'
+                      }`}
+                  />
+                ))}
+              </div>
             </div>
             <div className="grid grid-cols-4 gap-2">
               {product.gallery.map((g, i) => (
                 <button
                   key={g + i}
                   onClick={() => setActiveImage(i)}
-                  className="aspect-square bg-mist overflow-hidden border-2 transition-colors"
+                  className={`aspect-square bg-mist overflow-hidden border-2 transition-colors ${i === activeImage ? 'border-navy' : 'border-transparent'
+                    }`}
                 >
                   <img src={g} alt="" className="w-full h-full object-cover" />
                 </button>
@@ -267,6 +312,7 @@ export default function ProductDetail() {
             </div>
           </div>
 
+          {/* Product Info */}
           <div className="md:pt-2">
             {product.badge && (
               <span className="inline-block bg-navy text-white text-[10px] font-semibold tracking-widest2 uppercase px-2.5 py-1 mb-3">
@@ -283,12 +329,30 @@ export default function ProductDetail() {
               )}
             </div>
 
+            {/* Product Badges */}
             <div className="mt-4 flex flex-wrap gap-2 text-xs text-navy/70">
-              <span className="rounded-full bg-mist px-3 py-1">Secure checkout</span>
-              <span className="rounded-full bg-mist px-3 py-1">Free delivery over EGP 2,000</span>
-              <span className="rounded-full bg-mist px-3 py-1">30-day easy returns</span>
+              <span className="rounded-full bg-green-50 text-green-700 px-3 py-1 border border-green-200">
+                Secure checkout
+              </span>
+              <span className="rounded-full bg-green-50 text-green-700 px-3 py-1 border border-green-200">
+                Free delivery over EGP 2,000
+              </span>
+              <span className="rounded-full bg-green-50 text-green-700 px-3 py-1 border border-green-200">
+                30-day easy returns
+              </span>
+              {inStock && (
+                <span className="rounded-full bg-green-50 text-green-700 px-3 py-1 border border-green-200">
+                  In Stock
+                </span>
+              )}
+              {!inStock && (
+                <span className="rounded-full bg-red-50 text-red-700 px-3 py-1 border border-red-200">
+                  Out of Stock
+                </span>
+              )}
             </div>
 
+            {/* Color Selection */}
             <div className="mt-8">
               <p className="nv-eyebrow text-navy/60 mb-3">Color: {color.name}</p>
               <div className="flex gap-2">
@@ -302,12 +366,10 @@ export default function ProductDetail() {
                     aria-label={`Choose ${c.name}`}
                     aria-pressed={i === colorIdx}
                     data-testid="color-option"
-                    className="w-10 h-10 rounded-full border-2 transition-all"
+                    className={`w-10 h-10 rounded-full border-2 transition-all shadow-sm ${i === colorIdx ? 'ring-2 ring-navy/30' : ''
+                      }`}
                     style={{
-                      boxShadow:
-                        i === colorIdx
-                          ? 'inset 0 0 0 2px rgba(10,10,40,0.4)'
-                          : 'inset 0 0 0 1px rgba(10,10,40,0.1)',
+                      boxShadow: i === colorIdx ? 'inset 0 0 0 2px rgba(10,10,40,0.4)' : 'inset 0 0 0 1px rgba(10,10,40,0.1)',
                     }}
                   >
                     <span
@@ -319,12 +381,13 @@ export default function ProductDetail() {
               </div>
             </div>
 
+            {/* Size Selection */}
             <div className="mt-8">
               <div className="flex items-center justify-between mb-3">
                 <p className="nv-eyebrow text-navy/60">Size{size ? `: ${size}` : ''}</p>
                 <button
                   onClick={() => setSizeGuideOpen(true)}
-                  className="text-xs underline text-navy/50"
+                  className="text-xs underline text-navy/50 hover:text-navy transition-colors"
                 >
                   Size Guide
                 </button>
@@ -346,7 +409,11 @@ export default function ProductDetail() {
                         setNotifyStatus('idle');
                       }
                     }}
-                    className="h-11 text-sm border transition-colors"
+                    className={`h-11 text-sm border transition-colors ${s.inStock ? 'hover:bg-navy hover:text-white' : 'opacity-50 cursor-not-allowed'
+                      } ${size === s.size && s.inStock
+                        ? 'bg-navy text-white border-navy'
+                        : 'border-navy/25 text-navy'
+                      }`}
                   >
                     {s.size}
                   </button>
@@ -355,8 +422,9 @@ export default function ProductDetail() {
               {sizeError && <p className="text-xs text-red-600 mt-2">Please select a size.</p>}
               {product.fitNotes && <p className="text-xs text-navy/50 mt-2">{product.fitNotes}</p>}
 
+              {/* Back in Stock Notification */}
               {notifySize && (
-                <div className="mt-4 border border-navy/15 p-4">
+                <div className="mt-4 border border-navy/15 p-4 bg-mist/30 rounded-lg">
                   {notifyStatus === 'done' ? (
                     <p className="text-sm">
                       We&apos;ll email you the moment <strong>{notifySize}</strong> is back.
@@ -410,30 +478,35 @@ export default function ProductDetail() {
               )}
             </div>
 
-            <div className="mt-8 flex gap-3">
+            {/* Action Buttons */}
+            <div className="mt-8 flex gap-3 flex-wrap">
               <div className="flex items-center border border-navy/25">
                 <button
                   aria-label="Decrease quantity"
                   onClick={() => setQty(q => Math.max(1, q - 1))}
-                  className="w-11 h-14 flex items-center justify-center hover:bg-mist"
+                  className="w-11 h-14 flex items-center justify-center hover:bg-mist transition-colors"
                 >
                   <Minus size={14} />
                 </button>
-                <span className="w-10 text-center">{qty}</span>
+                <span className="w-10 text-center text-sm font-semibold">{qty}</span>
                 <button
                   aria-label="Increase quantity"
                   onClick={() => setQty(q => q + 1)}
-                  className="w-11 h-14 flex items-center justify-center hover:bg-mist"
+                  className="w-11 h-14 flex items-center justify-center hover:bg-mist transition-colors"
                 >
                   <Plus size={14} />
                 </button>
               </div>
               <button
                 onClick={handleAddToBag}
+                disabled={!inStock}
                 data-testid="add-to-bag-button"
-                className="flex-1 bg-navy text-white nv-eyebrow py-4 hover:bg-navy-2 transition-colors"
+                className={`flex-1 nv-eyebrow py-4 transition-colors ${inStock
+                  ? 'bg-navy text-white hover:bg-navy-2'
+                  : 'bg-mist text-silver cursor-not-allowed'
+                  }`}
               >
-                Add to Bag
+                {inStock ? 'Add to Bag' : 'Sold Out'}
               </button>
               <button
                 aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
@@ -451,17 +524,24 @@ export default function ProductDetail() {
                     2000,
                   );
                 }}
-                className="w-14 h-14 border border-navy/25 flex items-center justify-center hover:border-navy transition-colors flex-shrink-0"
+                className={`w-14 h-14 flex items-center justify-center border transition-colors flex-shrink-0 ${wished
+                  ? 'border-navy bg-navy text-white'
+                  : 'border-navy/25 text-navy hover:border-navy'
+                  }`}
               >
-                <Heart size={18} className={wished ? 'fill-navy text-navy' : 'text-navy'} />
+                <Heart size={18} className={wished ? 'fill-current' : ''} />
               </button>
             </div>
             <button
               onClick={handleBuyNow}
+              disabled={!inStock}
               data-testid="buy-now-button"
-              className="mt-3 w-full border border-navy nv-eyebrow py-4 hover:bg-navy hover:text-white transition-colors"
+              className={`mt-3 w-full nv-eyebrow py-4 transition-colors ${inStock
+                ? 'border border-navy hover:bg-navy hover:text-white'
+                : 'border-mist text-silver cursor-not-allowed'
+                }`}
             >
-              Buy Now
+              {inStock ? 'Buy Now' : 'Sold Out'}
             </button>
 
             {/* Tabs */}
@@ -471,6 +551,7 @@ export default function ProductDetail() {
                   ['description', 'Description & Material'],
                   ['size', 'Size Guide'],
                   ['shipping', 'Shipping & Returns'],
+                  ['reviews', `Reviews (${reviewStats.reviewCount})`],
                 ] as [Tab, string][]
               ).map(([key, label]) => (
                 <div key={key} className="border-b border-navy/10">
@@ -483,7 +564,7 @@ export default function ProductDetail() {
                     <span className="text-lg">{tab === key ? '-' : '+'}</span>
                   </button>
                   {tab === key && (
-                    <div className="pb-5 text-sm text-navy/70 leading-relaxed space-y-3">
+                    <div className="pb-5 text-sm text-navy/70 leading-relaxed space-y-3 animate-fadeUp">
                       {key === 'description' && (
                         <>
                           <p>{product.description}</p>
@@ -522,35 +603,77 @@ export default function ProductDetail() {
                           </div>
                         </div>
                       )}
+                      {key === 'reviews' && (
+                        <div className="space-y-4">
+                          {reviews.length > 0 ? (
+                            <div className="space-y-4">
+                              {reviews.map(review => (
+                                <div key={review.id} className="border-b border-navy/10 pb-4">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <div className="flex">{renderStars(review.rating)}</div>
+                                    {review.verified && (
+                                      <span className="inline-block bg-green-100 text-green-600 text-[10px] px-2 py-0.5 rounded-full">
+                                        Verified
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="font-medium text-sm mb-1">{review.title}</p>
+                                  <p className="text-sm text-navy/60">{review.comment}</p>
+                                  <p className="text-xs text-navy/40 mt-1">
+                                    {new Date(review.createdAt).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-navy/50">No reviews yet. Be the first to review!</p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
               ))}
             </div>
 
-            {/* Reviews Section */}
+            {/* FAQ - NEW SECTION */}
             <div className="mt-10 border-t border-navy/10">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="nv-heading text-xl">Customer Reviews</h2>
+              <button
+                onClick={() => setFaqOpen(!faqOpen)}
+                className="w-full flex items-center justify-between py-4 text-left"
+              >
                 <div className="flex items-center gap-2">
-                  <span className="text-lg font-semibold">{getAverageRating(reviews)}</span>
-                  <div className="flex">{renderStars(reviewStats.averageRating)}</div>
-                  <span className="text-sm text-navy/60">({reviewStats.reviewCount} reviews)</span>
+                  <Info size={20} className="text-navy" />
+                  <span className="nv-edit font-semibold text-sm uppercase">Frequently Asked Questions</span>
                 </div>
-              </div>
+                <span className="text-lg">{faqOpen ? '-' : '+'}</span>
+              </button>
+              {faqOpen && (
+                <div className="space-y-4 pb-5 animate-fadeUp">
+                  {faqs.map((faq, i) => (
+                    <div key={i}>
+                      <p className="font-medium text-navy mb-2">{faq.question}</p>
+                      <p className="text-sm text-navy/60 leading-relaxed">{faq.answer}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-              {/* Review Form */}
+            {/* Review Form */}
+            <div className="mt-10">
               {user ? (
-                <div className="mb-6">
+                <div className="bg-mist/50 p-6 rounded-lg">
                   {!showReviewForm ? (
                     <button
                       onClick={() => setShowReviewForm(true)}
-                      className="bg-navy text-white nv-eyebrow px-4 py-2 rounded-lg hover:bg-navy-2 transition-colors"
+                      className="bg-navy text-white nv-eyebrow px-6 py-3 rounded-lg hover:bg-navy-2 transition-colors"
                     >
                       Write a Review
                     </button>
                   ) : (
-                    <div className="bg-mist/50 p-4 rounded-lg">
+                    <div className="animate-fadeUp">
+                      <h3 className="nv-heading text-lg mb-4">Submit Your Review</h3>
                       <form onSubmit={handleReviewSubmit} className="space-y-3">
                         <div>
                           <label
@@ -633,44 +756,19 @@ export default function ProductDetail() {
                   )}
                 </div>
               ) : (
-                <p className="text-sm text-navy/50 mb-4">
+                <p className="text-sm text-navy/50 mb-6">
                   Please{' '}
-                  <a href="/login" className="text-navy underline">
+                  <a href="/login" className="text-navy underline hover:text-navy/70">
                     sign in
                   </a>{' '}
                   to write a review.
                 </p>
               )}
-
-              {/* Review List */}
-              {reviews.length > 0 ? (
-                <div className="space-y-4">
-                  {reviews.map(review => (
-                    <div key={review.id} className="border-b border-navy/10 pb-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="flex">{renderStars(review.rating)}</div>
-                        {review.verified && (
-                          <span className="inline-block bg-green-100 text-green-600 text-[10px] px-2 py-0.5 rounded-full">
-                            Verified
-                          </span>
-                        )}
-                      </div>
-                      <p className="font-medium text-sm mb-1">{review.title}</p>
-                      <p className="text-sm text-navy/60">{review.comment}</p>
-                      <p className="text-xs text-navy/40 mt-1">
-                        {new Date(review.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-navy/50">No reviews yet. Be the first to review!</p>
-              )}
             </div>
           </div>
         </div>
 
-        {/* Recommended */}
+        {/* You May Also Like */}
         {related.length > 0 && (
           <div className="mt-24">
             <h2 className="nv-heading text-3xl md:text-4xl mb-8">You May Also Like</h2>
@@ -682,22 +780,67 @@ export default function ProductDetail() {
           </div>
         )}
       </div>
+
+      {/* Mobile Bottom Actions */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-navy/10 bg-white/95 p-3 backdrop-blur md:hidden">
         <div className="mx-auto flex max-w-5xl items-center gap-2">
           <button
             onClick={handleAddToBag}
-            className="flex-1 rounded-full bg-navy px-4 py-3 text-sm font-semibold text-white"
+            disabled={!inStock}
+            className={`flex-1 rounded-full px-4 py-3 text-sm font-semibold text-white ${inStock ? 'bg-navy hover:bg-navy-2' : 'bg-mist text-silver cursor-not-allowed'
+              }`}
           >
-            Add to Bag
+            {inStock ? 'Add to Bag' : 'Sold Out'}
           </button>
           <button
             onClick={handleBuyNow}
-            className="flex-1 rounded-full border border-navy px-4 py-3 text-sm font-semibold text-navy"
+            disabled={!inStock}
+            className={`flex-1 rounded-full px-4 py-3 text-sm font-semibold ${inStock
+              ? 'border border-navy text-navy hover:bg-navy hover:text-white'
+              : 'border-mist text-silver cursor-not-allowed'
+              }`}
           >
-            Buy Now
+            {inStock ? 'Buy Now' : 'Sold Out'}
           </button>
         </div>
       </div>
+
+      {/* Image Zoom Modal */}
+      {zoomOpen && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4"
+          onClick={e => {
+            if (e.target === e.currentTarget) setZoomOpen(false);
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image zoom"
+        >
+          <button
+            className="absolute top-6 right-6 text-white text-4xl bg-transparent border-none p-2 cursor-pointer"
+            onClick={() => setZoomOpen(false)}
+            aria-label="Close zoom"
+          >
+            ×
+          </button>
+          <img
+            src={product.gallery[activeImage] || color.image}
+            alt={product.name}
+            className="max-w-full max-h-[90vh] object-contain"
+          />
+          <button
+            className="absolute inset-0 w-full h-full cursor-pointer"
+            onClick={e => {
+              if (e.target === e.currentTarget) setZoomOpen(false);
+            }}
+            onKeyDown={e => {
+              if (e.key === 'Escape') setZoomOpen(false);
+            }}
+            aria-label="Close zoom"
+          />
+        </div>
+      )}
+
       {sizeGuideOpen && <SizeGuideModal onClose={() => setSizeGuideOpen(false)} />}
     </div>
   );

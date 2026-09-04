@@ -6,7 +6,7 @@ import { productService } from '../services/productService';
 import { collections } from '../data/products';
 import { useSEO, seoHelpers } from '../lib/seo';
 import ProductCard from '../components/ProductCard';
-import HeroProductCarousel from '../components/HeroProductCarousel';
+import HeroSection from '../components/HeroSection';
 import Newsletter from '../components/Newsletter';
 import Skeleton from '../components/Skeleton';
 
@@ -24,6 +24,7 @@ const gallery = ['nw-1', 'nw-2', 'nw-3', 'nw-4', 'nw-5', 'nw-6'];
 export default function Home() {
   useSEO(seoHelpers.home());
   const [newDrop, setNewDrop] = useState<Product[]>([]);
+  const [heroProduct, setHeroProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,6 +32,7 @@ export default function Home() {
     productService.getNewDrop().then(data => {
       if (mounted) {
         setNewDrop(data);
+        setHeroProduct(data[0] || null);
         setLoading(false);
       }
     });
@@ -41,12 +43,12 @@ export default function Home() {
 
   return (
     <>
-      {/* HERO — auto-scrolling product showcase (Salty-style) at top */}
-      {!loading && newDrop.length >= 4 ? (
-        <HeroProductCarousel products={newDrop} />
+      {/* HERO — elegant static hero at top */}
+      {!loading ? (
+        <HeroSection product={heroProduct} />
       ) : (
         <section className="relative h-[100svh] min-h-[560px] flex items-center justify-center bg-navy">
-          <p className="text-white/60">Loading collection…</p>
+          <div className="text-white/60 animate-pulse">Loading collection…</div>
         </section>
       )}
 
@@ -182,6 +184,52 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* TESTIMONIALS - NEW SECTION */}
+      {!loading && (
+        <section className="bg-mist py-16 md:py-24 px-5 md:px-8">
+          <div className="mx-auto max-w-[1600px]">
+            <div className="text-center mb-12">
+              <p className="nv-eyebrow text-navy/60 mb-2">TESTIMONIALS</p>
+              <h2 className="nv-heading text-4xl md:text-6xl">What They Say</h2>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                {
+                  name: 'Ahmed M.',
+                  text: 'The quality is unmatched. Best streetwear I have found in Egypt.',
+                  role: 'Style Enthusiast',
+                },
+                {
+                  name: 'Sarah K.',
+                  text: 'Finally a local brand that understands modern minimalism. Highly recommend!',
+                  role: 'Fashion Blogger',
+                },
+                {
+                  name: 'Omar R.',
+                  text: 'Fast delivery and incredible customer service. The New Drop collection is amazing.',
+                  role: 'Regular Customer',
+                },
+              ].map((t, i) => (
+                <div key={i} className="bg-white p-8 shadow-sm">
+                  <div className="flex gap-1 text-amber-500 mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <p className="text-navy/70 mb-6 italic">&ldquo;{t.text}&rdquo;</p>
+                  <div>
+                    <p className="font-semibold text-navy">{t.name}</p>
+                    <p className="text-xs text-navy/50 uppercase tracking-widest">{t.role}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <Newsletter />
     </>

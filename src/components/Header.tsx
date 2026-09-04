@@ -42,26 +42,27 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
         Skip to main content
       </a>
       <header
-        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
-          solid ? 'bg-navy/95 backdrop-blur-md border-b border-white/10' : 'bg-transparent'
-        }`}
+        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${solid ? 'bg-navy/95 backdrop-blur-md border-b border-white/10' : 'bg-transparent'
+          }`}
       >
         <div className="mx-auto max-w-[1600px] px-5 md:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
-            <Link to="/" className="flex items-center">
+            <Link to="/" className="flex items-center" aria-label="NERVE Home">
               <img
                 src="/assets/images/nervee logo.png"
                 alt="NERVE"
-                className="h-8 md:h-10 w-auto brightness-0 invert"
+                className="h-8 md:h-10 w-auto brightness-0 invert object-contain"
                 onError={e => {
                   // Fallback to text logo if image fails to load
                   e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  const textLogo = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (textLogo) textLogo.classList.remove('hidden');
                 }}
               />
               <span className="nv-heading text-2xl md:text-3xl tracking-wide hidden">NERVE</span>
             </Link>
 
+            {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-10">
               {links.map(l => (
                 <NavLink
@@ -69,8 +70,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
                   to={l.to}
                   data-testid={`nav-${l.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
                   className={({ isActive }) =>
-                    `nv-eyebrow transition-colors hover:text-white ${
-                      isActive ? 'text-white' : 'text-silver'
+                    `nv-eyebrow transition-colors hover:text-white ${isActive ? 'text-white' : 'text-silver'
                     }`
                   }
                 >
@@ -79,15 +79,18 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
               ))}
             </nav>
 
-            <div className="flex items-center gap-4 md:gap-5">
+            {/* Right Side Icons */}
+            <div className="flex items-center gap-3 md:gap-5">
+              {/* Desktop search always visible */}
               <button
                 aria-label="Search"
                 data-testid="search-button"
                 onClick={onSearch}
-                className="p-2 hover:opacity-60 transition-opacity"
+                className="hidden lg:flex p-2 hover:opacity-60 transition-opacity"
               >
                 <Search size={19} strokeWidth={1.75} />
               </button>
+
               <Link
                 to={user ? '/account' : '/login'}
                 aria-label="Account"
@@ -128,20 +131,19 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
       {/* Mobile full-screen drawer */}
       <div
         data-testid="mobile-menu"
-        className={`fixed inset-0 z-50 bg-navy transition-transform duration-500 ease-[cubic-bezier(.65,0,.35,1)] lg:hidden ${
-          mobileOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
+        className={`fixed inset-0 z-50 bg-navy/95 backdrop-blur-sm transition-transform duration-500 ease-[cubic-bezier(.65,0,.35,1)] lg:hidden ${mobileOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
       >
         <div className="flex items-center justify-between h-16 px-5 border-b border-white/10">
           <div className="flex items-center">
             <img
               src="/assets/images/nervee logo.png"
               alt="NERVE"
-              className="h-6 w-auto brightness-0 invert"
+              className="h-6 w-auto brightness-0 invert object-contain"
               onError={e => {
-                // Fallback to text logo if image fails to load
                 e.currentTarget.style.display = 'none';
-                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                const textLogo = e.currentTarget.nextElementSibling as HTMLElement;
+                if (textLogo) textLogo.classList.remove('hidden');
               }}
             />
             <span className="nv-heading text-2xl hidden">NERVE</span>
@@ -150,7 +152,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
             <X size={24} />
           </button>
         </div>
-        <nav className="flex flex-col px-6 py-10 gap-1">
+        <nav className="flex flex-col px-6 py-8 gap-2">
           {links.map((l, i) => (
             <Link
               key={l.label}
@@ -162,7 +164,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
             </Link>
           ))}
         </nav>
-        <div className="px-6 mt-4 flex gap-6 nv-eyebrow text-silver">
+        <div className="px-6 mt-8 flex gap-6 nv-eyebrow text-silver">
           <a
             href="https://www.instagram.com/gotthenerve58/"
             target="_blank"

@@ -211,20 +211,18 @@ export default function Checkout() {
               {steps.slice(0, 4).map((label, i) => (
                 <div key={label} className="flex items-center gap-2 flex-shrink-0">
                   <div
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold ${
-                      step > i + 1
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold ${step > i + 1
                         ? 'bg-navy text-white'
                         : step === i + 1
-                        ? 'border-2 border-navy'
-                        : 'border border-navy/20 text-navy/30'
-                    }`}
+                          ? 'border-2 border-navy'
+                          : 'border border-navy/20 text-navy/30'
+                      }`}
                   >
                     {step > i + 1 ? <Check size={13} /> : i + 1}
                   </div>
                   <span
-                    className={`text-xs nv-eyebrow ${
-                      step === i + 1 ? 'text-navy' : 'text-navy/30'
-                    }`}
+                    className={`text-xs nv-eyebrow ${step === i + 1 ? 'text-navy' : 'text-navy/30'
+                      }`}
                   >
                     {label}
                   </span>
@@ -692,9 +690,8 @@ export default function Checkout() {
 }
 
 function inputCls(hasError: boolean) {
-  return `w-full border ${
-    hasError ? 'border-red-500' : 'border-navy/20'
-  } px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors`;
+  return `w-full border ${hasError ? 'border-red-500' : 'border-navy/20'
+    } px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors`;
 }
 
 function Field({
