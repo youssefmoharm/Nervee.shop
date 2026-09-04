@@ -18,14 +18,19 @@ interface RotatingBannerProps {
 export default function RotatingBanner({ banners }: RotatingBannerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoRotating, setIsAutoRotating] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Auto-rotate every 4 seconds
+  // Auto-rotate every 5 seconds
   useEffect(() => {
     if (!isAutoRotating || banners.length <= 1) return;
 
     const interval = setInterval(() => {
-      setCurrentIndex(prev => (prev + 1) % banners.length);
-    }, 4000);
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentIndex(prev => (prev + 1) % banners.length);
+        setIsTransitioning(false);
+      }, 300);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [isAutoRotating, banners.length]);
@@ -36,17 +41,29 @@ export default function RotatingBanner({ banners }: RotatingBannerProps) {
 
   // Navigation
   const goToPrevious = () => {
-    setCurrentIndex(prev => (prev - 1 + banners.length) % banners.length);
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentIndex(prev => (prev - 1 + banners.length) % banners.length);
+      setIsTransitioning(false);
+    }, 300);
     setIsAutoRotating(false);
   };
 
   const goToNext = () => {
-    setCurrentIndex(prev => (prev + 1) % banners.length);
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentIndex(prev => (prev + 1) % banners.length);
+      setIsTransitioning(false);
+    }, 300);
     setIsAutoRotating(false);
   };
 
   const goToSlide = (index: number) => {
-    setCurrentIndex(index);
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentIndex(index);
+      setIsTransitioning(false);
+    }, 300);
     setIsAutoRotating(false);
   };
 
@@ -56,116 +73,125 @@ export default function RotatingBanner({ banners }: RotatingBannerProps) {
 
   return (
     <div
-      className="relative w-full overflow-hidden bg-navy text-white"
+      className="relative w-full h-96 md:h-[500px] lg:h-[600px] overflow-hidden bg-black"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Background Image */}
+      {/* Background Image - Right Side */}
       {banner.image && (
-        <div className="absolute inset-0 z-0">
-          <img src={banner.image} alt={banner.title} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-navy/90 via-navy/70 to-transparent" />
+        <div
+          className={`absolute inset-0 transition-opacity duration-500 ${
+            isTransitioning ? 'opacity-0' : 'opacity-100'
+          }`}
+        >
+          <img
+            src={banner.image}
+            alt={banner.title}
+            className="w-full h-full object-cover object-center"
+          />
+          {/* Gradient Overlay - Left to Right */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
         </div>
       )}
 
-      <div className="relative z-10 w-full py-8 md:py-12 px-5">
-        <div className="mx-auto max-w-[1600px] flex items-center justify-between">
-          {/* Left: Product Info */}
-          <div className="flex-1 min-w-0 mr-6 md:mr-12 animate-fadeIn">
+      {/* Content - Left Side */}
+      <div className="absolute inset-0 z-10 flex items-center">
+        <div className="w-full px-5 md:px-8 md:max-w-[50%]">
+          <div className="space-y-4 md:space-y-6">
+            {/* Discount Badge */}
             {banner.discount && (
-              <div className="flex items-center gap-2 mb-3">
-                <span className="bg-amber-500 text-white text-xs md:text-sm px-3 py-1.5 uppercase tracking-wider font-semibold">
+              <div className="flex items-center gap-3">
+                <div className="h-1 w-8 bg-amber-500" />
+                <span className="nv-eyebrow text-amber-500 text-xs md:text-sm uppercase tracking-widest font-semibold">
                   {banner.discount}
-                </span>
-                <span className="text-white/70 text-xs md:text-sm uppercase tracking-widest">
-                  {banner.subtitle}
                 </span>
               </div>
             )}
-            <h3 className="nv-heading text-3xl md:text-5xl lg:text-6xl leading-tight mb-3 md:mb-4">
+
+            {/* Title */}
+            <h2 className="nv-heading text-4xl md:text-6xl lg:text-7xl leading-tight text-white">
               {banner.title}
-            </h3>
-            <p className="nv-edit text-lg md:text-2xl text-white/80 font-light mb-6">
-              Now Available
-            </p>
-            <Link
-              to={banner.link}
-              className="inline-flex items-center gap-2 nv-eyebrow px-8 py-4 bg-white text-navy hover:bg-amber-500 hover:text-white transition-all duration-300 uppercase tracking-widest text-base md:text-lg"
-            >
-              {banner.cta} <span className="text-lg">→</span>
-            </Link>
-          </div>
+            </h2>
 
-          {/* Right: Indicators & Controls */}
-          <div className="flex items-center gap-6 md:gap-8">
-            {/* Slide Indicators */}
-            <div className="hidden md:flex flex-col items-center gap-3">
-              {banners.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => goToSlide(index)}
-                  className={`transition-all duration-300 rounded-full ${
-                    index === currentIndex
-                      ? 'w-8 h-3 bg-white'
-                      : 'w-3 h-3 bg-white/30 hover:bg-white/50'
-                  }`}
-                  aria-label={`Go to product ${index + 1}`}
-                  aria-current={index === currentIndex}
-                />
-              ))}
+            {/* Subtitle */}
+            <p className="nv-edit text-lg md:text-xl text-white/80 max-w-md">{banner.subtitle}</p>
+
+            {/* CTA Button */}
+            <div className="pt-4">
+              <Link
+                to={banner.link}
+                className="inline-flex items-center gap-3 nv-eyebrow px-8 md:px-10 py-4 md:py-5 bg-white text-black hover:bg-amber-500 hover:text-white transition-all duration-300 uppercase tracking-widest text-sm md:text-base font-semibold"
+              >
+                {banner.cta}
+                <span className="text-lg">→</span>
+              </Link>
             </div>
 
-            {/* Navigation Arrows */}
-            <div className="flex items-center gap-3">
-              <button
-                onClick={goToPrevious}
-                className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all backdrop-blur-sm border border-white/20"
-                aria-label="Previous product"
-              >
-                <svg
-                  className="w-6 h-6 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-              </button>
-              <button
-                onClick={goToNext}
-                className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all backdrop-blur-sm border border-white/20"
-                aria-label="Next product"
-              >
-                <svg
-                  className="w-6 h-6 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            {/* Slide Counter */}
-            <div className="hidden md:flex flex-col items-end gap-1">
-              <span className="text-2xl font-bold text-white">{currentIndex + 1}</span>
-              <span className="text-xs text-white/50 uppercase tracking-widest">
-                OF {banners.length}
+            {/* Counter */}
+            <div className="pt-6 flex items-baseline gap-2">
+              <span className="text-4xl md:text-5xl font-bold text-white">
+                {String(currentIndex + 1).padStart(2, '0')}
+              </span>
+              <span className="text-white/50 text-sm uppercase tracking-widest">
+                / {String(banners.length).padStart(2, '0')}
               </span>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Bottom Navigation Indicators */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3">
+        {banners.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => goToSlide(index)}
+            className={`transition-all duration-300 ${
+              index === currentIndex
+                ? 'w-12 h-1.5 bg-white'
+                : 'w-6 h-1 bg-white/40 hover:bg-white/60'
+            }`}
+            aria-label={`Go to product ${index + 1}`}
+            aria-current={index === currentIndex}
+          />
+        ))}
+      </div>
+
+      {/* Navigation Arrows */}
+      <div className="absolute right-8 top-1/2 -translate-y-1/2 z-20 flex flex-col items-center gap-4">
+        <button
+          onClick={goToPrevious}
+          className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all backdrop-blur-sm border border-white/20 group"
+          aria-label="Previous product"
+        >
+          <svg
+            className="w-5 h-5 text-white group-hover:scale-110 transition-transform"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
+        <button
+          onClick={goToNext}
+          className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all backdrop-blur-sm border border-white/20 group"
+          aria-label="Next product"
+        >
+          <svg
+            className="w-5 h-5 text-white group-hover:scale-110 transition-transform"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
       </div>
     </div>
   );
