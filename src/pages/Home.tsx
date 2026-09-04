@@ -6,7 +6,7 @@ import { productService } from '../services/productService';
 import { collections } from '../data/products';
 import { useSEO, seoHelpers } from '../lib/seo';
 import ProductCard from '../components/ProductCard';
-import HeroSection from '../components/HeroSection';
+import RotatingHeroCarousel from '../components/RotatingHeroCarousel';
 import Newsletter from '../components/Newsletter';
 import Skeleton from '../components/Skeleton';
 
@@ -24,7 +24,6 @@ const gallery = ['nw-1', 'nw-2', 'nw-3', 'nw-4', 'nw-5', 'nw-6'];
 export default function Home() {
   useSEO(seoHelpers.home());
   const [newDrop, setNewDrop] = useState<Product[]>([]);
-  const [heroProduct, setHeroProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,7 +31,6 @@ export default function Home() {
     productService.getNewDrop().then(data => {
       if (mounted) {
         setNewDrop(data);
-        setHeroProduct(data[0] || null);
         setLoading(false);
       }
     });
@@ -43,9 +41,9 @@ export default function Home() {
 
   return (
     <>
-      {/* HERO — elegant static hero at top */}
+      {/* HERO — rotating carousel with auto-rotation */}
       {!loading ? (
-        <HeroSection product={heroProduct} />
+        <RotatingHeroCarousel products={newDrop} />
       ) : (
         <section className="relative h-[100svh] min-h-[560px] flex items-center justify-center bg-navy">
           <div className="text-white/60 animate-pulse">Loading collection…</div>
