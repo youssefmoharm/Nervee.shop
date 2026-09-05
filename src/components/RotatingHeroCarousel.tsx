@@ -1,67 +1,60 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Product } from '../types';
 
 interface RotatingHeroCarouselProps {
   products: Product[];
 }
 
+const SLIDE_DURATION = 5500; // 5.5 seconds per slide
+const TRANSITION_DURATION = 800; // 800ms crossfade
+
 export default function RotatingHeroCarousel({ products }: RotatingHeroCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAutoRotating, setIsAutoRotating] = useState(true);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [nextIndex, setNextIndex] = useState(1);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [progress, setProgress] = useState(0);
 
-  // Auto-rotate every 5 seconds
+  // Auto-rotate with proper lifecycle management
   useEffect(() => {
-    if (!isAutoRotating || products.length <= 1) return;
+    if (products.length <= 1) return;
 
-    const interval = setInterval(() => {
-      setCurrentIndex(prev => (prev + 1) % products.length);
-    }, 5000);
+    // Timer for slide rotation
+    const slideTimer = setInterval(() => {
+      setIsTransitioning(true);
 
-    return () => clearInterval(interval);
-  }, [isAutoRotating, products.length]);
+      setTimeout(() => {
+        setCurrentIndex(prev => (prev + 1) % products.length);
+        setNextIndex(prev => (prev + 1) % products.length);
+        setProgress(0);
+        setIsTransitioning(false);
+      }, TRANSITION_DURATION);
+    }, SLIDE_DURATION);
 
-  // Pause rotation on hover
-  const handleMouseEnter = () => setIsAutoRotating(false);
-  const handleMouseLeave = () => setIsAutoRotating(true);
+    // Timer for progress bar animation
+    const progressTimer = setInterval(() => {
+      setProgress(prev => {
+        const increment = (100 / SLIDE_DURATION) * 50; // Update every 50ms
+        return prev + increment > 100 ? 100 : prev + increment;
+      });
+    }, 50);
 
-  // Navigation
-  const goToPrevious = () => {
-    setCurrentIndex(prev => (prev - 1 + products.length) % products.length);
-    setIsAutoRotating(false);
-  };
+    return () => {
+      clearInterval(slideTimer);
+      clearInterval(progressTimer);
+    };
+  }, [products.length]);
 
-  const goToNext = () => {
-    setCurrentIndex(prev => (prev + 1) % products.length);
-    setIsAutoRotating(false);
-  };
-
-  const goToSlide = (index: number) => {
-    setCurrentIndex(index);
-    setIsAutoRotating(false);
-  };
-
-  // Touch handlers for mobile swipe
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.touches[0].clientX);
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!touchStart) return;
-    const end = e.changedTouches[0].clientX;
-    const diff = touchStart - end;
-
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) {
-        goToNext();
-      } else {
-        goToPrevious();
+  // Preload next image
+  useEffect(() => {
+    if (products.length > 1) {
+      const nextProduct = products[nextIndex];
+      if (nextProduct?.colors[0]?.image) {
+        const img = new Image();
+        img.src = nextProduct.colors[0].image;
       }
     }
-    setTouchStart(null);
-  };
+  }, [nextIndex, products]);
 
   if (!products || products.length === 0) {
     return (
@@ -93,34 +86,46 @@ export default function RotatingHeroCarousel({ products }: RotatingHeroCarouselP
   const price = `EGP ${product.price.toLocaleString()}`;
 
   return (
-    <section
-      className="relative h-[100svh] min-h-[600px] w-full overflow-hidden bg-navy"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-    >
-      {/* Carousel Container */}
+    <section className="relative h-[100svh] min-h-[600px] w-full overflow-hidden bg-navy">
+      {/* Background Image Layer with Crossfade Transition */}
       <div className="absolute inset-0">
-        {/* Background Image with smooth fade transition */}
-        <div className="absolute inset-0 transition-opacity duration-700">
+        {/* Current Image */}
+        <div
+          className={`absolute inset-0 transition-opacity duration-800 ${
+            isTransitioning ? 'opacity-0' : 'opacity-100'
+          }`}
+        >
           <img
             src={color?.image}
             alt={product.name}
             className="w-full h-full object-cover object-center"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-navy/90 via-navy/40 to-navy/20" />
-          <div className="absolute inset-0 bg-checker-light opacity-20" />
         </div>
+
+        {/* Next Image (preloaded, hidden) */}
+        {products.length > 1 && (
+          <div
+            className={`absolute inset-0 transition-opacity duration-800 ${
+              isTransitioning ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <img
+              src={products[nextIndex]?.colors[0]?.image}
+              alt={products[nextIndex]?.name}
+              className="w-full h-full object-cover object-center"
+            />
+          </div>
+        )}
+
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-navy/90 via-navy/40 to-navy/20" />
+        <div className="absolute inset-0 bg-checker-light opacity-20" />
       </div>
 
-      {/* Content with fade animation */}
+      {/* Content Layer */}
       <div className="relative z-10 h-full flex items-center">
         <div className="mx-auto max-w-[1600px] px-5 md:px-8 w-full">
-          <div
-            className="max-w-2xl animate-fadeUp transition-opacity duration-500"
-            key={`slide-${currentIndex}`}
-          >
+          <div className="max-w-2xl">
             <p className="nv-eyebrow text-white/80 mb-4 uppercase tracking-widest">
               {product.badge || 'New Arrivals'}
             </p>
@@ -138,52 +143,26 @@ export default function RotatingHeroCarousel({ products }: RotatingHeroCarouselP
         </div>
       </div>
 
-      {/* Navigation Arrows */}
-      <button
-        onClick={goToPrevious}
-        className="absolute left-5 md:left-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all duration-300 backdrop-blur-sm border border-white/20 hover:border-white/40 group"
-        aria-label="Previous slide"
-      >
-        <ChevronLeft className="text-white group-hover:scale-110 transition-transform" size={24} />
-      </button>
-
-      <button
-        onClick={goToNext}
-        className="absolute right-5 md:right-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all duration-300 backdrop-blur-sm border border-white/20 hover:border-white/40 group"
-        aria-label="Next slide"
-      >
-        <ChevronRight className="text-white group-hover:scale-110 transition-transform" size={24} />
-      </button>
-
-      {/* Slide Indicators */}
-      <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3">
-        {products.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => goToSlide(index)}
-            className={`transition-all duration-300 rounded-full ${
-              index === currentIndex ? 'w-8 h-2 bg-white' : 'w-2 h-2 bg-white/40 hover:bg-white/60'
-            }`}
-            aria-label={`Go to slide ${index + 1}`}
-            aria-current={index === currentIndex}
-          />
-        ))}
-      </div>
-
-      {/* Slide Counter */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
-        <p className="nv-eyebrow text-white/60 text-xs uppercase tracking-widest">
-          {currentIndex + 1} / {products.length}
-        </p>
-      </div>
-
-      {/* Bottom Brand Mark */}
+      {/* Bottom Brand Mark with Counter and Progress */}
       <div className="absolute bottom-0 left-0 right-0 z-20 h-16 md:h-24 bg-navy/95 backdrop-blur-sm">
         <div className="mx-auto max-w-[1600px] px-5 md:px-8 flex items-center justify-between h-full">
-          <div className="nv-checker-mini w-8 h-8" />
+          <div className="flex items-center gap-4">
+            <div className="nv-checker-mini w-8 h-8" />
+            <div className="flex items-baseline gap-2">
+              <span className="text-sm md:text-base text-white/80 font-semibold">
+                {String(currentIndex + 1).padStart(2, '0')}
+              </span>
+              <span className="text-white/50">/</span>
+              <span className="text-sm md:text-base text-white/80 font-semibold">
+                {String(products.length).padStart(2, '0')}
+              </span>
+            </div>
+          </div>
+
           <p className="text-xs md:text-sm text-white/50 uppercase tracking-widest">
             EST. 2026 • CAIRO
           </p>
+
           <div className="flex items-center gap-4">
             <Link
               to="/shop"
@@ -198,6 +177,14 @@ export default function RotatingHeroCarousel({ products }: RotatingHeroCarouselP
               COLLECT
             </Link>
           </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="absolute bottom-0 left-0 w-full h-0.5 bg-white/10">
+          <div
+            className="h-full bg-white transition-all duration-75"
+            style={{ width: `${progress}%` }}
+          />
         </div>
       </div>
     </section>

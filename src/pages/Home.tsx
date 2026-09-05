@@ -7,7 +7,6 @@ import { collections } from '../data/products';
 import { useSEO, seoHelpers } from '../lib/seo';
 import ProductCard from '../components/ProductCard';
 import RotatingHeroCarousel from '../components/RotatingHeroCarousel';
-import RotatingBanner from '../components/RotatingBanner';
 import Newsletter from '../components/Newsletter';
 import Skeleton from '../components/Skeleton';
 
@@ -40,30 +39,9 @@ export default function Home() {
     };
   }, []);
 
-  // Create banner items from products for rotating effect (4 products)
-  const bannerProducts = newDrop.slice(0, 4).map((product, index) => {
-    const color = product.colors[0];
-    return {
-      id: `banner-${product.id}`,
-      title: product.name,
-      subtitle: `${product.category} • ${index + 1} OF 4`,
-      cta: 'Shop Now',
-      link: `/product/${product.slug}`,
-      discount: product.badge || 'NEW',
-      image: color?.image,
-    };
-  });
-
   return (
     <>
-      {/* ROTATING BANNER - Top of page like Salty_eg.com with 4 products */}
-      {!loading ? (
-        <RotatingBanner banners={bannerProducts} />
-      ) : (
-        <div className="w-full h-32 md:h-48 bg-navy/50 animate-pulse" />
-      )}
-
-      {/* HERO — rotating carousel with auto-rotation */}
+      {/* HERO — auto-rotating carousel with smooth transitions */}
       {!loading ? (
         <RotatingHeroCarousel products={newDrop} />
       ) : (
