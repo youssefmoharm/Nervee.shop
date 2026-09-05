@@ -14,6 +14,8 @@ import ProductCard from '../components/ProductCard';
 import SizeGuideModal from '../components/SizeGuideModal';
 import Skeleton from '../components/Skeleton';
 
+const STORE_URL = import.meta.env.VITE_APP_URL || 'https://www.nerveey.shop';
+
 type Tab = 'description' | 'size' | 'shipping';
 
 export default function ProductDetail() {
@@ -81,7 +83,7 @@ export default function ProductDetail() {
           '@context': 'https://schema.org',
           '@type': 'Organization',
           name: 'NERVE',
-          url: 'https://nerve-store.com',
+          url: STORE_URL,
           sameAs: [
             'https://www.instagram.com/gothennerve58/',
             'https://www.tiktok.com/@user795916160817',

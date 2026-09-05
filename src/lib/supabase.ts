@@ -16,9 +16,11 @@ if (!envUrl || !envKey) {
         'Refusing to silently fall back to mock/demo data in production.',
     );
   }
-  console.warn(
-    '[supabase] VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY not set — running in demo/mock mode (development only).',
-  );
+  if (import.meta.env.DEV) {
+    console.warn(
+      '[supabase] VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY not set — running in demo/mock mode (development only).',
+    );
+  }
 }
 
 // In production these are guaranteed present (otherwise we threw above).

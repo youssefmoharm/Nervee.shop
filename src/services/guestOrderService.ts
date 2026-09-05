@@ -1,5 +1,6 @@
 import { logError } from '../lib/sentry';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../lib/supabase';
+import { SUPABASE_ANON_KEY } from '../lib/supabase';
+import { getEndpoint } from '../lib/apiEndpoints';
 import type { GuestOrder } from '../types';
 
 export interface GuestOrderLookup {
@@ -15,7 +16,7 @@ export const guestOrderService = {
    */
   async lookup(email: string, orderNumber: string, verificationToken?: string) {
     try {
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/verify-guest-order`, {
+      const response = await fetch(getEndpoint('VERIFY_GUEST_ORDER'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -58,9 +59,11 @@ export const guestOrderService = {
     void _email;
     void _orderNumber;
     void _verificationToken;
-    console.warn(
-      'guestOrderService.create is deprecated — orders are created via the create-order edge function.',
-    );
+    if (import.meta.env.DEV) {
+      console.warn(
+        'guestOrderService.create is deprecated — orders are created via the create-order edge function.',
+      );
+    }
     return { success: false, error: 'Use checkout to create orders.' };
   },
 

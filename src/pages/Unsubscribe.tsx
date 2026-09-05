@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { supabase, SUPABASE_URL } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
+import { getEndpoint } from '../lib/apiEndpoints';
 import { logError } from '../lib/sentry';
 
 type Status = 'loading' | 'success' | 'error' | 'resubscribe';
@@ -34,7 +35,7 @@ export default function Unsubscribe() {
 
   const processUnsubscribe = async () => {
     try {
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/handle-unsubscribe`, {
+      const response = await fetch(getEndpoint('HANDLE_UNSUBSCRIBE'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

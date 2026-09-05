@@ -3,7 +3,10 @@ import { MessageCircle, X, Send, User, Bot, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { logError } from '../lib/sentry';
 import { useToast } from '../context/ToastContext';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../lib/supabase';
+import { SUPABASE_ANON_KEY } from '../lib/supabase';
+import { getEndpoint } from '../lib/apiEndpoints';
+
+const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || 'support@nerveey.shop';
 
 interface Message {
   id: string;
@@ -68,7 +71,7 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
 
     try {
       // Call AI chat function
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/chat-ai`, {
+      const response = await fetch(getEndpoint('CHAT_AI'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -124,7 +127,7 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
 
       const errorMsg: Message = {
         id: (Date.now() + 1).toString(),
-        text: "I'm having trouble responding right now. Please try again or contact us directly at support@nerve-store.com",
+        text: `I'm having trouble responding right now. Please try again or contact us directly at ${SUPPORT_EMAIL}`,
         sender: 'bot',
         timestamp: new Date(),
       };
@@ -143,7 +146,7 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
     try {
       setIsLoading(true);
 
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/create-support-ticket`, {
+      const response = await fetch(getEndpoint('CREATE_SUPPORT_TICKET'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

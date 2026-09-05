@@ -69,14 +69,24 @@ export default function Shop() {
     let mounted = true;
     setLoading(true);
     setDisplayCount(12); // Reset display count when filters change
-    productService.list(filters).then(data => {
-      if (mounted) {
-        const visible = filterProducts(data, debouncedQuery, category, colors, sizes, priceMax);
-        setAllProducts(visible);
-        setProducts(visible.slice(0, 12));
-        setLoading(false);
-      }
-    });
+    productService
+      .list(filters)
+      .then(data => {
+        if (mounted) {
+          const visible = filterProducts(data, debouncedQuery, category, colors, sizes, priceMax);
+          setAllProducts(visible);
+          setProducts(visible.slice(0, 12));
+          setLoading(false);
+        }
+      })
+      .catch(error => {
+        if (mounted) {
+          console.error('Failed to load products:', error);
+          setProducts([]);
+          setAllProducts([]);
+          setLoading(false);
+        }
+      });
     return () => {
       mounted = false;
     };

@@ -20,15 +20,20 @@ export default function CollectionDetail() {
     if (!id) return;
     let mounted = true;
     setLoading(true);
-    Promise.all([
-      productService.getCollection(id),
-      productService.getProductsByCollection(id),
-    ]).then(([c, p]) => {
-      if (!mounted) return;
-      setCollection(c ?? null);
-      setProducts(p);
-      setLoading(false);
-    });
+    Promise.all([productService.getCollection(id), productService.getProductsByCollection(id)])
+      .then(([c, p]) => {
+        if (!mounted) return;
+        setCollection(c ?? null);
+        setProducts(p);
+        setLoading(false);
+      })
+      .catch(error => {
+        if (!mounted) return;
+        console.error('Failed to load collection:', error);
+        setCollection(null);
+        setProducts([]);
+        setLoading(false);
+      });
     return () => {
       mounted = false;
     };

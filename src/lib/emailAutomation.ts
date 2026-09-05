@@ -5,7 +5,8 @@
  * Integrates with Supabase Edge Functions for secure email sending
  */
 
-import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase';
+import { supabase, SUPABASE_ANON_KEY } from './supabase';
+import { getEndpoint } from './apiEndpoints';
 import { logError } from './sentry';
 import type { CartLine } from '../types';
 
@@ -48,7 +49,7 @@ class EmailAutomationService {
     metadata?: Record<string, any>,
   ): Promise<boolean> {
     try {
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+      const response = await fetch(getEndpoint('SEND_EMAIL'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -276,7 +277,7 @@ class EmailAutomationService {
         return ''; // Fallback to empty link if token creation fails
       }
 
-      const storeUrl = import.meta.env.VITE_APP_URL || 'https://nerve-store.com';
+      const storeUrl = import.meta.env.VITE_APP_URL || 'https://www.nerveey.shop';
       return `${storeUrl}/unsubscribe?token=${token.data}`;
     } catch (error) {
       logError('Error getting unsubscribe link:', error);

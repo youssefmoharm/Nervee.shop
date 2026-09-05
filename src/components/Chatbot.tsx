@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, User, Bot } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
+const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || 'support@nerveey.shop';
+
 interface Message {
   id: string;
   text: string;
@@ -51,8 +53,7 @@ const FAQ_RESPONSES: Record<string, string> = {
     'Create an account to track orders, save addresses, and access your wishlist. Sign up takes just a minute!',
   password:
     'You can reset your password from the login page or change it in your account settings.',
-  contact:
-    'You can reach us via this chat, email at support@nerve-store.com, or through our contact page.',
+  contact: `You can reach us via this chat, email at ${SUPPORT_EMAIL}, or through our contact page.`,
 };
 
 const GREETING_MESSAGES = [

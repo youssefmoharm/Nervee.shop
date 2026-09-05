@@ -6,6 +6,8 @@
 
 import { useEffect } from 'react';
 
+const STORE_URL = import.meta.env.VITE_APP_URL || 'https://www.nerveey.shop';
+
 export interface SEOProps {
   title: string;
   description: string;
@@ -168,8 +170,8 @@ export const DEFAULT_SEO = {
   title: 'NERVE - Cool but Chic | Egyptian Streetwear',
   description:
     "Discover NERVE's collection of modern streetwear. From premium tees to sustainable denim, find your style in our carefully curated Egyptian concept store.",
-  image: 'https://nerve-store.com/nervee-logo-favicon.png',
-  url: 'https://nerve-store.com',
+  image: `${STORE_URL}/nervee-logo-favicon.png`,
+  url: STORE_URL,
   type: 'website' as const,
 };
 

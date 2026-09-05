@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
 
+const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || 'support@nerveey.shop';
+
 const NAV_LINKS = [
   { name: 'Shop', href: '/shop' },
   { name: 'Collections', href: '/collections' },
@@ -111,11 +113,8 @@ export default function Footer() {
             <ul className="space-y-2 text-sm text-navy/60">
               <li className="flex items-center gap-2">
                 <Mail size={16} />
-                <a
-                  href="mailto:hello@nerve-store.com"
-                  className="hover:text-navy transition-colors"
-                >
-                  hello@nerve-store.com
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="hover:text-navy transition-colors">
+                  {SUPPORT_EMAIL}
                 </a>
               </li>
               <li className="flex items-center gap-2">

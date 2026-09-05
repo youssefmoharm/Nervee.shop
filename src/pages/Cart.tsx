@@ -20,7 +20,13 @@ export default function Cart() {
   const [recommended, setRecommended] = useState<Product[]>([]);
 
   useEffect(() => {
-    productService.getBestSellers().then(p => setRecommended(p.slice(0, 4)));
+    productService
+      .getBestSellers()
+      .then(p => setRecommended(p.slice(0, 4)))
+      .catch(error => {
+        console.error('Failed to load recommended products:', error);
+        setRecommended([]);
+      });
   }, []);
 
   const applyPromo = () => {
