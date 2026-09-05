@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ChevronLeft, Loader2 } from 'lucide-react';
 import { orderService } from '../../services/orderService';
 import { supabase } from '../../lib/supabase';
+import { getEndpoint } from '../../lib/apiEndpoints';
 import AccountLayout from './AccountLayout';
 
 interface OrderItem {
@@ -70,7 +71,7 @@ export default function OrderDetail() {
     } = await supabase.auth.getSession();
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
-    const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/request-return`, {
+    const res = await fetch(getEndpoint('REQUEST_RETURN'), {
       method: 'POST',
       headers,
       body: JSON.stringify({ orderId: id, type, reason: returnReason.trim() }),

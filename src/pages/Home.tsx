@@ -27,12 +27,21 @@ export default function Home() {
 
   useEffect(() => {
     let mounted = true;
-    productService.getNewDrop().then(data => {
-      if (mounted) {
-        setNewDrop(data);
-        setLoading(false);
-      }
-    });
+    productService
+      .getNewDrop()
+      .then(data => {
+        if (mounted) {
+          setNewDrop(data);
+          setLoading(false);
+        }
+      })
+      .catch(error => {
+        if (mounted) {
+          console.error('Failed to load new drop:', error);
+          setNewDrop([]);
+          setLoading(false);
+        }
+      });
     return () => {
       mounted = false;
     };

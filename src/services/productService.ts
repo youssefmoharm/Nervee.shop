@@ -97,7 +97,9 @@ export const productService = {
   async list(filters: ShopFilters = {}): Promise<Product[]> {
     // Fallback to mock data if Supabase not configured
     if (!isSupabaseConfigured) {
-      console.warn('Supabase not configured, using mock data');
+      if (import.meta.env.DEV) {
+        console.warn('Supabase not configured, using mock data');
+      }
       let result = [...mockProducts];
 
       if (filters.category && filters.category !== 'New Arrivals') {

@@ -3,6 +3,8 @@ import { Loader2 } from 'lucide-react';
 import { contactService } from '../services/contactService';
 import { useSEO } from '../lib/seo';
 
+const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || 'support@nerveey.shop';
+
 function Shell({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="bg-white text-navy min-h-screen pt-32 pb-24 px-5 md:px-8">
@@ -41,7 +43,7 @@ export function Contact() {
         Have a question about an order, a product, or a collaboration? We&apos;d love to hear from
         you.
       </p>
-      <p>Email: hello@nerve-store.com</p>
+      <p>Email: {SUPPORT_EMAIL}</p>
       <p>Instagram / TikTok: @nerve</p>
       <p>Customer care hours: Sunday – Thursday, 10:00 – 18:00 Cairo time.</p>
 
@@ -140,7 +142,7 @@ export function Returns() {
         Unworn items with tags attached can be returned within 14 days of delivery for a full
         refund.
       </p>
-      <p>To start a return, contact hello@nerve-store.com with your order number.</p>
+      <p>To start a return, contact {SUPPORT_EMAIL} with your order number.</p>
       <p>Sale and limited/archive items are final sale unless faulty.</p>
     </Shell>
   );
@@ -155,7 +157,7 @@ export function Privacy() {
   return (
     <Shell title="Privacy Policy">
       <p>
-        Last updated: August 30, 2026. NERVE (we, us) operates nerve-store.com. This page explains
+        Last updated: August 30, 2026. NERVE (we, us) operates www.nerveey.shop. This page explains
         what we collect and why.
       </p>
 
@@ -182,7 +184,7 @@ export function Privacy() {
       <h2 className="text-navy font-semibold text-lg pt-2">Your rights</h2>
       <p>
         You can view and edit your profile and addresses any time from your account, or email
-        hello@nerve-store.com to request a copy or deletion of your data.
+        {SUPPORT_EMAIL} to request a copy or deletion of your data.
       </p>
 
       <h2 className="text-navy font-semibold text-lg pt-2">Cookies</h2>
@@ -192,7 +194,7 @@ export function Privacy() {
       </p>
 
       <h2 className="text-navy font-semibold text-lg pt-2">Contact</h2>
-      <p>Questions about this policy: hello@nerve-store.com.</p>
+      <p>Questions about this policy: {SUPPORT_EMAIL}</p>
     </Shell>
   );
 }
@@ -205,7 +207,7 @@ export function Terms() {
   return (
     <Shell title="Terms of Service">
       <p>
-        Last updated: August 30, 2026. By using nerve-store.com or placing an order, you agree to
+        Last updated: August 30, 2026. By using www.nerveey.shop or placing an order, you agree to
         these terms.
       </p>
 
@@ -245,7 +247,7 @@ export function Terms() {
       <h2 className="text-navy font-semibold text-lg pt-2">Accounts</h2>
       <p>
         You&apos;re responsible for keeping your account credentials secure. Let us know immediately
-        at hello@nerve-store.com if you believe your account has been compromised.
+        at {SUPPORT_EMAIL} if you believe your account has been compromised.
       </p>
 
       <h2 className="text-navy font-semibold text-lg pt-2">Intellectual property</h2>
@@ -262,7 +264,7 @@ export function Terms() {
       </p>
 
       <h2 className="text-navy font-semibold text-lg pt-2">Contact</h2>
-      <p>hello@nerve-store.com</p>
+      <p>{SUPPORT_EMAIL}</p>
     </Shell>
   );
 }

@@ -78,7 +78,9 @@ export function initMetaPixel() {
 
   // Validate pixel ID format to prevent injection
   if (!/^\d+$/.test(pixelId)) {
-    console.error('Invalid Meta Pixel ID format');
+    if (import.meta.env.DEV) {
+      console.error('Invalid Meta Pixel ID format');
+    }
     return;
   }
 
