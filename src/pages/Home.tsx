@@ -5,11 +5,11 @@ import type { Product } from '../types';
 import { productService } from '../services/productService';
 import { collections, categories } from '../data/products';
 import { useSEO, seoHelpers } from '../lib/seo';
+import HeroCarousel from '../components/HeroCarousel';
 import ProductCard from '../components/ProductCard';
 import Newsletter from '../components/Newsletter';
 import Skeleton from '../components/Skeleton';
 
-// Generate category tiles from real category data
 const categoryTiles = categories
   .slice(1)
   .map(cat => ({
@@ -20,7 +20,6 @@ const categoryTiles = categories
 
 const gallery = ['nw-1', 'nw-2', 'nw-3', 'nw-4', 'nw-5', 'nw-6'];
 
-// Seeded placeholder imagery - swap with real campaign photography
 const img = (seed: string, w = 900, h = 1125) => `https://picsum.photos/seed/${seed}/${w}/${h}`;
 
 export default function Home() {
@@ -52,42 +51,8 @@ export default function Home() {
 
   return (
     <>
-      {/* HERO - Full-bleed with deliberate reveal on load */}
-      <section className="relative h-[100svh] min-h-[560px] flex items-end overflow-hidden bg-navy">
-        <img
-          src={img('nerve-hero-2026', 1800, 2400)}
-          alt="NERVE new season campaign"
-          fetchPriority="high"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/40 to-navy/20" />
+      <HeroCarousel />
 
-        <div className="relative w-full px-5 md:px-8 pb-14 md:pb-20">
-          <div className="mx-auto max-w-[1600px]">
-            <p className="nv-eyebrow text-silver mb-3">New Season - 2026</p>
-            <h1 className="nv-heading text-[16vw] sm:text-[13vw] md:text-[9vw] lg:text-[7.5vw] leading-[0.85]">
-              COOL BUT
-              <br />
-              CHIC
-            </h1>
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mt-8">
-              <p className="text-silver max-w-sm text-sm md:text-base">
-                Based in everyone&apos;s closet. NERVE is a concept store for individuality and
-                movement - the new drop is here.
-              </p>
-              <Link
-                to="/shop?category=New%20Arrivals"
-                className="group inline-flex items-center gap-3 bg-white text-navy px-8 py-4 nv-eyebrow flex-shrink-0 hover:bg-mist transition-colors w-fit"
-              >
-                Shop the Drop
-                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* COLLECTIONS SHOWCASE */}
       <section className="bg-navy py-16 md:py-24 px-5 md:px-8">
         <div className="mx-auto max-w-[1600px]">
           <p className="nv-eyebrow text-silver mb-2">Curated Edits</p>
@@ -121,7 +86,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FEATURED PRODUCTS */}
       <section className="bg-white text-navy py-16 md:py-24 px-5 md:px-8">
         <div className="mx-auto max-w-[1600px]">
           <div className="flex items-end justify-between mb-10 md:mb-14">
@@ -156,7 +120,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CATEGORY GRID */}
       <section className="bg-white text-navy py-16 md:py-24 px-5 md:px-8">
         <div className="mx-auto max-w-[1600px]">
           <h2 className="nv-heading text-4xl md:text-6xl mb-10 md:mb-14">Shop by Category</h2>
@@ -168,7 +131,7 @@ export default function Home() {
                 className="group relative aspect-[3/4] overflow-hidden block bg-mist"
               >
                 <img
-                  src={`https://picsum.photos/seed/${c.seed}/500/650`}
+                  src={img(c.seed)}
                   alt={c.name}
                   loading="lazy"
                   decoding="async"
@@ -184,7 +147,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SOCIAL / COMMUNITY */}
       <section className="bg-navy py-16 md:py-24 px-5 md:px-8">
         <div className="mx-auto max-w-[1600px]">
           <div className="flex items-end justify-between mb-10">
@@ -208,7 +170,7 @@ export default function Home() {
                 className="group aspect-square overflow-hidden block"
               >
                 <img
-                  src={`https://picsum.photos/seed/${g}/500/500`}
+                  src={img(g)}
                   alt="Community post"
                   loading="lazy"
                   decoding="async"
