@@ -6,30 +6,26 @@ interface RotatingHeroCarouselProps {
   products: Product[];
 }
 
-const SLIDE_DURATION = 3000; // 3 seconds per color variant (faster)
-const TRANSITION_DURATION = 600; // 600ms crossfade
+const SLIDE_DURATION = 5500; // 5.5 seconds per product
+const TRANSITION_DURATION = 800; // 800ms crossfade
 
 export default function RotatingHeroCarousel({ products }: RotatingHeroCarouselProps) {
-  // Use first product and cycle through its color variants
-  const product = products?.[0];
-  const colors = product?.colors || [];
-
-  const [currentColorIndex, setCurrentColorIndex] = useState(0);
-  const [nextColorIndex, setNextColorIndex] = useState(1);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [nextIndex, setNextIndex] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  // Auto-rotate through color variants
+  // Auto-rotate through products
   useEffect(() => {
-    if (colors.length <= 1) return;
+    if (!products || products.length <= 1) return;
 
-    // Timer for color rotation
+    // Timer for product rotation
     const slideTimer = setInterval(() => {
       setIsTransitioning(true);
 
       setTimeout(() => {
-        setCurrentColorIndex(prev => (prev + 1) % colors.length);
-        setNextColorIndex(prev => (prev + 1) % colors.length);
+        setCurrentIndex(prev => (prev + 1) % products.length);
+        setNextIndex(prev => (prev + 1) % products.length);
         setProgress(0);
         setIsTransitioning(false);
       }, TRANSITION_DURATION);
@@ -47,20 +43,19 @@ export default function RotatingHeroCarousel({ products }: RotatingHeroCarouselP
       clearInterval(slideTimer);
       clearInterval(progressTimer);
     };
-  }, [colors.length]);
+  }, [products.length]);
 
-  // Preload next color image
+  // Preload next product hero image
   useEffect(() => {
-    if (colors.length > 1) {
-      const nextColor = colors[nextColorIndex];
-      if (nextColor?.image) {
-        const img = new Image();
-        img.src = nextColor.image;
-      }
+    if (!products || products.length <= 1) return;
+    const nextProduct = products[nextIndex];
+    if (nextProduct?.colors?.[0]?.image) {
+      const img = new Image();
+      img.src = nextProduct.colors[0].image;
     }
-  }, [nextColorIndex, colors]);
+  }, [nextIndex, products]);
 
-  if (!product || colors.length === 0) {
+  if (!products || products.length === 0) {
     return (
       <section className="relative h-[100svh] min-h-[600px] w-full overflow-hidden bg-navy flex items-center justify-center">
         <div className="text-center px-5">
@@ -85,9 +80,11 @@ export default function RotatingHeroCarousel({ products }: RotatingHeroCarouselP
     );
   }
 
-  const currentColor = colors[currentColorIndex];
-  const nextColor = colors[nextColorIndex];
-  const price = `EGP ${product.price.toLocaleString()}`;
+  const currentProduct = products[currentIndex];
+  const nextProduct = products[nextIndex];
+  const currentHeroImage = currentProduct?.colors?.[0]?.image;
+  const nextHeroImage = nextProduct?.colors?.[0]?.image;
+  const price = `EGP ${currentProduct?.price?.toLocaleString()}`;
 
   return (
     <section className="relative h-[100svh] min-h-[600px] w-full overflow-hidden bg-navy">
@@ -95,27 +92,29 @@ export default function RotatingHeroCarousel({ products }: RotatingHeroCarouselP
       <div className="absolute inset-0">
         {/* Current Image */}
         <div
-          className={`absolute inset-0 transition-opacity duration-600 ${
+          className={`absolute inset-0 transition-opacity ${
             isTransitioning ? 'opacity-0' : 'opacity-100'
           }`}
+          style={{ transitionDuration: `${TRANSITION_DURATION}ms` }}
         >
           <img
-            src={currentColor?.image}
-            alt={`${product.name} - ${currentColor?.name || 'variant'}`}
+            src={currentHeroImage}
+            alt={currentProduct?.name}
             className="w-full h-full object-cover object-center"
           />
         </div>
 
         {/* Next Image (preloaded, hidden) */}
-        {colors.length > 1 && (
+        {products.length > 1 && (
           <div
-            className={`absolute inset-0 transition-opacity duration-600 ${
+            className={`absolute inset-0 transition-opacity ${
               isTransitioning ? 'opacity-100' : 'opacity-0'
             }`}
+            style={{ transitionDuration: `${TRANSITION_DURATION}ms` }}
           >
             <img
-              src={nextColor?.image}
-              alt={`${product.name} - ${nextColor?.name || 'variant'}`}
+              src={nextHeroImage}
+              alt={nextProduct?.name}
               className="w-full h-full object-cover object-center"
             />
           </div>
@@ -131,22 +130,21 @@ export default function RotatingHeroCarousel({ products }: RotatingHeroCarouselP
         <div className="mx-auto max-w-[1600px] px-5 md:px-8 w-full">
           <div className="max-w-2xl">
             <p className="nv-eyebrow text-white/80 mb-4 uppercase tracking-widest">
-              {product.badge || 'New Arrivals'}
+              {currentProduct?.badge || 'New Arrivals'}
             </p>
             <h1 className="nv-heading text-5xl md:text-8xl text-white mb-6 leading-tight drop-shadow-lg">
-              {product.name}
+              {currentProduct?.name}
             </h1>
-            {currentColor?.name && (
-              <p className="nv-edit text-sm md:text-base text-white/70 mb-3 uppercase tracking-widest">
-                Color: {currentColor.name}
-              </p>
-            )}
+            <p className="nv-edit text-base md:text-lg text-white/70 mb-3 uppercase tracking-widest">
+              {currentProduct?.category} • {currentProduct?.colors?.length || 1} OF{' '}
+              {currentProduct?.colors?.length || 1}
+            </p>
             <p className="nv-edit text-2xl md:text-4xl text-white/90 mb-8">{price}</p>
             <Link
-              to={`/product/${product.slug}`}
+              to={`/product/${currentProduct?.slug}`}
               className="inline-block bg-white text-navy nv-eyebrow px-10 py-5 hover:bg-navy hover:text-white transition-all duration-300 transform hover:scale-105"
             >
-              Shop Collection
+              Shop Now
             </Link>
           </div>
         </div>
@@ -159,11 +157,11 @@ export default function RotatingHeroCarousel({ products }: RotatingHeroCarouselP
             <div className="nv-checker-mini w-8 h-8" />
             <div className="flex items-baseline gap-2">
               <span className="text-sm md:text-base text-white/80 font-semibold">
-                {String(currentColorIndex + 1).padStart(2, '0')}
+                {String(currentIndex + 1).padStart(2, '0')}
               </span>
               <span className="text-white/50">/</span>
               <span className="text-sm md:text-base text-white/80 font-semibold">
-                {String(colors.length).padStart(2, '0')}
+                {String(products.length).padStart(2, '0')}
               </span>
             </div>
           </div>
