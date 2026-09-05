@@ -8,6 +8,7 @@ import { discountService, type DiscountCode } from '../services/discountService'
 import { useSEO } from '../lib/seo';
 import { useToast } from '../context/ToastContext';
 import { EGYPT_GOVERNORATES } from '../data/governorates';
+import { ecommerce } from '../lib/analytics';
 import { estimateShippingCost, getCheckoutSummary } from '../lib/checkout';
 
 type Step = 1 | 2 | 3 | 4 | 5;
@@ -15,7 +16,7 @@ type Step = 1 | 2 | 3 | 4 | 5;
 const steps = ['Information', 'Shipping', 'Delivery', 'Payment', 'Confirmation'];
 
 interface FormState {
-  email: string;
+  email: string | undefined;
   firstName: string;
   lastName: string;
   phone: string;
@@ -62,9 +63,15 @@ export default function Checkout() {
     discount: DiscountCode;
   } | null>(null);
 
+  // Pre-fill email from user if authenticated, and disable editing
   useEffect(() => {
-    if (user?.email) setForm(f => ({ ...f, email: user.email! }));
+    if (user?.email) {
+      setForm(f => ({ ...f, email: user.email }));
+    }
   }, [user]);
+
+  // Email field should be disabled for authenticated users
+  const isEmailDisabled = !!user?.email;
 
   const set = (key: keyof FormState, value: string) => setForm(f => ({ ...f, [key]: value }));
 
@@ -79,7 +86,8 @@ export default function Checkout() {
 
   const validateStep1 = () => {
     const e: typeof errors = {};
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Enter a valid email.';
+    if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+      e.email = 'Enter a valid email.';
     if (!form.firstName.trim()) e.firstName = 'Required.';
     if (!form.lastName.trim()) e.lastName = 'Required.';
     // Validate Egyptian phone numbers: +201xxxxxxxxx or 01xxxxxxxxx (11 digits total)
@@ -134,7 +142,7 @@ export default function Checkout() {
 
     const { order, error } = await orderService.placeOrder(
       {
-        email: form.email,
+        email: form.email ?? '',
         firstName: form.firstName,
         lastName: form.lastName,
         phone: form.phone,
@@ -160,6 +168,10 @@ export default function Checkout() {
     setOrderNumber(order.order_number);
     setPlacing(false);
     setStep(5);
+
+    // Track purchase event for analytics
+    ecommerce.purchase(order.order_number, order.total);
+
     clear();
   };
 
@@ -249,9 +261,10 @@ export default function Checkout() {
                     id="email"
                     autoComplete="email"
                     type="email"
-                    value={form.email}
+                    value={form.email ?? ''}
                     onChange={e => set('email', e.target.value)}
-                    className={inputCls(!!errors.email)}
+                    disabled={isEmailDisabled}
+                    className={inputCls(!!errors.email) + (isEmailDisabled ? ' opacity-60' : '')}
                     placeholder="you@email.com"
                     data-testid="email-input"
                   />

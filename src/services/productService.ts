@@ -48,7 +48,10 @@ function transformProduct(row: any): Product {
     description: row.description,
     material: row.material,
     care: row.care || [],
-    gallery: [], // Will be populated from colors
+    gallery:
+      (row.gallery as string[]) ||
+      (row.product_colors as any[]).map(c => c.image).filter(Boolean) ||
+      [],
     isBestSeller: row.is_best_seller || false,
     createdAt: row.created_at,
     fitNotes: row.fit_notes,

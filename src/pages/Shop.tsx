@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { LayoutGrid, List, Search, SlidersHorizontal, X } from 'lucide-react';
+import { LayoutGrid, List, Search } from 'lucide-react';
 import type { Product, SortOption } from '../types';
 import { productService, type ShopFilters } from '../services/productService';
 import { categories } from '../data/products';
@@ -9,6 +9,7 @@ import ProductCard from '../components/ProductCard';
 import Skeleton from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
 import { filterProducts, getSearchSuggestions } from '../lib/productDiscovery';
+import { Breadcrumb } from '../components/Breadcrumb';
 
 const ALL_COLORS = ['Navy', 'White', 'Black', 'Gray', 'Silver', 'Raw Indigo', 'Washed Black'];
 const ALL_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
@@ -36,7 +37,6 @@ export default function Shop() {
   const [sizes, setSizes] = useState<string[]>([]);
   const [priceMax, setPriceMax] = useState(3500);
   const [view, setView] = useState<'grid' | 'list'>('grid');
-  const [filterOpen, setFilterOpen] = useState(false);
 
   const filters: ShopFilters = useMemo(
     () => ({ category, colors, sizes, priceMax, sort }),
@@ -203,6 +203,7 @@ export default function Shop() {
   return (
     <div className="bg-white text-navy min-h-screen pt-24 md:pt-28">
       <div className="mx-auto max-w-[1600px] px-5 md:px-8 pb-24">
+        <Breadcrumb items={[{ label: 'Shop' }]} />
         <div className="mb-8 md:mb-12">
           <p className="nv-eyebrow text-navy/50 mb-2">{category || 'Shop All'}</p>
           <h1 className="nv-heading text-5xl md:text-7xl">{category || 'Shop'}</h1>
@@ -279,14 +280,7 @@ export default function Shop() {
         )}
 
         <div className="flex items-center justify-between border-y border-navy/10 py-3 mb-8 sticky top-16 md:top-20 bg-white z-20">
-          <button
-            onClick={() => setFilterOpen(true)}
-            className="lg:hidden flex items-center gap-2 text-sm font-medium"
-          >
-            <SlidersHorizontal size={16} /> Filters{' '}
-            {activeFilterCount > 0 && `(${activeFilterCount})`}
-          </button>
-          <span className="hidden lg:block text-sm text-navy/50">
+          <span className="text-sm text-navy/50">
             {loading
               ? 'Loading…'
               : `Showing ${products.length} of ${allProducts.length} product${
@@ -389,35 +383,6 @@ export default function Shop() {
             )}
           </div>
         </div>
-      </div>
-
-      {/* Mobile filter drawer */}
-      <button
-        type="button"
-        aria-label="Close filters"
-        className={`fixed inset-0 z-[90] bg-navy/40 lg:hidden transition-opacity border-0 p-0 ${
-          filterOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={() => setFilterOpen(false)}
-      />
-      <div
-        className={`fixed top-0 left-0 z-[95] h-full w-[85%] max-w-sm bg-white text-navy p-6 overflow-y-auto nv-scroll transition-transform duration-400 lg:hidden ${
-          filterOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className="flex items-center justify-between mb-8">
-          <h3 className="nv-eyebrow">Filters</h3>
-          <button onClick={() => setFilterOpen(false)} aria-label="Close filters">
-            <X size={20} />
-          </button>
-        </div>
-        {FilterPanel}
-        <button
-          onClick={() => setFilterOpen(false)}
-          className="mt-8 w-full bg-navy text-white nv-eyebrow py-4"
-        >
-          Show {products.length} Results
-        </button>
       </div>
     </div>
   );
