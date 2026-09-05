@@ -8,6 +8,12 @@ interface RotatingHeroCarouselProps {
 
 const SLIDE_DURATION = 5500; // 5.5 seconds per product
 const TRANSITION_DURATION = 800; // 800ms crossfade
+const EDITORIAL_COLORS = [
+  'from-teal-600 to-teal-700',
+  'from-slate-700 to-slate-800',
+  'from-amber-700 to-amber-800',
+  'from-indigo-700 to-indigo-800',
+];
 
 export default function RotatingHeroCarousel({ products }: RotatingHeroCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -57,21 +63,13 @@ export default function RotatingHeroCarousel({ products }: RotatingHeroCarouselP
 
   if (!products || products.length === 0) {
     return (
-      <section className="relative h-[100svh] min-h-[600px] w-full overflow-hidden bg-navy flex items-center justify-center">
+      <section className="relative h-[100svh] min-h-[600px] w-full overflow-hidden bg-slate-900 flex items-center justify-center">
         <div className="text-center px-5">
-          <h1 className="nv-heading text-5xl md:text-8xl text-white mb-6 animate-fadeUp">
-            NEW DROP
-          </h1>
-          <p
-            className="nv-edit text-xl md:text-3xl text-white/70 mb-8 animate-fadeUp"
-            style={{ animationDelay: '0.2s' }}
-          >
-            EST. 2026
-          </p>
+          <h1 className="text-5xl md:text-8xl text-white mb-6 font-black">NEW COLLECTION</h1>
+          <p className="text-xl md:text-3xl text-white/70 mb-8">Coming Soon</p>
           <Link
             to="/shop"
-            className="inline-block nv-eyebrow text-white border border-white/30 px-8 py-4 hover:bg-white hover:text-navy transition-all duration-300 animate-fadeUp"
-            style={{ animationDelay: '0.4s' }}
+            className="inline-block bg-white/95 text-slate-900 px-8 py-4 uppercase tracking-widest font-bold hover:bg-white transition-all"
           >
             SHOP NOW
           </Link>
@@ -85,10 +83,14 @@ export default function RotatingHeroCarousel({ products }: RotatingHeroCarouselP
   const currentHeroImage = currentProduct?.colors?.[0]?.image;
   const nextHeroImage = nextProduct?.colors?.[0]?.image;
   const price = `EGP ${currentProduct?.price?.toLocaleString()}`;
+  const colorGradient = EDITORIAL_COLORS[currentIndex % EDITORIAL_COLORS.length];
 
   return (
-    <section className="relative h-[100svh] min-h-[600px] w-full overflow-hidden bg-navy">
-      {/* Background Image Layer with Crossfade Transition */}
+    <section className="relative h-[100svh] min-h-[600px] w-full overflow-hidden bg-slate-900">
+      {/* Background Gradient - Premium Editorial Color */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${colorGradient} opacity-90`} />
+
+      {/* Background Product Image - Right Side */}
       <div className="absolute inset-0">
         {/* Current Image */}
         <div
@@ -104,7 +106,7 @@ export default function RotatingHeroCarousel({ products }: RotatingHeroCarouselP
           />
         </div>
 
-        {/* Next Image (preloaded, hidden) */}
+        {/* Next Image */}
         {products.length > 1 && (
           <div
             className={`absolute inset-0 transition-opacity ${
@@ -119,79 +121,60 @@ export default function RotatingHeroCarousel({ products }: RotatingHeroCarouselP
             />
           </div>
         )}
-
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-navy/90 via-navy/40 to-navy/20" />
-        <div className="absolute inset-0 bg-checker-light opacity-20" />
       </div>
 
-      {/* Content Layer */}
-      <div className="relative z-10 h-full flex items-center">
-        <div className="mx-auto max-w-[1600px] px-5 md:px-8 w-full">
-          <div className="max-w-2xl">
-            <p className="nv-eyebrow text-white/80 mb-4 uppercase tracking-widest">
-              {currentProduct?.badge || 'New Arrivals'}
-            </p>
-            <h1 className="nv-heading text-5xl md:text-8xl text-white mb-6 leading-tight drop-shadow-lg">
-              {currentProduct?.name}
-            </h1>
-            <p className="nv-edit text-base md:text-lg text-white/70 mb-3 uppercase tracking-widest">
-              {currentProduct?.category} • {currentProduct?.colors?.length || 1} OF{' '}
-              {currentProduct?.colors?.length || 1}
-            </p>
-            <p className="nv-edit text-2xl md:text-4xl text-white/90 mb-8">{price}</p>
-            <Link
-              to={`/product/${currentProduct?.slug}`}
-              className="inline-block bg-white text-navy nv-eyebrow px-10 py-5 hover:bg-navy hover:text-white transition-all duration-300 transform hover:scale-105"
-            >
-              Shop Now
-            </Link>
+      {/* Dark Overlay for Text Readability */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent" />
+
+      {/* Content Layer - Left Side Editorial Layout */}
+      <div className="relative z-10 h-full flex flex-col justify-between">
+        {/* Top Navigation */}
+        <div className="pt-8 px-8 md:px-12 flex items-center justify-between">
+          <div className="w-8 h-8 rounded-full border-2 border-white/40" />
+          <div className="flex gap-4 text-white/60 text-xs uppercase tracking-widest">
+            <button className="hover:text-white transition-colors">SHOP</button>
+            <button className="hover:text-white transition-colors">ABOUT</button>
           </div>
         </div>
-      </div>
 
-      {/* Bottom Brand Mark with Counter and Progress */}
-      <div className="absolute bottom-0 left-0 right-0 z-20 h-16 md:h-24 bg-navy/95 backdrop-blur-sm">
-        <div className="mx-auto max-w-[1600px] px-5 md:px-8 flex items-center justify-between h-full">
-          <div className="flex items-center gap-4">
-            <div className="nv-checker-mini w-8 h-8" />
-            <div className="flex items-baseline gap-2">
-              <span className="text-sm md:text-base text-white/80 font-semibold">
-                {String(currentIndex + 1).padStart(2, '0')}
-              </span>
-              <span className="text-white/50">/</span>
-              <span className="text-sm md:text-base text-white/80 font-semibold">
-                {String(products.length).padStart(2, '0')}
-              </span>
-            </div>
-          </div>
-
-          <p className="text-xs md:text-sm text-white/50 uppercase tracking-widest">
-            EST. 2026 • CAIRO
+        {/* Hero Content */}
+        <div className="px-8 md:px-12 pb-20 max-w-2xl">
+          {/* Category Label */}
+          <p className="text-white/70 text-xs uppercase tracking-[0.2em] mb-6 font-light">
+            {currentProduct?.badge || 'New Collection'}
           </p>
 
-          <div className="flex items-center gap-4">
-            <Link
-              to="/shop"
-              className="text-xs md:text-sm text-white/60 hover:text-white transition-colors uppercase tracking-widest"
-            >
-              SHOP
-            </Link>
-            <Link
-              to="/collections"
-              className="text-xs md:text-sm text-white/60 hover:text-white transition-colors uppercase tracking-widest"
-            >
-              COLLECT
-            </Link>
-          </div>
+          {/* Main Headline */}
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white mb-8 leading-none drop-shadow-2xl">
+            {currentProduct?.name}
+          </h1>
+
+          {/* Price */}
+          <p className="text-white/90 text-lg md:text-2xl mb-8 font-light tracking-wide">{price}</p>
+
+          {/* CTA Button */}
+          <Link
+            to={`/product/${currentProduct?.slug}`}
+            className="inline-block bg-white/95 text-slate-900 px-8 md:px-10 py-3 md:py-4 text-xs md:text-sm uppercase tracking-[0.15em] font-bold hover:bg-white transition-all duration-300 shadow-lg"
+          >
+            Shop Collection
+          </Link>
         </div>
 
-        {/* Progress Bar */}
-        <div className="absolute bottom-0 left-0 w-full h-0.5 bg-white/10">
-          <div
-            className="h-full bg-white transition-all duration-75"
-            style={{ width: `${progress}%` }}
-          />
+        {/* Bottom Counter and Progress */}
+        <div className="px-8 md:px-12 pb-8">
+          <div className="flex items-center gap-4 text-white/80 mb-4">
+            <span className="text-sm font-semibold">
+              {String(currentIndex + 1).padStart(2, '0')} /{' '}
+              {String(products.length).padStart(2, '0')}
+            </span>
+          </div>
+          <div className="w-24 h-0.5 bg-white/20">
+            <div
+              className="h-full bg-white transition-all duration-75"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
       </div>
     </section>
