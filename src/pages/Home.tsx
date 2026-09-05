@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { Product } from '../types';
-import { productService } from '../services/productService';
 import { useSEO, seoHelpers } from '../lib/seo';
-import RotatingHeroCarousel from '../components/RotatingHeroCarousel';
 import Newsletter from '../components/Newsletter';
 
 const categoryTiles = [
@@ -17,33 +14,14 @@ const categoryTiles = [
 
 export default function Home() {
   useSEO(seoHelpers.home());
-  const [newDrop, setNewDrop] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-    productService.getNewDrop().then(data => {
-      if (mounted) {
-        setNewDrop(data);
-        setLoading(false);
-      }
-    });
-    return () => {
-      mounted = false;
-    };
+    setLoading(false);
   }, []);
 
   return (
     <>
-      {/* HERO — auto-rotating carousel with smooth transitions */}
-      {!loading ? (
-        <RotatingHeroCarousel products={newDrop} />
-      ) : (
-        <section className="relative h-[100svh] min-h-[560px] flex items-center justify-center bg-navy">
-          <div className="text-white/60 animate-pulse">Loading collection…</div>
-        </section>
-      )}
-
       {/* SHOP BY CATEGORY */}
       <section className="bg-white text-navy py-16 md:py-24 px-5 md:px-8">
         <div className="mx-auto max-w-[1600px]">
