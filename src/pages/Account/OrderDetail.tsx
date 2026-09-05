@@ -43,6 +43,7 @@ export default function OrderDetail() {
     'idle',
   );
   const [returnError, setReturnError] = useState<string | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -57,6 +58,9 @@ export default function OrderDetail() {
     order &&
     ['placed', 'processing'].includes(order.status) &&
     Date.now() - new Date(order.created_at).getTime() < 2 * 60 * 60 * 1000;
+  const cancelTimeLeft = canCancel
+    ? Math.ceil((2 * 60 * 60 * 1000 - (Date.now() - new Date(order.created_at).getTime())) / 1000)
+    : 0;
 
   const submitReturn = async (type: 'return' | 'cancellation') => {
     if (!order || !id) return;
@@ -66,6 +70,11 @@ export default function OrderDetail() {
     }
     setReturnStatus('loading');
     setReturnError(null);
+
+    if (type === 'cancellation') {
+      setIsCancelling(true);
+    }
+
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -80,9 +89,11 @@ export default function OrderDetail() {
     if (!res.ok) {
       setReturnError(json.error || 'Failed');
       setReturnStatus('error');
+      setIsCancelling(false);
       return;
     }
     setReturnStatus('success');
+    setIsCancelling(false);
     setTimeout(() => setShowReturn(false), 1500);
   };
 
@@ -176,6 +187,37 @@ export default function OrderDetail() {
           </p>
         </div>
       </div>
+
+      {/* Order Cancellation Section - Separate from Returns */}
+      {canCancel && (
+        <div className="mt-8 border-t border-navy/10 pt-6">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <div className="w-10 h-10 bg-navy/5 rounded-full flex items-center justify-center">
+                <Loader2 className="text-navy/50" size={20} />
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className="nv-eyebrow text-sm mb-2">Cancel Order</h3>
+              <p className="text-sm text-navy/70 mb-4">
+                Order can be cancelled within <strong>2 hours</strong> of placement.
+                {cancelTimeLeft > 0 && ` Time remaining: ${cancelTimeLeft} seconds.`}
+              </p>
+              <button
+                onClick={() => {
+                  setReturnReason('Order cancelled by customer');
+                  setShowReturn(true);
+                }}
+                disabled={isCancelling}
+                className="bg-red-600 text-white px-6 py-2.5 text-sm hover:bg-red-700 transition-colors disabled:opacity-60 flex items-center gap-2"
+              >
+                {isCancelling && <Loader2 size={14} className="animate-spin" />}
+                Cancel Order Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {(canReturn || canCancel) && (
         <div className="mt-8 border-t border-navy/10 pt-6">
