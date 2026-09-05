@@ -6,9 +6,6 @@ interface RotatingHeroCarouselProps {
   products: Product[];
 }
 
-const SLIDE_DURATION = 5500; // 5.5 seconds per product
-const TRANSITION_DURATION = 800; // 800ms crossfade
-
 export default function RotatingHeroCarousel({ products }: RotatingHeroCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [nextIndex, setNextIndex] = useState(1);
