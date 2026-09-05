@@ -6,7 +6,6 @@ import { productService } from '../services/productService';
 import { collections } from '../data/products';
 import { useSEO, seoHelpers } from '../lib/seo';
 import ProductCard from '../components/ProductCard';
-import RotatingHeroCarousel from '../components/RotatingHeroCarousel';
 import Newsletter from '../components/Newsletter';
 import Skeleton from '../components/Skeleton';
 
@@ -41,14 +40,6 @@ export default function Home() {
 
   return (
     <>
-      {/* HERO — auto-rotating carousel with smooth transitions */}
-      {!loading ? (
-        <RotatingHeroCarousel products={newDrop} />
-      ) : (
-        <section className="relative h-[100svh] min-h-[560px] flex items-center justify-center bg-navy">
-          <div className="text-white/60 animate-pulse">Loading collection…</div>
-        </section>
-      )}
       {/* NEW DROP */}
       <section className="bg-white text-navy py-16 md:py-24 px-5 md:px-8">
         <div className="mx-auto max-w-[1600px]">
