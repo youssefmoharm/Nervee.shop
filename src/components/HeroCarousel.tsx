@@ -136,7 +136,7 @@ export default function HeroCarousel() {
             {slide.headline}
           </h1>
           {slide.description && (
-            <p className="text-navy/60 nv-eyebrow text-xs mb-8 uppercase tracking-wider">
+            <p className="text-navy nv-eyebrow text-xs mb-8 uppercase tracking-wider">
               {slide.description}
             </p>
           )}
