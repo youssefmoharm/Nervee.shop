@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 interface CarouselSlide {
   id: string;
   headline: string;
-  subtitle?: string;
+  description?: string;
   ctaLabel: string;
   ctaLink: string;
   backgroundImage: string;
@@ -15,32 +15,32 @@ const slides: CarouselSlide[] = [
   {
     id: 'slide-1',
     headline: 'UP TO 60%\nOFF',
-    subtitle: 'New Season Collection',
-    ctaLabel: 'Shop Now',
+    description: 'New Season Collection',
+    ctaLabel: 'SHOP',
     ctaLink: '/shop?category=New%20Arrivals',
     backgroundImage: 'nerve-hero-2026',
   },
   {
     id: 'slide-2',
     headline: 'EVERYDAY\nESSENTIALS',
-    subtitle: 'Core Collection',
-    ctaLabel: 'Shop',
+    description: 'Core Collection',
+    ctaLabel: 'SHOP',
     ctaLink: '/collections/core-essentials',
     backgroundImage: 'nerve-core-essentials',
   },
   {
     id: 'slide-3',
     headline: 'LIMITED\nEDITION',
-    subtitle: 'Archive Pieces',
-    ctaLabel: 'Browse',
+    description: 'Archive Pieces',
+    ctaLabel: 'SHOP',
     ctaLink: '/collections/nerve-archive',
     backgroundImage: 'nerve-archive-edit',
   },
   {
     id: 'slide-4',
     headline: 'TECHNICAL\nWEAR',
-    subtitle: 'Street Form',
-    ctaLabel: 'Explore',
+    description: 'Street Form',
+    ctaLabel: 'SHOP',
     ctaLink: '/collections/street-form',
     backgroundImage: 'nerve-street-form',
   },
@@ -113,36 +113,36 @@ export default function HeroCarousel() {
         })}
       </div>
 
-      {/* Minimal Overlay - navy gradient from left */}
-      <div className="absolute inset-0 bg-gradient-to-r from-navy/40 via-navy/20 to-transparent" />
+      {/* Subtle Overlay - minimal, lets image show */}
+      <div className="absolute inset-0 bg-gradient-to-r from-mist/60 via-mist/40 to-transparent" />
 
       {/* Content - Left Side */}
-      <div className="absolute inset-0 flex flex-col justify-between p-6 sm:p-8 md:p-12">
+      <div className="absolute inset-0 flex flex-col justify-between p-8 md:p-12">
         {/* Top - Branding */}
         <div className="z-10">
-          <div className="text-paper font-black text-xs sm:text-sm tracking-widest uppercase mb-2">
+          <div className="nv-eyebrow text-navy font-black text-sm tracking-widest uppercase">
             NERVE.
           </div>
         </div>
 
         {/* Middle - Headline (Left side) */}
-        <div className="z-10 max-w-md">
+        <div className="z-10 max-w-lg">
           <h1
             key={`headline-${currentSlide}`}
-            className={`text-warning font-black text-5xl sm:text-6xl md:text-7xl leading-none mb-4 transition-all duration-700 ease-out ${
+            className={`nv-heading text-warning font-black text-6xl md:text-7xl lg:text-8xl leading-none mb-6 transition-all duration-700 ease-out whitespace-pre-line ${
               direction === 'next' ? 'animate-slide-in-from-left' : 'animate-slide-in-from-right'
             }`}
           >
             {slide.headline}
           </h1>
-          {slide.subtitle && (
-            <p className="text-silver text-xs sm:text-sm uppercase tracking-wider mb-6">
-              {slide.subtitle}
+          {slide.description && (
+            <p className="text-navy/60 nv-eyebrow text-xs mb-8 uppercase tracking-wider">
+              {slide.description}
             </p>
           )}
           <Link
             to={slide.ctaLink}
-            className="inline-block bg-warning text-paper px-8 py-3 font-bold text-sm uppercase tracking-wider hover:bg-opacity-90 transition-all"
+            className="inline-block bg-warning text-paper px-6 py-3 nv-eyebrow font-bold text-xs uppercase tracking-widest hover:opacity-90 transition-opacity"
           >
             {slide.ctaLabel}
           </Link>
@@ -156,27 +156,27 @@ export default function HeroCarousel() {
                 key={index}
                 onClick={() => goToSlide(index)}
                 aria-label={`Go to slide ${index + 1}`}
-                className={`transition-all duration-300 h-0.5 ${
-                  index === currentSlide ? 'w-8 bg-warning' : 'w-2 bg-paper/50 hover:bg-paper/70'
+                className={`transition-all duration-300 h-1 ${
+                  index === currentSlide ? 'w-8 bg-warning' : 'w-2 bg-navy/30 hover:bg-navy/50'
                 }`}
               />
             ))}
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-2">
             <button
               onClick={prevSlide}
               aria-label="Previous slide"
-              className="p-2 text-paper hover:text-warning transition-colors"
+              className="p-2 text-navy/50 hover:text-warning transition-colors"
             >
-              <ChevronLeft size={28} strokeWidth={1.5} />
+              <ChevronLeft size={24} strokeWidth={1.5} />
             </button>
             <button
               onClick={nextSlide}
               aria-label="Next slide"
-              className="p-2 text-paper hover:text-warning transition-colors"
+              className="p-2 text-navy/50 hover:text-warning transition-colors"
             >
-              <ChevronRight size={28} strokeWidth={1.5} />
+              <ChevronRight size={24} strokeWidth={1.5} />
             </button>
           </div>
         </div>
