@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
 import type { Product } from '../types';
 import { productService } from '../services/productService';
 import { useSEO, seoHelpers } from '../lib/seo';
@@ -15,8 +14,6 @@ const categoryTiles = [
   { name: 'Caps', seed: 'cat-caps' },
   { name: 'Accessories', seed: 'cat-acc' },
 ];
-
-const gallery = ['nw-1', 'nw-2', 'nw-3', 'nw-4', 'nw-5', 'nw-6'];
 
 export default function Home() {
   useSEO(seoHelpers.home());
@@ -70,42 +67,6 @@ export default function Home() {
                   {c.name}
                 </span>
               </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* SOCIAL / COMMUNITY */}
-      <section className="bg-navy py-16 md:py-24 px-5 md:px-8">
-        <div className="mx-auto max-w-[1600px]">
-          <div className="flex items-end justify-between mb-10">
-            <h2 className="nv-heading text-4xl md:text-6xl">Nerve in the Wild</h2>
-            <a
-              href="https://www.instagram.com/gothennerve58/"
-              target="_blank"
-              rel="noreferrer"
-              className="hidden sm:inline-flex nv-eyebrow items-center gap-2 hover:opacity-60"
-            >
-              @gothennerve58 <ArrowRight size={14} />
-            </a>
-          </div>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-1.5">
-            {gallery.map(g => (
-              <a
-                key={g}
-                href="https://www.instagram.com/gothennerve58/"
-                target="_blank"
-                rel="noreferrer"
-                className="group aspect-square overflow-hidden block"
-              >
-                <img
-                  src={`https://picsum.photos/seed/${g}/500/500`}
-                  alt="Community post"
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-              </a>
             ))}
           </div>
         </div>
