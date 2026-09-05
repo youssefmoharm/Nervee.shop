@@ -5,9 +5,8 @@ import type { Product } from '../types';
 import { productService } from '../services/productService';
 import { collections } from '../data/products';
 import { useSEO, seoHelpers } from '../lib/seo';
-import ProductCard from '../components/ProductCard';
+import RotatingHeroCarousel from '../components/RotatingHeroCarousel';
 import Newsletter from '../components/Newsletter';
-import Skeleton from '../components/Skeleton';
 
 const categoryTiles = [
   { name: 'T-Shirts', seed: 'cat-tees' },
@@ -40,40 +39,14 @@ export default function Home() {
 
   return (
     <>
-      {/* NEW DROP */}
-      <section className="bg-white text-navy py-16 md:py-24 px-5 md:px-8">
-        <div className="mx-auto max-w-[1600px]">
-          <div className="flex items-end justify-between mb-10 md:mb-14">
-            <div>
-              <p className="nv-eyebrow text-navy/50 mb-2">Just Landed</p>
-              <h2 className="nv-heading text-4xl md:text-6xl">The New Drop</h2>
-            </div>
-            <Link
-              to="/shop"
-              className="hidden sm:inline-flex nv-eyebrow items-center gap-2 hover:opacity-60"
-            >
-              View All <ArrowRight size={14} />
-            </Link>
-          </div>
-
-          {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-10">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="space-y-3">
-                  <Skeleton className="aspect-[4/5] w-full" />
-                  <Skeleton variant="text" count={2} height="h-3" />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-10">
-              {newDrop.map(p => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+      {/* HERO — auto-rotating carousel with smooth transitions */}
+      {!loading ? (
+        <RotatingHeroCarousel products={newDrop} />
+      ) : (
+        <section className="relative h-[100svh] min-h-[560px] flex items-center justify-center bg-navy">
+          <div className="text-white/60 animate-pulse">Loading collection…</div>
+        </section>
+      )}
 
       {/* FEATURED COLLECTIONS */}
       <section className="bg-navy py-16 md:py-24 px-5 md:px-8">
