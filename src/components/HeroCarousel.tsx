@@ -88,7 +88,7 @@ export default function HeroCarousel() {
   const slide = slides[currentSlide];
 
   return (
-    <section className="relative w-full h-screen min-h-[600px] overflow-hidden bg-gray-200">
+    <section className="relative w-full h-screen min-h-[600px] overflow-hidden bg-mist">
       {/* Background Images */}
       <div className="absolute inset-0">
         {slides.map((s, index) => {
@@ -113,14 +113,14 @@ export default function HeroCarousel() {
         })}
       </div>
 
-      {/* Minimal Overlay - subtle gradient only */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-transparent" />
+      {/* Minimal Overlay - navy gradient from left */}
+      <div className="absolute inset-0 bg-gradient-to-r from-navy/40 via-navy/20 to-transparent" />
 
       {/* Content - Left Side */}
       <div className="absolute inset-0 flex flex-col justify-between p-6 sm:p-8 md:p-12">
-        {/* Top - Header info */}
+        {/* Top - Branding */}
         <div className="z-10">
-          <div className="text-red-500 font-bold text-xs sm:text-sm tracking-widest uppercase mb-2">
+          <div className="text-paper font-black text-xs sm:text-sm tracking-widest uppercase mb-2">
             NERVE.
           </div>
         </div>
@@ -129,20 +129,20 @@ export default function HeroCarousel() {
         <div className="z-10 max-w-md">
           <h1
             key={`headline-${currentSlide}`}
-            className={`text-red-500 font-black text-5xl sm:text-6xl md:text-7xl leading-none mb-4 transition-all duration-700 ease-out ${
+            className={`text-warning font-black text-5xl sm:text-6xl md:text-7xl leading-none mb-4 transition-all duration-700 ease-out ${
               direction === 'next' ? 'animate-slide-in-from-left' : 'animate-slide-in-from-right'
             }`}
           >
             {slide.headline}
           </h1>
           {slide.subtitle && (
-            <p className="text-gray-400 text-xs sm:text-sm uppercase tracking-wider mb-6">
+            <p className="text-silver text-xs sm:text-sm uppercase tracking-wider mb-6">
               {slide.subtitle}
             </p>
           )}
           <Link
             to={slide.ctaLink}
-            className="inline-block bg-red-500 text-white px-8 py-3 font-bold text-sm uppercase tracking-wider hover:bg-red-600 transition-colors"
+            className="inline-block bg-warning text-paper px-8 py-3 font-bold text-sm uppercase tracking-wider hover:bg-opacity-90 transition-all"
           >
             {slide.ctaLabel}
           </Link>
@@ -157,7 +157,7 @@ export default function HeroCarousel() {
                 onClick={() => goToSlide(index)}
                 aria-label={`Go to slide ${index + 1}`}
                 className={`transition-all duration-300 h-0.5 ${
-                  index === currentSlide ? 'w-8 bg-red-500' : 'w-2 bg-white/50 hover:bg-white/70'
+                  index === currentSlide ? 'w-8 bg-warning' : 'w-2 bg-paper/50 hover:bg-paper/70'
                 }`}
               />
             ))}
@@ -167,14 +167,14 @@ export default function HeroCarousel() {
             <button
               onClick={prevSlide}
               aria-label="Previous slide"
-              className="p-2 text-white hover:text-red-500 transition-colors"
+              className="p-2 text-paper hover:text-warning transition-colors"
             >
               <ChevronLeft size={28} strokeWidth={1.5} />
             </button>
             <button
               onClick={nextSlide}
               aria-label="Next slide"
-              className="p-2 text-white hover:text-red-500 transition-colors"
+              className="p-2 text-paper hover:text-warning transition-colors"
             >
               <ChevronRight size={28} strokeWidth={1.5} />
             </button>
