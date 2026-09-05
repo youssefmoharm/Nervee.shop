@@ -47,27 +47,50 @@ export default function Home() {
       {/* SHOP BY CATEGORY */}
       <section className="bg-white text-navy py-16 md:py-24 px-5 md:px-8">
         <div className="mx-auto max-w-[1600px]">
-          <h2 className="nv-heading text-4xl md:text-6xl mb-10 md:mb-14">Shop by Category</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {categoryTiles.map(c => (
-              <Link
-                key={c.name}
-                to={`/shop?category=${encodeURIComponent(c.name)}`}
-                className="group relative aspect-[3/4] overflow-hidden block bg-mist"
-              >
-                <img
-                  src={`https://picsum.photos/seed/${c.seed}/500/650`}
-                  alt={c.name}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-navy/0 group-hover:bg-navy/30 transition-colors" />
-                <span className="absolute bottom-3 left-3 text-white nv-edit text-sm font-semibold uppercase tracking-wide drop-shadow">
-                  {c.name}
-                </span>
-              </Link>
-            ))}
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Left Column - Category List */}
+            <div className="flex flex-col justify-start">
+              <h2 className="nv-heading text-4xl md:text-5xl mb-10">Shop by Category</h2>
+              <div className="space-y-3">
+                {categoryTiles.map(c => (
+                  <Link
+                    key={c.name}
+                    to={`/shop?category=${encodeURIComponent(c.name)}`}
+                    className="text-sm md:text-base text-navy/70 hover:text-navy transition-colors uppercase tracking-widest"
+                  >
+                    {c.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Right Column - Large Images Grid */}
+            <div className="md:col-span-2">
+              <div className="grid grid-cols-2 gap-4">
+                {categoryTiles.map((c, idx) => (
+                  <Link
+                    key={c.name}
+                    to={`/shop?category=${encodeURIComponent(c.name)}`}
+                    className={`group relative overflow-hidden block ${
+                      idx === 0 ? 'md:col-span-2 md:row-span-2' : ''
+                    }`}
+                    style={idx === 0 ? { aspectRatio: '1 / 1' } : { aspectRatio: '3/4' }}
+                  >
+                    <img
+                      src={`https://picsum.photos/seed/${c.seed}/500/650`}
+                      alt={c.name}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-navy/0 group-hover:bg-navy/20 transition-colors" />
+                    <span className="absolute bottom-3 left-3 text-white nv-edit text-sm font-semibold uppercase tracking-wide drop-shadow">
+                      {c.name}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
