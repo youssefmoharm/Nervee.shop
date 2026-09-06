@@ -10,6 +10,7 @@ import {
 import type { CartLine } from '../types';
 import { useAuth } from './AuthContext';
 import { cartService } from '../services/cartService';
+import { saveCheckoutSession, clearCheckoutSession } from '../lib/checkoutSessionManager';
 
 interface CartContextValue {
   lines: CartLine[];
@@ -60,6 +61,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (user) return;
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
+      // Also backup to localStorage for checkout session persistence
+      if (lines.length > 0) {
+        saveCheckoutSession({ cartLines: lines });
+      }
     } catch {
       /* storage unavailable — non-fatal */
     }
@@ -142,6 +147,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clear = () => {
     setLines([]);
+    clearCheckoutSession(); // Also clear checkout session on cart clear
     if (user) void cartService.clear();
     else sessionStorage.removeItem(STORAGE_KEY);
   };

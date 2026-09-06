@@ -11,6 +11,11 @@ import { useToast } from '../context/ToastContext';
 import { EGYPT_GOVERNORATES } from '../data/governorates';
 import { ecommerce } from '../lib/analytics';
 import { estimateShippingCost, getCheckoutSummary } from '../lib/checkout';
+import {
+  loadCheckoutSession,
+  saveCheckoutSession,
+  clearCheckoutSession,
+} from '../lib/checkoutSessionManager';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -52,8 +57,14 @@ export default function Checkout() {
   });
   const { lines, subtotal, clear } = useCart();
   const { user } = useAuth();
-  const [step, setStep] = useState<Step>(1);
-  const [form, setForm] = useState<FormState>(initialForm);
+
+  // Restore checkout session if available
+  const session = loadCheckoutSession();
+  const [step, setStep] = useState<Step>(() => (session?.checkoutStep as Step) || 1);
+  const [form, setForm] = useState<FormState>(() => ({
+    ...initialForm,
+    ...(session?.formState || {}),
+  }));
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [placing, setPlacing] = useState(false);
   const [placeError, setPlaceError] = useState<string | null>(null);
@@ -63,7 +74,7 @@ export default function Checkout() {
   const [appliedDiscount, setAppliedDiscount] = useState<{
     code: string;
     discount: DiscountCode;
-  } | null>(null);
+  } | null>(() => session?.appliedDiscount || null);
 
   // Pre-fill email from user if authenticated, and disable editing
   useEffect(() => {
@@ -71,6 +82,16 @@ export default function Checkout() {
       setForm(f => ({ ...f, email: user.email }));
     }
   }, [user]);
+
+  // Persist checkout state to localStorage whenever it changes
+  useEffect(() => {
+    saveCheckoutSession({
+      cartLines: lines,
+      formState: form,
+      appliedDiscount,
+      checkoutStep: step,
+    });
+  }, [form, appliedDiscount, step, lines]);
 
   // Email field should be disabled for authenticated users
   const isEmailDisabled = !!user?.email;
@@ -207,6 +228,8 @@ export default function Checkout() {
     // Track purchase event for analytics
     ecommerce.purchase(order.order_number, order.total);
 
+    // Clear checkout session and cart on successful order
+    clearCheckoutSession();
     clear();
   };
 
@@ -246,6 +269,19 @@ export default function Checkout() {
   return (
     <div className="bg-white text-navy min-h-screen pt-24 md:pt-28 px-5 md:px-8 pb-24">
       <div className="mx-auto max-w-5xl">
+        {/* Session recovery banner */}
+        {session && step < 5 && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800 flex items-start gap-3">
+            <span className="text-lg">ℹ️</span>
+            <div>
+              <p className="font-semibold">Your checkout was saved</p>
+              <p className="text-xs text-blue-700 mt-1">
+                We recovered your cart and form data. You&apos;re on step {step} of 4.
+              </p>
+            </div>
+          </div>
+        )}
+
         {step !== 4 && (
           <>
             <Link
