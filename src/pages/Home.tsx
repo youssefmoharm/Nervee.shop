@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import type { Product } from '../types';
 import { productService } from '../services/productService';
 import { collections, categories } from '../data/products';
-import { useSEO, seoHelpers } from '../lib/seo';
+import { useSEO } from '../lib/seo';
 import { logError } from '../lib/sentry';
 import HeroCarousel from '../components/HeroCarousel';
 import ProductCard from '../components/ProductCard';
@@ -24,7 +24,12 @@ const gallery = ['nw-1', 'nw-2', 'nw-3', 'nw-4', 'nw-5', 'nw-6'];
 const img = (seed: string, w = 900, h = 1125) => `https://picsum.photos/seed/${seed}/${w}/${h}`;
 
 export default function Home() {
-  useSEO(seoHelpers.home());
+  useSEO({
+    title: 'NERVE — Cool but Chic | Contemporary Egyptian Concept Store',
+    description:
+      'A contemporary concept store built around individuality, movement, and the pieces that become part of your everyday identity. Cool but chic. EST 2026.',
+    keywords: 'fashion, streetwear, concept store, contemporary clothing, Egyptian fashion',
+  });
   const [newDrop, setNewDrop] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
