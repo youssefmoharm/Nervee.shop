@@ -103,7 +103,6 @@ export default function ProductDetail() {
             'https://www.linkedin.com/in/nerve-shop-b67623429',
           ],
         },
-    'product-structured-data',
   );
 
   useEffect(() => {
