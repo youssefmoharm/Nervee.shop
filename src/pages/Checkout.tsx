@@ -340,7 +340,7 @@ export default function Checkout() {
                     data-testid="email-input"
                   />
                 </Field>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 gap-3 md:gap-4">
                   <Field label="First Name" error={errors.firstName}>
                     <input
                       id="firstName"
@@ -394,7 +394,7 @@ export default function Checkout() {
                     data-testid="address-input"
                   />
                 </Field>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 gap-3 md:gap-4">
                   <Field label="City" error={errors.city}>
                     <input
                       id="city"
@@ -642,41 +642,41 @@ export default function Checkout() {
           </form>
 
           {step !== 5 && (
-            <div className="bg-white border border-navy/10 rounded-2xl h-fit sticky top-24 overflow-hidden shadow-sm">
+            <div className="bg-white border border-navy/10 rounded-2xl h-fit sticky top-24 md:top-28 overflow-hidden shadow-sm max-h-[90vh] overflow-y-auto">
               {/* Header */}
-              <div className="bg-gradient-to-r from-navy to-navy-2 px-6 py-4">
-                <h3 className="text-white nv-eyebrow flex items-center gap-2">
+              <div className="bg-gradient-to-r from-navy to-navy-2 px-4 md:px-6 py-3 md:py-4">
+                <h3 className="text-white nv-eyebrow flex items-center gap-2 text-sm md:text-base">
                   <Package size={16} />
                   Order Summary
                 </h3>
               </div>
 
               {/* Items */}
-              <div className="p-6 space-y-4">
-                <ul className="space-y-3 max-h-64 overflow-y-auto nv-scroll">
+              <div className="p-3 md:p-6 space-y-3 md:space-y-4">
+                <ul className="space-y-2 md:space-y-3 max-h-48 md:max-h-64 overflow-y-auto nv-scroll">
                   {lines.map(l => (
                     <li
                       key={`${l.productId}-${l.color}-${l.size}`}
-                      className="flex gap-3 pb-3 border-b border-navy/5 last:border-0"
+                      className="flex gap-2 md:gap-3 pb-2 md:pb-3 border-b border-navy/5 last:border-0"
                     >
-                      <div className="w-14 h-16 bg-mist flex-shrink-0 overflow-hidden rounded-lg relative">
+                      <div className="w-12 md:w-14 h-14 md:h-16 bg-mist flex-shrink-0 overflow-hidden rounded-lg relative">
                         <img src={l.image} alt={l.name} className="w-full h-full object-cover" />
-                        <span className="absolute -top-2 -right-2 bg-navy text-white text-[10px] font-semibold w-5 h-5 rounded-full flex items-center justify-center">
+                        <span className="absolute -top-2 -right-2 bg-navy text-white text-[10px] font-semibold w-4 h-4 rounded-full flex items-center justify-center">
                           {l.quantity}
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold uppercase text-navy truncate">
+                        <p className="text-[11px] md:text-xs font-semibold uppercase text-navy truncate">
                           {l.name}
                         </p>
-                        <p className="text-xs text-navy/50 mt-0.5">
+                        <p className="text-[10px] md:text-xs text-navy/50 mt-0.5">
                           {l.color} / {l.size}
                         </p>
-                        <p className="text-xs text-navy/40 mt-1">
+                        <p className="text-[10px] md:text-xs text-navy/40 mt-1">
                           EGP {l.price.toLocaleString()} × {l.quantity}
                         </p>
                       </div>
-                      <span className="text-sm font-semibold text-navy whitespace-nowrap">
+                      <span className="text-xs md:text-sm font-semibold text-navy whitespace-nowrap">
                         EGP {(l.price * l.quantity).toLocaleString()}
                       </span>
                     </li>
@@ -685,10 +685,10 @@ export default function Checkout() {
               </div>
 
               {/* Divider */}
-              <div className="mx-6 border-t border-navy/10" />
+              <div className="mx-3 md:mx-6 border-t border-navy/10" />
 
               {/* Pricing */}
-              <div className="px-6 py-4 space-y-3 text-sm">
+              <div className="px-3 md:px-6 py-3 md:py-4 space-y-2 md:space-y-3 text-xs md:text-sm">
                 <div className="flex justify-between items-center text-navy/60">
                   <span>Subtotal</span>
                   <span className="font-medium text-navy">EGP {subtotal.toLocaleString()}</span>
@@ -713,28 +713,28 @@ export default function Checkout() {
                 </div>
 
                 {/* Total */}
-                <div className="pt-3 border-t border-navy/10 flex justify-between items-center">
+                <div className="pt-2 md:pt-3 border-t border-navy/10 flex justify-between items-center">
                   <span className="font-semibold text-navy">Total</span>
-                  <span className="text-lg font-bold text-navy">
+                  <span className="text-base md:text-lg font-bold text-navy">
                     EGP {finalTotal.toLocaleString()}
                   </span>
                 </div>
               </div>
 
               {/* Discount Code Section */}
-              <div className="mx-6 mb-6">
-                <div className="rounded-lg border border-navy/10 bg-mist/30 p-4">
-                  <p className="text-[11px] font-semibold text-navy/70 mb-3 uppercase tracking-wide">
+              <div className="mx-3 md:mx-6 mb-3 md:mb-6">
+                <div className="rounded-lg border border-navy/10 bg-mist/30 p-3 md:p-4">
+                  <p className="text-[10px] md:text-[11px] font-semibold text-navy/70 mb-2 md:mb-3 uppercase tracking-wide">
                     Discount Code
                   </p>
                   {appliedDiscount ? (
                     <div className="flex items-center gap-2">
-                      <span className="flex-1 text-sm font-medium bg-green-50 text-green-700 px-3 py-2 rounded border border-green-200">
+                      <span className="flex-1 text-xs md:text-sm font-medium bg-green-50 text-green-700 px-3 py-2 rounded border border-green-200">
                         {appliedDiscount.code}
                       </span>
                       <button
                         onClick={handleRemoveDiscount}
-                        className="px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded transition-colors"
+                        className="px-2 md:px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded transition-colors"
                       >
                         Remove
                       </button>
@@ -752,7 +752,7 @@ export default function Checkout() {
                       <button
                         type="submit"
                         disabled={applyingDiscount}
-                        className="bg-navy text-white px-4 py-2 text-xs font-medium rounded hover:bg-navy-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="bg-navy text-white px-3 md:px-4 py-2 text-xs font-medium rounded hover:bg-navy-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
                       >
                         {applyingDiscount ? (
                           <>
@@ -769,7 +769,7 @@ export default function Checkout() {
               </div>
 
               {/* Footer */}
-              <div className="bg-mist/30 border-t border-navy/10 px-6 py-3 text-[11px] text-navy/60 flex items-start gap-2">
+              <div className="bg-mist/30 border-t border-navy/10 px-3 md:px-6 py-2 md:py-3 text-[10px] md:text-[11px] text-navy/60 flex items-start gap-2">
                 <Truck size={14} className="flex-shrink-0 mt-0.5 text-navy/50" />
                 <span>
                   <span className="font-semibold text-navy/80">Fast delivery updates</span> and
