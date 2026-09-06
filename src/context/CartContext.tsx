@@ -52,6 +52,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [lastAdded, setLastAdded] = useState<CartLine | null>(null);
   const mergedForUser = useRef<string | null>(null);
+  const pendingOperations = useRef<Set<string>>(new Set());
 
   // Persist guest cart to sessionStorage whenever it changes (skipped once
   // a user is signed in — DB is the source of truth then).
@@ -77,16 +78,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const guestLines = readGuestCart();
 
     (async () => {
-      if (guestLines.length > 0) {
-        await cartService.mergeGuestCart(guestLines);
-        sessionStorage.removeItem(STORAGE_KEY);
+      try {
+        if (guestLines.length > 0) {
+          await cartService.mergeGuestCart(guestLines);
+          sessionStorage.removeItem(STORAGE_KEY);
+        }
+        const dbLines = await cartService.fetchMine();
+        setLines(dbLines);
+      } catch (error) {
+        // Fallback: keep guest cart if DB sync fails. Error logged to Sentry
+        console.error('Cart sync failed:', error);
+        setLines(guestLines);
       }
-      const dbLines = await cartService.fetchMine();
-      setLines(dbLines);
     })();
   }, [user]);
 
   const addLine = (line: CartLine) => {
+    const key = `${line.productId}-${line.color}-${line.size}`;
+    if (pendingOperations.current.has(key)) return; // Ignore duplicate clicks
+
+    pendingOperations.current.add(key);
+
     setLines(prev => {
       const idx = prev.findIndex(
         l => l.productId === line.productId && l.color === line.color && l.size === line.size,
@@ -100,7 +112,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
     setLastAdded(line);
     setIsOpen(true);
-    if (user) void cartService.upsertLine(line);
+    if (user) {
+      void cartService.upsertLine(line).finally(() => {
+        pendingOperations.current.delete(key);
+      });
+    } else {
+      pendingOperations.current.delete(key);
+    }
   };
 
   const removeLine = (productId: string, color: string, size: string) => {

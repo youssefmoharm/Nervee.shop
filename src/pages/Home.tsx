@@ -5,6 +5,7 @@ import type { Product } from '../types';
 import { productService } from '../services/productService';
 import { collections, categories } from '../data/products';
 import { useSEO, seoHelpers } from '../lib/seo';
+import { logError } from '../lib/sentry';
 import HeroCarousel from '../components/HeroCarousel';
 import ProductCard from '../components/ProductCard';
 import Newsletter from '../components/Newsletter';
@@ -39,7 +40,7 @@ export default function Home() {
       })
       .catch(error => {
         if (mounted) {
-          console.error('Failed to load new drop:', error);
+          logError('Failed to load new drop:', error);
           setNewDrop([]);
           setLoading(false);
         }

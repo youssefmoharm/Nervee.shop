@@ -102,6 +102,7 @@ export default function HeroCarousel() {
               className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
                 isVisible ? 'opacity-100' : 'opacity-0'
               }`}
+              style={{ backgroundColor: '#031230' }}
             >
               <img
                 src={img(s.backgroundImage)}
@@ -110,6 +111,12 @@ export default function HeroCarousel() {
                 loading={index === 0 ? 'eager' : 'lazy'}
                 decoding="async"
                 className="w-full h-full object-cover object-center"
+                onError={e => {
+                  e.currentTarget.style.display = 'none';
+                  if (e.currentTarget.parentElement) {
+                    e.currentTarget.parentElement.style.backgroundColor = '#031230';
+                  }
+                }}
               />
             </div>
           );
