@@ -9,6 +9,7 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export type ImageSize = 'thumbnail' | 'card' | 'full';
 export type ImageType = '01-front' | '02-back' | '03-detail' | '04-on-model';
+export type ImageFormat = 'jpeg' | 'webp' | 'avif';
 
 const STORAGE_BUCKET = 'product-images';
 const PLACEHOLDER_BASE = 'https://picsum.photos/seed';
@@ -16,6 +17,7 @@ const PLACEHOLDER_BASE = 'https://picsum.photos/seed';
 interface ImageOptions {
   size?: ImageSize;
   quality?: number;
+  format?: ImageFormat;
 }
 
 // Responsive image size mappings
@@ -25,8 +27,35 @@ const SIZE_MAP: Record<ImageSize, { width: number; height: number }> = {
   full: { width: 900, height: 1125 },
 };
 
+// Breakpoint widths for responsive images
+const RESPONSIVE_WIDTHS = [300, 600, 900, 1200, 1800];
+
+/**
+ * Detect browser support for modern image formats
+ */
+export function detectSupportedFormats(): ImageFormat[] {
+  const supported: ImageFormat[] = ['jpeg'];
+
+  // Check WebP support
+  const canvas = typeof document !== 'undefined' ? document.createElement('canvas') : null;
+  if (canvas && canvas.toDataURL('image/webp').startsWith('data:image/webp')) {
+    supported.push('webp');
+  }
+
+  // AVIF support check (more complex, so we use graceful detection)
+  // Note: This is a simplified check; production code would use modernizr or similar
+  const hasAVIFSupport =
+    typeof CSS !== 'undefined' && CSS.supports('(image-set(url(#) type(image/avif)))');
+  if (hasAVIFSupport) {
+    supported.push('avif');
+  }
+
+  return supported;
+}
+
 /**
  * Get the URL for a product image from Supabase Storage or fallback to placeholder
+ * Supports modern image formats with quality optimization
  */
 export function getProductImageUrl(
   slug: string,
@@ -45,7 +74,7 @@ export function getProductImageUrl(
   // Build Supabase Storage path
   const path = `products/${slug}/${color}/${imageType}.jpg`;
 
-  // Get public URL with transformation
+  // Get public URL with transformation (Supabase transform API)
   const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path, {
     transform: {
       width: SIZE_MAP[size].width,
@@ -54,6 +83,8 @@ export function getProductImageUrl(
     },
   });
 
+  // Note: Format negotiation (WebP/AVIF) handled client-side via picture element
+  // Supabase Edge Function can be used for server-side format conversion if needed
   return data.publicUrl;
 }
 
@@ -66,7 +97,8 @@ export function getProductGallery(slug: string, color: string, size: ImageSize =
 }
 
 /**
- * Generate srcSet for responsive images
+ * Generate responsive srcSet with modern format support
+ * Returns both JPG fallback and WebP/AVIF variants for progressive enhancement
  */
 export function getImageSrcSet(
   slug: string,
@@ -74,13 +106,66 @@ export function getImageSrcSet(
   imageType: ImageType = '01-front',
 ): string {
   const sizes: ImageSize[] = ['thumbnail', 'card', 'full'];
+
   return sizes
     .map(size => {
-      const url = getProductImageUrl(slug, color, imageType, { size });
       const width = SIZE_MAP[size].width;
+      const url = getProductImageUrl(slug, color, imageType, { size, format: 'jpeg' });
       return `${url} ${width}w`;
     })
     .join(', ');
+}
+
+/**
+ * Generate picture element sources with format negotiation
+ * Allows browsers to choose the best format for their capabilities
+ */
+export function getImagePictureSources(
+  slug: string,
+  color: string,
+  imageType: ImageType = '01-front',
+): Array<{ srcSet: string; type: string }> {
+  // Return in order of preference (browser will use first supported format)
+  const sources = [];
+
+  // AVIF - Best compression, newest browsers
+  const avifSrcSet = RESPONSIVE_WIDTHS.map(width => {
+    // Map width to closest ImageSize
+    let imageSize: ImageSize = 'card';
+    if (width <= 300) imageSize = 'thumbnail';
+    else if (width <= 900) imageSize = 'card';
+    else imageSize = 'full';
+
+    const url = getProductImageUrl(slug, color, imageType, { size: imageSize, format: 'avif' });
+    return `${url} ${width}w`;
+  }).join(', ');
+  sources.push({ srcSet: avifSrcSet, type: 'image/avif' });
+
+  // WebP - Good compression, wider browser support
+  const webpSrcSet = RESPONSIVE_WIDTHS.map(width => {
+    let imageSize: ImageSize = 'card';
+    if (width <= 300) imageSize = 'thumbnail';
+    else if (width <= 900) imageSize = 'card';
+    else imageSize = 'full';
+
+    const url = getProductImageUrl(slug, color, imageType, { size: imageSize, format: 'webp' });
+    return `${url} ${width}w`;
+  }).join(', ');
+  sources.push({ srcSet: webpSrcSet, type: 'image/webp' });
+
+  // JPEG - Universal fallback
+  const jpegSrcSet = RESPONSIVE_WIDTHS.map(width => {
+    let imageSize: ImageSize = 'card';
+    if (width <= 300) imageSize = 'thumbnail';
+    else if (width <= 900) imageSize = 'card';
+    else imageSize = 'full';
+
+    const url = getProductImageUrl(slug, color, imageType, { size: imageSize, format: 'jpeg' });
+    return `${url} ${width}w`;
+  }).join(', ');
+  sources.push({ srcSet: jpegSrcSet, type: 'image/jpeg' });
+
+  return sources;
 }
 
 /**

@@ -18,6 +18,7 @@ import CompleteTheLook from '../components/CompleteTheLook';
 import PersonalizedRecommendations from '../components/PersonalizedRecommendations';
 import ARTryOn from '../components/ARTryOn';
 import Skeleton from '../components/Skeleton';
+import OptimizedImage from '../components/OptimizedImage';
 
 const STORE_URL = import.meta.env.VITE_APP_URL || 'https://www.nerveey.shop';
 
@@ -291,10 +292,14 @@ export default function ProductDetail() {
         <div className="grid md:grid-cols-2 gap-8 md:gap-14">
           <div>
             <div className="aspect-[4/5] bg-mist overflow-hidden mb-3">
-              <img
-                src={product.gallery[activeImage] || color.image}
-                alt={product.name}
+              <OptimizedImage
+                slug={product.slug}
+                color={color.name}
+                imageType="01-front"
+                size="full"
+                productName={product.name}
                 className="w-full h-full object-cover"
+                testId="product-detail-main-image"
               />
             </div>
             <div className="grid grid-cols-4 gap-2">
@@ -303,8 +308,17 @@ export default function ProductDetail() {
                   key={g + i}
                   onClick={() => setActiveImage(i)}
                   className="aspect-square bg-mist overflow-hidden border-2 transition-colors"
+                  aria-label={`View product image ${i + 1}`}
+                  aria-pressed={activeImage === i}
                 >
-                  <img src={g} alt="" className="w-full h-full object-cover" />
+                  <OptimizedImage
+                    slug={product.slug}
+                    color={color.name}
+                    imageType={['01-front', '02-back', '03-detail', '04-on-model'][i] as any}
+                    size="card"
+                    productName={product.name}
+                    className="w-full h-full object-cover"
+                  />
                 </button>
               ))}
             </div>
