@@ -1,4 +1,47 @@
+# NERVE E-Commerce Store
+# Generated for production deployment
+
 User-agent: *
 Allow: /
+Allow: /shop
+Allow: /collections
+Allow: /about
+Allow: /contact
+Allow: /track-order
 
+# Disallow admin and account pages from indexing
+Disallow: /admin
+Disallow: /account
+Disallow: /checkout
+Disallow: /cart
+Disallow: /login
+Disallow: /register
+Disallow: /wishlist-*
+Disallow: /*.json$
+Disallow: /*?*sort=
+Disallow: /*?*filter=
+
+# Allow specific crawlers for better indexing
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# Google News
+User-agent: Googlebot-News
+Allow: /
+
+# Block bad bots
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: AhrefsBot
+Allow: /robots.txt
+
+# Sitemap
 Sitemap: https://www.nerveey.shop/sitemap.xml
+Sitemap: https://www.nerveey.shop/sitemap-products.xml
+Sitemap: https://www.nerveey.shop/sitemap-collections.xml

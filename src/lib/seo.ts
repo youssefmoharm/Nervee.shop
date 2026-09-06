@@ -1,221 +1,246 @@
 /**
- * SEO & Meta Tags Management
- *
- * Dynamic meta tags for better search rankings and social sharing
+ * SEO utilities for managing meta tags and structured data
  */
 
-import { useEffect } from 'react';
-
-const STORE_URL = import.meta.env.VITE_APP_URL || 'https://www.nerveey.shop';
-
-export interface SEOProps {
-  title: string;
-  description: string;
-  image?: string;
-  url?: string;
-  type?: 'website' | 'product' | 'article';
-  price?: number;
-  currency?: string;
-  availability?: 'InStock' | 'OutOfStock';
-  brand?: string;
+interface MetaTags {
+  title?: string;
+  description?: string;
+  canonical?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+  ogType?: string;
+  twitterCard?: string;
+  twitterTitle?: string;
+  twitterDescription?: string;
+  robots?: string;
+  keywords?: string;
 }
 
-// Set meta tag helper
-function setMeta(name: string, content: string) {
-  if (typeof window === 'undefined') return;
+/**
+ * Update document head meta tags
+ */
+export function updateMetaTags(tags: MetaTags) {
+  const {
+    title,
+    description,
+    canonical,
+    ogTitle,
+    ogDescription,
+    ogImage,
+    ogType = 'website',
+    twitterCard = 'summary_large_image',
+    twitterTitle,
+    twitterDescription,
+    robots,
+    keywords,
+  } = tags;
 
-  let tag =
-    document.querySelector(`meta[property="${name}"]`) ||
-    document.querySelector(`meta[name="${name}"]`);
-
-  if (!tag) {
-    tag = document.createElement('meta');
-    const attrName = name.startsWith('og:') || name.startsWith('twitter:') ? 'property' : 'name';
-    tag.setAttribute(attrName, name);
-    document.head.appendChild(tag);
+  // Update title
+  if (title) {
+    document.title = title;
+    updateMetaTag('og:title', ogTitle || title);
+    updateMetaTag('twitter:title', twitterTitle || title);
   }
 
-  tag.setAttribute('content', content);
-}
-
-// React hook for SEO
-export function useSEO(props: SEOProps) {
-  useEffect(() => {
-    const currentUrl = props.url || window.location.href;
-
-    // Canonical URL (strips query params by default)
-    setCanonicalUrl(props.url || window.location.href.split('?')[0]);
-
-    // Basic meta tags
-    document.title = props.title;
-    setMeta('description', props.description);
-
-    // Open Graph (Facebook, LinkedIn)
-    setMeta('og:title', props.title);
-    setMeta('og:description', props.description);
-    setMeta('og:type', props.type || 'website');
-    setMeta('og:url', currentUrl);
-    setMeta('og:site_name', 'NERVE - Cool but Chic');
-
-    if (props.image) {
-      setMeta('og:image', props.image);
-      setMeta('og:image:width', '1200');
-      setMeta('og:image:height', '630');
-    }
-
-    // Twitter Cards
-    setMeta('twitter:card', 'summary_large_image');
-    setMeta('twitter:title', props.title);
-    setMeta('twitter:description', props.description);
-    setMeta('twitter:site', '@nerve_store'); // Replace with actual Twitter handle
-
-    if (props.image) {
-      setMeta('twitter:image', props.image);
-    }
-
-    // Product-specific meta tags
-    if (props.type === 'product') {
-      if (props.price) {
-        setMeta('product:price:amount', props.price.toString());
-        setMeta('product:price:currency', props.currency || 'EGP');
-      }
-
-      if (props.availability) {
-        setMeta('product:availability', props.availability);
-      }
-
-      if (props.brand) {
-        setMeta('product:brand', props.brand);
-      }
-    }
-
-    // Cleanup function
-    return () => {
-      // Don't remove basic tags as they'll be replaced by next page
-    };
-  }, [props]);
-}
-
-// Insert structured data into page
-export function insertStructuredData(schema: object, id?: string) {
-  if (typeof window === 'undefined') return;
-
-  const scriptId = id || 'structured-data';
-
-  // Remove existing script if it exists
-  const existingScript = document.getElementById(scriptId);
-  if (existingScript) {
-    existingScript.remove();
+  // Update description
+  if (description) {
+    updateMetaTag('description', description);
+    updateMetaTag('og:description', ogDescription || description);
+    updateMetaTag('twitter:description', twitterDescription || description);
   }
 
-  // Create new script
-  const script = document.createElement('script');
-  script.id = scriptId;
-  script.type = 'application/ld+json';
-  script.textContent = JSON.stringify(schema);
-  document.head.appendChild(script);
-}
+  // Update canonical
+  if (canonical) {
+    updateCanonical(canonical);
+  }
 
-// React hook for structured data
-export function useStructuredData(schema: object, id?: string) {
-  useEffect(() => {
-    insertStructuredData(schema, id);
+  // Update OG tags
+  if (ogImage) {
+    updateMetaTag('og:image', ogImage);
+    updateMetaTag('twitter:image', ogImage);
+  }
+  updateMetaTag('og:type', ogType);
+  updateMetaTag('twitter:card', twitterCard);
 
-    return () => {
-      if (id) {
-        const script = document.getElementById(id);
-        if (script) script.remove();
-      }
-    };
-  }, [schema, id]);
-}
+  // Update robots
+  if (robots) {
+    updateMetaTag('robots', robots);
+  }
 
-// Get optimized meta description
-export function getMetaDescription(text: string, maxLength: number = 160): string {
-  if (text.length <= maxLength) return text;
-
-  // Find the last complete sentence within the limit
-  const truncated = text.substring(0, maxLength);
-  const lastPeriod = truncated.lastIndexOf('.');
-  const lastSpace = truncated.lastIndexOf(' ');
-
-  if (lastPeriod > maxLength * 0.7) {
-    return truncated.substring(0, lastPeriod + 1);
-  } else if (lastSpace > maxLength * 0.7) {
-    return truncated.substring(0, lastSpace) + '...';
-  } else {
-    return truncated + '...';
+  // Update keywords
+  if (keywords) {
+    updateMetaTag('keywords', keywords);
   }
 }
 
-// Generate canonical URL
-export function setCanonicalUrl(url?: string) {
-  if (typeof window === 'undefined') return;
+/**
+ * Update a single meta tag
+ */
+function updateMetaTag(name: string, content: string) {
+  let element = document.querySelector(`meta[name="${name}"], meta[property="${name}"]`);
+  if (!element) {
+    element = document.createElement('meta');
+    const isProperty = name.startsWith('og:') || name.startsWith('twitter:');
+    if (isProperty) {
+      element.setAttribute('property', name);
+    } else {
+      element.setAttribute('name', name);
+    }
+    document.head.appendChild(element);
+  }
+  element.setAttribute('content', content);
+}
 
-  const canonicalUrl = url || window.location.href.split('?')[0]; // Remove query params
-
-  let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
-
+/**
+ * Update or create canonical link
+ */
+function updateCanonical(url: string) {
+  let link = document.querySelector('link[rel="canonical"]');
   if (!link) {
     link = document.createElement('link');
-    link.rel = 'canonical';
+    link.setAttribute('rel', 'canonical');
     document.head.appendChild(link);
   }
-
-  link.href = canonicalUrl;
+  link.setAttribute('href', url);
 }
 
-// Default SEO values
-export const DEFAULT_SEO = {
-  title: 'NERVE - Cool but Chic | Egyptian Streetwear',
-  description:
-    "Discover NERVE's collection of modern streetwear. From premium tees to sustainable denim, find your style in our carefully curated Egyptian concept store.",
-  image: `${STORE_URL}/nervee-logo-favicon.png`,
-  url: STORE_URL,
-  type: 'website' as const,
-};
+/**
+ * Add JSON-LD structured data
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function addStructuredData(data: Record<string, any>) {
+  const script = document.createElement('script');
+  script.type = 'application/ld+json';
+  script.textContent = JSON.stringify({
+    '@context': 'https://schema.org',
+    ...data,
+  });
+  document.head.appendChild(script);
+  return () => script.remove();
+}
 
-// SEO helpers for common pages
-export const seoHelpers = {
-  // Home page
-  home: (): SEOProps => ({
-    ...DEFAULT_SEO,
-    title: 'NERVE - Cool but Chic | Modern Egyptian Streetwear',
-    description:
-      'Shop the latest in Egyptian streetwear at NERVE. Premium tees, hoodies, and sustainable denim. Free delivery across Egypt.',
-  }),
+/**
+ * Generate Product schema
+ */
+export function getProductSchema(product: {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  image?: string;
+  rating?: number;
+  reviewCount?: number;
+  inStock?: boolean;
+  url?: string;
+}) {
+  const baseUrl = 'https://www.nerveey.shop';
+  return {
+    '@type': 'Product',
+    '@id': `${baseUrl}/products/${product.id}`,
+    name: product.name,
+    description: product.description,
+    image: product.image || `${baseUrl}/nervee-logo-favicon.png`,
+    url: product.url || `${baseUrl}/product/${product.id}`,
+    offers: {
+      '@type': 'Offer',
+      price: product.price.toString(),
+      priceCurrency: 'EGP',
+      availability: product.inStock ? 'InStock' : 'OutOfStock',
+      url: product.url || `${baseUrl}/product/${product.id}`,
+    },
+    ...(product.rating && {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: product.rating.toString(),
+        reviewCount: product.reviewCount || 0,
+      },
+    }),
+  };
+}
 
-  // Shop page
-  shop: (): SEOProps => ({
-    ...DEFAULT_SEO,
-    title: 'Shop All Products | NERVE Streetwear',
-    description:
-      'Browse our complete collection of streetwear. Tees, hoodies, denim and more. Free shipping on orders over EGP 500.',
-  }),
+/**
+ * Generate Organization schema
+ */
+export function getOrganizationSchema() {
+  return {
+    '@type': 'Organization',
+    name: 'NERVE',
+    url: 'https://www.nerveey.shop',
+    logo: 'https://www.nerveey.shop/nervee-logo-favicon.png',
+    sameAs: ['https://www.instagram.com/nervee.shop', 'https://www.facebook.com/nervee.shop'],
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'Customer Service',
+      email: 'hello@nerveey.shop',
+    },
+    address: {
+      '@type': 'PostalAddress',
+      addressCountry: 'EG',
+      addressLocality: 'Cairo',
+    },
+  };
+}
 
-  // Product page
-  product: (product: {
-    name: string;
-    description: string;
-    price: number;
-    images: string[];
-    category?: string;
-  }): SEOProps => ({
-    title: `${product.name} | NERVE`,
-    description: getMetaDescription(product.description),
-    image: product.images[0],
-    type: 'product',
-    price: product.price,
-    currency: 'EGP',
-    brand: 'NERVE',
-  }),
+/**
+ * Generate BreadcrumbList schema
+ */
+export function getBreadcrumbSchema(items: Array<{ name: string; url: string }>) {
+  return {
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: (index + 1).toString(),
+      name: item.name,
+      item: item.url,
+    })),
+  };
+}
 
-  // Category page
-  category: (categoryName: string, description?: string): SEOProps => ({
-    ...DEFAULT_SEO,
-    title: `${categoryName} | NERVE Streetwear`,
-    description:
-      description ||
-      `Shop ${categoryName.toLowerCase()} from NERVE. Modern Egyptian streetwear with free delivery across Egypt.`,
-  }),
-};
+/**
+ * Generate CollectionPage schema
+ */
+export function getCollectionSchema(collection: {
+  name: string;
+  description?: string;
+  image?: string;
+  url: string;
+  productCount?: number;
+}) {
+  return {
+    '@type': 'CollectionPage',
+    name: collection.name,
+    description: collection.description,
+    image: collection.image,
+    url: collection.url,
+    ...(collection.productCount && {
+      numberOfItems: collection.productCount,
+    }),
+  };
+}
+
+/**
+ * Generate FAQPage schema
+ */
+export function getFAQSchema(
+  faqs: Array<{
+    question: string;
+    answer: string;
+  }>,
+) {
+  return {
+    '@type': 'FAQPage',
+    mainEntity: faqs.map(faq => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer,
+      },
+    })),
+  };
+}
+
+// Re-export hooks from their files for convenience
+export { useSEO } from '../hooks/useSEO';
+export { useStructuredData } from '../hooks/useStructuredData';

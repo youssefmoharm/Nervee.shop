@@ -4,7 +4,7 @@ import { LayoutGrid, List, Search } from 'lucide-react';
 import type { Product, SortOption } from '../types';
 import { productService, type ShopFilters } from '../services/productService';
 import { categories } from '../data/products';
-import { useSEO, seoHelpers } from '../lib/seo';
+import { useSEO } from '../lib/seo';
 import { logError } from '../lib/sentry';
 import ProductCard from '../components/ProductCard';
 import { SectionErrorBoundary } from '../components/ErrorBoundary';
@@ -25,7 +25,11 @@ const sortLabels: Record<SortOption, string> = {
 };
 
 export default function Shop() {
-  useSEO(seoHelpers.shop());
+  useSEO({
+    title: 'Shop | NERVE — Cool but Chic',
+    description: 'Browse our curated collection of contemporary clothing and lifestyle products.',
+    keywords: 'fashion, clothing, streetwear, shop, buy online',
+  });
   const [params, setParams] = useSearchParams();
   const category = params.get('category') as ShopFilters['category'];
   const [products, setProducts] = useState<Product[]>([]);
