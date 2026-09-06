@@ -127,16 +127,6 @@ export default function HeroCarousel() {
 
       {/* Content - Left Side */}
       <div className="absolute inset-0 flex flex-col justify-between p-8 md:p-12">
-        {/* Top - Branding */}
-        <div className="z-10">
-          <div
-            className="nv-eyebrow font-black text-sm tracking-widest uppercase"
-            style={{ color: '#031230' }}
-          >
-            NERVE.
-          </div>
-        </div>
-
         {/* Middle - Headline (Left side) */}
         <div className="z-10 max-w-lg">
           <h1
