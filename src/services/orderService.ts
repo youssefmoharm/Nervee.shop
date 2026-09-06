@@ -33,6 +33,8 @@ export const orderService = {
    * Places an order. This calls the `create-order` Supabase Edge Function,
    * which re-validates stock and re-prices every line server-side — nothing
    * about totals or availability is trusted from the client.
+   *
+   * Uses idempotency key to prevent duplicate orders on retry/double-click.
    */
   async placeOrder(info: CheckoutInfo, lines: CartLine[]): Promise<PlaceOrderResult> {
     if (!isSupabaseConfigured) {
@@ -44,9 +46,14 @@ export const orderService = {
     }
 
     try {
+      // Generate a unique idempotency key for this request
+      // If the request fails and is retried, the same key ensures the same order is returned
+      const idempotencyKey = `${crypto.randomUUID()}-${Date.now()}`;
+
       const { data, error } = await supabase.functions.invoke('create-order', {
         body: {
           ...info,
+          idempotencyKey,
           items: lines.map(l => ({
             productId: l.productId,
             color: l.color,

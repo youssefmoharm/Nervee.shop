@@ -58,6 +58,7 @@ interface CreateOrderBody {
   paymentMethod: 'cod'
   discountCode?: string
   items: CartLineInput[]
+  idempotencyKey: string // Required: prevents duplicate orders on retry
 }
 
 serve(async (req) => {
@@ -125,7 +126,7 @@ serve(async (req) => {
       discountCode: body.discountCode ? sanitizeText(body.discountCode, 20) : undefined,
     }
 
-    const { data: order, error } = await supabase.rpc('place_order', {
+    const { data: order, error } = await supabase.rpc('place_order_with_idempotency', {
       p_customer_id: customerId,
       p_email: sanitizedBody.email,
       p_first_name: sanitizedBody.firstName,
@@ -145,6 +146,7 @@ serve(async (req) => {
         quantity: i.quantity,
         image: i.image ?? '',
       })),
+      p_idempotency_key: sanitizedBody.idempotencyKey,
     })
 
     if (error) {
