@@ -126,9 +126,9 @@ export default function HeroCarousel() {
       />
 
       {/* Content - Left Side */}
-      <div className="absolute inset-0 flex flex-col justify-between p-8 md:p-12">
-        {/* Middle - Headline (Left side) */}
-        <div className="z-10 max-w-lg">
+      <div className="absolute inset-0 flex flex-col justify-end p-8 md:p-12 pb-1/3">
+        {/* Headline (Left side) - positioned lower */}
+        <div className="z-10 max-w-lg mb-auto">
           <h1
             key={`headline-${currentSlide}`}
             className={`nv-heading font-black text-6xl md:text-7xl lg:text-8xl leading-none mb-6 transition-all duration-700 ease-out whitespace-pre-line ${
@@ -156,7 +156,7 @@ export default function HeroCarousel() {
         </div>
 
         {/* Bottom - Navigation */}
-        <div className="z-10 flex items-center justify-between">
+        <div className="z-10 flex items-center justify-between mt-12">
           <div className="flex gap-2">
             {slides.map((_, index) => (
               <button
