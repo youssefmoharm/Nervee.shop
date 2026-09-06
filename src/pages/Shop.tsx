@@ -5,7 +5,9 @@ import type { Product, SortOption } from '../types';
 import { productService, type ShopFilters } from '../services/productService';
 import { categories } from '../data/products';
 import { useSEO, seoHelpers } from '../lib/seo';
+import { logError } from '../lib/sentry';
 import ProductCard from '../components/ProductCard';
+import { SectionErrorBoundary } from '../components/ErrorBoundary';
 import Skeleton from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
 import { filterProducts, getSearchSuggestions } from '../lib/productDiscovery';
@@ -81,7 +83,7 @@ export default function Shop() {
       })
       .catch(error => {
         if (mounted) {
-          console.error('Failed to load products:', error);
+          logError('Failed to load products:', error);
           setProducts([]);
           setAllProducts([]);
           setLoading(false);
@@ -352,34 +354,51 @@ export default function Shop() {
                 }}
               />
             ) : (
-              <>
-                <div
-                  data-testid="products-grid"
-                  className={`grid gap-x-5 gap-y-12 ${
-                    view === 'grid' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-1 max-w-md'
-                  }`}
-                >
-                  {products.map(p => (
-                    <ProductCard key={p.id} product={p} />
-                  ))}
-                </div>
-                {displayCount < allProducts.length && (
-                  <div className="mt-12 flex justify-center">
+              <SectionErrorBoundary
+                fallback={
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
+                    <p className="text-red-800 font-medium mb-2">Failed to load products</p>
+                    <p className="text-red-600 text-sm mb-4">
+                      Please refresh the page to try again.
+                    </p>
                     <button
-                      onClick={() => {
-                        const newCount = Math.min(displayCount + 12, allProducts.length);
-                        setDisplayCount(newCount);
-                        setProducts(allProducts.slice(0, newCount));
-                      }}
-                      className="border border-navy px-8 py-4 nv-eyebrow hover:bg-navy hover:text-white transition-colors"
+                      onClick={() => window.location.reload()}
+                      className="inline-block px-6 py-2 bg-navy text-white rounded hover:opacity-90 transition-opacity"
                     >
-                      Load More{' '}
-                      {allProducts.length - displayCount > 0 &&
-                        `(${allProducts.length - displayCount} remaining)`}
+                      Refresh
                     </button>
                   </div>
-                )}
-              </>
+                }
+              >
+                <>
+                  <div
+                    data-testid="products-grid"
+                    className={`grid gap-x-5 gap-y-12 ${
+                      view === 'grid' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-1 max-w-md'
+                    }`}
+                  >
+                    {products.map(p => (
+                      <ProductCard key={p.id} product={p} />
+                    ))}
+                  </div>
+                  {displayCount < allProducts.length && (
+                    <div className="mt-12 flex justify-center">
+                      <button
+                        onClick={() => {
+                          const newCount = Math.min(displayCount + 12, allProducts.length);
+                          setDisplayCount(newCount);
+                          setProducts(allProducts.slice(0, newCount));
+                        }}
+                        className="border border-navy px-8 py-4 nv-eyebrow hover:bg-navy hover:text-white transition-colors"
+                      >
+                        Load More{' '}
+                        {allProducts.length - displayCount > 0 &&
+                          `(${allProducts.length - displayCount} remaining)`}
+                      </button>
+                    </div>
+                  )}
+                </>
+              </SectionErrorBoundary>
             )}
           </div>
         </div>

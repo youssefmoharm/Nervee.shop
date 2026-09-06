@@ -90,10 +90,24 @@ export default function Checkout() {
       e.email = 'Enter a valid email.';
     if (!form.firstName.trim()) e.firstName = 'Required.';
     if (!form.lastName.trim()) e.lastName = 'Required.';
-    // Validate Egyptian phone numbers: +201xxxxxxxxx or 01xxxxxxxxx (11 digits total)
+
+    // Validate Egyptian phone numbers with carrier prefix validation
+    const cleaned = form.phone.replace(/\s/g, '');
     const phoneRegex = /^(\+20)?01[0-9]{9}$/;
-    if (!phoneRegex.test(form.phone.replace(/\s/g, '')))
+
+    if (!phoneRegex.test(cleaned)) {
       e.phone = 'Enter a valid Egyptian phone number (e.g., 01012345678).';
+    } else {
+      // Extract prefix (01X where X is the carrier digit)
+      const prefix = cleaned.startsWith('+20') ? cleaned.slice(-11, -9) : cleaned.slice(0, 3);
+
+      // Valid Egyptian carriers: 010, 011, 012, 015 (Vodafone, Orange, Etisalat, Telecom Egypt)
+      const validPrefixes = ['010', '011', '012', '015'];
+      if (!validPrefixes.some(p => prefix.includes(p))) {
+        e.phone = 'Enter a valid Egyptian carrier number (010, 011, 012, or 015).';
+      }
+    }
+
     setErrors(e);
     return Object.keys(e).length === 0;
   };
