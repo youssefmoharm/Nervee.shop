@@ -3,7 +3,7 @@ import type { CartLine } from '../types';
 
 interface BundleContextValue {
   bundleItems: CartLine[];
-  addToBundl: (item: CartLine) => void;
+  addToBundle: (item: CartLine) => void;
   removeFromBundle: (productId: string, color: string, size: string) => void;
   clearBundle: () => void;
   getBundleTotal: () => number;
@@ -17,7 +17,7 @@ const BUNDLE_DISCOUNT_PERCENT = 10;
 export function BundleProvider({ children }: { children: ReactNode }) {
   const [bundleItems, setBundleItems] = useState<CartLine[]>([]);
 
-  const addToBundl = (item: CartLine) => {
+  const addToBundle = (item: CartLine) => {
     setBundleItems(prev => {
       const exists = prev.some(
         b => b.productId === item.productId && b.color === item.color && b.size === item.size,
@@ -62,7 +62,7 @@ export function BundleProvider({ children }: { children: ReactNode }) {
     <BundleContext.Provider
       value={{
         bundleItems,
-        addToBundl,
+        addToBundle,
         removeFromBundle,
         clearBundle,
         getBundleTotal,
