@@ -64,6 +64,21 @@ export default function HeroCarousel() {
     return () => clearInterval(interval);
   }, [isAutoPlaying]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        nextSlide();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const goToSlide = (index: number) => {
     setDirection(index > currentSlide ? 'next' : 'prev');
     setCurrentSlide(index);
@@ -89,8 +104,9 @@ export default function HeroCarousel() {
 
   return (
     <section
-      className="relative w-full h-screen min-h-[600px] overflow-hidden"
+      className="relative w-full h-screen min-h-[600px] overflow-hidden focus:outline-navy focus:ring-2"
       style={{ backgroundColor: '#FFFFFF' }}
+      aria-label="Featured products carousel"
     >
       {/* Background Images */}
       <div className="absolute inset-0">
@@ -183,7 +199,7 @@ export default function HeroCarousel() {
             <button
               onClick={prevSlide}
               aria-label="Previous slide"
-              className="p-2 transition-colors hover:opacity-70"
+              className="p-2 transition-colors hover:opacity-70 focus:outline-navy focus:ring-2 focus:ring-offset-2"
               style={{ color: '#AAAAAA' }}
             >
               <ChevronLeft size={24} strokeWidth={1.5} />
@@ -191,7 +207,7 @@ export default function HeroCarousel() {
             <button
               onClick={nextSlide}
               aria-label="Next slide"
-              className="p-2 transition-colors hover:opacity-70"
+              className="p-2 transition-colors hover:opacity-70 focus:outline-navy focus:ring-2 focus:ring-offset-2"
               style={{ color: '#AAAAAA' }}
             >
               <ChevronRight size={24} strokeWidth={1.5} />

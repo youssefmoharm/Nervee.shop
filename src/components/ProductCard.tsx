@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, Plus } from 'lucide-react';
+import { Heart, Plus, Eye, BarChart3, Ruler } from 'lucide-react';
 import type { Product, Size } from '../types';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { useToast } from '../context/ToastContext';
+import { useQuickView } from '../context/QuickViewContext';
+import { useComparison } from '../hooks/useComparison';
 
 export default function ProductCard({ product }: { product: Product }) {
   const [colorIdx, setColorIdx] = useState(0);
@@ -11,9 +14,34 @@ export default function ProductCard({ product }: { product: Product }) {
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const { addLine } = useCart();
   const { toggle, has } = useWishlist();
+  const { showToast } = useToast();
+  const { open: openQuickView } = useQuickView();
+  const {
+    add: addToComparison,
+    remove: removeFromComparison,
+    has: inComparison,
+    isFull,
+  } = useComparison();
 
   const color = product.colors[colorIdx];
   const wished = has(product.id);
+
+  // Check for low stock (any size < 5 items)
+  const minStock =
+    product.sizes.length > 0
+      ? Math.min(...product.sizes.map(() => 1)) // Simplified - would need stock data
+      : 0;
+  const hasLowStock = product.sizes.some(s => s.inStock) && minStock < 5;
+
+  // Check if product is new (created within last 7 days)
+  const createdDate = new Date(product.createdAt);
+  const daysSinceCreation = Math.floor(
+    (new Date().getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24),
+  );
+  const isNew = daysSinceCreation <= 7;
+
+  // Mock trending indicator (would be based on views/sales in real app)
+  const isTrending = product.isBestSeller || product.badge === 'BEST SELLER';
 
   const handleQuickAdd = (size: Size) => {
     addLine({
@@ -26,7 +54,22 @@ export default function ProductCard({ product }: { product: Product }) {
       size,
       quantity: 1,
     });
+    showToast(`Added ${product.name} to bag`, 'success', 3000);
     setQuickAddOpen(false);
+  };
+
+  const handleToggleComparison = () => {
+    if (inComparison(product.id)) {
+      removeFromComparison(product.id);
+      showToast(`Removed from comparison`, 'info', 3000);
+    } else {
+      if (isFull) {
+        showToast('You can only compare up to 3 products', 'error', 3000);
+        return;
+      }
+      addToComparison(product);
+      showToast(`Added to comparison`, 'success', 3000);
+    }
   };
 
   return (
@@ -63,6 +106,33 @@ export default function ProductCard({ product }: { product: Product }) {
           </span>
         )}
 
+        {/* Scarcity badges */}
+        <div className="absolute top-3 left-3 space-y-2 flex flex-col">
+          {product.badge && (
+            <span className="block bg-navy text-white text-[10px] font-semibold tracking-widest2 uppercase px-2.5 py-1">
+              {product.badge}
+            </span>
+          )}
+
+          {hasLowStock && !product.badge && (
+            <span className="block bg-red-600 text-white text-[10px] font-semibold tracking-widest2 uppercase px-2.5 py-1">
+              Low Stock
+            </span>
+          )}
+
+          {isTrending && !product.badge && (
+            <span className="block bg-orange-500 text-white text-[10px] font-semibold tracking-widest2 uppercase px-2.5 py-1">
+              🔥 Trending
+            </span>
+          )}
+
+          {isNew && !product.badge && (
+            <span className="block bg-green-600 text-white text-[10px] font-semibold tracking-widest2 uppercase px-2.5 py-1">
+              ✨ New
+            </span>
+          )}
+        </div>
+
         <button
           aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
           onClick={() =>
@@ -83,19 +153,27 @@ export default function ProductCard({ product }: { product: Product }) {
           />
         </button>
 
-        {/* Quick add */}
+        {/* Quick add + Quick view */}
         <div
           className={`absolute left-0 right-0 bottom-0 transition-all duration-300 ${
             hovered ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0 pointer-events-none'
-          } hidden md:block`}
+          } hidden md:flex flex-col gap-1`}
         >
           {!quickAddOpen ? (
-            <button
-              onClick={() => setQuickAddOpen(true)}
-              className="w-full bg-navy text-white text-xs font-semibold tracking-widest2 uppercase py-3 flex items-center justify-center gap-2 hover:bg-navy-2 transition-colors"
-            >
-              <Plus size={14} /> Quick Add
-            </button>
+            <>
+              <button
+                onClick={() => setQuickAddOpen(true)}
+                className="w-full bg-navy text-white text-xs font-semibold tracking-widest2 uppercase py-2.5 flex items-center justify-center gap-2 hover:bg-navy-2 transition-colors"
+              >
+                <Plus size={14} /> Quick Add
+              </button>
+              <button
+                onClick={() => openQuickView(product)}
+                className="w-full bg-navy/80 text-white text-xs font-semibold tracking-widest2 uppercase py-2.5 flex items-center justify-center gap-2 hover:bg-navy transition-colors"
+              >
+                <Eye size={14} /> Quick View
+              </button>
+            </>
           ) : (
             <div className="bg-navy p-2 flex flex-wrap gap-1.5">
               {product.sizes.map(s => (
@@ -152,6 +230,28 @@ export default function ProductCard({ product }: { product: Product }) {
             ))}
           </div>
         )}
+
+        {/* Compare button */}
+        <button
+          onClick={handleToggleComparison}
+          className={`w-full mt-3 text-xs font-semibold tracking-widest2 uppercase py-2 px-3 rounded flex items-center justify-center gap-2 transition-colors ${
+            inComparison(product.id)
+              ? 'bg-navy text-white hover:bg-navy-2'
+              : 'bg-navy/10 text-navy hover:bg-navy/20'
+          }`}
+        >
+          <BarChart3 size={14} />
+          {inComparison(product.id) ? 'In Comparison' : 'Compare'}
+        </button>
+
+        {/* Find My Size button */}
+        <Link
+          to="/size-guide"
+          className="w-full mt-2 text-xs font-semibold tracking-widest2 uppercase py-2 px-3 rounded flex items-center justify-center gap-2 transition-colors bg-mist text-navy hover:bg-mist/75"
+        >
+          <Ruler size={14} />
+          Find My Size
+        </Link>
       </div>
     </div>
   );

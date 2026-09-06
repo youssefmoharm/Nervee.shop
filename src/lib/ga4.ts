@@ -5,6 +5,10 @@
  * Requires VITE_GA_ID environment variable to be set.
  */
 
+import debug from 'debug';
+
+const log = debug('nerve:ga4');
+
 declare global {
   interface Window {
     gtag?: (...args: any[]) => void;
@@ -42,7 +46,7 @@ export function initGA4() {
   const gaId = import.meta.env.VITE_GA_ID;
 
   if (!gaId) {
-    console.warn('GA4: Google Analytics ID not configured. Add VITE_GA_ID to environment.');
+    log('Google Analytics ID not configured. Add VITE_GA_ID to environment.');
     return false;
   }
 
@@ -76,17 +80,12 @@ export function initGA4() {
 // Send a custom event
 export function sendEvent(eventName: string, params: GA4EventParameters = {}) {
   if (!window.gtag) {
-    if (import.meta.env.DEV) {
-      console.log('GA4: Event skipped (not initialized)', eventName, params);
-    }
+    log('Event skipped (not initialized):', eventName, params);
     return;
   }
 
   window.gtag('event', eventName, params);
-
-  if (import.meta.env.DEV) {
-    console.log('GA4: Event sent', eventName, params);
-  }
+  log('Event sent:', eventName, params);
 }
 
 // E-commerce events
@@ -258,9 +257,7 @@ export const engagement = {
 // Page view tracking
 export function trackPageView(pageTitle: string, pagePath?: string) {
   if (!window.gtag) {
-    if (import.meta.env.DEV) {
-      console.log('GA4: Page view skipped (not initialized)', pageTitle, pagePath);
-    }
+    log('Page view skipped (not initialized):', pageTitle, pagePath);
     return;
   }
 
@@ -274,9 +271,7 @@ export function trackPageView(pageTitle: string, pagePath?: string) {
 // Custom dimensions/metrics
 export function setUserProperty(name: string, value: string | number | boolean) {
   if (!window.gtag) {
-    if (import.meta.env.DEV) {
-      console.log('GA4: User property skipped (not initialized)', name, value);
-    }
+    log('User property skipped (not initialized):', name, value);
     return;
   }
 
@@ -288,9 +283,7 @@ export function setUserProperty(name: string, value: string | number | boolean) 
 // User ID tracking
 export function setUserId(userId: string) {
   if (!window.gtag) {
-    if (import.meta.env.DEV) {
-      console.log('GA4: User ID skipped (not initialized)', userId);
-    }
+    log('User ID skipped (not initialized):', userId);
     return;
   }
 
@@ -300,9 +293,7 @@ export function setUserId(userId: string) {
 // Clear user ID (on logout)
 export function clearUserId() {
   if (!window.gtag) {
-    if (import.meta.env.DEV) {
-      console.log('GA4: User ID clear skipped (not initialized)');
-    }
+    log('User ID clear skipped (not initialized)');
     return;
   }
 

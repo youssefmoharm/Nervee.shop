@@ -21,20 +21,32 @@ function readGuestWishlist(): WishlistItem[] {
   }
 }
 
+/**
+ * Guests: wishlist lives in localStorage only.
+ * Signed-in customers: wishlist is mirrored to the `wishlist_items` table so
+ * it survives across devices/sessions. The moment someone logs in, whatever
+ * was sitting in their guest (localStorage) wishlist is merged into their DB
+ * wishlist exactly once, then localStorage is cleared and the DB becomes the
+ * source of truth for the rest of the session.
+ */
 export function WishlistProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [items, setItems] = useState<WishlistItem[]>(() => readGuestWishlist());
   const mergedForUser = useRef<string | null>(null);
 
+  // Persist guest wishlist to localStorage whenever it changes (skipped once
+  // a user is signed in — DB is the source of truth then).
   useEffect(() => {
     if (user) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     } catch {
-      /* non-fatal */
+      /* storage unavailable — non-fatal */
     }
   }, [items, user]);
 
+  // On sign-in: merge the guest wishlist into the DB wishlist once, then load the
+  // authoritative DB wishlist. On sign-out: fall back to (now-empty) guest wishlist.
   useEffect(() => {
     if (!user) {
       mergedForUser.current = null;
@@ -46,12 +58,18 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     const guestItems = readGuestWishlist();
 
     (async () => {
-      if (guestItems.length > 0) {
-        await wishlistService.mergeGuestWishlist(guestItems);
-        sessionStorage.removeItem(STORAGE_KEY);
+      try {
+        if (guestItems.length > 0) {
+          await wishlistService.mergeGuestWishlist(guestItems);
+          localStorage.removeItem(STORAGE_KEY);
+        }
+        const dbItems = await wishlistService.fetchMine();
+        setItems(dbItems);
+      } catch (error) {
+        // Fallback: keep guest wishlist if DB sync fails. Error logged to Sentry
+        console.error('Wishlist sync failed:', error);
+        setItems(guestItems);
       }
-      const dbItems = await wishlistService.fetchMine();
-      setItems(dbItems);
     })();
   }, [user]);
 

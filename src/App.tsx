@@ -6,17 +6,25 @@ import Loader from './components/Loader';
 import SimpleSkeleton from './components/SimpleSkeleton';
 import CartDrawer from './components/CartDrawer';
 import SearchOverlay from './components/SearchOverlay';
+import ProductQuickView from './components/ProductQuickView';
 import ChatbotAI, { ChatbotAITrigger } from './components/ChatbotAI';
+import CrispChat from './components/CrispChat';
 import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
+import { BrowsingHistoryProvider } from './context/BrowsingHistoryContext';
+import { BundleProvider } from './context/BundleContext';
 import { ToastProvider } from './context/ToastContext';
+import { QuickViewProvider } from './context/QuickViewContext';
+import { ComparisonProvider } from './context/ComparisonContext';
+import ComparisonWidget from './components/ComparisonWidget';
 import { initSentry, trackError } from './lib/sentry';
 import { initAnalytics, usePageTracking } from './lib/analytics';
 import { initPerformanceMonitoring } from './lib/performance';
+import { useAbandonedCartRecovery } from './hooks/useAbandonedCartRecovery';
 
 // Initialize Sentry error tracking and analytics
 initSentry();
@@ -31,7 +39,10 @@ import CollectionDetail from './pages/CollectionDetail';
 import { About } from './pages/About';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
+import Comparison from './pages/Comparison';
+import SizeGuide from './pages/SizeGuide';
 import GuestOrder from './pages/GuestOrder';
+import SharedWishlist from './pages/SharedWishlist';
 import NotFound from './pages/NotFound';
 import { Contact, Shipping, Returns, Privacy, Terms } from './pages/InfoPages';
 import Unsubscribe from './pages/Unsubscribe';
@@ -98,6 +109,9 @@ function StorefrontChrome({
       <Header onSearch={() => setSearchOpen(true)} />
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
       <CartDrawer />
+      <ProductQuickView />
+      <ComparisonWidget />
+      <CrispChat />
       <main id="main">{children}</main>
       <Footer />
 
@@ -116,6 +130,9 @@ export default function App() {
 
   // Track page views automatically
   usePageTracking();
+
+  // Track abandoned carts
+  useAbandonedCartRecovery();
 
   // Error handler for production error tracking
   const handleError = (error: Error, errorInfo: React.ErrorInfo) => {
@@ -151,10 +168,13 @@ export default function App() {
       <Route path="/about" element={<About />} />
       <Route path="/cart" element={<Cart />} />
       <Route path="/checkout" element={<Checkout />} />
+      <Route path="/compare" element={<Comparison />} />
+      <Route path="/size-guide" element={<SizeGuide />} />
       <Route path="/newsletter" element={<Newsletter />} />
       <Route path="/track-order" element={<TrackOrder />} />
 
       <Route path="/guest-order" element={<GuestOrder />} />
+      <Route path="/wishlist/:shareCode" element={<SharedWishlist />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/shipping" element={<Shipping />} />
       <Route path="/returns" element={<Returns />} />
@@ -316,20 +336,28 @@ export default function App() {
     <ErrorBoundary onError={handleError}>
       <CartProvider>
         <WishlistProvider>
-          <ToastProvider>
-            {isAdminRoute ? (
-              routes
-            ) : (
-              <StorefrontChrome
-                loading={loading}
-                setLoading={setLoading}
-                searchOpen={searchOpen}
-                setSearchOpen={setSearchOpen}
-              >
-                {routes}
-              </StorefrontChrome>
-            )}
-          </ToastProvider>
+          <BrowsingHistoryProvider>
+            <BundleProvider>
+              <ToastProvider>
+                <QuickViewProvider>
+                  <ComparisonProvider>
+                    {isAdminRoute ? (
+                      routes
+                    ) : (
+                      <StorefrontChrome
+                        loading={loading}
+                        setLoading={setLoading}
+                        searchOpen={searchOpen}
+                        setSearchOpen={setSearchOpen}
+                      >
+                        {routes}
+                      </StorefrontChrome>
+                    )}
+                  </ComparisonProvider>
+                </QuickViewProvider>
+              </ToastProvider>
+            </BundleProvider>
+          </BrowsingHistoryProvider>
         </WishlistProvider>
       </CartProvider>
     </ErrorBoundary>

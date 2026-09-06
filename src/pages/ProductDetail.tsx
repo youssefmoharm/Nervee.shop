@@ -8,10 +8,15 @@ import { reviewService } from '../services/reviewService';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { useBrowsingHistory } from '../context/BrowsingHistoryContext';
 import { useToast } from '../context/ToastContext';
 import { useSEO, useStructuredData } from '../lib/seo';
 import ProductCard from '../components/ProductCard';
 import SizeGuideModal from '../components/SizeGuideModal';
+import ReviewPhotoGallery from '../components/ReviewPhotoGallery';
+import CompleteTheLook from '../components/CompleteTheLook';
+import PersonalizedRecommendations from '../components/PersonalizedRecommendations';
+import ARTryOn from '../components/ARTryOn';
 import Skeleton from '../components/Skeleton';
 
 const STORE_URL = import.meta.env.VITE_APP_URL || 'https://www.nerveey.shop';
@@ -25,6 +30,7 @@ export default function ProductDetail() {
   const { toggle, has } = useWishlist();
   const { showToast } = useToast();
   const { user } = useAuth();
+  const { addView } = useBrowsingHistory();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
@@ -36,14 +42,20 @@ export default function ProductDetail() {
   const [tab, setTab] = useState<Tab>('description');
   const [sizeError, setSizeError] = useState(false);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
+  const [arOpen, setArOpen] = useState(false);
   const [notifySize, setNotifySize] = useState<Size | null>(null);
   const [notifyEmail, setNotifyEmail] = useState('');
   const [notifyStatus, setNotifyStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [reviews, setReviews] = useState<ProductReview[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
   const [reviewStats, setReviewStats] = useState({ reviewCount: 0, averageRating: 0 });
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewForm, setReviewForm] = useState({ rating: 5, title: '', comment: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewPhotos, setReviewPhotos] = useState<string[]>([]);
+  const [reviewSort, setReviewSort] = useState<'newest' | 'helpful' | 'rating'>('newest');
+  const [reviewFilter, setReviewFilter] = useState<'all' | 'verified' | 'photos'>('all');
+  const [helpfulVotes, setHelpfulVotes] = useState<Record<string, boolean>>({});
 
   useSEO({
     title: product ? `${product.name} | NERVE` : 'NERVE — Cool but Chic',
@@ -110,12 +122,18 @@ export default function ProductDetail() {
         return;
       }
       setProduct(p);
+      addView(p.id, p.category); // Track browsing history
       const rel = await productService.getRelated(p);
       if (mounted) setRelated(rel);
+
+      // Load reviews with loading state
+      setReviewsLoading(true);
       const reviewData = await reviewService.getByProduct(p.id);
       if (reviewData.reviews) setReviews(reviewData.reviews);
       const statsData = await reviewService.getStats(p.id);
       if (statsData.stats) setReviewStats(statsData.stats);
+      setReviewsLoading(false);
+
       setLoading(false);
     });
     return () => {
@@ -226,6 +244,29 @@ export default function ProductDetail() {
     if (reviewList.length === 0) return 0;
     const sum = reviewList.reduce((acc, r) => acc + r.rating, 0);
     return (sum / reviewList.length).toFixed(1);
+  };
+
+  const getFilteredAndSortedReviews = () => {
+    let filtered = reviews;
+
+    // Apply filter
+    if (reviewFilter === 'verified') {
+      filtered = filtered.filter(r => r.verified);
+    } else if (reviewFilter === 'photos') {
+      filtered = filtered.filter(r => r.photos && r.photos.length > 0);
+    }
+
+    // Apply sort
+    if (reviewSort === 'helpful') {
+      filtered.sort((a, b) => (b.helpfulCount || 0) - (a.helpfulCount || 0));
+    } else if (reviewSort === 'rating') {
+      filtered.sort((a, b) => b.rating - a.rating);
+    } else {
+      // newest
+      filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+
+    return filtered;
   };
 
   const renderStars = (rating: number) => {
@@ -466,6 +507,14 @@ export default function ProductDetail() {
               Buy Now
             </button>
 
+            {/* AR Try-On Button */}
+            <button
+              onClick={() => setArOpen(true)}
+              className="mt-3 w-full border border-yellow-500 text-yellow-600 nv-eyebrow py-4 hover:bg-yellow-50 transition-colors flex items-center justify-center gap-2"
+            >
+              <span>📱</span> Try in AR
+            </button>
+
             {/* Tabs */}
             <div className="mt-10 border-t border-navy/10">
               {(
@@ -614,6 +663,61 @@ export default function ProductDetail() {
                             rows={3}
                           />
                         </div>
+
+                        {/* Photo upload */}
+                        <div>
+                          <label
+                            htmlFor="review-photos"
+                            className="text-xs font-medium text-navy/60 mb-1 block"
+                          >
+                            Add Photos (optional, max 3)
+                          </label>
+                          <input
+                            id="review-photos"
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={e => {
+                              const files = Array.from(e.currentTarget.files || []);
+                              const limitedFiles = files.slice(0, 3 - reviewPhotos.length);
+                              Promise.all(
+                                limitedFiles.map(
+                                  file =>
+                                    new Promise<string>(resolve => {
+                                      const reader = new FileReader();
+                                      reader.onload = () => resolve(reader.result as string);
+                                      reader.readAsDataURL(file);
+                                    }),
+                                ),
+                              ).then(newPhotos => {
+                                setReviewPhotos(prev => [...prev, ...newPhotos].slice(0, 3));
+                              });
+                            }}
+                            className="w-full text-xs"
+                            disabled={reviewPhotos.length >= 3}
+                          />
+                          {reviewPhotos.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {reviewPhotos.map((photo, i) => (
+                                <div
+                                  key={i}
+                                  className="relative w-16 h-16 rounded-lg overflow-hidden"
+                                >
+                                  <img src={photo} alt="" className="w-full h-full object-cover" />
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setReviewPhotos(prev => prev.filter((_, idx) => idx !== i))
+                                    }
+                                    className="absolute top-0 right-0 p-1 bg-red-600 text-white rounded-bl text-xs"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                         <div className="flex gap-2">
                           <button
                             type="submit"
@@ -645,23 +749,108 @@ export default function ProductDetail() {
               )}
 
               {/* Review List */}
-              {reviews.length > 0 ? (
+              {reviews.length > 0 && (
+                <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className="flex gap-2 flex-wrap">
+                    <button
+                      onClick={() => setReviewFilter('all')}
+                      className={`text-xs px-3 py-1 rounded transition-colors ${
+                        reviewFilter === 'all'
+                          ? 'bg-navy text-white'
+                          : 'bg-mist text-navy hover:bg-mist/75'
+                      }`}
+                    >
+                      All Reviews
+                    </button>
+                    <button
+                      onClick={() => setReviewFilter('verified')}
+                      className={`text-xs px-3 py-1 rounded transition-colors ${
+                        reviewFilter === 'verified'
+                          ? 'bg-navy text-white'
+                          : 'bg-mist text-navy hover:bg-mist/75'
+                      }`}
+                    >
+                      ✓ Verified
+                    </button>
+                    <button
+                      onClick={() => setReviewFilter('photos')}
+                      className={`text-xs px-3 py-1 rounded transition-colors ${
+                        reviewFilter === 'photos'
+                          ? 'bg-navy text-white'
+                          : 'bg-mist text-navy hover:bg-mist/75'
+                      }`}
+                    >
+                      📸 With Photos
+                    </button>
+                  </div>
+                  <select
+                    value={reviewSort}
+                    onChange={e => setReviewSort(e.target.value as 'newest' | 'helpful' | 'rating')}
+                    className="text-xs px-3 py-1 border border-navy/20 rounded focus:outline-none focus:border-navy"
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="helpful">Most Helpful</option>
+                    <option value="rating">Highest Rating</option>
+                  </select>
+                </div>
+              )}
+
+              {reviewsLoading ? (
                 <div className="space-y-4">
-                  {reviews.map(review => (
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="border-b border-navy/10 pb-4 animate-pulse">
+                      <div className="flex gap-1 mb-2">
+                        {[...Array(5)].map((_, j) => (
+                          <div key={j} className="w-4 h-4 bg-mist rounded-full" />
+                        ))}
+                      </div>
+                      <div className="h-4 bg-mist rounded mb-2 w-2/3" />
+                      <div className="h-3 bg-mist rounded mb-2 w-full" />
+                      <div className="h-3 bg-mist rounded w-1/4" />
+                    </div>
+                  ))}
+                </div>
+              ) : reviews.length > 0 ? (
+                <div className="space-y-4">
+                  {getFilteredAndSortedReviews().map(review => (
                     <div key={review.id} className="border-b border-navy/10 pb-4">
                       <div className="flex items-center gap-2 mb-1">
                         <div className="flex">{renderStars(review.rating)}</div>
                         {review.verified && (
                           <span className="inline-block bg-green-100 text-green-600 text-[10px] px-2 py-0.5 rounded-full">
-                            Verified
+                            ✓ Verified Purchase
                           </span>
                         )}
                       </div>
                       <p className="font-medium text-sm mb-1">{review.title}</p>
-                      <p className="text-sm text-navy/60">{review.comment}</p>
-                      <p className="text-xs text-navy/40 mt-1">
-                        {new Date(review.createdAt).toLocaleDateString()}
-                      </p>
+                      <p className="text-sm text-navy/60 mb-2">{review.comment}</p>
+
+                      {/* Photo gallery */}
+                      <ReviewPhotoGallery photos={review.photos || []} />
+
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mt-3 text-xs">
+                        <p className="text-navy/40">
+                          {new Date(review.createdAt).toLocaleDateString()} by{' '}
+                          {review.customerName || 'Anonymous'}
+                        </p>
+                        <button
+                          onClick={() => {
+                            const isHelpful = helpfulVotes[review.id];
+                            setHelpfulVotes(prev => ({
+                              ...prev,
+                              [review.id]: !isHelpful,
+                            }));
+                          }}
+                          className={`px-2 py-1 rounded transition-colors ${
+                            helpfulVotes[review.id]
+                              ? 'bg-blue-100 text-blue-600'
+                              : 'bg-mist text-navy hover:bg-mist/75'
+                          }`}
+                        >
+                          👍 {(review.helpfulCount || 0) + (helpfulVotes[review.id] ? 1 : 0)}{' '}
+                          Helpful
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -671,6 +860,11 @@ export default function ProductDetail() {
             </div>
           </div>
         </div>
+
+        {/* Complete the Look */}
+        {related.length >= 2 && (
+          <CompleteTheLook mainProduct={product} suggestedItems={related.slice(0, 3)} />
+        )}
 
         {/* Recommended */}
         {related.length > 0 && (
@@ -682,6 +876,15 @@ export default function ProductDetail() {
               ))}
             </div>
           </div>
+        )}
+
+        {/* Personalized Recommendations */}
+        {product && (
+          <PersonalizedRecommendations
+            currentProduct={product}
+            position="below-description"
+            title="Complete Your Style"
+          />
         )}
       </div>
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-navy/10 bg-white/95 p-3 backdrop-blur md:hidden">
@@ -701,6 +904,9 @@ export default function ProductDetail() {
         </div>
       </div>
       {sizeGuideOpen && <SizeGuideModal onClose={() => setSizeGuideOpen(false)} />}
+      {product && (
+        <ARTryOn isOpen={arOpen} onClose={() => setArOpen(false)} productName={product.name} />
+      )}
     </div>
   );
 }

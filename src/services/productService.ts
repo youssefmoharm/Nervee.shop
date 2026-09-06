@@ -29,6 +29,13 @@ export interface ShopFilters {
   sort?: SortOption;
 }
 
+interface ProductColorRow {
+  name: string;
+  hex: string;
+  image: string;
+  hover_image?: string;
+}
+
 /**
  * Transform Supabase row to Product type
  */
@@ -50,7 +57,7 @@ function transformProduct(row: any): Product {
     care: row.care || [],
     gallery:
       (row.gallery as string[]) ||
-      (row.product_colors as any[]).map(c => c.image).filter(Boolean) ||
+      (row.product_colors as ProductColorRow[] | undefined)?.map(c => c.image).filter(Boolean) ||
       [],
     isBestSeller: row.is_best_seller || false,
     createdAt: row.created_at,

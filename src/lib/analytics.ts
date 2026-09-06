@@ -8,6 +8,10 @@
  * - Performance monitoring
  */
 
+import debug from 'debug';
+
+const log = debug('nerve:analytics');
+
 declare global {
   interface Window {
     gtag?: (...args: any[]) => void;
@@ -44,7 +48,7 @@ export function initGoogleAnalytics() {
   const gaId = import.meta.env.VITE_GA_ID;
 
   if (!gaId) {
-    console.warn('Google Analytics ID not configured. Add VITE_GA_ID to environment.');
+    log('Google Analytics ID not configured. Add VITE_GA_ID to environment.');
     return;
   }
 
@@ -72,15 +76,13 @@ export function initMetaPixel() {
   const pixelId = import.meta.env.VITE_META_PIXEL_ID;
 
   if (!pixelId) {
-    console.warn('Meta Pixel ID not configured. Add VITE_META_PIXEL_ID to environment.');
+    log('Meta Pixel ID not configured. Add VITE_META_PIXEL_ID to environment.');
     return;
   }
 
   // Validate pixel ID format to prevent injection
   if (!/^\d+$/.test(pixelId)) {
-    if (import.meta.env.DEV) {
-      console.error('Invalid Meta Pixel ID format');
-    }
+    log('Invalid Meta Pixel ID format');
     return;
   }
 
@@ -136,10 +138,8 @@ export function trackEvent(eventName: string, parameters: Record<string, any> = 
     window.gtag('event', eventName, parameters);
   }
 
-  // Console log in development
-  if (import.meta.env.DEV) {
-    console.log('📊 Analytics Event:', eventName, parameters);
-  }
+  // Debug log
+  log('Analytics Event:', eventName, parameters);
 }
 
 // E-commerce specific tracking
@@ -162,10 +162,8 @@ export function trackEcommerce(event: EcommerceEvent) {
     });
   }
 
-  // Console in development
-  if (import.meta.env.DEV) {
-    console.log('🛒 E-commerce Event:', event_name, parameters);
-  }
+  // Debug log
+  log('E-commerce Event:', event_name, parameters);
 }
 
 // Search tracking
@@ -220,7 +218,7 @@ export function trackWebVitals() {
 
       lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
     } catch (e) {
-      console.warn('LCP observer failed:', e);
+      log('LCP observer failed:', e);
     }
 
     // First Input Delay (FID)
@@ -241,7 +239,7 @@ export function trackWebVitals() {
 
       fidObserver.observe({ type: 'first-input', buffered: true });
     } catch (e) {
-      console.warn('FID observer failed:', e);
+      log('FID observer failed:', e);
     }
 
     // Cumulative Layout Shift (CLS)
@@ -262,7 +260,7 @@ export function trackWebVitals() {
 
       clsObserver.observe({ type: 'layout-shift', buffered: true });
     } catch (e) {
-      console.warn('CLS observer failed:', e);
+      log('CLS observer failed:', e);
     }
   }
 }

@@ -128,9 +128,14 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
       {/* Mobile full-screen drawer */}
       <div
         data-testid="mobile-menu"
-        className={`fixed inset-0 z-50 bg-navy transition-transform duration-500 ease-[cubic-bezier(.65,0,.35,1)] lg:hidden ${
+        className={`fixed inset-0 z-50 bg-navy transition-transform duration-300 lg:hidden ${
           mobileOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
+        style={{
+          transitionDuration: matchMedia('(prefers-reduced-motion: reduce)').matches
+            ? '0ms'
+            : '300ms',
+        }}
       >
         <div className="flex items-center justify-between h-16 px-5 border-b border-white/10">
           <div className="flex items-center">
@@ -155,8 +160,15 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
             <Link
               key={l.label}
               to={l.to}
-              className="nv-heading text-[13vw] leading-none py-3 border-b border-white/10 opacity-0 animate-fadeUp"
-              style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'forwards' }}
+              className="nv-heading text-[13vw] leading-none py-3 border-b border-white/10 transition-opacity duration-300 opacity-0 animate-fadeUp"
+              style={{
+                animationDelay: `${i * 60}ms`,
+                animationFillMode: 'forwards',
+                ...(matchMedia('(prefers-reduced-motion: reduce)').matches && {
+                  animation: 'none',
+                  opacity: 1,
+                }),
+              }}
             >
               {l.label}
             </Link>
