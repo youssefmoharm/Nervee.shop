@@ -122,7 +122,8 @@ function StorefrontChrome({
   );
 }
 
-export default function App() {
+// Component that uses hooks requiring providers
+function AppContent() {
   const [loading, setLoading] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   const location = useLocation();
@@ -334,32 +335,38 @@ export default function App() {
 
   return (
     <ErrorBoundary onError={handleError}>
-      <CartProvider>
-        <WishlistProvider>
-          <BrowsingHistoryProvider>
-            <BundleProvider>
-              <ToastProvider>
-                <QuickViewProvider>
-                  <ComparisonProvider>
-                    {isAdminRoute ? (
-                      routes
-                    ) : (
-                      <StorefrontChrome
-                        loading={loading}
-                        setLoading={setLoading}
-                        searchOpen={searchOpen}
-                        setSearchOpen={setSearchOpen}
-                      >
-                        {routes}
-                      </StorefrontChrome>
-                    )}
-                  </ComparisonProvider>
-                </QuickViewProvider>
-              </ToastProvider>
-            </BundleProvider>
-          </BrowsingHistoryProvider>
-        </WishlistProvider>
-      </CartProvider>
+      {isAdminRoute ? (
+        routes
+      ) : (
+        <StorefrontChrome
+          loading={loading}
+          setLoading={setLoading}
+          searchOpen={searchOpen}
+          setSearchOpen={setSearchOpen}
+        >
+          {routes}
+        </StorefrontChrome>
+      )}
     </ErrorBoundary>
+  );
+}
+
+export default function App() {
+  return (
+    <CartProvider>
+      <WishlistProvider>
+        <BrowsingHistoryProvider>
+          <BundleProvider>
+            <ToastProvider>
+              <QuickViewProvider>
+                <ComparisonProvider>
+                  <AppContent />
+                </ComparisonProvider>
+              </QuickViewProvider>
+            </ToastProvider>
+          </BundleProvider>
+        </BrowsingHistoryProvider>
+      </WishlistProvider>
+    </CartProvider>
   );
 }
