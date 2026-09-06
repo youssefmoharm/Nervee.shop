@@ -88,7 +88,10 @@ export default function HeroCarousel() {
   const slide = slides[currentSlide];
 
   return (
-    <section className="relative w-full h-screen min-h-[600px] overflow-hidden bg-mist">
+    <section
+      className="relative w-full h-screen min-h-[600px] overflow-hidden"
+      style={{ backgroundColor: '#FFFFFF' }}
+    >
       {/* Background Images */}
       <div className="absolute inset-0">
         {slides.map((s, index) => {
@@ -114,13 +117,22 @@ export default function HeroCarousel() {
       </div>
 
       {/* Subtle Overlay - minimal, lets image show */}
-      <div className="absolute inset-0 bg-gradient-to-r from-mist/60 via-mist/40 to-transparent" />
+      <div
+        className="absolute inset-0 bg-gradient-to-r from-opacity-60 via-opacity-40 to-transparent"
+        style={{
+          background:
+            'linear-gradient(to right, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.4), transparent)',
+        }}
+      />
 
       {/* Content - Left Side */}
       <div className="absolute inset-0 flex flex-col justify-between p-8 md:p-12">
         {/* Top - Branding */}
         <div className="z-10">
-          <div className="nv-eyebrow text-navy font-black text-sm tracking-widest uppercase">
+          <div
+            className="nv-eyebrow font-black text-sm tracking-widest uppercase"
+            style={{ color: '#031230' }}
+          >
             NERVE.
           </div>
         </div>
@@ -129,20 +141,25 @@ export default function HeroCarousel() {
         <div className="z-10 max-w-lg">
           <h1
             key={`headline-${currentSlide}`}
-            className={`nv-heading text-warning font-black text-6xl md:text-7xl lg:text-8xl leading-none mb-6 transition-all duration-700 ease-out whitespace-pre-line ${
+            className={`nv-heading font-black text-6xl md:text-7xl lg:text-8xl leading-none mb-6 transition-all duration-700 ease-out whitespace-pre-line ${
               direction === 'next' ? 'animate-slide-in-from-left' : 'animate-slide-in-from-right'
             }`}
+            style={{ color: '#031230' }}
           >
             {slide.headline}
           </h1>
           {slide.description && (
-            <p className="text-navy nv-eyebrow text-xs mb-8 uppercase tracking-wider">
+            <p
+              className="nv-eyebrow text-xs mb-8 uppercase tracking-wider"
+              style={{ color: '#000000' }}
+            >
               {slide.description}
             </p>
           )}
           <Link
             to={slide.ctaLink}
-            className="inline-block bg-warning text-paper px-6 py-3 nv-eyebrow font-bold text-xs uppercase tracking-widest hover:opacity-90 transition-opacity"
+            className="inline-block px-6 py-3 nv-eyebrow font-bold text-xs uppercase tracking-widest hover:opacity-90 transition-opacity"
+            style={{ backgroundColor: '#031230', color: '#FFFFFF' }}
           >
             {slide.ctaLabel}
           </Link>
@@ -156,9 +173,11 @@ export default function HeroCarousel() {
                 key={index}
                 onClick={() => goToSlide(index)}
                 aria-label={`Go to slide ${index + 1}`}
-                className={`transition-all duration-300 h-1 ${
-                  index === currentSlide ? 'w-8 bg-warning' : 'w-2 bg-navy/30 hover:bg-navy/50'
-                }`}
+                className="transition-all duration-300 h-1"
+                style={{
+                  width: index === currentSlide ? '32px' : '8px',
+                  backgroundColor: index === currentSlide ? '#031230' : '#AAAAAA',
+                }}
               />
             ))}
           </div>
@@ -167,14 +186,16 @@ export default function HeroCarousel() {
             <button
               onClick={prevSlide}
               aria-label="Previous slide"
-              className="p-2 text-navy/50 hover:text-warning transition-colors"
+              className="p-2 transition-colors hover:opacity-70"
+              style={{ color: '#AAAAAA' }}
             >
               <ChevronLeft size={24} strokeWidth={1.5} />
             </button>
             <button
               onClick={nextSlide}
               aria-label="Next slide"
-              className="p-2 text-navy/50 hover:text-warning transition-colors"
+              className="p-2 transition-colors hover:opacity-70"
+              style={{ color: '#AAAAAA' }}
             >
               <ChevronRight size={24} strokeWidth={1.5} />
             </button>
