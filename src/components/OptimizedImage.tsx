@@ -67,8 +67,10 @@ export default function OptimizedImage({
   };
 
   const handleError = () => {
+    // If image fails to load, show placeholder
     setError(true);
     onError?.();
+    console.warn(`Image failed to load: ${slug}/${color}/${imageType}`);
   };
 
   // Fallback for older browsers or error case

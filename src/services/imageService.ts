@@ -12,7 +12,8 @@ export type ImageType = '01-front' | '02-back' | '03-detail' | '04-on-model';
 export type ImageFormat = 'jpeg' | 'webp' | 'avif';
 
 const STORAGE_BUCKET = 'product-images';
-const PLACEHOLDER_BASE = 'https://picsum.photos/seed';
+// Use local placeholder images (fallback when Supabase is not configured or images not uploaded)
+const PLACEHOLDER_LOCAL = '/placeholder-product.jpg';
 
 interface ImageOptions {
   size?: ImageSize;
@@ -65,10 +66,9 @@ export function getProductImageUrl(
 ): string {
   const { size = 'card', quality = 80 } = options;
 
-  // If Supabase is not configured, return placeholder
+  // If Supabase is not configured, return local placeholder
   if (!isSupabaseConfigured) {
-    const { width, height } = SIZE_MAP[size];
-    return `${PLACEHOLDER_BASE}/${slug}-${color}-${imageType}/${width}/${height}`;
+    return PLACEHOLDER_LOCAL;
   }
 
   // Build Supabase Storage path
@@ -83,9 +83,10 @@ export function getProductImageUrl(
     },
   });
 
+  // Fallback to local placeholder if URL is invalid or image doesn't exist
   // Note: Format negotiation (WebP/AVIF) handled client-side via picture element
   // Supabase Edge Function can be used for server-side format conversion if needed
-  return data.publicUrl;
+  return data?.publicUrl || PLACEHOLDER_LOCAL;
 }
 
 /**
