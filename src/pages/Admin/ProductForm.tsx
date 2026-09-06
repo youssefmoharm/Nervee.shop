@@ -1,24 +1,33 @@
-import { useEffect, useState, type FormEvent } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { Loader2, Plus, Trash2 } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
-import { adminService } from '../../services/adminService'
-import AdminLayout from './AdminLayout'
+import { useEffect, useState, type FormEvent } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { adminService } from '../../services/adminService';
+import AdminLayout from './AdminLayout';
 
-const CATEGORIES = ['T-Shirts', 'Hoodies', 'Pants', 'Denim', 'Tops', 'Jackets', 'Caps', 'Accessories']
-const BADGES = ['', 'NEW', 'BEST SELLER', 'LIMITED', 'SALE', 'RESTOCKED']
-const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+const CATEGORIES = [
+  'T-Shirts',
+  'Hoodies',
+  'Pants',
+  'Denim',
+  'Tops',
+  'Jackets',
+  'Caps',
+  'Accessories',
+];
+const BADGES = ['', 'NEW', 'BEST SELLER', 'LIMITED', 'SALE', 'RESTOCKED'];
+const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
 interface ColorRow {
-  name: string
-  hex: string
-  image: string
-  hover_image: string
+  name: string;
+  hex: string;
+  image: string;
+  hover_image: string;
 }
 
 interface Collection {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 function slugify(text: string) {
@@ -26,47 +35,49 @@ function slugify(text: string) {
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
+    .replace(/(^-|-$)/g, '');
 }
 
 export default function ProductForm() {
-  const { id } = useParams()
-  const isNew = !id || id === 'new'
-  const navigate = useNavigate()
+  const { id } = useParams();
+  const isNew = !id || id === 'new';
+  const navigate = useNavigate();
 
-  const [collections, setCollections] = useState<Collection[]>([])
-  const [loading, setLoading] = useState(!isNew)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [loading, setLoading] = useState(!isNew);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [name, setName] = useState('')
-  const [category, setCategory] = useState(CATEGORIES[0])
-  const [collectionId, setCollectionId] = useState('')
-  const [price, setPrice] = useState('')
-  const [compareAtPrice, setCompareAtPrice] = useState('')
-  const [badge, setBadge] = useState('')
-  const [isBestSeller, setIsBestSeller] = useState(false)
-  const [isActive, setIsActive] = useState(true)
-  const [description, setDescription] = useState('')
-  const [material, setMaterial] = useState('')
-  const [care, setCare] = useState('')
-  const [colors, setColors] = useState<ColorRow[]>([{ name: '', hex: '#061735', image: '', hover_image: '' }])
+  const [name, setName] = useState('');
+  const [category, setCategory] = useState(CATEGORIES[0]);
+  const [collectionId, setCollectionId] = useState('');
+  const [price, setPrice] = useState('');
+  const [compareAtPrice, setCompareAtPrice] = useState('');
+  const [badge, setBadge] = useState('');
+  const [isBestSeller, setIsBestSeller] = useState(false);
+  const [isActive, setIsActive] = useState(true);
+  const [description, setDescription] = useState('');
+  const [material, setMaterial] = useState('');
+  const [care, setCare] = useState('');
+  const [colors, setColors] = useState<ColorRow[]>([
+    { name: '', hex: '#061735', image: '', hover_image: '' },
+  ]);
   const [inventory, setInventory] = useState<Record<string, number>>(
-    Object.fromEntries(SIZES.map((s) => [s, 0]))
-  )
+    Object.fromEntries(SIZES.map(s => [s, 0])),
+  );
   const [initialInventory, setInitialInventory] = useState<Record<string, number>>(
-    Object.fromEntries(SIZES.map((s) => [s, 0]))
-  )
+    Object.fromEntries(SIZES.map(s => [s, 0])),
+  );
 
   useEffect(() => {
     supabase
       .from('collections')
       .select('id, name')
-      .then(({ data }) => setCollections(data ?? []))
-  }, [])
+      .then(({ data }) => setCollections(data ?? []));
+  }, []);
 
   useEffect(() => {
-    if (isNew || !id) return
+    if (isNew || !id) return;
     supabase
       .from('products')
       .select('*, product_colors(*), product_inventory(*)')
@@ -74,20 +85,20 @@ export default function ProductForm() {
       .single()
       .then(({ data }) => {
         if (!data) {
-          setLoading(false)
-          return
+          setLoading(false);
+          return;
         }
-        setName(data.name)
-        setCategory(data.category)
-        setCollectionId(data.collection_id ?? '')
-        setPrice(String(data.price))
-        setCompareAtPrice(data.compare_at_price ? String(data.compare_at_price) : '')
-        setBadge(data.badge ?? '')
-        setIsBestSeller(!!data.is_best_seller)
-        setIsActive(data.is_active !== false)
-        setDescription(data.description)
-        setMaterial(data.material)
-        setCare((data.care ?? []).join('\n'))
+        setName(data.name);
+        setCategory(data.category);
+        setCollectionId(data.collection_id ?? '');
+        setPrice(String(data.price));
+        setCompareAtPrice(data.compare_at_price ? String(data.compare_at_price) : '');
+        setBadge(data.badge ?? '');
+        setIsBestSeller(!!data.is_best_seller);
+        setIsActive(data.is_active !== false);
+        setDescription(data.description);
+        setMaterial(data.material);
+        setCare((data.care ?? []).join('\n'));
         if (data.product_colors?.length) {
           setColors(
             data.product_colors.map((c: any) => ({
@@ -95,26 +106,26 @@ export default function ProductForm() {
               hex: c.hex,
               image: c.image,
               hover_image: c.hover_image ?? '',
-            }))
-          )
+            })),
+          );
         }
-        const inv: Record<string, number> = Object.fromEntries(SIZES.map((s) => [s, 0]))
-        for (const row of data.product_inventory ?? []) inv[row.size] = row.stock_quantity
-        setInventory(inv)
-        setInitialInventory(inv)
-        setLoading(false)
-      })
-  }, [id, isNew])
+        const inv: Record<string, number> = Object.fromEntries(SIZES.map(s => [s, 0]));
+        for (const row of data.product_inventory ?? []) inv[row.size] = row.stock_quantity;
+        setInventory(inv);
+        setInitialInventory(inv);
+        setLoading(false);
+      });
+  }, [id, isNew]);
 
   const updateColor = (i: number, patch: Partial<ColorRow>) =>
-    setColors((prev) => prev.map((c, idx) => (idx === i ? { ...c, ...patch } : c)))
+    setColors(prev => prev.map((c, idx) => (idx === i ? { ...c, ...patch } : c)));
 
   const onSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    setSaving(true)
-    setError(null)
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
 
-    const productId = isNew ? slugify(name) : id!
+    const productId = isNew ? slugify(name) : id!;
     const productPayload = {
       id: productId,
       slug: slugify(name),
@@ -129,22 +140,25 @@ export default function ProductForm() {
       is_active: isActive,
       description,
       material,
-      care: care.split('\n').map((s) => s.trim()).filter(Boolean),
-    }
+      care: care
+        .split('\n')
+        .map(s => s.trim())
+        .filter(Boolean),
+    };
 
     const result = isNew
       ? await adminService.createProduct(productPayload)
-      : await adminService.updateProduct(productId, productPayload)
+      : await adminService.updateProduct(productId, productPayload);
 
     if (result.error) {
-      setSaving(false)
-      setError(result.error)
-      return
+      setSaving(false);
+      setError(result.error);
+      return;
     }
 
     // Replace colors
-    await supabase.from('product_colors').delete().eq('product_id', productId)
-    const validColors = colors.filter((c) => c.name && c.image)
+    await supabase.from('product_colors').delete().eq('product_id', productId);
+    const validColors = colors.filter(c => c.name && c.image);
     if (validColors.length) {
       await supabase.from('product_colors').insert(
         validColors.map((c, i) => ({
@@ -154,38 +168,38 @@ export default function ProductForm() {
           image: c.image,
           hover_image: c.hover_image || null,
           sort_order: i,
-        }))
-      )
+        })),
+      );
     }
 
     // Upsert inventory rows for every size
     await supabase.from('product_inventory').upsert(
-      SIZES.map((size) => ({
+      SIZES.map(size => ({
         product_id: productId,
         size,
         stock_quantity: inventory[size] ?? 0,
         in_stock: (inventory[size] ?? 0) > 0,
       })),
-      { onConflict: 'product_id,size' }
-    )
+      { onConflict: 'product_id,size' },
+    );
 
     // Notify anyone waiting on a size that just came back into stock.
     for (const size of SIZES) {
-      const wasOut = (initialInventory[size] ?? 0) <= 0
-      const nowIn = (inventory[size] ?? 0) > 0
-      if (wasOut && nowIn) void adminService.triggerRestockCheck(productId, size)
+      const wasOut = (initialInventory[size] ?? 0) <= 0;
+      const nowIn = (inventory[size] ?? 0) > 0;
+      if (wasOut && nowIn) void adminService.triggerRestockCheck(productId, size);
     }
 
-    setSaving(false)
-    navigate('/admin/products')
-  }
+    setSaving(false);
+    navigate('/admin/products');
+  };
 
   if (loading) {
     return (
       <AdminLayout>
         <Loader2 className="animate-spin text-navy/40" size={20} />
       </AdminLayout>
-    )
+    );
   }
 
   return (
@@ -199,7 +213,7 @@ export default function ProductForm() {
             <input
               required
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={e => setName(e.target.value)}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
             />
           </label>
@@ -207,10 +221,10 @@ export default function ProductForm() {
             <span className="text-xs font-medium text-navy/60 mb-1.5 block">Category</span>
             <select
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              onChange={e => setCategory(e.target.value)}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
             >
-              {CATEGORIES.map((c) => (
+              {CATEGORIES.map(c => (
                 <option key={c} value={c}>
                   {c}
                 </option>
@@ -221,11 +235,11 @@ export default function ProductForm() {
             <span className="text-xs font-medium text-navy/60 mb-1.5 block">Collection</span>
             <select
               value={collectionId}
-              onChange={(e) => setCollectionId(e.target.value)}
+              onChange={e => setCollectionId(e.target.value)}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
             >
               <option value="">None</option>
-              {collections.map((c) => (
+              {collections.map(c => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>
@@ -236,10 +250,10 @@ export default function ProductForm() {
             <span className="text-xs font-medium text-navy/60 mb-1.5 block">Badge</span>
             <select
               value={badge}
-              onChange={(e) => setBadge(e.target.value)}
+              onChange={e => setBadge(e.target.value)}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
             >
-              {BADGES.map((b) => (
+              {BADGES.map(b => (
                 <option key={b} value={b}>
                   {b || 'None'}
                 </option>
@@ -253,17 +267,19 @@ export default function ProductForm() {
               type="number"
               min={0}
               value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              onChange={e => setPrice(e.target.value)}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
             />
           </label>
           <label className="block">
-            <span className="text-xs font-medium text-navy/60 mb-1.5 block">Compare-at Price (optional)</span>
+            <span className="text-xs font-medium text-navy/60 mb-1.5 block">
+              Compare-at Price (optional)
+            </span>
             <input
               type="number"
               min={0}
               value={compareAtPrice}
-              onChange={(e) => setCompareAtPrice(e.target.value)}
+              onChange={e => setCompareAtPrice(e.target.value)}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
             />
           </label>
@@ -271,11 +287,21 @@ export default function ProductForm() {
 
         <div className="flex items-center gap-6">
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={isBestSeller} onChange={(e) => setIsBestSeller(e.target.checked)} className="accent-navy" />
+            <input
+              type="checkbox"
+              checked={isBestSeller}
+              onChange={e => setIsBestSeller(e.target.checked)}
+              className="accent-navy"
+            />
             Best Seller
           </label>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="accent-navy" />
+            <input
+              type="checkbox"
+              checked={isActive}
+              onChange={e => setIsActive(e.target.checked)}
+              className="accent-navy"
+            />
             Published (visible on the storefront)
           </label>
         </div>
@@ -286,7 +312,7 @@ export default function ProductForm() {
             required
             rows={3}
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={e => setDescription(e.target.value)}
             className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
           />
         </label>
@@ -295,16 +321,18 @@ export default function ProductForm() {
           <input
             required
             value={material}
-            onChange={(e) => setMaterial(e.target.value)}
+            onChange={e => setMaterial(e.target.value)}
             className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
           />
         </label>
         <label className="block">
-          <span className="text-xs font-medium text-navy/60 mb-1.5 block">Care Instructions (one per line)</span>
+          <span className="text-xs font-medium text-navy/60 mb-1.5 block">
+            Care Instructions (one per line)
+          </span>
           <textarea
             rows={3}
             value={care}
-            onChange={(e) => setCare(e.target.value)}
+            onChange={e => setCare(e.target.value)}
             className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
           />
         </label>
@@ -314,66 +342,102 @@ export default function ProductForm() {
             <span className="nv-eyebrow text-xs text-navy/50">Colors</span>
             <button
               type="button"
-              onClick={() => setColors((prev) => [...prev, { name: '', hex: '#061735', image: '', hover_image: '' }])}
+              onClick={() =>
+                setColors(prev => [
+                  ...prev,
+                  { name: '', hex: '#061735', image: '', hover_image: '' },
+                ])
+              }
               className="text-navy/60 hover:text-navy flex items-center gap-1 text-xs"
             >
               <Plus size={14} /> Add color
             </button>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {colors.map((c, i) => (
-              <div key={i} className="grid grid-cols-[1fr_1fr_2fr_2fr_auto] gap-2 items-center">
-                <input
-                  placeholder="Name"
-                  value={c.name}
-                  onChange={(e) => updateColor(i, { name: e.target.value })}
-                  className="border border-navy/20 px-2 py-2 text-xs"
-                />
-                <input
-                  type="color"
-                  value={c.hex}
-                  onChange={(e) => updateColor(i, { hex: e.target.value })}
-                  className="border border-navy/20 h-9 w-full"
-                />
-                <input
-                  placeholder="Image URL"
-                  value={c.image}
-                  onChange={(e) => updateColor(i, { image: e.target.value })}
-                  className="border border-navy/20 px-2 py-2 text-xs"
-                />
-                <input
-                  placeholder="Hover image URL (optional)"
-                  value={c.hover_image}
-                  onChange={(e) => updateColor(i, { hover_image: e.target.value })}
-                  className="border border-navy/20 px-2 py-2 text-xs"
-                />
-                <button
-                  type="button"
-                  onClick={() => setColors((prev) => prev.filter((_, idx) => idx !== i))}
-                  className="text-navy/40 hover:text-red-600"
-                >
-                  <Trash2 size={15} />
-                </button>
+              <div key={i}>
+                <div className="grid grid-cols-[1fr_1fr_2fr_2fr_auto] gap-2 items-center mb-2">
+                  <input
+                    placeholder="Name"
+                    value={c.name}
+                    onChange={e => updateColor(i, { name: e.target.value })}
+                    className="border border-navy/20 px-2 py-2 text-xs"
+                  />
+                  <input
+                    type="color"
+                    value={c.hex}
+                    onChange={e => updateColor(i, { hex: e.target.value })}
+                    className="border border-navy/20 h-9 w-full"
+                  />
+                  <input
+                    placeholder="Image URL"
+                    value={c.image}
+                    onChange={e => updateColor(i, { image: e.target.value })}
+                    className="border border-navy/20 px-2 py-2 text-xs"
+                  />
+                  <input
+                    placeholder="Hover image URL (optional)"
+                    value={c.hover_image}
+                    onChange={e => updateColor(i, { hover_image: e.target.value })}
+                    className="border border-navy/20 px-2 py-2 text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setColors(prev => prev.filter((_, idx) => idx !== i))}
+                    className="text-navy/40 hover:text-red-600"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+                {c.image && (
+                  <div className="flex gap-2 mb-2 flex-wrap">
+                    <div className="flex-shrink-0">
+                      <img
+                        src={c.image}
+                        alt={`Preview for ${c.name}`}
+                        className="w-20 h-28 object-cover bg-mist rounded border border-navy/10"
+                        onError={e => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                    {c.hover_image && (
+                      <div className="flex-shrink-0">
+                        <img
+                          src={c.hover_image}
+                          alt={`Hover preview for ${c.name}`}
+                          className="w-20 h-28 object-cover bg-mist rounded border border-navy/10"
+                          onError={e => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
           <p className="text-xs text-navy/40 mt-2">
-            Upload images to the <code>product-images</code> Supabase Storage bucket first, then paste the public URL
-            here (path convention: <code>products/&#123;slug&#125;/&#123;color&#125;/01-front.jpg</code>).
+            Upload images to the <code>product-images</code> Supabase Storage bucket first, then
+            paste the public URL here (path convention:{' '}
+            <code>products/&#123;slug&#125;/&#123;color&#125;/01-front.jpg</code>).
           </p>
         </div>
 
         <div>
           <span className="nv-eyebrow text-xs text-navy/50 mb-3 block">Inventory by Size</span>
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-            {SIZES.map((size) => (
+            {SIZES.map(size => (
               <label key={size} className="block">
                 <span className="text-xs text-navy/60 mb-1 block">{size}</span>
                 <input
                   type="number"
                   min={0}
                   value={inventory[size]}
-                  onChange={(e) => setInventory((prev) => ({ ...prev, [size]: Number(e.target.value) }))}
+                  onChange={e =>
+                    setInventory(prev => ({ ...prev, [size]: Number(e.target.value) }))
+                  }
                   className="w-full border border-navy/20 px-2 py-2 text-sm focus:outline-none focus:border-navy"
                 />
               </label>
@@ -392,5 +456,5 @@ export default function ProductForm() {
         </button>
       </form>
     </AdminLayout>
-  )
+  );
 }

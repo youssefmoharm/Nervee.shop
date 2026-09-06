@@ -3,9 +3,12 @@ import { Link } from 'react-router-dom';
 import { Lock, Minus, Plus, ShieldCheck, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { productService } from '../services/productService';
+import { discountService, type DiscountCode } from '../services/discountService';
 import { useSEO } from '../lib/seo';
+import { useToast } from '../context/ToastContext';
 import type { Product } from '../types';
 import ProductCard from '../components/ProductCard';
+import ShippingProgressBar from '../components/ShippingProgressBar';
 
 export default function Cart() {
   useSEO({
@@ -14,9 +17,10 @@ export default function Cart() {
       'Review the pieces in your NERVE cart. Cash on delivery across Egypt — no card needed.',
   });
   const { lines, removeLine, updateQuantity, subtotal } = useCart();
+  const { showToast } = useToast();
   const [promo, setPromo] = useState('');
   const [promoStatus, setPromoStatus] = useState<'idle' | 'applied' | 'invalid'>('idle');
-  const [discount, setDiscount] = useState(0);
+  const [appliedDiscount, setAppliedDiscount] = useState<DiscountCode | null>(null);
   const [recommended, setRecommended] = useState<Product[]>([]);
 
   useEffect(() => {
@@ -29,18 +33,32 @@ export default function Cart() {
       });
   }, []);
 
-  const applyPromo = () => {
-    if (promo.trim().toUpperCase() === 'NERVE10') {
-      setDiscount(subtotal * 0.1);
-      setPromoStatus('applied');
-    } else {
-      setPromoStatus('invalid');
-      setDiscount(0);
+  const applyPromo = async () => {
+    if (!promo.trim()) {
+      showToast('Please enter a discount code', 'error', 3000);
+      return;
     }
+
+    const result = await discountService.validate(promo.trim(), subtotal);
+
+    if (!result.valid || !result.discount) {
+      showToast(result.error || 'Please check your code and try again', 'error', 3000);
+      setPromoStatus('invalid');
+      setAppliedDiscount(null);
+      return;
+    }
+
+    setAppliedDiscount(result.discount);
+    setPromoStatus('applied');
+    const discountAmount = discountService.calculateDiscount(result.discount, subtotal);
+    showToast(`You saved EGP ${discountAmount.toLocaleString()}`, 'success', 3000);
   };
 
+  const discountAmount = appliedDiscount
+    ? discountService.calculateDiscount(appliedDiscount, subtotal)
+    : 0;
   const shippingEstimate = subtotal > 2000 || subtotal === 0 ? 0 : 100;
-  const total = subtotal - discount + shippingEstimate;
+  const total = subtotal - discountAmount + shippingEstimate;
 
   return (
     <div className="bg-white text-navy min-h-screen pt-24 md:pt-28 px-5 md:px-8 pb-24">
@@ -124,7 +142,11 @@ export default function Cart() {
               ))}
             </div>
 
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 space-y-6">
+              {/* Shipping Progress Bar */}
+              <ShippingProgressBar subtotal={subtotal} />
+
+              {/* Order Summary */}
               <div className="bg-mist/50 p-6 space-y-5">
                 <h2 className="nv-eyebrow">Order Summary</h2>
                 <div className="flex gap-2">
@@ -147,7 +169,10 @@ export default function Cart() {
                   </button>
                 </div>
                 {promoStatus === 'applied' && (
-                  <p className="text-xs text-green-700">Code NERVE10 applied — 10% off.</p>
+                  <p className="text-xs text-green-700">
+                    Code {appliedDiscount?.code} applied — you saved EGP{' '}
+                    {discountAmount.toLocaleString()}.
+                  </p>
                 )}
                 {promoStatus === 'invalid' && (
                   <p className="text-xs text-red-600">Invalid discount code.</p>
@@ -158,10 +183,10 @@ export default function Cart() {
                     <span className="text-navy/60">Subtotal</span>
                     <span>EGP {subtotal.toLocaleString()}</span>
                   </div>
-                  {discount > 0 && (
+                  {discountAmount > 0 && (
                     <div className="flex justify-between text-green-700">
                       <span>Discount</span>
-                      <span>-EGP {discount.toLocaleString()}</span>
+                      <span>-EGP {discountAmount.toLocaleString()}</span>
                     </div>
                   )}
                   <div className="flex justify-between">

@@ -49,5 +49,17 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function ({ addUtilities }) {
+      addUtilities({
+        '@media (prefers-reduced-motion: reduce)': {
+          '*': {
+            'animation-duration': '0.01ms !important',
+            'animation-iteration-count': '1 !important',
+            'transition-duration': '0.01ms !important',
+          },
+        },
+      })
+    },
+  ],
 }

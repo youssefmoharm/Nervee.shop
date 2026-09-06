@@ -10,6 +10,9 @@
 
 import * as Sentry from '@sentry/react';
 
+// Get package version
+const VERSION = '1.0.0';
+
 export function initSentry() {
   const dsn = import.meta.env.VITE_SENTRY_DSN;
   const environment = import.meta.env.VITE_ENV || 'development';
@@ -25,6 +28,7 @@ export function initSentry() {
   Sentry.init({
     dsn,
     environment,
+    release: environment === 'production' ? `v${VERSION}` : undefined,
     // Capture 100% of errors in development, 10% in production
     tracesSampleRate: environment === 'production' ? 0.1 : 1.0,
     beforeSend(event) {

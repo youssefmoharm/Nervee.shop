@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { orderService } from '../services/orderService';
 import { discountService, type DiscountCode } from '../services/discountService';
+import { sendOrderSMS } from '../services/smsService';
 import { useSEO } from '../lib/seo';
 import { useToast } from '../context/ToastContext';
 import { EGYPT_GOVERNORATES } from '../data/governorates';
@@ -57,6 +58,7 @@ export default function Checkout() {
   const [placing, setPlacing] = useState(false);
   const [placeError, setPlaceError] = useState<string | null>(null);
   const [orderNumber, setOrderNumber] = useState('');
+  const [applyingDiscount, setApplyingDiscount] = useState(false);
   const { showToast } = useToast();
   const [appliedDiscount, setAppliedDiscount] = useState<{
     code: string;
@@ -120,19 +122,25 @@ export default function Checkout() {
       return;
     }
 
-    const result = await discountService.validate(form.discountCode.trim(), subtotal);
+    setApplyingDiscount(true);
+    try {
+      const result = await discountService.validate(form.discountCode.trim(), subtotal);
 
-    if (!result.valid || !result.discount) {
-      showToast(result.error || 'Please check your code and try again', 'error', 3000);
-      setAppliedDiscount(null);
-      return;
+      if (!result.valid || !result.discount) {
+        showToast(result.error || 'Please check your code and try again', 'error', 3000);
+        setAppliedDiscount(null);
+        return;
+      }
+
+      setAppliedDiscount({
+        code: result.discount.code,
+        discount: result.discount,
+      });
+      const discountAmt = discountService.calculateDiscount(result.discount, subtotal);
+      showToast(`You saved EGP ${discountAmt.toLocaleString()}`, 'success', 3000);
+    } finally {
+      setApplyingDiscount(false);
     }
-
-    setAppliedDiscount({
-      code: result.discount.code,
-      discount: result.discount,
-    });
-    showToast(`You saved ${discountAmount / 100} EGP`, 'success', 3000);
   };
 
   const handleRemoveDiscount = () => {
@@ -177,6 +185,19 @@ export default function Checkout() {
         error ?? 'We could not place your order. Please check your connection and try again.',
       );
       return;
+    }
+
+    // Send SMS notification
+    try {
+      await sendOrderSMS(
+        form.phone,
+        order.order_number,
+        'placed',
+        `${window.location.origin}/track-order?orderNumber=${order.order_number}&email=${form.email}`,
+      );
+    } catch (smsError) {
+      console.error('Failed to send SMS notification:', smsError);
+      // Don't fail the order if SMS fails - it's a secondary notification
     }
 
     setOrderNumber(order.order_number);
@@ -690,12 +711,21 @@ export default function Checkout() {
                         onChange={e => setForm(f => ({ ...f, discountCode: e.target.value }))}
                         placeholder="Enter code"
                         className="flex-1 border border-navy/20 px-3 py-2 text-xs rounded focus:outline-none focus:border-navy focus:ring-1 focus:ring-navy/20 transition-colors"
+                        disabled={applyingDiscount}
                       />
                       <button
                         type="submit"
-                        className="bg-navy text-white px-4 py-2 text-xs font-medium rounded hover:bg-navy-2 transition-colors"
+                        disabled={applyingDiscount}
+                        className="bg-navy text-white px-4 py-2 text-xs font-medium rounded hover:bg-navy-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                       >
-                        Apply
+                        {applyingDiscount ? (
+                          <>
+                            <Loader2 size={14} className="animate-spin" />
+                            Applying...
+                          </>
+                        ) : (
+                          'Apply'
+                        )}
                       </button>
                     </form>
                   )}

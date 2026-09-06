@@ -77,6 +77,7 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
+  phone?: string;
   role: string;
   createdAt: string;
 }
@@ -120,6 +121,8 @@ export interface ProductReview {
   rating: number;
   title: string;
   comment?: string;
+  photos?: string[];
+  helpfulCount?: number;
   verified: boolean;
   createdAt: string;
   customerName?: string;
@@ -161,4 +164,19 @@ export interface AdminUser {
   userId: string;
   role: 'admin' | 'super_admin';
   createdAt: string;
+}
+
+export interface AbandonedCart {
+  id: string;
+  userId?: string;
+  email: string;
+  phone?: string;
+  items: CartLine[];
+  total: number;
+  createdAt: number;
+  firstReminderAt?: number;
+  secondReminderAt?: number;
+  smsReminderAt?: number;
+  recoveredAt?: number;
+  cartRecoveryCode?: string;
 }
