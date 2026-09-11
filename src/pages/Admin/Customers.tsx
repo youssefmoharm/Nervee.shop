@@ -1,24 +1,24 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Loader2 } from 'lucide-react'
-import { adminService } from '../../services/adminService'
-import AdminLayout from './AdminLayout'
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
+import { adminService } from '../../services/adminService';
+import AdminLayout from './AdminLayout';
 
 interface Customer {
-  id: string
-  email: string
-  first_name: string | null
-  last_name: string | null
-  phone: string | null
-  created_at: string
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  created_at: string;
 }
 
 export default function Customers() {
-  const [customers, setCustomers] = useState<Customer[] | null>(null)
+  const [customers, setCustomers] = useState<Customer[] | null>(null);
 
   useEffect(() => {
-    adminService.listCustomers().then((data) => setCustomers(data as Customer[]))
-  }, [])
+    adminService.listCustomers().then(result => setCustomers(result.data as Customer[]));
+  }, []);
 
   return (
     <AdminLayout>
@@ -40,24 +40,30 @@ export default function Customers() {
               </tr>
             </thead>
             <tbody className="divide-y divide-navy/10">
-              {customers.map((c) => (
-                  <tr key={c.id}>
-                    <td className="px-4 py-3 font-medium">
-                      <Link to={`/admin/customers/${c.id}`} className="text-navy hover:underline">
-                        {c.first_name || c.last_name ? `${c.first_name ?? ''} ${c.last_name ?? ''}`.trim() : '—'}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-navy/70">{c.email}</td>
-                    <td className="px-4 py-3 text-navy/70">{c.phone || '—'}</td>
-                    <td className="px-4 py-3 text-navy/70">
-                      {new Date(c.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </td>
-                  </tr>
-                ))}
+              {customers.map(c => (
+                <tr key={c.id}>
+                  <td className="px-4 py-3 font-medium">
+                    <Link to={`/admin/customers/${c.id}`} className="text-navy hover:underline">
+                      {c.first_name || c.last_name
+                        ? `${c.first_name ?? ''} ${c.last_name ?? ''}`.trim()
+                        : '—'}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 text-navy/70">{c.email}</td>
+                  <td className="px-4 py-3 text-navy/70">{c.phone || '—'}</td>
+                  <td className="px-4 py-3 text-navy/70">
+                    {new Date(c.created_at).toLocaleDateString('en-GB', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
       )}
     </AdminLayout>
-  )
+  );
 }

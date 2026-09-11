@@ -310,7 +310,7 @@ export default function Checkout() {
                   We keep your information secure and only use it to fulfill your order and send
                   delivery updates.
                 </div>
-                <Field label="Email" error={errors.email}>
+                <Field label="Email" error={errors.email} errorId="email-error">
                   <input
                     id="email"
                     autoComplete="email"
@@ -321,10 +321,12 @@ export default function Checkout() {
                     className={inputCls(!!errors.email) + (isEmailDisabled ? ' opacity-60' : '')}
                     placeholder="you@email.com"
                     data-testid="email-input"
+                    aria-required="true"
+                    aria-describedby={errors.email ? 'email-error' : undefined}
                   />
                 </Field>
                 <div className="grid md:grid-cols-2 gap-3 md:gap-4">
-                  <Field label="First Name" error={errors.firstName}>
+                  <Field label="First Name" error={errors.firstName} errorId="firstName-error">
                     <input
                       id="firstName"
                       autoComplete="given-name"
@@ -332,9 +334,11 @@ export default function Checkout() {
                       onChange={e => set('firstName', e.target.value)}
                       className={inputCls(!!errors.firstName)}
                       data-testid="firstName-input"
+                      aria-required="true"
+                      aria-describedby={errors.firstName ? 'firstName-error' : undefined}
                     />
                   </Field>
-                  <Field label="Last Name" error={errors.lastName}>
+                  <Field label="Last Name" error={errors.lastName} errorId="lastName-error">
                     <input
                       id="lastName"
                       autoComplete="family-name"
@@ -342,10 +346,12 @@ export default function Checkout() {
                       onChange={e => set('lastName', e.target.value)}
                       className={inputCls(!!errors.lastName)}
                       data-testid="lastName-input"
+                      aria-required="true"
+                      aria-describedby={errors.lastName ? 'lastName-error' : undefined}
                     />
                   </Field>
                 </div>
-                <Field label="Phone" error={errors.phone}>
+                <Field label="Phone" error={errors.phone} errorId="phone-error">
                   <input
                     id="phone"
                     autoComplete="tel"
@@ -354,6 +360,8 @@ export default function Checkout() {
                     className={inputCls(!!errors.phone)}
                     placeholder="+20 1xx xxx xxxx"
                     data-testid="phone-input"
+                    aria-required="true"
+                    aria-describedby={errors.phone ? 'phone-error' : undefined}
                   />
                 </Field>
               </div>
@@ -366,7 +374,7 @@ export default function Checkout() {
                   We currently deliver across Egypt with the fastest available option for your
                   governorate.
                 </div>
-                <Field label="Address" error={errors.address}>
+                <Field label="Address" error={errors.address} errorId="address-error">
                   <input
                     id="address"
                     autoComplete="street-address"
@@ -375,10 +383,12 @@ export default function Checkout() {
                     className={inputCls(!!errors.address)}
                     placeholder="Street, building, apartment"
                     data-testid="address-input"
+                    aria-required="true"
+                    aria-describedby={errors.address ? 'address-error' : undefined}
                   />
                 </Field>
                 <div className="grid md:grid-cols-2 gap-3 md:gap-4">
-                  <Field label="City" error={errors.city}>
+                  <Field label="City" error={errors.city} errorId="city-error">
                     <input
                       id="city"
                       autoComplete="address-level2"
@@ -386,15 +396,19 @@ export default function Checkout() {
                       onChange={e => set('city', e.target.value)}
                       className={inputCls(!!errors.city)}
                       data-testid="city-input"
+                      aria-required="true"
+                      aria-describedby={errors.city ? 'city-error' : undefined}
                     />
                   </Field>
-                  <Field label="Governorate" error={errors.governorate}>
+                  <Field label="Governorate" error={errors.governorate} errorId="governorate-error">
                     <select
                       id="governorate"
                       data-testid="governorate-select"
                       value={form.governorate}
                       onChange={e => set('governorate', e.target.value)}
                       className={inputCls(!!errors.governorate)}
+                      aria-required="true"
+                      aria-describedby={errors.governorate ? 'governorate-error' : undefined}
                     >
                       <option value="">Select governorate</option>
                       {EGYPT_GOVERNORATES.map(g => (
@@ -776,17 +790,32 @@ function inputCls(hasError: boolean) {
 function Field({
   label,
   error,
+  required,
+  errorId,
   children,
 }: {
   label: string;
   error?: string;
+  required?: boolean;
+  errorId?: string;
   children: React.ReactNode;
 }) {
   return (
     <label className="block">
-      <span className="text-xs font-medium text-navy/60 mb-1.5 block">{label}</span>
+      <span className="text-xs font-medium text-navy/60 mb-1.5 block">
+        {label}
+        {required && (
+          <span className="text-red-500 ml-0.5" aria-hidden="true">
+            *
+          </span>
+        )}
+      </span>
       {children}
-      {error && <span className="text-xs text-red-600 mt-1 block">{error}</span>}
+      {error && (
+        <span id={errorId} className="text-xs text-red-600 mt-1 block" role="alert">
+          {error}
+        </span>
+      )}
     </label>
   );
 }

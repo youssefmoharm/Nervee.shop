@@ -5,7 +5,7 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
 import { getCorsHeaders } from '../_shared/cors.ts'
-import { rateLimit, getRateLimitHeaders } from '../_shared/ratelimit.ts'
+import { distributedRateLimit, getRateLimitHeaders } from '../_shared/ratelimit.ts'
 import { 
   validateEmail, 
   validateUUID, 
@@ -42,11 +42,15 @@ serve(async (req) => {
 
     // Rate limiting: 10 requests per minute per IP
     const ip = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'anonymous'
-    const allowed = rateLimit(ip, { windowMs: 60000, maxRequests: 10 })
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    )
+    const rateLimitResult = await distributedRateLimit(supabase, `back-in-stock:${ip}`, { windowMs: 60000, maxRequests: 10 })
     
-    if (!allowed) {
+    if (!rateLimitResult.allowed) {
       logRateLimitHit(ip, 'back-in-stock')
-      const rateLimitHeaders = getRateLimitHeaders(ip, { windowMs: 60000, maxRequests: 10 })
+      const rateLimitHeaders = getRateLimitHeaders(rateLimitResult)
       timer.end()
       return new Response(
         JSON.stringify({ error: 'Too many requests. Please try again in a minute.' }),
@@ -56,11 +60,6 @@ serve(async (req) => {
         }
       )
     }
-
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    )
 
     const body: BackInStockRequest = await req.json()
 

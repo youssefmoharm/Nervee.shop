@@ -23,7 +23,7 @@ import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
 import { getCorsHeaders } from '../_shared/cors.ts'
 import { orderConfirmedEmail, sendEmail } from '../_shared/email.ts'
-import { rateLimit, getRateLimitHeaders } from '../_shared/ratelimit.ts'
+import { distributedRateLimit, getRateLimitHeaders } from '../_shared/ratelimit.ts'
 import {
   logOrderSuccess,
   logOrderFailure,
@@ -78,11 +78,14 @@ serve(async (req) => {
 
     // Rate limiting: 10 orders per minute per IP (adjust as needed)
     const identifier = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'anonymous'
-    const allowed = rateLimit(identifier, { windowMs: 60000, maxRequests: 10 })
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabase = createClient(supabaseUrl, serviceRoleKey)
+    const rateLimitResult = await distributedRateLimit(supabase, `create-order:${identifier}`, { windowMs: 60000, maxRequests: 10 })
 
-    if (!allowed) {
+    if (!rateLimitResult.allowed) {
       logRateLimitHit(identifier, 'create-order')
-      const rateLimitHeaders = getRateLimitHeaders(identifier, { windowMs: 60000, maxRequests: 10 })
+      const rateLimitHeaders = getRateLimitHeaders(rateLimitResult)
       return new Response(
         JSON.stringify({ error: 'Too many order requests. Please try again in a minute.' }),
         {
@@ -91,10 +94,6 @@ serve(async (req) => {
         }
       )
     }
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const supabase = createClient(supabaseUrl, serviceRoleKey)
 
     // Identify the logged-in customer from their JWT, if any. We do NOT
     // trust a customer_id passed in the request body — guests get NULL.

@@ -9,7 +9,7 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
 import { getCorsHeaders } from '../_shared/cors.ts'
-import { rateLimit, getRateLimitHeaders } from '../_shared/ratelimit.ts'
+import { distributedRateLimit, getRateLimitHeaders } from '../_shared/ratelimit.ts'
 import { validateEmail, validateRequestSize } from '../_shared/validation.ts'
 import { requireAdmin } from '../_shared/admin.ts'
 import { logEmailSuccess, PerformanceTimer } from '../_shared/monitoring.ts'
@@ -73,9 +73,9 @@ serve(async (req) => {
     // Use per-token rate limit for service_role to avoid IP-spoof bypass; fall back to IP for admin.
     const rateId = isServiceRole ? `service:${token.slice(-8)}` : `ip:${ip}`
     const maxEmails = isServiceRole ? 200 : 20
-    const allowed = rateLimit(rateId, { windowMs: 60000, maxRequests: maxEmails })
-    if (!allowed) {
-      const rateLimitHeaders = getRateLimitHeaders(rateId, { windowMs: 60000, maxRequests: maxEmails })
+    const rateLimitResult = await distributedRateLimit(supabase, rateId, { windowMs: 60000, maxRequests: maxEmails })
+    if (!rateLimitResult.allowed) {
+      const rateLimitHeaders = getRateLimitHeaders(rateLimitResult)
       timer.end()
       return new Response(
         JSON.stringify({ error: 'Too many email requests. Please wait before sending more.' }),
@@ -122,7 +122,7 @@ serve(async (req) => {
       p_email_type: emailType === 'transactional' || emailType === 'order_confirmation' ? null : emailType,
     })
 
-    const storeUrl = Deno.env.get('STORE_URL') || 'https://nerve-store.com'
+    const storeUrl = Deno.env.get('STORE_URL') || 'https://www.nerveey.shop'
     const unsubscribeLink = unsubscribeToken.data
       ? `${storeUrl}/unsubscribe?token=${unsubscribeToken.data}`
       : null

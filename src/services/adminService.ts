@@ -33,12 +33,18 @@ export const adminService = {
     };
   },
 
-  async listOrders(status?: string) {
-    let query = supabase.from('orders').select('*').order('created_at', { ascending: false });
+  async listOrders(status?: string, page = 1, pageSize = 50) {
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    let query = supabase
+      .from('orders')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to);
     if (status) query = query.eq('status', status);
-    const { data, error } = await query;
+    const { data, error, count } = await query;
     if (error) logError(error);
-    return data ?? [];
+    return { data: data ?? [], total: count ?? 0, page, pageSize };
   },
 
   async updateOrderStatus(
@@ -69,13 +75,16 @@ export const adminService = {
       );
   },
 
-  async listCustomers() {
-    const { data, error } = await supabase
+  async listCustomers(page = 1, pageSize = 50) {
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    const { data, error, count } = await supabase
       .from('customers')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to);
     if (error) logError(error);
-    return data ?? [];
+    return { data: data ?? [], total: count ?? 0, page, pageSize };
   },
 
   async getCustomer(id: string) {
@@ -98,13 +107,16 @@ export const adminService = {
     return data ?? [];
   },
 
-  async listProducts() {
-    const { data, error } = await supabase
+  async listProducts(page = 1, pageSize = 50) {
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    const { data, error, count } = await supabase
       .from('products')
-      .select('*, product_colors(*), product_inventory(*)')
-      .order('created_at', { ascending: false });
+      .select('*, product_colors(*), product_inventory(*)', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to);
     if (error) logError(error);
-    return data ?? [];
+    return { data: data ?? [], total: count ?? 0, page, pageSize };
   },
 
   async createProduct(product: Record<string, unknown>) {

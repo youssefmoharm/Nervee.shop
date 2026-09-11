@@ -3,9 +3,10 @@ import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 interface ReviewPhotoGalleryProps {
   photos: string[];
+  productName?: string;
 }
 
-export default function ReviewPhotoGallery({ photos }: ReviewPhotoGalleryProps) {
+export default function ReviewPhotoGallery({ photos, productName }: ReviewPhotoGalleryProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentPhotoIdx, setCurrentPhotoIdx] = useState(0);
 
@@ -34,7 +35,11 @@ export default function ReviewPhotoGallery({ photos }: ReviewPhotoGalleryProps) 
             }}
             className="relative w-12 h-12 rounded-lg overflow-hidden border border-navy/10 hover:border-navy transition-colors"
           >
-            <img src={photo} alt="" className="w-full h-full object-cover" />
+            <img
+              src={photo}
+              alt={`Customer submission ${i + 1}${productName ? ` for ${productName}` : ''}`}
+              className="w-full h-full object-cover"
+            />
           </button>
         ))}
       </div>
@@ -54,7 +59,13 @@ export default function ReviewPhotoGallery({ photos }: ReviewPhotoGalleryProps) 
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
           <div className="relative w-full max-w-2xl max-h-[90vh]">
             {/* Main image */}
-            <img src={currentPhoto} alt="" className="w-full h-full object-contain rounded-lg" />
+            <img
+              src={currentPhoto}
+              alt={`Customer submission ${currentPhotoIdx + 1} of ${photos.length}${
+                productName ? ` for ${productName}` : ''
+              }`}
+              className="w-full h-full object-contain rounded-lg"
+            />
 
             {/* Close button */}
             <button

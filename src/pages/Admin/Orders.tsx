@@ -21,7 +21,9 @@ export default function AdminOrders() {
   const [filter, setFilter] = useState('');
 
   const load = () =>
-    adminService.listOrders(filter || undefined).then(data => setOrders(data as OrderRow[]));
+    adminService
+      .listOrders(filter || undefined)
+      .then(result => setOrders(result.data as OrderRow[]));
 
   useEffect(() => {
     load();

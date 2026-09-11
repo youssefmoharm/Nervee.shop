@@ -211,7 +211,7 @@ export default function ProductCard({ product }: { product: Product }) {
             {product.colors.map((c, i) => (
               <button
                 key={c.name}
-                aria-label={c.name}
+                aria-label={`Select color: ${c.name}`}
                 onClick={() => setColorIdx(i)}
                 className={`w-4 h-4 rounded-full border transition-all ${
                   i === colorIdx

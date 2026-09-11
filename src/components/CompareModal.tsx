@@ -60,6 +60,7 @@ export function CompareModal({ isOpen, onClose }: ComparisonModalProps) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="compare-modal-title"
+      aria-hidden={isOpen ? 'false' : 'true'}
     >
       <div
         className="bg-white w-full max-w-5xl max-h-[90vh] rounded-xl shadow-2xl overflow-hidden flex flex-col outline-none"
