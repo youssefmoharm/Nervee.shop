@@ -300,7 +300,7 @@ export const productService = {
 
       if (error) throw error;
 
-      return (data || []).map((row: any) => {
+      const results = (data || []).map((row: any) => {
         const product = transformProduct(row);
         product.colors = (row.product_colors || [])
           .sort((a: any, b: any) => a.sort_order - b.sort_order)
@@ -308,9 +308,10 @@ export const productService = {
         product.sizes = (row.product_inventory || []).map(transformInventory);
         return product;
       });
+      return results.length > 0 ? results : getMockNewDrop();
     } catch (error) {
       logError('Error fetching new drop:', error);
-      return [];
+      return getMockNewDrop();
     }
   },
 
@@ -338,7 +339,7 @@ export const productService = {
 
       if (error) throw error;
 
-      return (data || []).map((row: any) => {
+      const results = (data || []).map((row: any) => {
         const product = transformProduct(row);
         product.colors = (row.product_colors || [])
           .sort((a: any, b: any) => a.sort_order - b.sort_order)
@@ -346,9 +347,10 @@ export const productService = {
         product.sizes = (row.product_inventory || []).map(transformInventory);
         return product;
       });
+      return results.length > 0 ? results : getMockBestSellers();
     } catch (error) {
       logError('Error fetching best sellers:', error);
-      return [];
+      return getMockBestSellers();
     }
   },
 
@@ -407,10 +409,11 @@ export const productService = {
 
       if (error) throw error;
 
-      return (data || []).map(transformCollection);
+      const results = (data || []).map(transformCollection);
+      return results.length > 0 ? results : mockCollections;
     } catch (error) {
       logError('Error fetching collections:', error);
-      return [];
+      return mockCollections;
     }
   },
 

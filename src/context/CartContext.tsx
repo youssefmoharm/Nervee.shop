@@ -78,7 +78,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return;
     }
     if (mergedForUser.current === user.id) return;
-    mergedForUser.current = user.id;
+    const currentUserId = user.id;
+    mergedForUser.current = currentUserId;
 
     const guestLines = readGuestCart();
 
@@ -88,12 +89,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
           await cartService.mergeGuestCart(guestLines);
           sessionStorage.removeItem(STORAGE_KEY);
         }
-        const dbLines = await cartService.fetchMine();
-        setLines(dbLines);
+        // Only update state if this user is still the current user
+        if (mergedForUser.current === currentUserId) {
+          const dbLines = await cartService.fetchMine();
+          setLines(dbLines);
+        }
       } catch (error) {
         // Fallback: keep guest cart if DB sync fails. Error logged to Sentry
         console.error('Cart sync failed:', error);
-        setLines(guestLines);
+        if (mergedForUser.current === currentUserId) {
+          setLines(guestLines);
+        }
       }
     })();
   }, [user]);

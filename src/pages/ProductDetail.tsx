@@ -891,7 +891,7 @@ export default function ProductDetail() {
                       <p className="text-sm text-navy/60 mb-2">{review.comment}</p>
 
                       {/* Photo gallery */}
-                      <ReviewPhotoGallery photos={review.photos || []} />
+                      <ReviewPhotoGallery photos={review.photos || []} productName={product.name} />
 
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mt-3 text-xs">
                         <p className="text-navy/40">

@@ -6,7 +6,7 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
 import { getCorsHeaders } from '../_shared/cors.ts'
-import { rateLimit, getRateLimitHeaders } from '../_shared/ratelimit.ts'
+import { distributedRateLimit, getRateLimitHeaders } from '../_shared/ratelimit.ts'
 import { 
   validateContactForm, 
   validateEmail, 
@@ -38,11 +38,15 @@ const timer = new PerformanceTimer('contact-form')
 
     // Aggressive rate limiting for contact forms to prevent spam
     const ip = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'anonymous'
-    const allowed = rateLimit(ip, { windowMs: 60000, maxRequests: 2 }) // 2 per minute
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    )
+    const rateLimitResult = await distributedRateLimit(supabase, `contact:${ip}`, { windowMs: 60000, maxRequests: 2 })
     
-    if (!allowed) {
+    if (!rateLimitResult.allowed) {
       logRateLimitHit(ip, 'contact-form')
-      const rateLimitHeaders = getRateLimitHeaders(ip, { windowMs: 60000, maxRequests: 2 })
+      const rateLimitHeaders = getRateLimitHeaders(rateLimitResult)
       timer.end()
       return new Response(
         JSON.stringify({ error: 'Too many contact requests. Please wait before sending another message.' }),
@@ -52,11 +56,6 @@ const timer = new PerformanceTimer('contact-form')
         }
       )
     }
-
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    )
 
     const body = await req.json()
     const action = body.action || 'contact' // 'contact' or 'newsletter'
