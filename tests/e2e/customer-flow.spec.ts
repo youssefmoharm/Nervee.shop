@@ -7,8 +7,12 @@ test.describe('Customer Journey', () => {
 
   test('homepage renders hero and shop CTA', async ({ page }) => {
     await expect(page).toHaveTitle(/NERVE/i)
-    await expect(page.getByRole('heading', { name: /cool but/i })).toBeVisible()
-    await page.getByRole('link', { name: /shop the drop/i }).click()
+    // Hero carousel shows "UP TO 60% OFF" or one of the other slides
+    await expect(page.getByRole('heading').first()).toBeVisible()
+    // Click on "SHOP" button or shop link on the page
+    const shopLink = page.getByRole('link', { name: /shop/i }).first()
+    await expect(shopLink).toBeVisible()
+    await shopLink.click()
     await expect(page).toHaveURL(/\/shop/)
   })
 
