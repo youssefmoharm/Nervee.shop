@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { Product } from '../types';
 import { useCart } from '../context/CartContext';
@@ -19,6 +20,15 @@ export default function ComparisonModal({
 }: ComparisonModalProps) {
   const { addLine } = useCart();
   const { showToast } = useToast();
+
+  // Escape key handler - must be before early return
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
 
   if (products.length === 0) {
     return null;
@@ -48,16 +58,25 @@ export default function ComparisonModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="compare-modal-title"
+      aria-hidden="true"
+    >
+      <div
+        className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col outline-none"
+        role="document"
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-4 md:p-6 border-b border-navy/10">
-          <h2 className="text-xl md:text-2xl font-bold text-navy">
+          <h2 id="compare-modal-title" className="text-xl md:text-2xl font-bold text-navy">
             Compare Products ({products.length}/3)
           </h2>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-navy/10 rounded-full transition-colors"
+            className="p-1 hover:bg-navy/10 rounded-full transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-navy"
             aria-label="Close modal"
           >
             <X size={24} />

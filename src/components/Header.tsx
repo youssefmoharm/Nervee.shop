@@ -79,30 +79,30 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
               ))}
             </nav>
 
-            <div className="flex items-center gap-4 md:gap-5">
+            <div className="flex items-center gap-2 sm:gap-3">
               <button
                 aria-label="Search"
                 data-testid="search-button"
                 onClick={onSearch}
-                className="p-2 hover:opacity-60 transition-opacity"
+                className="w-10 h-10 flex items-center justify-center hover:bg-mist rounded transition-colors"
               >
-                <Search size={19} strokeWidth={1.75} />
+                <Search size={20} strokeWidth={1.75} />
               </button>
               <Link
                 to={user ? '/account' : '/login'}
                 aria-label="Account"
                 data-testid="account-link"
-                className="hidden sm:block p-2 hover:opacity-60 transition-opacity"
+                className="hidden sm:flex w-10 h-10 items-center justify-center hover:bg-mist rounded transition-colors"
               >
-                <User size={19} strokeWidth={1.75} />
+                <User size={20} strokeWidth={1.75} />
               </Link>
               <button
                 aria-label={`Bag, ${count} items`}
                 data-testid="bag-button"
                 onClick={openCart}
-                className="relative p-2 hover:opacity-60 transition-opacity"
+                className="relative w-10 h-10 flex items-center justify-center hover:bg-mist rounded transition-colors"
               >
-                <ShoppingBag size={19} strokeWidth={1.75} />
+                <ShoppingBag size={20} strokeWidth={1.75} />
                 {count > 0 && (
                   <span
                     data-testid="cart-count"
@@ -116,9 +116,9 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
                 aria-label="Menu"
                 data-testid="menu-button"
                 onClick={() => setMobileOpen(true)}
-                className="lg:hidden p-2"
+                className="lg:hidden w-11 h-11 flex items-center justify-center hover:bg-mist rounded transition-colors"
               >
-                <Menu size={22} strokeWidth={1.75} />
+                <Menu size={24} strokeWidth={1.75} />
               </button>
             </div>
           </div>
@@ -155,7 +155,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
             <X size={24} />
           </button>
         </div>
-        <nav className="flex flex-col px-6 py-10 gap-1">
+        <nav className="flex flex-col px-6 py-10 gap-1 overflow-y-auto max-h-[calc(100vh-4rem)]">
           {links.map((l, i) => (
             <Link
               key={l.label}

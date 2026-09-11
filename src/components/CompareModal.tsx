@@ -55,8 +55,16 @@ export function CompareModal({ isOpen, onClose }: ComparisonModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-xl shadow-2xl overflow-hidden flex flex-col">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="compare-modal-title"
+    >
+      <div
+        className="bg-white w-full max-w-5xl max-h-[90vh] rounded-xl shadow-2xl overflow-hidden flex flex-col outline-none"
+        role="document"
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-navy/10">
           <h2 className="text-2xl font-semibold">Compare Products</h2>
