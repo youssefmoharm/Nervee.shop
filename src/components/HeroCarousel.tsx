@@ -2,6 +2,10 @@
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+// Using /placeholder-product.jpg (local fallback, no external dependency)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const img = (_seed?: string, _w?: number, _h?: number) => `/placeholder-product.jpg`;
+
 interface CarouselSlide {
   id: string;
   headline: string;
@@ -18,7 +22,7 @@ const slides: CarouselSlide[] = [
     description: 'New Season Collection',
     ctaLabel: 'SHOP',
     ctaLink: '/shop?category=New%20Arrivals',
-    backgroundImage: 'nerve-hero-2026',
+    backgroundImage: img(),
   },
   {
     id: 'slide-2',
@@ -26,7 +30,7 @@ const slides: CarouselSlide[] = [
     description: 'Core Collection',
     ctaLabel: 'SHOP',
     ctaLink: '/collections/core-essentials',
-    backgroundImage: 'nerve-core-essentials',
+    backgroundImage: img(),
   },
   {
     id: 'slide-3',
@@ -34,7 +38,7 @@ const slides: CarouselSlide[] = [
     description: 'Archive Pieces',
     ctaLabel: 'SHOP',
     ctaLink: '/collections/nerve-archive',
-    backgroundImage: 'nerve-archive-edit',
+    backgroundImage: img(),
   },
   {
     id: 'slide-4',
@@ -42,17 +46,9 @@ const slides: CarouselSlide[] = [
     description: 'Street Form',
     ctaLabel: 'SHOP',
     ctaLink: '/collections/street-form',
-    backgroundImage: 'nerve-street-form',
+    backgroundImage: img(),
   },
 ];
-
-// Production hero images from Supabase Storage.
-// For development/placeholder, using local fallback image service.
-// Replace with actual hero image URLs when assets are ready.
-// const img = (seed: string, w = 1800, h = 2400) => `https://picsum.photos/seed/${seed}/${w}/${h}`;
-
-// Using /placeholder-product.jpg (local fallback, no external dependency)
-const img = (seed: string, w = 1800, h = 2400) => `/placeholder-product.jpg`;
 
 export default function HeroCarousel() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -121,8 +117,9 @@ export default function HeroCarousel() {
           return (
             <div
               key={s.id}
-              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${isVisible ? 'opacity-100' : 'opacity-0'
-                }`}
+              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                isVisible ? 'opacity-100' : 'opacity-0'
+              }`}
               style={{ backgroundColor: '#031230' }}
             >
               <img
@@ -159,8 +156,9 @@ export default function HeroCarousel() {
         <div className="z-10 max-w-lg mb-auto pt-96">
           <h1
             key={`headline-${currentSlide}`}
-            className={`nv-heading font-black text-6xl md:text-7xl lg:text-8xl leading-none mb-6 transition-all duration-700 ease-out whitespace-pre-line ${direction === 'next' ? 'animate-slide-in-from-left' : 'animate-slide-in-from-right'
-              }`}
+            className={`nv-heading font-black text-6xl md:text-7xl lg:text-8xl leading-none mb-6 transition-all duration-700 ease-out whitespace-pre-line ${
+              direction === 'next' ? 'animate-slide-in-from-left' : 'animate-slide-in-from-right'
+            }`}
             style={{ color: '#031230' }}
           >
             {slide.headline}

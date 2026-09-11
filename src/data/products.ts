@@ -1,16 +1,11 @@
-import type { Collection, Product } from '../types'
+import type { Collection, Product } from '../types';
 
 // Production images are served from Supabase Storage.
-// For now, while images are being prepared, uncomment this fallback.
-// const img = (seed: string, w = 900, h = 1125) => `https://picsum.photos/seed/${seed}/${w}/${h}`
-
-// Using image service from the imageService.ts — see getProductImageUrl()
-// Until real images are uploaded to Supabase Storage, the system will gracefully
-// fall back to /placeholder-product.jpg (local fallback, no external dependency)
-import { getProductImageUrl } from '../services/imageService'
 
 // Helper to get product image for seeded products
-const img = (productSlug: string, color: string) => getProductImageUrl(productSlug, color, '01-front', { size: 'full' })
+// For now, returns placeholder. Will integrate with Supabase Storage for real images.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const img = (_productSlug?: string, _color?: string) => `/placeholder-product.jpg`;
 
 export const collections: Collection[] = [
   {
@@ -19,7 +14,7 @@ export const collections: Collection[] = [
     tagline: 'EVERYDAY PIECES',
     description:
       'The foundation of the NERVE closet — heavyweight cotton staples designed to be lived in, worn out, and reached for first.',
-    image: img('nerve-core-essentials', 1400, 1750),
+    image: img('nerve-core-essentials'),
   },
   {
     id: 'nerve-archive',
@@ -27,7 +22,7 @@ export const collections: Collection[] = [
     tagline: 'LIMITED EDITIONS',
     description:
       'Small-batch releases that don\u2019t come back. Numbered pieces for the ones who were there first.',
-    image: img('nerve-archive-edit', 1400, 1750),
+    image: img('nerve-archive-edit'),
   },
   {
     id: 'street-form',
@@ -35,15 +30,15 @@ export const collections: Collection[] = [
     tagline: 'BUILT FOR MOVEMENT',
     description:
       'Technical fabrics and articulated cuts built for the pace of the city — engineered comfort with a sharp silhouette.',
-    image: img('nerve-street-form', 1400, 1750),
+    image: img('nerve-street-form'),
   },
-]
+];
 
 const sizesFull = (excluded: string[] = []) =>
-  (['XS', 'S', 'M', 'L', 'XL', 'XXL'] as const).map((size) => ({
+  (['XS', 'S', 'M', 'L', 'XL', 'XXL'] as const).map(size => ({
     size,
     inStock: !excluded.includes(size),
-  }))
+  }));
 
 export const products: Product[] = [
   {
@@ -58,9 +53,24 @@ export const products: Product[] = [
     isBestSeller: true,
     createdAt: '2026-06-01',
     colors: [
-      { name: 'Navy', hex: '#061735', image: img('core-tee-navy'), hoverImage: img('core-tee-navy-b') },
-      { name: 'White', hex: '#FFFFFF', image: img('core-tee-white'), hoverImage: img('core-tee-white-b') },
-      { name: 'Gray', hex: '#A7A7A7', image: img('core-tee-gray'), hoverImage: img('core-tee-gray-b') },
+      {
+        name: 'Navy',
+        hex: '#061735',
+        image: img('core-tee-navy'),
+        hoverImage: img('core-tee-navy-b'),
+      },
+      {
+        name: 'White',
+        hex: '#FFFFFF',
+        image: img('core-tee-white'),
+        hoverImage: img('core-tee-white-b'),
+      },
+      {
+        name: 'Gray',
+        hex: '#A7A7A7',
+        image: img('core-tee-gray'),
+        hoverImage: img('core-tee-gray-b'),
+      },
     ],
     sizes: sizesFull(['XXL']),
     description:
@@ -81,15 +91,29 @@ export const products: Product[] = [
     isBestSeller: false,
     createdAt: '2026-06-10',
     colors: [
-      { name: 'Black', hex: '#000000', image: img('oversized-tee-black'), hoverImage: img('oversized-tee-black-b') },
-      { name: 'Navy', hex: '#061735', image: img('oversized-tee-navy'), hoverImage: img('oversized-tee-navy-b') },
+      {
+        name: 'Black',
+        hex: '#000000',
+        image: img('oversized-tee-black'),
+        hoverImage: img('oversized-tee-black-b'),
+      },
+      {
+        name: 'Navy',
+        hex: '#061735',
+        image: img('oversized-tee-navy'),
+        hoverImage: img('oversized-tee-navy-b'),
+      },
     ],
     sizes: sizesFull(),
     description:
       'A drop-shoulder oversized fit with an extended hem. Garment-washed for a broken-in feel from the first wear.',
     material: '100% cotton jersey, garment-dyed',
     care: ['Machine wash cold', 'Do not iron print', 'Hang dry recommended'],
-    gallery: [img('oversized-tee-black'), img('oversized-tee-black-b'), img('oversized-tee-detail')],
+    gallery: [
+      img('oversized-tee-black'),
+      img('oversized-tee-black-b'),
+      img('oversized-tee-detail'),
+    ],
     fitNotes: 'Runs oversized — size down for a closer fit.',
   },
   {
@@ -105,8 +129,18 @@ export const products: Product[] = [
     isBestSeller: true,
     createdAt: '2026-05-20',
     colors: [
-      { name: 'Navy', hex: '#061735', image: img('zip-hoodie-navy'), hoverImage: img('zip-hoodie-navy-b') },
-      { name: 'Gray', hex: '#A7A7A7', image: img('zip-hoodie-gray'), hoverImage: img('zip-hoodie-gray-b') },
+      {
+        name: 'Navy',
+        hex: '#061735',
+        image: img('zip-hoodie-navy'),
+        hoverImage: img('zip-hoodie-navy-b'),
+      },
+      {
+        name: 'Gray',
+        hex: '#A7A7A7',
+        image: img('zip-hoodie-gray'),
+        hoverImage: img('zip-hoodie-gray-b'),
+      },
     ],
     sizes: sizesFull(['XS']),
     description:
@@ -127,8 +161,18 @@ export const products: Product[] = [
     isBestSeller: false,
     createdAt: '2026-04-15',
     colors: [
-      { name: 'Black', hex: '#000000', image: img('track-pants-black'), hoverImage: img('track-pants-black-b') },
-      { name: 'Navy', hex: '#061735', image: img('track-pants-navy'), hoverImage: img('track-pants-navy-b') },
+      {
+        name: 'Black',
+        hex: '#000000',
+        image: img('track-pants-black'),
+        hoverImage: img('track-pants-black-b'),
+      },
+      {
+        name: 'Navy',
+        hex: '#061735',
+        image: img('track-pants-navy'),
+        hoverImage: img('track-pants-navy-b'),
+      },
     ],
     sizes: sizesFull(['XS', 'XXL']),
     description:
@@ -149,15 +193,29 @@ export const products: Product[] = [
     isBestSeller: false,
     createdAt: '2026-03-02',
     colors: [
-      { name: 'Raw Indigo', hex: '#1c2b4a', image: img('archive-denim-indigo'), hoverImage: img('archive-denim-indigo-b') },
-      { name: 'Washed Black', hex: '#0d0d0d', image: img('archive-denim-black'), hoverImage: img('archive-denim-black-b') },
+      {
+        name: 'Raw Indigo',
+        hex: '#1c2b4a',
+        image: img('archive-denim-indigo'),
+        hoverImage: img('archive-denim-indigo-b'),
+      },
+      {
+        name: 'Washed Black',
+        hex: '#0d0d0d',
+        image: img('archive-denim-black'),
+        hoverImage: img('archive-denim-black-b'),
+      },
     ],
     sizes: sizesFull(['XS', 'S']),
     description:
       'Numbered archive release. Straight-leg selvedge denim, 14oz rigid cotton that breaks in to your shape. Each pair individually numbered on the inner waistband.',
     material: '100% rigid selvedge cotton denim, 14oz',
     care: ['Wash sparingly, cold water', 'Hang dry', 'Avoid dryer to preserve shrink-to-fit'],
-    gallery: [img('archive-denim-indigo'), img('archive-denim-indigo-b'), img('archive-denim-detail')],
+    gallery: [
+      img('archive-denim-indigo'),
+      img('archive-denim-indigo-b'),
+      img('archive-denim-detail'),
+    ],
   },
   {
     id: 'p-006',
@@ -174,7 +232,11 @@ export const products: Product[] = [
       { name: 'Navy', hex: '#061735', image: img('cap-navy'), hoverImage: img('cap-navy-b') },
       { name: 'White', hex: '#FFFFFF', image: img('cap-white'), hoverImage: img('cap-white-b') },
     ],
-    sizes: [{ size: 'S', inStock: true }, { size: 'M', inStock: true }, { size: 'L', inStock: true }],
+    sizes: [
+      { size: 'S', inStock: true },
+      { size: 'M', inStock: true },
+      { size: 'L', inStock: true },
+    ],
     description:
       'Six-panel unstructured cap in washed cotton twill with a curved brim and embroidered NERVE checkerboard tab at the back.',
     material: '100% washed cotton twill',
@@ -193,12 +255,18 @@ export const products: Product[] = [
     isBestSeller: true,
     createdAt: '2026-02-11',
     colors: [
-      { name: 'Navy', hex: '#061735', image: img('sig-jacket-navy'), hoverImage: img('sig-jacket-navy-b') },
+      {
+        name: 'Navy',
+        hex: '#061735',
+        image: img('sig-jacket-navy'),
+        hoverImage: img('sig-jacket-navy-b'),
+      },
     ],
     sizes: sizesFull(['XS', 'XXL']),
     description:
       'The NERVE signature coach jacket. Water-resistant shell, checkerboard-lined interior, snap-button front and embroidered chest wordmark.',
-    material: 'Shell: 100% nylon, water-resistant finish. Lining: 100% cotton checkerboard jacquard.',
+    material:
+      'Shell: 100% nylon, water-resistant finish. Lining: 100% cotton checkerboard jacquard.',
     care: ['Wipe clean', 'Dry clean for deep clean', 'Do not tumble dry'],
     gallery: [img('sig-jacket-navy'), img('sig-jacket-navy-b'), img('sig-jacket-detail')],
   },
@@ -214,9 +282,24 @@ export const products: Product[] = [
     isBestSeller: true,
     createdAt: '2026-01-22',
     colors: [
-      { name: 'White', hex: '#FFFFFF', image: img('ess-tee-white'), hoverImage: img('ess-tee-white-b') },
-      { name: 'Black', hex: '#000000', image: img('ess-tee-black'), hoverImage: img('ess-tee-black-b') },
-      { name: 'Navy', hex: '#061735', image: img('ess-tee-navy'), hoverImage: img('ess-tee-navy-b') },
+      {
+        name: 'White',
+        hex: '#FFFFFF',
+        image: img('ess-tee-white'),
+        hoverImage: img('ess-tee-white-b'),
+      },
+      {
+        name: 'Black',
+        hex: '#000000',
+        image: img('ess-tee-black'),
+        hoverImage: img('ess-tee-black-b'),
+      },
+      {
+        name: 'Navy',
+        hex: '#061735',
+        image: img('ess-tee-navy'),
+        hoverImage: img('ess-tee-navy-b'),
+      },
     ],
     sizes: sizesFull(),
     description:
@@ -237,8 +320,18 @@ export const products: Product[] = [
     isBestSeller: false,
     createdAt: '2026-05-02',
     colors: [
-      { name: 'Black', hex: '#000000', image: img('shell-black'), hoverImage: img('shell-black-b') },
-      { name: 'Silver', hex: '#A7A7A7', image: img('shell-silver'), hoverImage: img('shell-silver-b') },
+      {
+        name: 'Black',
+        hex: '#000000',
+        image: img('shell-black'),
+        hoverImage: img('shell-black-b'),
+      },
+      {
+        name: 'Silver',
+        hex: '#A7A7A7',
+        image: img('shell-silver'),
+        hoverImage: img('shell-silver-b'),
+      },
     ],
     sizes: sizesFull(['XS']),
     description:
@@ -259,8 +352,18 @@ export const products: Product[] = [
     isBestSeller: false,
     createdAt: '2026-06-15',
     colors: [
-      { name: 'Gray', hex: '#A7A7A7', image: img('crew-top-gray'), hoverImage: img('crew-top-gray-b') },
-      { name: 'Navy', hex: '#061735', image: img('crew-top-navy'), hoverImage: img('crew-top-navy-b') },
+      {
+        name: 'Gray',
+        hex: '#A7A7A7',
+        image: img('crew-top-gray'),
+        hoverImage: img('crew-top-gray-b'),
+      },
+      {
+        name: 'Navy',
+        hex: '#061735',
+        image: img('crew-top-navy'),
+        hoverImage: img('crew-top-navy-b'),
+      },
     ],
     sizes: sizesFull(),
     description:
@@ -280,8 +383,14 @@ export const products: Product[] = [
     badge: null,
     isBestSeller: false,
     createdAt: '2026-04-28',
-    colors: [{ name: 'Black', hex: '#000000', image: img('belt-black'), hoverImage: img('belt-black-b') }],
-    sizes: [{ size: 'S', inStock: true }, { size: 'M', inStock: true }, { size: 'L', inStock: true }],
+    colors: [
+      { name: 'Black', hex: '#000000', image: img('belt-black'), hoverImage: img('belt-black-b') },
+    ],
+    sizes: [
+      { size: 'S', inStock: true },
+      { size: 'M', inStock: true },
+      { size: 'L', inStock: true },
+    ],
     description:
       'Woven technical webbing belt with a matte metal NERVE buckle. Adjustable, one size fits most within range.',
     material: 'Nylon webbing, matte alloy hardware',
@@ -299,7 +408,14 @@ export const products: Product[] = [
     badge: 'LIMITED',
     isBestSeller: false,
     createdAt: '2026-01-09',
-    colors: [{ name: 'Raw Indigo', hex: '#1c2b4a', image: img('trucker-indigo'), hoverImage: img('trucker-indigo-b') }],
+    colors: [
+      {
+        name: 'Raw Indigo',
+        hex: '#1c2b4a',
+        image: img('trucker-indigo'),
+        hoverImage: img('trucker-indigo-b'),
+      },
+    ],
     sizes: sizesFull(['XS', 'XXL']),
     description:
       'Cropped trucker cut from the same 14oz selvedge as the Archive Denim. Numbered edition, checkerboard-jacquard inner collar.',
@@ -307,16 +423,16 @@ export const products: Product[] = [
     care: ['Wash sparingly, cold water', 'Hang dry'],
     gallery: [img('trucker-indigo'), img('trucker-indigo-b')],
   },
-]
+];
 
-export const getBestSellers = () => products.filter((p) => p.isBestSeller)
+export const getBestSellers = () => products.filter(p => p.isBestSeller);
 export const getNewDrop = () =>
-  [...products].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)).slice(0, 8)
-export const getProductBySlug = (slug: string) => products.find((p) => p.slug === slug)
+  [...products].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)).slice(0, 8);
+export const getProductBySlug = (slug: string) => products.find(p => p.slug === slug);
 export const getRelated = (product: Product, count = 4) =>
-  products.filter((p) => p.id !== product.id && p.category === product.category).slice(0, count)
-export const getCollection = (id: string) => collections.find((c) => c.id === id)
-export const getProductsByCollection = (id: string) => products.filter((p) => p.collectionId === id)
+  products.filter(p => p.id !== product.id && p.category === product.category).slice(0, count);
+export const getCollection = (id: string) => collections.find(c => c.id === id);
+export const getProductsByCollection = (id: string) => products.filter(p => p.collectionId === id);
 
 export const categories: Category_[] = [
   'New Arrivals',
@@ -328,5 +444,5 @@ export const categories: Category_[] = [
   'Jackets',
   'Caps',
   'Accessories',
-]
-type Category_ = 'New Arrivals' | Product['category']
+];
+type Category_ = 'New Arrivals' | Product['category'];
