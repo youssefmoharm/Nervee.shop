@@ -1,47 +1,46 @@
-# NERVE E-Commerce Store
-# Generated for production deployment
+# NERVE — robots.txt
+# Directs search engine crawlers to optimal crawl paths
 
+# Default rules for all bots
 User-agent: *
 Allow: /
-Allow: /shop
-Allow: /collections
-Allow: /about
-Allow: /contact
-Allow: /track-order
-
-# Disallow admin and account pages from indexing
-Disallow: /admin
-Disallow: /account
-Disallow: /checkout
-Disallow: /cart
-Disallow: /login
-Disallow: /register
-Disallow: /wishlist-*
-Disallow: /*.json$
+Disallow: /admin/
+Disallow: /account/
+Disallow: /checkout/
+Disallow: /cart/
+Disallow: /wishlist/
+Disallow: /my-orders/
 Disallow: /*?*sort=
 Disallow: /*?*filter=
+Disallow: /*.json$
+Disallow: /api/
 
-# Allow specific crawlers for better indexing
+# Optimize Google crawl efficiency
 User-agent: Googlebot
-Allow: /
 Crawl-delay: 0
-
-User-agent: Bingbot
 Allow: /
+
+# Bing crawl limits
+User-agent: Bingbot
 Crawl-delay: 1
 
-# Google News
-User-agent: Googlebot-News
-Allow: /
-
-# Block bad bots
+# Slow down aggressive crawlers
 User-agent: MJ12bot
-Disallow: /
+Crawl-delay: 10
+Request-rate: 1/10s
 
 User-agent: AhrefsBot
-Allow: /robots.txt
+Crawl-delay: 10
 
-# Sitemap
+User-agent: SemrushBot
+Crawl-delay: 5
+
+# Block bad actors
+User-agent: MiiosBot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+# Sitemap location
 Sitemap: https://www.nerveey.shop/sitemap.xml
-Sitemap: https://www.nerveey.shop/sitemap-products.xml
-Sitemap: https://www.nerveey.shop/sitemap-collections.xml

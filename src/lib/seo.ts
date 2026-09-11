@@ -50,9 +50,10 @@ export function updateMetaTags(tags: MetaTags) {
     updateMetaTag('twitter:description', twitterDescription || description);
   }
 
-  // Update canonical
+  // Update canonical and og:url
   if (canonical) {
     updateCanonical(canonical);
+    updateMetaTag('og:url', canonical);
   }
 
   // Update OG tags
