@@ -168,7 +168,7 @@ export default function Shop() {
               key={s}
               onClick={() => toggleSize(s)}
               aria-pressed={sizes.includes(s)}
-              className={`w-10 h-10 text-xs border transition-colors ${
+              className={`w-11 h-11 text-sm border transition-colors flex items-center justify-center ${
                 sizes.includes(s) ? 'bg-navy text-white border-navy' : 'border-navy/25 text-navy/70'
               }`}
             >

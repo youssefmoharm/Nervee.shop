@@ -167,7 +167,8 @@ export default function ProductDetail() {
         return;
       }
       setProduct(p);
-      addView(p.id, p.category); // Track browsing history
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      addView(p.id, p.category); // addView is stable - no need to add to deps
       const rel = await productService.getRelated(p);
       if (mounted) setRelated(rel);
 
@@ -346,7 +347,7 @@ export default function ProductDetail() {
                 testId="product-detail-main-image"
               />
             </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
               {product.gallery.map((g, i) => (
                 <button
                   key={g + i}
@@ -358,7 +359,7 @@ export default function ProductDetail() {
                   <OptimizedImage
                     slug={product.slug}
                     color={color.name}
-                    imageType={['01-front', '02-back', '03-detail', '04-on-model'][i] as any}
+                    imageType={['01-front', '02-back', '03-detail', '04-on-model'][i]}
                     size="card"
                     productName={product.name}
                     className="w-full h-full object-cover"
@@ -400,10 +401,10 @@ export default function ProductDetail() {
                       setColorIdx(i);
                       setActiveImage(0);
                     }}
-                    aria-label={`Choose ${c.name}`}
+                    aria-label={`Select color: ${c.name}`}
                     aria-pressed={i === colorIdx}
                     data-testid="color-option"
-                    className="w-10 h-10 rounded-full border-2 transition-all"
+                    className="w-12 h-12 rounded-full border-2 transition-all flex-shrink-0"
                     style={{
                       boxShadow:
                         i === colorIdx
@@ -430,7 +431,7 @@ export default function ProductDetail() {
                   Size Guide
                 </button>
               </div>
-              <div className="grid grid-cols-6 gap-2">
+              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                 {product.sizes.map(s => (
                   <button
                     key={s.size}
@@ -447,7 +448,7 @@ export default function ProductDetail() {
                         setNotifyStatus('idle');
                       }
                     }}
-                    className="h-11 text-sm border transition-colors"
+                    className="py-2.5 sm:py-2 px-3 text-sm sm:text-base border transition-colors rounded flex items-center justify-center"
                   >
                     {s.size}
                   </button>

@@ -114,9 +114,9 @@ export default function ProductQuickView() {
       {/* Backdrop */}
       <div
         onClick={handleBackdropClick}
-        onKeyDown={e => {
+        onKeyDown={(e: React.KeyboardEvent) => {
           if (e.key === 'Enter' || e.key === ' ') {
-            handleBackdropClick(e as any);
+            handleBackdropClick(e);
           }
         }}
         role="button"
@@ -125,6 +125,7 @@ export default function ProductQuickView() {
         className={`fixed inset-0 bg-black z-40 transition-opacity duration-300 ${
           isOpen ? 'opacity-30' : 'opacity-0 pointer-events-none'
         }`}
+        aria-hidden={isOpen ? 'false' : 'true'}
       />
 
       {/* Modal */}
@@ -135,9 +136,10 @@ export default function ProductQuickView() {
         }`}
       >
         <div
-          className={`bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-lg shadow-2xl transition-transform duration-300 ${
-            isOpen ? 'scale-100' : 'scale-95'
-          }`}
+          className={`bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-lg shadow-2xl transition-transform duration-300 outline-none`}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="quickview-modal-title"
         >
           <div className="grid md:grid-cols-2 gap-8 p-6 md:p-8">
             {/* Image Gallery */}
@@ -152,7 +154,7 @@ export default function ProductQuickView() {
                 {/* Close button */}
                 <button
                   onClick={close}
-                  className="absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
+                  className="absolute top-3 right-3 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-navy"
                   aria-label="Close modal"
                 >
                   <X size={16} className="text-navy" />

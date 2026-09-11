@@ -111,9 +111,9 @@ export default function Cart() {
                           onClick={() =>
                             updateQuantity(line.productId, line.color, line.size, line.quantity - 1)
                           }
-                          className="w-8 h-8 flex items-center justify-center hover:bg-mist"
+                          className="w-11 h-11 flex items-center justify-center hover:bg-mist text-navy/60 hover:text-navy"
                         >
-                          <Minus size={12} />
+                          <Minus size={16} />
                         </button>
                         <span className="w-9 text-center text-sm">{line.quantity}</span>
                         <button
@@ -121,9 +121,9 @@ export default function Cart() {
                           onClick={() =>
                             updateQuantity(line.productId, line.color, line.size, line.quantity + 1)
                           }
-                          className="w-8 h-8 flex items-center justify-center hover:bg-mist"
+                          className="w-11 h-11 flex items-center justify-center hover:bg-mist text-navy/60 hover:text-navy"
                         >
-                          <Plus size={12} />
+                          <Plus size={16} />
                         </button>
                       </div>
                       <span className="hidden sm:block text-sm font-medium w-24 text-right">
