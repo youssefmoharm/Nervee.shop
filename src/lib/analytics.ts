@@ -12,17 +12,19 @@ import debug from 'debug';
 
 const log = debug('nerve:analytics');
 
+import { GtagArgs, FbqArgs, AnalyticsEventParameters } from './integration-types';
+
 declare global {
   interface Window {
-    gtag?: (...args: any[]) => void;
-    fbq?: (...args: any[]) => void;
+    gtag?: (...args: GtagArgs) => void;
+    fbq?: (...args: FbqArgs) => void;
   }
 }
 
 // Types
 export interface AnalyticsEvent {
   name: string;
-  parameters?: Record<string, any>;
+  parameters?: AnalyticsEventParameters;
 }
 
 export interface EcommerceEvent {

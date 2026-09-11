@@ -9,12 +9,6 @@ import debug from 'debug';
 
 const log = debug('nerve:ga4');
 
-declare global {
-  interface Window {
-    gtag?: (...args: any[]) => void;
-  }
-}
-
 // GA4 Event Parameters
 export interface GA4EventParameters {
   [key: string]: string | number | boolean | undefined | GA4Item[];

@@ -39,7 +39,7 @@ export default function AdminReturns() {
 
   useEffect(() => {
     load();
-  }, [filter]);
+  }, [filter, load]);
 
   const update = async (id: string, status: 'approved' | 'rejected' | 'completed') => {
     const { error } = await supabase
