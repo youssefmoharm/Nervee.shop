@@ -359,7 +359,13 @@ export default function ProductDetail() {
                   <OptimizedImage
                     slug={product.slug}
                     color={color.name}
-                    imageType={['01-front', '02-back', '03-detail', '04-on-model'][i]}
+                    imageType={
+                      ['01-front', '02-back', '03-detail', '04-on-model'][i] as
+                        | '01-front'
+                        | '02-back'
+                        | '03-detail'
+                        | '04-on-model'
+                    }
                     size="card"
                     productName={product.name}
                     className="w-full h-full object-cover"

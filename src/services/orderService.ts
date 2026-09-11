@@ -28,6 +28,19 @@ export interface PlaceOrderResult {
   error: string | null;
 }
 
+let currentIdempotencyKey: string | null = null;
+
+function getIdempotencyKey(): string {
+  if (!currentIdempotencyKey) {
+    currentIdempotencyKey = crypto.randomUUID();
+  }
+  return currentIdempotencyKey;
+}
+
+export function resetIdempotencyKey() {
+  currentIdempotencyKey = null;
+}
+
 export const orderService = {
   /**
    * Places an order. This calls the `create-order` Supabase Edge Function,
@@ -35,20 +48,22 @@ export const orderService = {
    * about totals or availability is trusted from the client.
    *
    * Uses idempotency key to prevent duplicate orders on retry/double-click.
+   * The key is generated once and reused across retries for the same checkout attempt.
    */
   async placeOrder(info: CheckoutInfo, lines: CartLine[]): Promise<PlaceOrderResult> {
     if (!isSupabaseConfigured) {
       return {
         order: null,
-        error:
-          'Checkout requires Supabase to be configured (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY). This demo instance is running on mock data.',
+        error: 'Checkout requires Supabase to be configured. Please try again later.',
       };
     }
 
+    if (!lines || lines.length === 0) {
+      return { order: null, error: 'Your cart is empty.' };
+    }
+
     try {
-      // Generate a unique idempotency key for this request
-      // If the request fails and is retried, the same key ensures the same order is returned
-      const idempotencyKey = `${crypto.randomUUID()}-${Date.now()}`;
+      const idempotencyKey = getIdempotencyKey();
 
       const { data, error } = await supabase.functions.invoke('create-order', {
         body: {
@@ -65,19 +80,22 @@ export const orderService = {
       });
 
       if (error) {
-        // Edge function returned a non-2xx; the error message from our
-        // handler is usually in error.context, fall back to a generic one.
         const message =
-          (typeof data === 'object' && data && 'error' in data && (data as any).error) ||
+          (typeof data === 'object' &&
+            data &&
+            'error' in data &&
+            (data as Record<string, unknown>).error) ||
           error.message ||
           'Could not place your order. Please try again.';
-        return { order: null, error: message };
+        return { order: null, error: message as string };
       }
 
       if (data?.error) {
         return { order: null, error: data.error };
       }
 
+      // Reset idempotency key on success so next order gets a new one
+      resetIdempotencyKey();
       return { order: data.order, error: null };
     } catch (err) {
       logError('placeOrder failed:', err);

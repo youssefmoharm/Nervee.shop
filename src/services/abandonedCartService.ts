@@ -67,7 +67,6 @@ export function trackAbandonedCart(
   };
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
-  console.log(`[Abandoned Cart] Tracked cart with ${items.length} items for ${email}`);
 }
 
 /**
@@ -100,43 +99,23 @@ export function markCartAsRecovered(): void {
 
   cart.recoveredAt = Date.now();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
-  console.log(`[Abandoned Cart] Cart recovered for ${cart.email}`);
 }
 
 /**
  * Send abandoned cart email reminder
  */
 async function sendAbandonedCartEmail(
-  cart: AbandonedCart,
-  type: 'first' | 'second',
+  _cart: AbandonedCart,
+  _type: 'first' | 'second',
 ): Promise<void> {
-  const discountCode = type === 'first' ? 'COMEBACK10' : 'COMEBACK20';
-  const discountPercent = type === 'first' ? 10 : 20;
-  const savedAmount = Math.round((cart.total * discountPercent) / 100);
-
-  console.log(`[Abandoned Cart Email - ${type}] To: ${cart.email}`);
-  console.log(`  Items: ${cart.items.length}`);
-  console.log(`  Total: ${cart.total} EGP`);
-  console.log(`  Discount: ${discountCode} (${discountPercent}% off, save ${savedAmount} EGP)`);
-
-  // In production: call email service (SendGrid, Mailgun, etc.)
+  // No-op: email provider not configured. In production, call Resend/SendGrid/Mailgun here.
 }
 
 /**
  * Send SMS reminder for abandoned cart
  */
-async function sendAbandonedCartSMS(cart: AbandonedCart): Promise<void> {
-  if (!cart.phone) {
-    console.log('[Abandoned Cart SMS] No phone number available');
-    return;
-  }
-
-  const message = `You have ${cart.items.length} items in your cart! Use COMEBACK20 for 20% off. Shop now: www.nerve.ey`;
-
-  console.log(`[Abandoned Cart SMS] To: ${cart.phone}`);
-  console.log(`  Message: ${message}`);
-
-  // In production: integrate with Twilio or local SMS provider
+async function sendAbandonedCartSMS(_cart: AbandonedCart): Promise<void> {
+  // No-op: SMS provider not configured. In production, integrate with Twilio or local provider.
 }
 
 /**

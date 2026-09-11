@@ -22,10 +22,6 @@ const categoryTiles = categories
 const gallery = ['nw-1', 'nw-2', 'nw-3', 'nw-4', 'nw-5', 'nw-6'];
 
 // Production gallery images from Supabase Storage.
-// For development/placeholder, using local fallback.
-// const img = (seed: string, w = 900, h = 1125) => `https://picsum.photos/seed/${seed}/${w}/${h}`;
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const img = (_seed?: string, _w?: number, _h?: number) => `/placeholder-product.jpg`;
 
 export default function Home() {

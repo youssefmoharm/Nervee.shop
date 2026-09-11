@@ -62,8 +62,7 @@ export default function WishlistShareModal({
       showToast('Please enter an email address', 'error');
       return;
     }
-    // Mock email send (would integrate with backend in production)
-    console.log(`Sending wishlist to ${email}: ${shareUrl}`);
+    // Email share would be sent via backend in production
     showToast(`Share link would be sent to ${email}`, 'success');
     handleClose();
   };

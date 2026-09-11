@@ -5,7 +5,6 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { orderService } from '../services/orderService';
 import { discountService, type DiscountCode } from '../services/discountService';
-import { sendOrderSMS } from '../services/smsService';
 import { useSEO } from '../lib/seo';
 import { useToast } from '../context/ToastContext';
 import { EGYPT_GOVERNORATES } from '../data/governorates';
@@ -115,20 +114,13 @@ export default function Checkout() {
     if (!form.lastName.trim()) e.lastName = 'Required.';
 
     // Validate Egyptian phone numbers with carrier prefix validation
-    const cleaned = form.phone.replace(/\s/g, '');
-    const phoneRegex = /^(\+20)?01[0-9]{9}$/;
+    const cleaned = form.phone.replace(/[\s-]/g, '');
+    // Normalize: strip leading +20 or 0020
+    const normalized = cleaned.replace(/^(\+20|0020)/, '');
+    const phoneRegex = /^01[0-2,5][0-9]{8}$/;
 
-    if (!phoneRegex.test(cleaned)) {
+    if (!phoneRegex.test(normalized)) {
       e.phone = 'Enter a valid Egyptian phone number (e.g., 01012345678).';
-    } else {
-      // Extract prefix (01X where X is the carrier digit)
-      const prefix = cleaned.startsWith('+20') ? cleaned.slice(-11, -9) : cleaned.slice(0, 3);
-
-      // Valid Egyptian carriers: 010, 011, 012, 015 (Vodafone, Orange, Etisalat, Telecom Egypt)
-      const validPrefixes = ['010', '011', '012', '015'];
-      if (!validPrefixes.some(p => prefix.includes(p))) {
-        e.phone = 'Enter a valid Egyptian carrier number (010, 011, 012, or 015).';
-      }
     }
 
     setErrors(e);
@@ -181,6 +173,7 @@ export default function Checkout() {
 
   const placeOrder = async () => {
     setPlaceError(null);
+    // Set placing immediately to prevent double-click before any async work
     setPlacing(true);
 
     const { order, error } = await orderService.placeOrder(
@@ -208,18 +201,8 @@ export default function Checkout() {
       return;
     }
 
-    // Send SMS notification
-    try {
-      await sendOrderSMS(
-        form.phone,
-        order.order_number,
-        'placed',
-        `${window.location.origin}/track-order?orderNumber=${order.order_number}&email=${form.email}`,
-      );
-    } catch (smsError) {
-      console.error('Failed to send SMS notification:', smsError);
-      // Don't fail the order if SMS fails - it's a secondary notification
-    }
+    // SMS notification is disabled until a real provider is integrated.
+    // The mock implementation just logged to console — skip the call entirely.
 
     setOrderNumber(order.order_number);
     setPlacing(false);

@@ -85,7 +85,7 @@ serve(async (req) => {
     // Idempotency: return existing attempt if same key
     const { data: existing } = await supabase
       .from('payment_attempts')
-      .select('*')
+      .select('id, order_id, provider, amount, currency, status, idempotency_key, created_at')
       .eq('idempotency_key', idempotencyKey)
       .maybeSingle()
 
@@ -112,7 +112,7 @@ serve(async (req) => {
       if (insertError) {
         // Unique violation on idempotency_key → concurrent request, return existing
         if (insertError.code === '23505') {
-          const { data: retry } = await supabase.from('payment_attempts').select('*').eq('idempotency_key', idempotencyKey).maybeSingle()
+          const { data: retry } = await supabase.from('payment_attempts').select('id, order_id, provider, amount, currency, status, idempotency_key, created_at').eq('idempotency_key', idempotencyKey).maybeSingle()
           timer.end()
           return json({ success: true, paymentAttempt: retry, reused: true }, 200, corsHeaders)
         }
@@ -145,7 +145,7 @@ serve(async (req) => {
         status: 'pending',
         idempotency_key: idempotencyKey,
       })
-      .select()
+      .select('id, order_id, provider, amount, currency, status, idempotency_key, created_at')
       .single()
 
     if (paymobError) throw paymobError
