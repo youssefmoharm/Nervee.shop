@@ -1,8 +1,16 @@
 import type { Collection, Product } from '../types'
 
-// Placeholder imagery — swap with real campaign photography.
-// Seeded picsum images keep each product visually consistent across pages.
-const img = (seed: string, w = 900, h = 1125) => `https://picsum.photos/seed/${seed}/${w}/${h}`
+// Production images are served from Supabase Storage.
+// For now, while images are being prepared, uncomment this fallback.
+// const img = (seed: string, w = 900, h = 1125) => `https://picsum.photos/seed/${seed}/${w}/${h}`
+
+// Using image service from the imageService.ts — see getProductImageUrl()
+// Until real images are uploaded to Supabase Storage, the system will gracefully
+// fall back to /placeholder-product.jpg (local fallback, no external dependency)
+import { getProductImageUrl } from '../services/imageService'
+
+// Helper to get product image for seeded products
+const img = (productSlug: string, color: string) => getProductImageUrl(productSlug, color, '01-front', { size: 'full' })
 
 export const collections: Collection[] = [
   {
