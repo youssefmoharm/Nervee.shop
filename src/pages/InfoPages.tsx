@@ -202,7 +202,7 @@ export function Privacy() {
 export function Terms() {
   useSEO({
     title: 'Terms of Service | NERVE',
-    description: 'The terms governing use of nerve-store.com and purchases from NERVE.',
+    description: 'The terms governing use of nerveey.shop and purchases from NERVE.',
   });
   return (
     <Shell title="Terms of Service">

@@ -53,6 +53,9 @@ serve(async (req) => {
       return json({ error: 'Reason must be 10-1000 characters' }, 400, corsHeaders)
     }
 
+    // Sanitize reason: strip HTML tags and limit length
+    const sanitizedReason = reason.trim().replace(/<[^>]*>/g, '').slice(0, 1000);
+
     // Resolve orderId if only orderNumber+email+token provided (guest)
     let resolvedOrderId = orderId
     let resolvedEmail: string | null = null
@@ -146,7 +149,7 @@ serve(async (req) => {
         order_id: resolvedOrderId,
         customer_id: customerId,
         type,
-        reason: reason.trim(),
+        reason: sanitizedReason,
         status: 'pending',
       })
       .select('id, order_id, type, status, requested_at')

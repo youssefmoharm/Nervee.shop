@@ -100,7 +100,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addLine = (line: CartLine) => {
     const key = `${line.productId}-${line.color}-${line.size}`;
-    if (pendingOperations.current.has(key)) return; // Ignore duplicate clicks
+    if (pendingOperations.current.has(key)) return;
 
     pendingOperations.current.add(key);
 
@@ -118,9 +118,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setLastAdded(line);
     setIsOpen(true);
     if (user) {
-      void cartService.upsertLine(line).finally(() => {
-        pendingOperations.current.delete(key);
-      });
+      void cartService
+        .upsertLine(line)
+        .catch(err => {
+          console.error('Cart DB sync failed after addLine:', err);
+        })
+        .finally(() => {
+          pendingOperations.current.delete(key);
+        });
     } else {
       pendingOperations.current.delete(key);
     }
@@ -130,11 +135,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setLines(prev =>
       prev.filter(l => !(l.productId === productId && l.color === color && l.size === size)),
     );
-    if (user) void cartService.removeLine(productId, color, size);
+    if (user) {
+      void cartService.removeLine(productId, color, size).catch(err => {
+        console.error('Cart DB sync failed after removeLine:', err);
+      });
+    }
   };
 
   const updateQuantity = (productId: string, color: string, size: string, quantity: number) => {
-    const safeQuantity = Math.max(1, quantity);
+    const safeQuantity = Math.max(1, Math.min(99, quantity));
     setLines(prev =>
       prev.map(l =>
         l.productId === productId && l.color === color && l.size === size
@@ -142,14 +151,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
           : l,
       ),
     );
-    if (user) void cartService.updateQuantity(productId, color, size, safeQuantity);
+    if (user) {
+      void cartService.updateQuantity(productId, color, size, safeQuantity).catch(err => {
+        console.error('Cart DB sync failed after updateQuantity:', err);
+      });
+    }
   };
 
   const clear = () => {
     setLines([]);
-    clearCheckoutSession(); // Also clear checkout session on cart clear
-    if (user) void cartService.clear();
-    else sessionStorage.removeItem(STORAGE_KEY);
+    clearCheckoutSession();
+    if (user) {
+      void cartService.clear().catch(err => {
+        console.error('Cart DB sync failed after clear:', err);
+      });
+    } else {
+      sessionStorage.removeItem(STORAGE_KEY);
+    }
   };
 
   const subtotal = useMemo(

@@ -55,7 +55,7 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
     const text = messageText || inputText.trim();
     if (!text || isLoading) return;
 
-    const userEmail = user?.email || 'guest@nerve.com';
+    const userEmail = user?.email || `guest-${Date.now()}@nerveey.shop`;
     const customerName = user?.user_metadata?.first_name || 'Customer';
 
     const userMessage: Message = {
@@ -153,7 +153,7 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
         },
         body: JSON.stringify({
           conversationId,
-          email: user?.email || 'guest@nerve.com',
+          email: user?.email || `guest-${Date.now()}@nerveey.shop`,
           customerName: user?.user_metadata?.first_name || 'Customer',
           subject: ticketSubject,
           description: messages.map(m => `${m.sender}: ${m.text}`).join('\n'),

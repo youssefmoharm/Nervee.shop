@@ -94,8 +94,8 @@ serve(async (req) => {
       return json({ error: 'Message must be 1-2000 characters' }, 400, corsHeaders)
     }
     // Basic email format check; full validation is server-side on order flows.
-    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw)
-    if (!emailOk) {
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailRaw)
+    if (!emailOk || emailRaw.length > 254) {
       timer.end()
       return json({ error: 'Valid email is required' }, 400, corsHeaders)
     }
@@ -269,9 +269,9 @@ serve(async (req) => {
       corsHeaders,
     )
   } catch (err) {
-    console.error('Chat AI error:', err instanceof Error ? { msg: err.message, stack: err.stack } : String(err))
+    console.error('Chat AI error:', err instanceof Error ? err.message : String(err))
     timer.end()
-    return json({ error: 'Failed to process message', details: (err as Error).message }, 500, getCorsHeaders(req))
+    return json({ error: 'Failed to process message' }, 500, getCorsHeaders(req))
   }
 })
 

@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { logError } from '../lib/sentry';
-import type { CartLine } from '../types';
+import type { CartLine, Size } from '../types';
 
 /**
  * Cart persistence strategy:
@@ -49,21 +49,22 @@ export const cartService = {
       if (itemsError) throw itemsError;
       if (!items) return [];
 
-      return items.map((row: any) => {
-        const product = row.products;
+      return items.map((row: Record<string, unknown>) => {
+        const product = row.products as Record<string, unknown> | null;
+        const colorImages = product?.product_colors as
+          | Array<{ name: string; image: string }>
+          | undefined;
         const colorImage =
-          product?.product_colors?.find((c: any) => c.name === row.color)?.image ??
-          product?.product_colors?.[0]?.image ??
-          '';
+          colorImages?.find(c => c.name === row.color)?.image ?? colorImages?.[0]?.image ?? '';
         return {
-          productId: row.product_id,
-          name: product?.name ?? '',
-          slug: product?.slug ?? '',
+          productId: row.product_id as string,
+          name: (product?.name as string) ?? '',
+          slug: (product?.slug as string) ?? '',
           image: colorImage,
-          price: product?.price ?? 0,
-          color: row.color,
-          size: row.size,
-          quantity: row.quantity,
+          price: (product?.price as number) ?? 0,
+          color: row.color as string,
+          size: row.size as Size,
+          quantity: row.quantity as number,
         };
       });
     } catch (error) {
@@ -152,6 +153,9 @@ export const cartService = {
     try {
       if (quantity < 1) {
         throw new Error('Quantity must be at least 1');
+      }
+      if (quantity > 99) {
+        throw new Error('Quantity cannot exceed 99');
       }
 
       const { data: cart, error: cartError } = await supabase
