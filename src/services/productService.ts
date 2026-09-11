@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { logError } from '../lib/sentry';
+import { ProductRow, ColorRow, InventoryRow, CollectionRow } from './types';
 import {
   products as mockProducts,
   collections as mockCollections,
@@ -29,31 +30,28 @@ export interface ShopFilters {
   sort?: SortOption;
 }
 
-interface ProductColorRow {
-  name: string;
-  hex: string;
-  image: string;
-  hover_image?: string;
+interface ProductColorRow extends ColorRow {
+  // Extends ColorRow which has all fields
 }
 
 /**
  * Transform Supabase row to Product type
  */
-function transformProduct(row: any): Product {
+function transformProduct(row: ProductRow): Product {
   return {
     id: row.id,
     slug: row.slug,
     name: row.name,
-    category: row.category,
-    collectionId: row.collection_id,
+    category: row.category as any, // Category is constrained to enum; trust Supabase data
+    collectionId: row.collection_id || '',
     price: row.price,
-    compareAtPrice: row.compare_at_price,
-    currency: row.currency || 'EGP',
+    compareAtPrice: row.compare_at_price || undefined,
+    currency: (row.currency || 'EGP') as 'EGP',
     colors: row.product_colors || [],
-    sizes: row.product_inventory || [],
-    badge: row.badge,
+    sizes: (row.product_inventory || []).map(transformInventory),
+    badge: (row.badge || 'default') as any, // Badge type is constrained; trust data
     description: row.description,
-    material: row.material,
+    material: row.material || '',
     care: row.care || [],
     gallery:
       (row.gallery as string[]) ||
@@ -61,28 +59,28 @@ function transformProduct(row: any): Product {
       [],
     isBestSeller: row.is_best_seller || false,
     createdAt: row.created_at,
-    fitNotes: row.fit_notes,
+    fitNotes: row.fit_notes || undefined,
   };
 }
 
 /**
  * Transform color row to ProductColor type
  */
-function transformColor(row: any): ProductColor {
+function transformColor(row: ColorRow): ProductColor {
   return {
     name: row.name,
     hex: row.hex,
     image: row.image,
-    hoverImage: row.hover_image,
+    hoverImage: row.hover_image || undefined,
   };
 }
 
 /**
  * Transform inventory row to ProductVariantAvailability type
  */
-function transformInventory(row: any): ProductVariantAvailability {
+function transformInventory(row: InventoryRow): ProductVariantAvailability {
   return {
-    size: row.size,
+    size: row.size as any, // Size is constrained to enum; trust Supabase data
     inStock: row.in_stock && row.stock_quantity > 0,
   };
 }
@@ -90,7 +88,7 @@ function transformInventory(row: any): ProductVariantAvailability {
 /**
  * Transform collection row to Collection type
  */
-function transformCollection(row: any): Collection {
+function transformCollection(row: CollectionRow): Collection {
   return {
     id: row.id,
     name: row.name,
