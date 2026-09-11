@@ -64,6 +64,8 @@ export default function ProductDetail() {
       ? product.description
       : 'A contemporary Egyptian concept store. Cool but chic. EST 2026.',
     type: product ? 'product' : 'website',
+    ogImage: product?.colors[colorIdx]?.image || product?.gallery[0],
+    canonical: product ? `${STORE_URL}/product/${product.slug}` : undefined,
     price: product?.price,
     currency: product ? 'EGP' : undefined,
     brand: 'NERVE',
@@ -91,6 +93,13 @@ export default function ProductDetail() {
               : 'https://schema.org/OutOfStock',
             seller: { '@type': 'Organization', name: 'NERVE' },
           },
+          ...(reviewStats.reviewCount > 0 && {
+            aggregateRating: {
+              '@type': 'AggregateRating',
+              ratingValue: reviewStats.averageRating.toFixed(1),
+              reviewCount: reviewStats.reviewCount,
+            },
+          }),
         }
       : {
           '@context': 'https://schema.org',
@@ -103,6 +112,42 @@ export default function ProductDetail() {
             'https://www.linkedin.com/in/nerve-shop-b67623429',
           ],
         },
+  );
+
+  // Breadcrumb schema for product pages
+  useStructuredData(
+    product
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            {
+              '@type': 'ListItem',
+              position: 1,
+              name: 'Home',
+              item: STORE_URL,
+            },
+            {
+              '@type': 'ListItem',
+              position: 2,
+              name: 'Shop',
+              item: `${STORE_URL}/shop`,
+            },
+            {
+              '@type': 'ListItem',
+              position: 3,
+              name: product.category,
+              item: `${STORE_URL}/shop?category=${encodeURIComponent(product.category)}`,
+            },
+            {
+              '@type': 'ListItem',
+              position: 4,
+              name: product.name,
+              item: `${STORE_URL}/product/${product.slug}`,
+            },
+          ],
+        }
+      : {},
   );
 
   useEffect(() => {
