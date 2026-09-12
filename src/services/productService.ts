@@ -375,6 +375,11 @@ export const productService = {
 
       if (error) throw error;
 
+      // If no data, use mock immediately
+      if (!data || data.length === 0) {
+        return getMockNewDrop();
+      }
+
       const results = (data || []).map((row: any) => {
         const product = transformProduct(row);
         product.colors = (row.product_colors || [])
@@ -383,7 +388,10 @@ export const productService = {
         product.sizes = (row.product_inventory || []).map(transformInventory);
         return product;
       });
-      return results.length > 0 ? results : getMockNewDrop();
+
+      // If results are empty or all products have no colors, use mock
+      const valid = results.filter(p => p.colors && p.colors.length > 0);
+      return valid.length > 0 ? valid : getMockNewDrop();
     } catch (error) {
       logError('Error fetching new drop:', error);
       return getMockNewDrop();

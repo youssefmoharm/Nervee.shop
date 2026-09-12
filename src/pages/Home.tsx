@@ -40,7 +40,6 @@ export default function Home() {
       .getNewDrop()
       .then(data => {
         if (mounted) {
-          // If service returns empty, use mock data as fallback
           setNewDrop(data && data.length > 0 ? data : getMockNewDrop());
           setLoading(false);
         }
@@ -48,7 +47,6 @@ export default function Home() {
       .catch(error => {
         if (mounted) {
           logError('Failed to load new drop:', error);
-          // On error, use mock data instead of empty array
           setNewDrop(getMockNewDrop());
           setLoading(false);
         }
