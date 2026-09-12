@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, AlertTriangle } from 'lucide-react';
 import type { Product } from '../types';
 import { productService } from '../services/productService';
 import { collections, categories, getNewDrop as getMockNewDrop } from '../data/products';
@@ -10,6 +10,7 @@ import HeroCarousel from '../components/HeroCarousel';
 import ProductCard from '../components/ProductCard';
 import Newsletter from '../components/Newsletter';
 import Skeleton from '../components/Skeleton';
+import { SectionErrorBoundary } from '../components/ErrorBoundary';
 
 const categoryTiles = categories
   .slice(1)
@@ -40,13 +41,20 @@ export default function Home() {
       .getNewDrop()
       .then(data => {
         if (mounted) {
-          setNewDrop(data && data.length > 0 ? data : getMockNewDrop());
+          const products = data && data.length > 0 ? data : getMockNewDrop();
+          console.info(
+            `[Home] New Drop loaded: ${products.length} products (source: ${
+              data && data.length > 0 ? 'supabase' : 'mock'
+            })`,
+          );
+          setNewDrop(products);
           setLoading(false);
         }
       })
       .catch(error => {
         if (mounted) {
           logError('Failed to load new drop:', error);
+          console.error('[Home] New Drop failed, using mock data:', error);
           setNewDrop(getMockNewDrop());
           setLoading(false);
         }
@@ -108,22 +116,37 @@ export default function Home() {
             </Link>
           </div>
 
-          {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-10">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="space-y-3">
-                  <Skeleton className="aspect-[4/5] w-full" />
-                  <Skeleton variant="text" count={2} height="h-3" />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-10">
-              {newDrop.slice(0, 8).map(p => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-          )}
+          <SectionErrorBoundary
+            fallback={
+              <div className="text-center py-12">
+                <AlertTriangle className="w-8 h-8 text-navy/30 mx-auto mb-3" />
+                <p className="text-navy/50 text-sm">
+                  Unable to load products. Please try refreshing.
+                </p>
+              </div>
+            }
+          >
+            {loading ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-10">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="space-y-3">
+                    <Skeleton className="aspect-[4/5] w-full" />
+                    <Skeleton variant="text" count={2} height="h-3" />
+                  </div>
+                ))}
+              </div>
+            ) : newDrop.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-10">
+                {newDrop.slice(0, 8).map(p => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-navy/50 text-sm">No products available yet. Check back soon.</p>
+              </div>
+            )}
+          </SectionErrorBoundary>
         </div>
       </section>
 

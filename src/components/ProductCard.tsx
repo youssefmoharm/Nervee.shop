@@ -88,7 +88,7 @@ export default function ProductCard({ product }: { product: Product }) {
         <Link to={`/product/${product.slug}`} aria-label={product.name}>
           <OptimizedImage
             slug={product.slug}
-            color={product.colors[colorIdx].name}
+            color={color.name}
             imageType={hovered ? '02-back' : '01-front'}
             size="card"
             productName={product.name}
