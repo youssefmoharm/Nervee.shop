@@ -5,13 +5,12 @@
 -- (superuser) instead of the querying user's. This bypasses RLS and
 -- is a critical security risk flagged by Supabase Security Advisor.
 --
--- FIX: Recreate both views explicitly as SECURITY INVOKER (the safe default).
+-- FIX: Drop and recreate both views without SECURITY DEFINER.
+-- Views are SECURITY INVOKER by default (the safe behavior).
 
 -- 1. Fix product_review_stats
 DROP VIEW IF EXISTS product_review_stats;
-CREATE VIEW product_review_stats
-  SECURITY INVOKER
-  AS
+CREATE OR REPLACE VIEW product_review_stats AS
 SELECT
   p.id AS product_id,
   COUNT(r.id) AS review_count,
@@ -22,9 +21,7 @@ GROUP BY p.id;
 
 -- 2. Fix product_availability
 DROP VIEW IF EXISTS product_availability;
-CREATE VIEW product_availability
-  SECURITY INVOKER
-  AS
+CREATE OR REPLACE VIEW product_availability AS
 SELECT product_id, size, in_stock FROM product_inventory;
 
 -- Ensure public access is still granted
