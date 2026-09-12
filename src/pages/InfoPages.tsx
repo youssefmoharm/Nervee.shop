@@ -20,7 +20,7 @@ export function Contact() {
   useSEO({
     title: 'Contact Us | NERVE',
     description:
-      'Get in touch with NERVE. Questions about your order, shipping, or returns? Our team is here to help.',
+      'Got questions about sizing, your order, or just want to say hi? Reach NERVE via email or Instagram DM — we usually reply within 24 hours.',
   });
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -38,14 +38,47 @@ export function Contact() {
   };
 
   return (
-    <Shell title="Contact">
+    <Shell title="Contact Us">
+      <p>Got Questions? We Don&apos;t Bite.</p>
       <p>
-        Have a question about an order, a product, or a collaboration? We&apos;d love to hear from
-        you.
+        Whether you need help with sizing, tracking your order, or just want to tell us how good you
+        look in NERVE, we&apos;re here for it!
       </p>
-      <p>Email: {SUPPORT_EMAIL}</p>
-      <p>Instagram / TikTok: @nerve</p>
-      <p>Customer care hours: Sunday – Thursday, 10:00 – 18:00 Cairo time.</p>
+      <p>
+        Drop us a message below or hit us up on any of our channels—a real human (and a cool one)
+        will get back to you as fast as possible.
+      </p>
+
+      <h2 className="text-navy font-semibold text-lg pt-4">Get in Touch Directly</h2>
+
+      <p>
+        <strong>Email Us:</strong>{' '}
+        <a href={`mailto:${SUPPORT_EMAIL}`} className="underline hover:text-navy/80">
+          {SUPPORT_EMAIL}
+        </a>
+      </p>
+      <p className="pl-4 text-navy/60 text-sm">
+        For order inquiries, general questions, or love letters. We usually reply within 24 hours!
+      </p>
+
+      <p className="pt-2">
+        <strong>Instagram DM:</strong>{' '}
+        <a
+          href="https://www.instagram.com/gotthenerve58"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-navy/80"
+        >
+          @gotthenerve58
+        </a>
+      </p>
+      <p className="pl-4 text-navy/60 text-sm">
+        Fastest way to reach us! Slide into our DMs for quick chats or sizing advice.
+      </p>
+
+      <p className="pt-4 text-navy/60 text-sm">Available Saturday to Thursday, 10 AM – 10 PM</p>
+
+      <h2 className="text-navy font-semibold text-lg pt-6">Send Us a Message</h2>
 
       {status === 'success' ? (
         <p className="nv-eyebrow text-navy pt-4">
