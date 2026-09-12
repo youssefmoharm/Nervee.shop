@@ -6,7 +6,7 @@ import { useToast } from '../context/ToastContext';
 import { SUPABASE_ANON_KEY } from '../lib/supabase';
 import { getEndpoint } from '../lib/apiEndpoints';
 
-const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || 'support@nerveey.shop';
+const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || 'nerveey.shop@gmail.com';
 
 interface Message {
   id: string;
