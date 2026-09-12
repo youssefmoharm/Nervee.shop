@@ -62,12 +62,18 @@ export default function OptimizedImage({
   const pictureSource = getImagePictureSources(slug, color, imageType);
   const fallbackUrl = getProductImageUrl(slug, color, imageType, { size, format: 'jpeg' });
 
+  const generatePlaceholder = () => {
+    // Generate a beautiful placeholder using product name
+    const text = encodeURIComponent(productName.split(' ').slice(0, 2).join(' '));
+    return `https://placehold.co/600x750/F5F5F5/061735?text=${text}`;
+  };
+
   const handleLoad = () => {
     onLoad?.();
   };
 
   const handleError = () => {
-    // If image fails to load, show placeholder
+    // If image fails to load, sequence a fallback placeholder to prevent broken UI
     setError(true);
     onError?.();
     console.warn(`Image failed to load: ${slug}/${color}/${imageType}`);
@@ -77,12 +83,12 @@ export default function OptimizedImage({
   if (!supportsPicture || error) {
     return (
       <img
-        src={fallbackUrl}
+        src={error ? generatePlaceholder() : fallbackUrl}
         alt={altText}
         loading="lazy"
         decoding="async"
         onLoad={handleLoad}
-        onError={handleError}
+        onError={error ? undefined : handleError}
         className={className}
         data-testid={testId}
       />
