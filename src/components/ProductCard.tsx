@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Plus, Eye, BarChart3, Ruler } from 'lucide-react';
 import type { Product, Size } from '../types';
@@ -9,7 +9,7 @@ import { useQuickView } from '../context/QuickViewContext';
 import { useComparison } from '../hooks/useComparison';
 import OptimizedImage from './OptimizedImage';
 
-export default function ProductCard({ product }: { product: Product }) {
+const ProductCard = memo(function ProductCard({ product }: { product: Product }) {
   const [colorIdx, setColorIdx] = useState(0);
   const [hovered, setHovered] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
@@ -252,4 +252,6 @@ export default function ProductCard({ product }: { product: Product }) {
       </div>
     </div>
   );
-}
+});
+
+export default ProductCard;

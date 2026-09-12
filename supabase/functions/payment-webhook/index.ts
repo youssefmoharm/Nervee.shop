@@ -169,7 +169,7 @@ serve(async (req) => {
   } catch (err) {
     console.error('payment-webhook error:', err)
     timer.end()
-    return json({ error: 'Webhook processing failed', details: (err as Error).message }, 500, getCorsHeaders(req))
+    return json({ error: 'An internal error occurred. Please try again.' }, 500, getCorsHeaders(req))
   }
 })
 

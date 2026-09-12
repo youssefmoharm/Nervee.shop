@@ -1,15 +1,16 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Loader2 } from 'lucide-react'
-import { orderService } from '../../services/orderService'
-import AccountLayout from './AccountLayout'
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
+import { orderService } from '../../services/orderService';
+import { logError } from '../../lib/sentry';
+import AccountLayout from './AccountLayout';
 
 interface OrderRow {
-  id: string
-  order_number: string
-  total: number
-  status: string
-  created_at: string
+  id: string;
+  order_number: string;
+  total: number;
+  status: string;
+  created_at: string;
 }
 
 const statusColor: Record<string, string> = {
@@ -19,14 +20,17 @@ const statusColor: Record<string, string> = {
   delivered: 'text-green-700',
   cancelled: 'text-red-600',
   refunded: 'text-red-600',
-}
+};
 
 export default function Orders() {
-  const [orders, setOrders] = useState<OrderRow[] | null>(null)
+  const [orders, setOrders] = useState<OrderRow[] | null>(null);
 
   useEffect(() => {
-    orderService.listMine().then((data) => setOrders(data as OrderRow[]))
-  }, [])
+    orderService
+      .listMine()
+      .then(data => setOrders(data as OrderRow[]))
+      .catch(err => logError('Failed to load orders', err));
+  }, []);
 
   return (
     <AccountLayout>
@@ -43,7 +47,7 @@ export default function Orders() {
         </div>
       ) : (
         <ul className="divide-y divide-navy/10 border border-navy/10">
-          {orders.map((o) => (
+          {orders.map(o => (
             <li key={o.id}>
               <Link
                 to={`/account/orders/${o.id}`}
@@ -61,7 +65,11 @@ export default function Orders() {
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-medium">EGP {o.total.toLocaleString()}</p>
-                  <p className={`nv-eyebrow text-[10px] mt-0.5 ${statusColor[o.status] ?? 'text-navy/60'}`}>
+                  <p
+                    className={`nv-eyebrow text-[10px] mt-0.5 ${
+                      statusColor[o.status] ?? 'text-navy/60'
+                    }`}
+                  >
                     {o.status}
                   </p>
                 </div>
@@ -71,5 +79,5 @@ export default function Orders() {
         </ul>
       )}
     </AccountLayout>
-  )
+  );
 }

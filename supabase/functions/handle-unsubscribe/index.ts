@@ -85,7 +85,7 @@ const timer = new PerformanceTimer('handle-unsubscribe')
     } catch (err) {
         console.error('Unsubscribe handler error:', err)
         timer.end()
-        return json({ error: 'Failed to process unsubscribe', details: (err as Error).message }, 500, getCorsHeaders(req))
+        return json({ error: 'An internal error occurred. Please try again.' }, 500, getCorsHeaders(req))
     }
 })
 

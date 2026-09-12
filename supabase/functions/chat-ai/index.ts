@@ -329,10 +329,13 @@ async function callGemini(
       }))
 
     const response = await fetch(
-      `${GEMINI_API_URL}/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+      `${GEMINI_API_URL}/models/${GEMINI_MODEL}:generateContent`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': GEMINI_API_KEY,
+        },
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemPrompt }] },
           contents,

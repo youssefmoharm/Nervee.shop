@@ -42,11 +42,13 @@ export default function Home() {
       .then(data => {
         if (mounted) {
           const products = data && data.length > 0 ? data : getMockNewDrop();
-          console.info(
-            `[Home] New Drop loaded: ${products.length} products (source: ${
-              data && data.length > 0 ? 'supabase' : 'mock'
-            })`,
-          );
+          if (import.meta.env.DEV) {
+            console.info(
+              `[Home] New Drop loaded: ${products.length} products (source: ${
+                data && data.length > 0 ? 'supabase' : 'mock'
+              })`,
+            );
+          }
           setNewDrop(products);
           setLoading(false);
         }

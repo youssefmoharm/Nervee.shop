@@ -22,8 +22,8 @@ function isAllowedOrigin(origin: string | null): boolean {
   if (PROD_ORIGINS.has(origin)) return true
   // Localhost allowed in any environment for local dev / preview
   if (DEV_ORIGINS.has(origin)) return true
-  // Allow Vercel preview deployments for this project
-  if (/^https:\/\/nerve.*\.vercel\.app$/.test(origin)) return true
+  // Allow only known Vercel preview deployments for this project
+  if (/^https:\/\/nerve-store-[a-z0-9]+-youssefmoharms-projects\.vercel\.app$/.test(origin)) return true
   return false
 }
 

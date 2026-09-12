@@ -69,7 +69,7 @@ export const adminService = {
       logError('process-restock failed:', error);
       return;
     }
-    if (data?.notified)
+    if (data?.notified && import.meta.env.DEV)
       console.info(
         `Notified ${data.notified} customer(s) that ${productId} (${size}) is back in stock.`,
       );

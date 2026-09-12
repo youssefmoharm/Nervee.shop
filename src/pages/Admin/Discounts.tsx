@@ -1,19 +1,20 @@
-import { useEffect, useState, type FormEvent } from 'react'
-import { Loader2, Trash2 } from 'lucide-react'
-import { adminService } from '../../services/adminService'
-import AdminLayout from './AdminLayout'
+import { useEffect, useState, type FormEvent } from 'react';
+import { Loader2, Trash2 } from 'lucide-react';
+import { adminService } from '../../services/adminService';
+import { logError } from '../../lib/sentry';
+import AdminLayout from './AdminLayout';
 
 interface Discount {
-  id: string
-  code: string
-  description: string | null
-  discount_type: 'percentage' | 'fixed'
-  discount_value: number
-  minimum_purchase: number | null
-  usage_limit: number | null
-  usage_count: number
-  valid_until: string | null
-  is_active: boolean
+  id: string;
+  code: string;
+  description: string | null;
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number;
+  minimum_purchase: number | null;
+  usage_limit: number | null;
+  usage_count: number;
+  valid_until: string | null;
+  is_active: boolean;
 }
 
 const emptyForm = {
@@ -24,25 +25,29 @@ const emptyForm = {
   minimum_purchase: '',
   usage_limit: '',
   valid_until: '',
-}
+};
 
 export default function Discounts() {
-  const [discounts, setDiscounts] = useState<Discount[] | null>(null)
-  const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState(emptyForm)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [discounts, setDiscounts] = useState<Discount[] | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const load = () => adminService.listDiscounts().then((data) => setDiscounts(data as Discount[]))
+  const load = () =>
+    adminService
+      .listDiscounts()
+      .then(data => setDiscounts(data as Discount[]))
+      .catch(err => logError('Failed to load discounts', err));
 
   useEffect(() => {
-    load()
-  }, [])
+    load();
+  }, []);
 
   const onSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    setSaving(true)
-    setError(null)
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
     const { error } = await adminService.createDiscount({
       code: form.code,
       description: form.description || null,
@@ -52,34 +57,34 @@ export default function Discounts() {
       usage_limit: form.usage_limit ? Number(form.usage_limit) : null,
       valid_until: form.valid_until ? new Date(form.valid_until).toISOString() : null,
       is_active: true,
-    })
-    setSaving(false)
+    });
+    setSaving(false);
     if (error) {
-      setError(error)
-      return
+      setError(error);
+      return;
     }
-    setForm(emptyForm)
-    setShowForm(false)
-    load()
-  }
+    setForm(emptyForm);
+    setShowForm(false);
+    load();
+  };
 
   const toggleActive = async (d: Discount) => {
-    await adminService.updateDiscount(d.id, { is_active: !d.is_active })
-    load()
-  }
+    await adminService.updateDiscount(d.id, { is_active: !d.is_active });
+    load();
+  };
 
   const remove = async (id: string, code: string) => {
-    if (!confirm(`Delete code "${code}"?`)) return
-    await adminService.deleteDiscount(id)
-    load()
-  }
+    if (!confirm(`Delete code "${code}"?`)) return;
+    await adminService.deleteDiscount(id);
+    load();
+  };
 
   return (
     <AdminLayout>
       <div className="flex items-center justify-between mb-8">
         <h1 className="nv-heading text-4xl">Discount Codes</h1>
         <button
-          onClick={() => setShowForm((s) => !s)}
+          onClick={() => setShowForm(s => !s)}
           className="bg-navy text-white nv-eyebrow px-6 py-3 hover:bg-navy-2 transition-colors"
         >
           {showForm ? 'Cancel' : '+ New Code'}
@@ -94,7 +99,7 @@ export default function Discounts() {
               <input
                 required
                 value={form.code}
-                onChange={(e) => setForm({ ...form, code: e.target.value })}
+                onChange={e => setForm({ ...form, code: e.target.value })}
                 placeholder="NERVE10"
                 className="w-full border border-navy/20 px-4 py-3 text-sm uppercase focus:outline-none focus:border-navy"
               />
@@ -103,7 +108,9 @@ export default function Discounts() {
               <span className="text-xs font-medium text-navy/60 mb-1.5 block">Type</span>
               <select
                 value={form.discount_type}
-                onChange={(e) => setForm({ ...form, discount_type: e.target.value as 'percentage' | 'fixed' })}
+                onChange={e =>
+                  setForm({ ...form, discount_type: e.target.value as 'percentage' | 'fixed' })
+                }
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
               >
                 <option value="percentage">Percentage off</option>
@@ -120,45 +127,53 @@ export default function Discounts() {
               type="number"
               min={1}
               value={form.discount_value}
-              onChange={(e) => setForm({ ...form, discount_value: e.target.value })}
+              onChange={e => setForm({ ...form, discount_value: e.target.value })}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
             />
           </label>
           <label className="block">
-            <span className="text-xs font-medium text-navy/60 mb-1.5 block">Description (internal note)</span>
+            <span className="text-xs font-medium text-navy/60 mb-1.5 block">
+              Description (internal note)
+            </span>
             <input
               value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              onChange={e => setForm({ ...form, description: e.target.value })}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
             />
           </label>
           <div className="grid sm:grid-cols-3 gap-4">
             <label className="block">
-              <span className="text-xs font-medium text-navy/60 mb-1.5 block">Min. Purchase (optional)</span>
+              <span className="text-xs font-medium text-navy/60 mb-1.5 block">
+                Min. Purchase (optional)
+              </span>
               <input
                 type="number"
                 min={0}
                 value={form.minimum_purchase}
-                onChange={(e) => setForm({ ...form, minimum_purchase: e.target.value })}
+                onChange={e => setForm({ ...form, minimum_purchase: e.target.value })}
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
               />
             </label>
             <label className="block">
-              <span className="text-xs font-medium text-navy/60 mb-1.5 block">Usage Limit (optional)</span>
+              <span className="text-xs font-medium text-navy/60 mb-1.5 block">
+                Usage Limit (optional)
+              </span>
               <input
                 type="number"
                 min={1}
                 value={form.usage_limit}
-                onChange={(e) => setForm({ ...form, usage_limit: e.target.value })}
+                onChange={e => setForm({ ...form, usage_limit: e.target.value })}
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
               />
             </label>
             <label className="block">
-              <span className="text-xs font-medium text-navy/60 mb-1.5 block">Expires (optional)</span>
+              <span className="text-xs font-medium text-navy/60 mb-1.5 block">
+                Expires (optional)
+              </span>
               <input
                 type="date"
                 value={form.valid_until}
-                onChange={(e) => setForm({ ...form, valid_until: e.target.value })}
+                onChange={e => setForm({ ...form, valid_until: e.target.value })}
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
               />
             </label>
@@ -192,11 +207,13 @@ export default function Discounts() {
               </tr>
             </thead>
             <tbody className="divide-y divide-navy/10">
-              {discounts.map((d) => (
+              {discounts.map(d => (
                 <tr key={d.id}>
                   <td className="px-4 py-3 font-mono font-medium">{d.code}</td>
                   <td className="px-4 py-3 text-navy/70">
-                    {d.discount_type === 'percentage' ? `${d.discount_value}%` : `EGP ${d.discount_value}`}
+                    {d.discount_type === 'percentage'
+                      ? `${d.discount_value}%`
+                      : `EGP ${d.discount_value}`}
                     {d.minimum_purchase ? ` (min EGP ${d.minimum_purchase})` : ''}
                   </td>
                   <td className="px-4 py-3 text-navy/70">
@@ -204,18 +221,30 @@ export default function Discounts() {
                     {d.usage_limit ? ` / ${d.usage_limit}` : ''}
                   </td>
                   <td className="px-4 py-3 text-navy/70">
-                    {d.valid_until ? new Date(d.valid_until).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                    {d.valid_until
+                      ? new Date(d.valid_until).toLocaleDateString('en-GB', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })
+                      : '—'}
                   </td>
                   <td className="px-4 py-3">
                     <button
                       onClick={() => toggleActive(d)}
-                      className={`nv-eyebrow text-[10px] px-2.5 py-1 ${d.is_active ? 'bg-navy text-white' : 'bg-mist text-navy/50'}`}
+                      className={`nv-eyebrow text-[10px] px-2.5 py-1 ${
+                        d.is_active ? 'bg-navy text-white' : 'bg-mist text-navy/50'
+                      }`}
                     >
                       {d.is_active ? 'Active' : 'Inactive'}
                     </button>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button aria-label="Delete" onClick={() => remove(d.id, d.code)} className="text-navy/40 hover:text-red-600">
+                    <button
+                      aria-label="Delete"
+                      onClick={() => remove(d.id, d.code)}
+                      className="text-navy/40 hover:text-red-600"
+                    >
                       <Trash2 size={15} />
                     </button>
                   </td>
@@ -226,5 +255,5 @@ export default function Discounts() {
         </div>
       )}
     </AdminLayout>
-  )
+  );
 }

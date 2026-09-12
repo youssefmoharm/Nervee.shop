@@ -64,20 +64,23 @@ export default function ProfileForm() {
       .select('first_name, last_name, phone, date_of_birth, gender, city, bio')
       .eq('id', user.id)
       .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          setProfile({
-            firstName: data.first_name ?? '',
-            lastName: data.last_name ?? '',
-            phone: data.phone ?? '',
-            dateOfBirth: data.date_of_birth ?? '',
-            gender: data.gender ?? '',
-            city: data.city ?? '',
-            bio: data.bio ?? '',
-          });
-        }
-        setLoading(false);
-      });
+      .then(
+        ({ data }) => {
+          if (data) {
+            setProfile({
+              firstName: data.first_name ?? '',
+              lastName: data.last_name ?? '',
+              phone: data.phone ?? '',
+              dateOfBirth: data.date_of_birth ?? '',
+              gender: data.gender ?? '',
+              city: data.city ?? '',
+              bio: data.bio ?? '',
+            });
+          }
+          setLoading(false);
+        },
+        () => setLoading(false),
+      );
   }, [user]);
 
   // Save profile changes

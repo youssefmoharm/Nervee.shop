@@ -1,20 +1,25 @@
-import { useEffect, useState } from 'react'
-import AdminLayout from './AdminLayout'
-import { adminService } from '../../services/adminService'
-import { Loader2 } from 'lucide-react'
+import { useEffect, useState } from 'react';
+import AdminLayout from './AdminLayout';
+import { adminService } from '../../services/adminService';
+import { logError } from '../../lib/sentry';
+import { Loader2 } from 'lucide-react';
 
 export default function Newsletter() {
-  const [subs, setSubs] = useState<any[] | null>(null)
+  const [subs, setSubs] = useState<any[] | null>(null);
 
   useEffect(() => {
-    adminService.listNewsletterSubscribers().then((d) => setSubs(d))
-  }, [])
+    adminService
+      .listNewsletterSubscribers()
+      .then(d => setSubs(d))
+      .catch(err => logError('Failed to load subscribers', err));
+  }, []);
 
-  if (!subs) return (
-    <AdminLayout>
-      <Loader2 className="animate-spin text-navy/40" size={20} />
-    </AdminLayout>
-  )
+  if (!subs)
+    return (
+      <AdminLayout>
+        <Loader2 className="animate-spin text-navy/40" size={20} />
+      </AdminLayout>
+    );
 
   return (
     <AdminLayout>
@@ -23,16 +28,21 @@ export default function Newsletter() {
         <p className="text-navy/60">No subscribers</p>
       ) : (
         <div className="space-y-2">
-          {subs.map((s) => (
-            <div key={s.email} className="border border-navy/10 p-3 flex justify-between items-center">
+          {subs.map(s => (
+            <div
+              key={s.email}
+              className="border border-navy/10 p-3 flex justify-between items-center"
+            >
               <div>
                 <div className="font-medium">{s.email}</div>
-                <div className="text-xs text-navy/60">{s.created_at ? new Date(s.created_at).toLocaleString() : ''}</div>
+                <div className="text-xs text-navy/60">
+                  {s.created_at ? new Date(s.created_at).toLocaleString() : ''}
+                </div>
               </div>
             </div>
           ))}
         </div>
       )}
     </AdminLayout>
-  )
+  );
 }
