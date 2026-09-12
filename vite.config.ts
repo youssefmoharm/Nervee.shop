@@ -8,15 +8,22 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Separate vendor chunks
-          if (id.includes('node_modules/react')) {
+          // React core
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
             return 'vendor-react'
           }
-          if (id.includes('node_modules/lucide-react')) {
+          // UI Libraries
+          if (id.includes('node_modules/lucide-react/') || id.includes('node_modules/framer-motion/') || id.includes('node_modules/@radix-ui/')) {
             return 'vendor-ui'
           }
-          if (id.includes('node_modules/zustand')) {
-            return 'vendor-form'
+          // State management
+          if (id.includes('node_modules/zustand/')) {
+            return 'vendor-state'
+          }
+          
+          // Supabase client in separate chunk
+          if (id.includes('lib/supabase') || id.includes('node_modules/@supabase/')) {
+            return 'supabase'
           }
 
           // Split large contexts to prevent bundle bloat
@@ -35,16 +42,16 @@ export default defineConfig({
             return 'context-other'
           }
 
-          // Supabase client in separate chunk
-          if (id.includes('lib/supabase')) {
-            return 'supabase'
+          // Catch-all for other node_modules
+          if (id.includes('node_modules')) {
+            return 'vendor'
           }
         },
       },
     },
 
     // Optimize chunk sizes
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 500,
 
     // Source maps only in dev
     sourcemap: false,
