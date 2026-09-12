@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import type { Product } from '../types';
 import { productService } from '../services/productService';
-import { collections, categories } from '../data/products';
+import { collections, categories, getNewDrop as getMockNewDrop } from '../data/products';
 import { useSEO } from '../lib/seo';
 import { logError } from '../lib/sentry';
 import HeroCarousel from '../components/HeroCarousel';
@@ -40,14 +40,16 @@ export default function Home() {
       .getNewDrop()
       .then(data => {
         if (mounted) {
-          setNewDrop(data);
+          // If service returns empty, use mock data as fallback
+          setNewDrop(data && data.length > 0 ? data : getMockNewDrop());
           setLoading(false);
         }
       })
       .catch(error => {
         if (mounted) {
           logError('Failed to load new drop:', error);
-          setNewDrop([]);
+          // On error, use mock data instead of empty array
+          setNewDrop(getMockNewDrop());
           setLoading(false);
         }
       });
