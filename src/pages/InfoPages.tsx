@@ -205,62 +205,55 @@ export function Terms() {
     description: 'The terms governing use of nerveey.shop and purchases from NERVE.',
   });
   return (
-    <Shell title="Terms of Service">
+    <Shell title="Terms & Conditions">
       <p>
-        Last updated: August 30, 2026. By using www.nerveey.shop or placing an order, you agree to
-        these terms.
+        Welcome to NERVE! By browsing, clicking, or buying from our site, you&apos;re agreeing to
+        the terms below. Don&apos;t worry, we kept the boring legalese to a minimum.
       </p>
 
-      <h2 className="text-navy font-semibold text-lg pt-2">Orders & pricing</h2>
+      <h2 className="text-navy font-semibold text-lg pt-2">1. The Basics</h2>
       <p>
-        All prices are in EGP and include applicable taxes unless stated otherwise. We reserve the
-        right to refuse or cancel an order — for example if an item is mispriced, out of stock, or
-        we suspect fraud — in which case we&apos;ll notify you and refund any payment taken.
+        By placing an order, you confirm that you&apos;re at least 18 years old (or using the site
+        with a parent&apos;s card and approval—we see you!).
       </p>
 
-      <h2 className="text-navy font-semibold text-lg pt-2">Payment</h2>
+      <h2 className="text-navy font-semibold text-lg pt-2">2. Prices &amp; Currency</h2>
       <p>
-        We accept Cash on Delivery. For Cash on Delivery, payment is due in full to the courier on
-        delivery.
+        All prices are listed in EGP (Egyptian Pounds). We reserve the right to change prices or
+        drop surprise discounts whenever we want, but the price you checkout with is always locked
+        in for your order.
       </p>
 
-      <h2 className="text-navy font-semibold text-lg pt-2">Shipping</h2>
+      <h2 className="text-navy font-semibold text-lg pt-2">3. Stock &amp; Orders</h2>
       <p>
-        See our{' '}
-        <a href="/shipping" className="underline">
-          Shipping
-        </a>{' '}
-        page for delivery times and costs. Delivery estimates are not guaranteed and may be affected
-        by courier delays outside our control.
+        Placing an item in your shopping cart does not reserve it. An order is only confirmed once
+        you complete the checkout process and receive an order confirmation email/SMS.
+      </p>
+      <p className="pt-2">
+        In the rare event that an item becomes out of stock after an order is placed, we will notify
+        you immediately and issue a full refund or exchange option.
       </p>
 
-      <h2 className="text-navy font-semibold text-lg pt-2">Returns & refunds</h2>
+      <h2 className="text-navy font-semibold text-lg pt-2">
+        4. Don&apos;t Steal Our Vibe (Intellectual Property)
+      </h2>
       <p>
-        See our{' '}
-        <a href="/returns" className="underline">
-          Returns
-        </a>{' '}
-        page. Refunds are issued to the original payment method (or, for Cash on Delivery orders, by
-        bank transfer) within a reasonable time after we receive and inspect the returned item.
+        All designs, photos, logos, and copy on this website belong strictly to NERVE. Please
+        don&apos;t copy our designs or use our photos without asking—it took a lot of coffee and
+        sleepless nights to create them!
       </p>
 
-      <h2 className="text-navy font-semibold text-lg pt-2">Accounts</h2>
+      <h2 className="text-navy font-semibold text-lg pt-2">5. Colors &amp; Reality</h2>
       <p>
-        You&apos;re responsible for keeping your account credentials secure. Let us know immediately
-        at {SUPPORT_EMAIL} if you believe your account has been compromised.
+        We do our absolute best to show colors accurately. However, every phone and monitor screen
+        displays colors slightly differently, so the real-life item might look 5% different under
+        natural light.
       </p>
 
-      <h2 className="text-navy font-semibold text-lg pt-2">Intellectual property</h2>
+      <h2 className="text-navy font-semibold text-lg pt-2">6. Policy Updates</h2>
       <p>
-        All NERVE branding, product designs, photography, and site content are our property or used
-        under license, and may not be reproduced without permission.
-      </p>
-
-      <h2 className="text-navy font-semibold text-lg pt-2">Liability</h2>
-      <p>
-        We aren&apos;t liable for indirect or consequential losses arising from use of the site or
-        delays outside our reasonable control. Nothing here limits any rights you have under
-        applicable consumer protection law.
+        We reserve the right to update or modify these Terms &amp; Conditions at any time. Any
+        changes will be published directly on this page.
       </p>
 
       <h2 className="text-navy font-semibold text-lg pt-2">Contact</h2>
