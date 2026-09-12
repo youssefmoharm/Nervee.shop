@@ -176,7 +176,7 @@ serve(async (req) => {
     return json({ success: true, request: inserted }, 200, corsHeaders)
   } catch (err) {
     console.error('request-return error', err)
-    return json({ error: 'Failed to process request', details: (err as Error).message }, 500, getCorsHeaders(req))
+    return json({ error: 'An internal error occurred. Please try again.' }, 500, getCorsHeaders(req))
   }
 })
 

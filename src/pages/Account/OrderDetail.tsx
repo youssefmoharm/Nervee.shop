@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ChevronLeft, Loader2 } from 'lucide-react';
 import { orderService } from '../../services/orderService';
+import { logError } from '../../lib/sentry';
 import { supabase } from '../../lib/supabase';
 import { getEndpoint } from '../../lib/apiEndpoints';
 import AccountLayout from './AccountLayout';
@@ -47,7 +48,10 @@ export default function OrderDetail() {
 
   useEffect(() => {
     if (!id) return;
-    orderService.getById(id).then(data => setOrder(data as OrderDetailData | null));
+    orderService
+      .getById(id)
+      .then(data => setOrder(data as OrderDetailData | null))
+      .catch(err => logError('Failed to load order', err));
   }, [id]);
 
   const canReturn =

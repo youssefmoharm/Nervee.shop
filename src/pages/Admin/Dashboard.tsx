@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
+import { logError } from '../../lib/sentry';
 import AdminLayout from './AdminLayout';
 
 interface Stats {
@@ -20,7 +21,10 @@ export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
 
   useEffect(() => {
-    adminService.getDashboardStats().then(s => setStats(s as unknown as Stats));
+    adminService
+      .getDashboardStats()
+      .then(s => setStats(s as unknown as Stats))
+      .catch(err => logError('Failed to load dashboard stats', err));
   }, []);
 
   if (!stats) {

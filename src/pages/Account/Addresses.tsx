@@ -1,54 +1,66 @@
-import { useEffect, useState, type FormEvent } from 'react'
-import { Loader2, Star, Trash2 } from 'lucide-react'
-import { addressService, type Address } from '../../services/addressService'
-import { EGYPT_GOVERNORATES } from '../../data/governorates'
-import AccountLayout from './AccountLayout'
+import { useEffect, useState, type FormEvent } from 'react';
+import { Loader2, Star, Trash2 } from 'lucide-react';
+import { addressService, type Address } from '../../services/addressService';
+import { logError } from '../../lib/sentry';
+import { EGYPT_GOVERNORATES } from '../../data/governorates';
+import AccountLayout from './AccountLayout';
 
-const emptyForm = { label: '', address: '', city: '', governorate: '', postal_code: '', is_default: false }
+const emptyForm = {
+  label: '',
+  address: '',
+  city: '',
+  governorate: '',
+  postal_code: '',
+  is_default: false,
+};
 
 export default function Addresses() {
-  const [addresses, setAddresses] = useState<Address[] | null>(null)
-  const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState(emptyForm)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [addresses, setAddresses] = useState<Address[] | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const load = () => addressService.list().then(setAddresses)
+  const load = () =>
+    addressService
+      .list()
+      .then(setAddresses)
+      .catch(err => logError('Failed to load addresses', err));
 
   useEffect(() => {
-    load()
-  }, [])
+    load();
+  }, []);
 
   const onSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    setSaving(true)
-    setError(null)
-    const { error } = await addressService.create(form)
-    setSaving(false)
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+    const { error } = await addressService.create(form);
+    setSaving(false);
     if (error) {
-      setError(error)
-      return
+      setError(error);
+      return;
     }
-    setForm(emptyForm)
-    setShowForm(false)
-    load()
-  }
+    setForm(emptyForm);
+    setShowForm(false);
+    load();
+  };
 
   const remove = async (id: string) => {
-    await addressService.remove(id)
-    load()
-  }
+    await addressService.remove(id);
+    load();
+  };
 
   const setDefault = async (id: string) => {
-    await addressService.setDefault(id)
-    load()
-  }
+    await addressService.setDefault(id);
+    load();
+  };
 
   return (
     <AccountLayout>
       <div className="flex items-center justify-between mb-6">
         <h2 className="nv-heading text-3xl">Addresses</h2>
-        <button onClick={() => setShowForm((s) => !s)} className="nv-eyebrow underline text-sm">
+        <button onClick={() => setShowForm(s => !s)} className="nv-eyebrow underline text-sm">
           {showForm ? 'Cancel' : '+ Add Address'}
         </button>
       </div>
@@ -56,10 +68,12 @@ export default function Addresses() {
       {showForm && (
         <form onSubmit={onSubmit} className="space-y-4 max-w-md mb-10 border border-navy/10 p-5">
           <label className="block">
-            <span className="text-xs font-medium text-navy/60 mb-1.5 block">Label (e.g. Home, Work)</span>
+            <span className="text-xs font-medium text-navy/60 mb-1.5 block">
+              Label (e.g. Home, Work)
+            </span>
             <input
               value={form.label}
-              onChange={(e) => setForm({ ...form, label: e.target.value })}
+              onChange={e => setForm({ ...form, label: e.target.value })}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
             />
           </label>
@@ -68,7 +82,7 @@ export default function Addresses() {
             <input
               required
               value={form.address}
-              onChange={(e) => setForm({ ...form, address: e.target.value })}
+              onChange={e => setForm({ ...form, address: e.target.value })}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
             />
           </label>
@@ -78,7 +92,7 @@ export default function Addresses() {
               <input
                 required
                 value={form.city}
-                onChange={(e) => setForm({ ...form, city: e.target.value })}
+                onChange={e => setForm({ ...form, city: e.target.value })}
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
               />
             </label>
@@ -87,11 +101,11 @@ export default function Addresses() {
               <select
                 required
                 value={form.governorate}
-                onChange={(e) => setForm({ ...form, governorate: e.target.value })}
+                onChange={e => setForm({ ...form, governorate: e.target.value })}
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
               >
                 <option value="">Select governorate</option>
-                {EGYPT_GOVERNORATES.map((g) => (
+                {EGYPT_GOVERNORATES.map(g => (
                   <option key={g} value={g}>
                     {g}
                   </option>
@@ -100,10 +114,12 @@ export default function Addresses() {
             </label>
           </div>
           <label className="block">
-            <span className="text-xs font-medium text-navy/60 mb-1.5 block">Postal Code (optional)</span>
+            <span className="text-xs font-medium text-navy/60 mb-1.5 block">
+              Postal Code (optional)
+            </span>
             <input
               value={form.postal_code}
-              onChange={(e) => setForm({ ...form, postal_code: e.target.value })}
+              onChange={e => setForm({ ...form, postal_code: e.target.value })}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
             />
           </label>
@@ -124,23 +140,35 @@ export default function Addresses() {
         <p className="text-navy/60">No saved addresses yet.</p>
       ) : (
         <ul className="space-y-3">
-          {addresses.map((a) => (
+          {addresses.map(a => (
             <li key={a.id} className="flex items-start justify-between border border-navy/10 p-4">
               <div>
                 <p className="nv-edit font-semibold text-sm flex items-center gap-2">
                   {a.label || 'Address'}
-                  {a.is_default && <span className="nv-eyebrow text-[10px] text-navy/50">Default</span>}
+                  {a.is_default && (
+                    <span className="nv-eyebrow text-[10px] text-navy/50">Default</span>
+                  )}
                 </p>
                 <p className="text-sm text-navy/70 mt-1">{a.address}</p>
-                <p className="text-sm text-navy/70">{a.city}, {a.governorate} {a.postal_code}</p>
+                <p className="text-sm text-navy/70">
+                  {a.city}, {a.governorate} {a.postal_code}
+                </p>
               </div>
               <div className="flex items-center gap-3 flex-shrink-0">
                 {!a.is_default && (
-                  <button aria-label="Set as default" onClick={() => setDefault(a.id)} className="text-navy/40 hover:text-navy">
+                  <button
+                    aria-label="Set as default"
+                    onClick={() => setDefault(a.id)}
+                    className="text-navy/40 hover:text-navy"
+                  >
                     <Star size={16} />
                   </button>
                 )}
-                <button aria-label="Delete address" onClick={() => remove(a.id)} className="text-navy/40 hover:text-red-600">
+                <button
+                  aria-label="Delete address"
+                  onClick={() => remove(a.id)}
+                  className="text-navy/40 hover:text-red-600"
+                >
                   <Trash2 size={16} />
                 </button>
               </div>
@@ -149,5 +177,5 @@ export default function Addresses() {
         </ul>
       )}
     </AccountLayout>
-  )
+  );
 }

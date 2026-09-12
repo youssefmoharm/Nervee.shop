@@ -333,7 +333,9 @@ export const productService = {
    */
   async getNewDrop(): Promise<Product[]> {
     if (!isSupabaseConfigured) {
-      console.info('[productService] Supabase not configured, using mock data for new drop');
+      if (import.meta.env.DEV) {
+        console.info('[productService] Supabase not configured, using mock data for new drop');
+      }
       return getMockNewDrop();
     }
 
@@ -391,7 +393,9 @@ export const productService = {
         return getMockNewDrop();
       }
 
-      console.info(`[productService] getNewDrop: Supabase returned ${data.length} products`);
+      if (import.meta.env.DEV) {
+        console.info(`[productService] getNewDrop: Supabase returned ${data.length} products`);
+      }
 
       const results = (data || []).map((row: any) => {
         const product = transformProduct(row);

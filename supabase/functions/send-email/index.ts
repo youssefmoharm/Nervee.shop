@@ -159,7 +159,7 @@ serve(async (req) => {
   } catch (err) {
     console.error('Email sending error:', err)
     timer.end()
-    return json({ error: 'Failed to send email', details: (err as Error).message }, 500, getCorsHeaders(req))
+    return json({ error: 'An internal error occurred. Please try again.' }, 500, getCorsHeaders(req))
   }
 })
 

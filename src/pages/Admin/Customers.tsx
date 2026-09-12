@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
+import { logError } from '../../lib/sentry';
 import AdminLayout from './AdminLayout';
 
 interface Customer {
@@ -17,7 +18,10 @@ export default function Customers() {
   const [customers, setCustomers] = useState<Customer[] | null>(null);
 
   useEffect(() => {
-    adminService.listCustomers().then(result => setCustomers(result.data as Customer[]));
+    adminService
+      .listCustomers()
+      .then(result => setCustomers(result.data as Customer[]))
+      .catch(err => logError('Failed to load customers', err));
   }, []);
 
   return (

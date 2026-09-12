@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Loader2, Pencil, Trash2 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
+import { logError } from '../../lib/sentry';
 import AdminLayout from './AdminLayout';
 
 interface ProductRow {
@@ -19,7 +20,10 @@ export default function Products() {
   const [products, setProducts] = useState<ProductRow[] | null>(null);
 
   const load = () =>
-    adminService.listProducts().then(result => setProducts(result.data as ProductRow[]));
+    adminService
+      .listProducts()
+      .then(result => setProducts(result.data as ProductRow[]))
+      .catch(err => logError('Failed to load products', err));
 
   useEffect(() => {
     load();

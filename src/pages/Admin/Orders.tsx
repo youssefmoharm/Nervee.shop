@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
+import { logError } from '../../lib/sentry';
 import AdminLayout from './AdminLayout';
 
 interface OrderRow {
@@ -23,7 +24,8 @@ export default function AdminOrders() {
   const load = () =>
     adminService
       .listOrders(filter || undefined)
-      .then(result => setOrders(result.data as OrderRow[]));
+      .then(result => setOrders(result.data as OrderRow[]))
+      .catch(err => logError('Failed to load orders', err));
 
   useEffect(() => {
     load();

@@ -73,7 +73,10 @@ export default function ProductForm() {
     supabase
       .from('collections')
       .select('id, name')
-      .then(({ data }) => setCollections(data ?? []));
+      .then(
+        ({ data }) => setCollections(data ?? []),
+        () => setCollections([]),
+      );
   }, []);
 
   useEffect(() => {
@@ -83,38 +86,41 @@ export default function ProductForm() {
       .select('*, product_colors(*), product_inventory(*)')
       .eq('id', id)
       .single()
-      .then(({ data }) => {
-        if (!data) {
+      .then(
+        ({ data }) => {
+          if (!data) {
+            setLoading(false);
+            return;
+          }
+          setName(data.name);
+          setCategory(data.category);
+          setCollectionId(data.collection_id ?? '');
+          setPrice(String(data.price));
+          setCompareAtPrice(data.compare_at_price ? String(data.compare_at_price) : '');
+          setBadge(data.badge ?? '');
+          setIsBestSeller(!!data.is_best_seller);
+          setIsActive(data.is_active !== false);
+          setDescription(data.description);
+          setMaterial(data.material);
+          setCare((data.care ?? []).join('\n'));
+          if (data.product_colors?.length) {
+            setColors(
+              data.product_colors.map((c: any) => ({
+                name: c.name,
+                hex: c.hex,
+                image: c.image,
+                hover_image: c.hover_image ?? '',
+              })),
+            );
+          }
+          const inv: Record<string, number> = Object.fromEntries(SIZES.map(s => [s, 0]));
+          for (const row of data.product_inventory ?? []) inv[row.size] = row.stock_quantity;
+          setInventory(inv);
+          setInitialInventory(inv);
           setLoading(false);
-          return;
-        }
-        setName(data.name);
-        setCategory(data.category);
-        setCollectionId(data.collection_id ?? '');
-        setPrice(String(data.price));
-        setCompareAtPrice(data.compare_at_price ? String(data.compare_at_price) : '');
-        setBadge(data.badge ?? '');
-        setIsBestSeller(!!data.is_best_seller);
-        setIsActive(data.is_active !== false);
-        setDescription(data.description);
-        setMaterial(data.material);
-        setCare((data.care ?? []).join('\n'));
-        if (data.product_colors?.length) {
-          setColors(
-            data.product_colors.map((c: any) => ({
-              name: c.name,
-              hex: c.hex,
-              image: c.image,
-              hover_image: c.hover_image ?? '',
-            })),
-          );
-        }
-        const inv: Record<string, number> = Object.fromEntries(SIZES.map(s => [s, 0]));
-        for (const row of data.product_inventory ?? []) inv[row.size] = row.stock_quantity;
-        setInventory(inv);
-        setInitialInventory(inv);
-        setLoading(false);
-      });
+        },
+        () => setLoading(false),
+      );
   }, [id, isNew]);
 
   const updateColor = (i: number, patch: Partial<ColorRow>) =>

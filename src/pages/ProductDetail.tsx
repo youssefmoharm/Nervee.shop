@@ -768,7 +768,11 @@ export default function ProductDetail() {
                                   key={i}
                                   className="relative w-16 h-16 rounded-lg overflow-hidden"
                                 >
-                                  <img src={photo} alt="" className="w-full h-full object-cover" />
+                                  <img
+                                    src={photo}
+                                    alt={`Uploaded ${i + 1}`}
+                                    className="w-full h-full object-cover"
+                                  />
                                   <button
                                     type="button"
                                     onClick={() =>
