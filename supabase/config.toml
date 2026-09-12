@@ -36,10 +36,9 @@ enable_confirmations = true
 enabled = true
 file_size_limit = "50MiB"
 
-# Edge Function JWT verification defaults
-# Each function can override with its own [functions.NAME] section
-[functions]
-verify_jwt = true
+# Edge Function JWT verification configuration
+# Default: all functions require JWT verification
+# Individual functions can override in their own sections below
 
 # Public functions (customer-facing, no JWT required)
 [functions.back-in-stock]
