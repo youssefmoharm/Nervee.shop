@@ -40,6 +40,7 @@ export interface ColorRow {
   hex: string;
   image: string;
   hover_image?: string | null;
+  sort_order?: number | null;
   created_at: string;
 }
 

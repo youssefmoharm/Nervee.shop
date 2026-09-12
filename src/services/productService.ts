@@ -333,6 +333,7 @@ export const productService = {
    */
   async getNewDrop(): Promise<Product[]> {
     if (!isSupabaseConfigured) {
+      console.info('[productService] Supabase not configured, using mock data for new drop');
       return getMockNewDrop();
     }
 
@@ -355,6 +356,10 @@ export const productService = {
 
       // If we get a permission error on product_inventory, try without it
       if (error && error.message?.includes('product_inventory')) {
+        console.warn(
+          '[productService] product_inventory join failed, retrying without it:',
+          error.message,
+        );
         const { data: dataWithoutInventory, error: error2 } = await supabase
           .from('products')
           .select(
@@ -373,12 +378,20 @@ export const productService = {
         }
       }
 
-      if (error) throw error;
+      if (error) {
+        console.error('[productService] getNewDrop query error:', error.message, error);
+        throw error;
+      }
 
       // If no data, use mock immediately
       if (!data || data.length === 0) {
+        console.warn(
+          '[productService] getNewDrop: Supabase returned 0 active products, using mock data',
+        );
         return getMockNewDrop();
       }
+
+      console.info(`[productService] getNewDrop: Supabase returned ${data.length} products`);
 
       const results = (data || []).map((row: any) => {
         const product = transformProduct(row);
@@ -391,9 +404,15 @@ export const productService = {
 
       // If results are empty or all products have no colors, use mock
       const valid = results.filter(p => p.colors && p.colors.length > 0);
+      if (valid.length === 0) {
+        console.warn(
+          `[productService] getNewDrop: ${results.length} products had no colors, using mock data`,
+        );
+      }
       return valid.length > 0 ? valid : getMockNewDrop();
     } catch (error) {
       logError('Error fetching new drop:', error);
+      console.error('[productService] getNewDrop failed, falling back to mock data:', error);
       return getMockNewDrop();
     }
   },
