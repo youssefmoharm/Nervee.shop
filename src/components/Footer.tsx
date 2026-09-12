@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
-import { Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
+import { Instagram, Linkedin, Mail, MapPin } from 'lucide-react';
 
-const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || 'support@nerveey.shop';
+const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || 'nerveey.shop@gmail.com';
 
 const NAV_LINKS = [
   { name: 'Shop', href: '/shop' },
@@ -118,12 +118,8 @@ export default function Footer() {
                 </a>
               </li>
               <li className="flex items-center gap-2">
-                <Phone size={16} />
-                <span>+20 100 000 0000</span>
-              </li>
-              <li className="flex items-center gap-2">
                 <MapPin size={16} />
-                <span>Cairo, Egypt</span>
+                <span>Alexandria, Egypt</span>
               </li>
             </ul>
           </div>

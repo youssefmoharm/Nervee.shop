@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { contactService } from '../services/contactService';
 import { useSEO } from '../lib/seo';
 
-const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || 'support@nerveey.shop';
+const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || 'nerveey.shop@gmail.com';
 
 function Shell({ title, children }: { title: string; children: ReactNode }) {
   return (

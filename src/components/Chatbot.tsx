@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, User, Bot } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || 'support@nerveey.shop';
+const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || 'nerveey.shop@gmail.com';
 
 interface Message {
   id: string;
@@ -131,7 +131,7 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
     }
 
     // Default response
-    return "I'd be happy to help! You can ask me about:\n• Order tracking and delivery\n• Size guides and product info\n• Returns and exchanges\n• Payment methods\n\nOr contact our team at support@nerveey.shop for detailed assistance.";
+    return "I'd be happy to help! You can ask me about:\n• Order tracking and delivery\n• Size guides and product info\n• Returns and exchanges\n• Payment methods\n\nOr contact our team at nerveey.shop@gmail.com for detailed assistance.";
   };
 
   // Send message
