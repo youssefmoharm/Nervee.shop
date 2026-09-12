@@ -1,4 +1,5 @@
 import type { CartLine } from '../types';
+import type { DiscountCode } from '../services/discountService';
 
 /**
  * Checkout Session Manager
@@ -13,14 +14,28 @@ import type { CartLine } from '../types';
  * Uses localStorage + timestamps for durability.
  */
 
+export interface CheckoutFormState {
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  governorate?: string;
+  postal?: string;
+  postalCode?: string;
+  delivery?: 'standard' | 'express';
+  paymentMethod?: 'cod' | 'card';
+  discountCode?: string;
+  notes?: string;
+}
+
 export interface CheckoutSession {
   cartLines: CartLine[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  formState: Record<string, any>;
+  formState: CheckoutFormState;
   appliedDiscount: {
     code: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    discount: any;
+    discount: DiscountCode;
   } | null;
   checkoutStep: number;
   timestamp: number; // When session was last saved
@@ -113,11 +128,9 @@ export function getCheckoutSessionAge(): number {
 /**
  * Update specific checkout session field without losing other data
  */
-export function updateCheckoutSession(
-  key: keyof Omit<CheckoutSession, 'timestamp' | 'expiresAt'>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  value: any,
-): void {
+export function updateCheckoutSession<
+  K extends keyof Omit<CheckoutSession, 'timestamp' | 'expiresAt'>,
+>(key: K, value: CheckoutSession[K]): void {
   const session = loadCheckoutSession();
   if (!session) {
     saveCheckoutSession({ [key]: value });

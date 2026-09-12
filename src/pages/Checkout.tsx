@@ -10,6 +10,7 @@ import { useToast } from '../context/ToastContext';
 import { EGYPT_GOVERNORATES } from '../data/governorates';
 import { ecommerce } from '../lib/analytics';
 import { estimateShippingCost, getCheckoutSummary } from '../lib/checkout';
+import { validateEgyptianPostalCode } from '../lib/egyptianValidation';
 import {
   loadCheckoutSession,
   saveCheckoutSession,
@@ -98,7 +99,7 @@ export default function Checkout() {
   const set = (key: keyof FormState, value: string) => setForm(f => ({ ...f, [key]: value }));
 
   const shippingCost = estimateShippingCost(subtotal, form.delivery);
-  const { total } = getCheckoutSummary(subtotal, form.delivery);
+  const { total, vatAmount } = getCheckoutSummary(subtotal, form.delivery);
 
   // Calculate final amount with discount
   const discountAmount = appliedDiscount
@@ -167,6 +168,10 @@ export default function Checkout() {
     if (!form.address.trim()) e.address = 'Required.';
     if (!form.city.trim()) e.city = 'Required.';
     if (!form.governorate.trim()) e.governorate = 'Required.';
+    if (form.postal) {
+      const postalResult = validateEgyptianPostalCode(form.postal);
+      if (!postalResult.valid) e.postal = postalResult.error!;
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -425,9 +430,14 @@ export default function Checkout() {
                     autoComplete="postal-code"
                     value={form.postal}
                     onChange={e => set('postal', e.target.value)}
-                    className={inputCls(false)}
+                    className={inputCls(!!errors.postal)}
                     data-testid="postal-input"
                   />
+                  {errors.postal && (
+                    <p className="mt-1 text-xs text-red-600" role="alert">
+                      {errors.postal}
+                    </p>
+                  )}
                 </Field>
               </div>
             )}
@@ -707,6 +717,11 @@ export default function Checkout() {
                       `EGP ${shippingCost}`
                     )}
                   </span>
+                </div>
+
+                <div className="flex justify-between items-center text-navy/40 text-[11px]">
+                  <span>VAT (14% incl.)</span>
+                  <span>EGP {vatAmount.toLocaleString()}</span>
                 </div>
 
                 {/* Total */}
