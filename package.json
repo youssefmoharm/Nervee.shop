@@ -32,7 +32,7 @@
     }
   },
   "engines": {
-    "node": "24.x"
+    "node": ">=18"
   },
   "dependencies": {
     "@sentry/react": "^10.69.0",
@@ -41,6 +41,7 @@
     "@tanstack/react-query-devtools": "^4.40.0",
     "debug": "^4.3.4",
     "dompurify": "^3.4.14",
+    "dotenv": "^17.4.2",
     "focus-trap-react": "^12.0.3",
     "framer-motion": "^11.2.10",
     "fuse.js": "^7.5.0",
