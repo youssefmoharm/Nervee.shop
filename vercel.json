@@ -6,7 +6,7 @@
   "cleanUrls": false,
   "headers": [
     {
-      "source": "/assets/vendor-.*\\.js",
+      "source": "/assets/vendor-(.*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -15,20 +15,11 @@
       ]
     },
     {
-      "source": "/assets/context-.*\\.js",
+      "source": "/assets/context-(.*)",
       "headers": [
         {
           "key": "Cache-Control",
           "value": "public, max-age=2592000"
-        }
-      ]
-    },
-    {
-      "source": "/assets/.*\\.js",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=604800"
         }
       ]
     },
