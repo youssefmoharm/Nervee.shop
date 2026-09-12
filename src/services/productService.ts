@@ -201,7 +201,39 @@ export const productService = {
           query = query.order('created_at', { ascending: false });
       }
 
-      const { data, error } = await query;
+      let { data, error } = await query;
+
+      // If we get a permission error on product_inventory, try without it
+      if (error && error.message?.includes('product_inventory')) {
+        let retryQuery = supabase
+          .from('products')
+          .select(
+            `
+          *,
+          product_colors (name, hex, image, hover_image, sort_order)
+        `,
+          )
+          .eq('is_active', true);
+
+        if (filters.category && filters.category !== 'New Arrivals') {
+          retryQuery = retryQuery.eq('category', filters.category);
+        }
+        if (filters.collectionId) {
+          retryQuery = retryQuery.eq('collection_id', filters.collectionId);
+        }
+        if (filters.priceMin != null) {
+          retryQuery = retryQuery.gte('price', filters.priceMin);
+        }
+        if (filters.priceMax != null) {
+          retryQuery = retryQuery.lte('price', filters.priceMax);
+        }
+
+        const { data: retryData, error: retryError } = await retryQuery;
+        if (!retryError) {
+          data = retryData;
+          error = null;
+        }
+      }
 
       if (error) throw error;
 
@@ -247,7 +279,7 @@ export const productService = {
     }
 
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('products')
         .select(
           `
@@ -259,6 +291,26 @@ export const productService = {
         .eq('slug', slug)
         .eq('is_active', true)
         .single();
+
+      // If we get a permission error on product_inventory, try without it
+      if (error && error.message?.includes('product_inventory')) {
+        const { data: dataWithoutInventory, error: error2 } = await supabase
+          .from('products')
+          .select(
+            `
+          *,
+          product_colors (name, hex, image, hover_image, sort_order)
+        `,
+          )
+          .eq('slug', slug)
+          .eq('is_active', true)
+          .single();
+
+        if (!error2) {
+          data = dataWithoutInventory;
+          error = null;
+        }
+      }
 
       if (error) throw error;
       if (!data) return undefined;
@@ -285,7 +337,8 @@ export const productService = {
     }
 
     try {
-      const { data, error } = await supabase
+      // Try with full relations first
+      const query = supabase
         .from('products')
         .select(
           `
@@ -297,6 +350,28 @@ export const productService = {
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(8);
+
+      let { data, error } = await query;
+
+      // If we get a permission error on product_inventory, try without it
+      if (error && error.message?.includes('product_inventory')) {
+        const { data: dataWithoutInventory, error: error2 } = await supabase
+          .from('products')
+          .select(
+            `
+          *,
+          product_colors (name, hex, image, hover_image, sort_order)
+        `,
+          )
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .limit(8);
+
+        if (!error2) {
+          data = dataWithoutInventory;
+          error = null;
+        }
+      }
 
       if (error) throw error;
 
@@ -324,7 +399,7 @@ export const productService = {
     }
 
     try {
-      const { data, error } = await supabase
+      const query = supabase
         .from('products')
         .select(
           `
@@ -336,6 +411,28 @@ export const productService = {
         .eq('is_best_seller', true)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
+
+      let { data, error } = await query;
+
+      // If we get a permission error on product_inventory, try without it
+      if (error && error.message?.includes('product_inventory')) {
+        const { data: dataWithoutInventory, error: error2 } = await supabase
+          .from('products')
+          .select(
+            `
+          *,
+          product_colors (name, hex, image, hover_image, sort_order)
+        `,
+          )
+          .eq('is_best_seller', true)
+          .eq('is_active', true)
+          .order('created_at', { ascending: false });
+
+        if (!error2) {
+          data = dataWithoutInventory;
+          error = null;
+        }
+      }
 
       if (error) throw error;
 
@@ -363,7 +460,7 @@ export const productService = {
     }
 
     try {
-      const { data, error } = await supabase
+      const query = supabase
         .from('products')
         .select(
           `
@@ -376,6 +473,29 @@ export const productService = {
         .eq('is_active', true)
         .neq('id', product.id)
         .limit(4);
+
+      let { data, error } = await query;
+
+      // If we get a permission error on product_inventory, try without it
+      if (error && error.message?.includes('product_inventory')) {
+        const { data: dataWithoutInventory, error: error2 } = await supabase
+          .from('products')
+          .select(
+            `
+          *,
+          product_colors (name, hex, image, hover_image, sort_order)
+        `,
+          )
+          .eq('category', product.category)
+          .eq('is_active', true)
+          .neq('id', product.id)
+          .limit(4);
+
+        if (!error2) {
+          data = dataWithoutInventory;
+          error = null;
+        }
+      }
 
       if (error) throw error;
 
@@ -447,7 +567,7 @@ export const productService = {
     }
 
     try {
-      const { data, error } = await supabase
+      const query = supabase
         .from('products')
         .select(
           `
@@ -459,6 +579,28 @@ export const productService = {
         .eq('collection_id', id)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
+
+      let { data, error } = await query;
+
+      // If we get a permission error on product_inventory, try without it
+      if (error && error.message?.includes('product_inventory')) {
+        const { data: dataWithoutInventory, error: error2 } = await supabase
+          .from('products')
+          .select(
+            `
+          *,
+          product_colors (name, hex, image, hover_image, sort_order)
+        `,
+          )
+          .eq('collection_id', id)
+          .eq('is_active', true)
+          .order('created_at', { ascending: false });
+
+        if (!error2) {
+          data = dataWithoutInventory;
+          error = null;
+        }
+      }
 
       if (error) throw error;
 
