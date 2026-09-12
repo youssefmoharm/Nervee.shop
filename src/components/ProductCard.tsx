@@ -24,7 +24,8 @@ export default function ProductCard({ product }: { product: Product }) {
     isFull,
   } = useComparison();
 
-  const color = product.colors[colorIdx];
+  const color = product.colors[colorIdx] ??
+    product.colors[0] ?? { name: '', hex: '#ccc', image: '/placeholder-product.jpg' };
   const wished = has(product.id);
 
   // Check for low stock (any size < 5 items)
