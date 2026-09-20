@@ -26,10 +26,6 @@ interface OptimizedImageProps extends Omit<HTMLAttributes<HTMLImageElement>, 'sr
   loading?: 'eager' | 'lazy';
 }
 
-interface OptimizedImageWithExtraProps extends OptimizedImageProps {
-  [key: string]: unknown;
-}
-
 export default function OptimizedImage({
   src = '',
   alt = '',
@@ -43,8 +39,7 @@ export default function OptimizedImage({
   objectFit = 'cover',
   loading,
   style,
-  ...props
-}: OptimizedImageWithExtraProps) {
+}: OptimizedImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [formats, setFormats] = useState<string[]>([]);
@@ -177,7 +172,6 @@ export default function OptimizedImage({
         style={{
           objectFit,
         }}
-        {...props}
       />
 
       {/* Error state placeholder */}
