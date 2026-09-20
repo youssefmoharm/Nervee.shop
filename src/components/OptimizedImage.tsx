@@ -1,6 +1,6 @@
 /**
  * Optimized Image Component for NERVE
- * 
+ *
  * Features:
  * - Automatic WebP/AVIF format conversion with JPEG fallback
  * - Lazy loading for performance
@@ -10,11 +10,11 @@
  * - Accessibility improvements
  */
 
-import { useState, useEffect, HTMLAttributes, ReactNode } from 'react';
+import { useState, useEffect, HTMLAttributes } from 'react';
 
 interface OptimizedImageProps extends Omit<HTMLAttributes<HTMLImageElement>, 'src'> {
-  src: string;
-  alt: string;
+  src?: string;
+  alt?: string;
   width?: number;
   height?: number;
   aspectRatio?: string;
@@ -24,11 +24,18 @@ interface OptimizedImageProps extends Omit<HTMLAttributes<HTMLImageElement>, 'sr
   priority?: boolean;
   objectFit?: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
   loading?: 'eager' | 'lazy';
+  // Allow custom props for image generation
+  slug?: string;
+  color?: string;
+  imageType?: string;
+  size?: string;
+  productName?: string;
+  testId?: string;
 }
 
 export default function OptimizedImage({
-  src,
-  alt,
+  src = '',
+  alt = '',
   width,
   height,
   aspectRatio,
@@ -39,12 +46,17 @@ export default function OptimizedImage({
   objectFit = 'cover',
   loading,
   style,
+  _slug,
+  _color,
+  _imageType,
+  _size,
+  _productName,
+  _testId,
   ...props
 }: OptimizedImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [formats, setFormats] = useState<string[]>([]);
-  const [currentSrc, setCurrentSrc] = useState(src);
 
   // Detect supported image formats
   useEffect(() => {
@@ -66,7 +78,8 @@ export default function OptimizedImage({
   // Test WebP support
   const testWebp = async (): Promise<boolean> => {
     try {
-      const webpData = 'data:image/webp;base64,UklGRh4AAABXRUJQVlA4TBEAAAAvAAAAAAfQ//73v/+BiOhlAAA=';
+      const webpData =
+        'data:image/webp;base64,UklGRh4AAABXRUJQVlA4TBEAAAAvAAAAAAfQ//73v/+BiOhlAAA=';
       const blob = await fetch(webpData).then(r => r.blob());
       return blob.size === 69;
     } catch {
@@ -77,7 +90,8 @@ export default function OptimizedImage({
   // Test AVIF support
   const testAvif = async (): Promise<boolean> => {
     try {
-      const avifData = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAAD3BpdG0AAAAAAAEAAAAeaWxvYwAAAABkAAABAAEAAAABAAABGgAABdQAAAHUbWV0YQAAAAAAAAAwaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAAD3BpdG0AAAAAAAEAAAAeaWxvYwAAAABkAAABAAEAAAABAAABGgAABdQAAAHU';
+      const avifData =
+        'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAAD3BpdG0AAAAAAAEAAAAeaWxvYwAAAABkAAABAAEAAAABAAABGgAABdQAAAHUbWV0YQAAAAAAAAAwaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAAD3BpdG0AAAAAAAEAAAAeaWxvYwAAAABkAAABAAEAAAABAAABGgAABdQAAAHU';
       const blob = await fetch(avifData).then(r => r.blob());
       return blob.size > 0;
     } catch {
@@ -90,7 +104,7 @@ export default function OptimizedImage({
     const sizes = [320, 640, 750, 828, 1080, 1200, 1920, 2048, 3840];
 
     return sizes
-      .map((size) => {
+      .map(size => {
         // Generate URL with width parameter (assuming a resize endpoint)
         // Modify this based on your actual image CDN configuration
         return `${baseUrl}?w=${size} ${size}w`;
@@ -102,7 +116,7 @@ export default function OptimizedImage({
   const getImageUrls = (originalSrc: string) => {
     const base = originalSrc.replace(/\.(jpg|jpeg|png|gif)$/i, '');
 
-    return formats.map((format) => {
+    return formats.map(format => {
       // Try to match existing format or add new one
       let url = originalSrc;
       if (originalSrc.match(/\.(jpg|jpeg|png)$/i)) {
@@ -130,11 +144,6 @@ export default function OptimizedImage({
     return lazy ? 'lazy' : 'eager';
   };
 
-  // Generate placeholder (blur)
-  const placeholder = blurPlaceholder && !isLoaded
-    ? 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iMSIgZmlsbD0iI2MwYzBjMCIvPjwvc3ZnPg=='
-    : undefined;
-
   // Construct image URLs for src and srcSet
   const imageUrls = getImageUrls(src);
   const srcset = imageUrls.length > 0 ? generateSrcSet(src) : undefined;
@@ -161,7 +170,7 @@ export default function OptimizedImage({
       )}
 
       <img
-        src={currentSrc}
+        src={primarySrc}
         srcSet={srcset}
         alt={alt}
         width={width}
@@ -202,8 +211,8 @@ export default function OptimizedImage({
  */
 export function useLazyImage() {
   const loadImages = (refs: React.RefObject<HTMLImageElement>[]) => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
         if (entry.isIntersecting) {
           const img = entry.target as HTMLImageElement;
           if (img.dataset.src) {
@@ -214,7 +223,7 @@ export function useLazyImage() {
       });
     });
 
-    refs.forEach((ref) => {
+    refs.forEach(ref => {
       if (ref.current) {
         observer.observe(ref.current);
       }

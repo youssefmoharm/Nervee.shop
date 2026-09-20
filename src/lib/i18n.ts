@@ -1,21 +1,21 @@
 /**
  * Arabic Translation Support for NERVE
- * 
+ *
  * This module provides i18n support for Arabic language with RTL layout.
  * Supports fallback to English and dynamic language switching.
- * 
+ *
  * Usage:
- * 
+ *
  * // In your component
  * import { useTranslation, Trans } from '../lib/i18n';
- * 
+ *
  * const { t, i18n } = useTranslation();
  * const isArabic = i18n.language === 'ar';
- * 
+ *
  * // In JSX
  * <h1>{t('home.title')}</h1>
  * <Trans i18nKey="home.subtitle" components={{ strong: <strong /> }} />
- * 
+ *
  * // For conditional RTL
  * <div dir={isArabic ? 'rtl' : 'ltr'}>
  *   <button className={isArabic ? 'mr-4' : 'ml-4'}>...</button>
@@ -64,12 +64,13 @@ export const resources = {
         admin: 'Admin',
         search: 'Search...',
       },
-      
+
       // Home
       home: {
         title: 'NERVE',
         subtitle: 'Cool but Chic | Contemporary Egyptian Concept Store',
-        tagline: 'Built around individuality, movement, and the pieces that become part of your everyday identity.',
+        tagline:
+          'Built around individuality, movement, and the pieces that become part of your everyday identity.',
         shopNow: 'Shop Now',
         featured: 'Featured Collections',
         newArrivals: 'New Arrivals',
@@ -80,7 +81,7 @@ export const resources = {
         subscribe: 'Subscribe',
         footer: '© 2026 NERVE. All rights reserved.',
       },
-      
+
       // Shop
       shop: {
         title: 'Shop',
@@ -96,7 +97,7 @@ export const resources = {
         addToCart: 'Add to Cart',
         outOfStock: 'Out of Stock',
       },
-      
+
       // Product Detail
       product: {
         addToCart: 'Add to Cart',
@@ -109,12 +110,12 @@ export const resources = {
         reviews: 'Reviews',
         similarProducts: 'Similar Products',
       },
-      
+
       // Cart
       cart: {
         title: 'Your Cart',
         empty: 'Your cart is empty',
-        emptySubtitle: 'Looks like you haven\'t added anything to your cart yet.',
+        emptySubtitle: "Looks like you haven't added anything to your cart yet.",
         continueShopping: 'Continue Shopping',
         subtotal: 'Subtotal',
         shipping: 'Shipping',
@@ -123,7 +124,7 @@ export const resources = {
         remove: 'Remove',
         updating: 'Updating...',
       },
-      
+
       // Checkout
       checkout: {
         title: 'Checkout',
@@ -146,7 +147,7 @@ export const resources = {
         processing: 'Processing...',
         success: 'Order Placed Successfully!',
       },
-      
+
       // Account
       account: {
         title: 'My Account',
@@ -157,7 +158,7 @@ export const resources = {
         settings: 'Settings',
         logout: 'Logout',
       },
-      
+
       // Orders
       orders: {
         title: 'My Orders',
@@ -172,13 +173,13 @@ export const resources = {
         shipped: 'Shipped',
         delivered: 'Delivered',
       },
-      
+
       // Collections
       collections: {
         title: 'Collections',
         seeAll: 'See All',
       },
-      
+
       // About
       about: {
         title: 'About NERVE',
@@ -186,7 +187,7 @@ export const resources = {
         mission: 'Our Mission',
         values: 'Our Values',
       },
-      
+
       // Contact
       contact: {
         title: 'Contact Us',
@@ -197,7 +198,7 @@ export const resources = {
         send: 'Send Message',
         sent: 'Message sent successfully!',
       },
-      
+
       // Auth
       auth: {
         login: 'Login',
@@ -206,11 +207,11 @@ export const resources = {
         password: 'Password',
         confirmPassword: 'Confirm Password',
         forgotPassword: 'Forgot Password?',
-        dontHaveAccount: 'Don\'t have an account?',
+        dontHaveAccount: "Don't have an account?",
         haveAccount: 'Already have an account?',
         logout: 'Logout',
       },
-      
+
       // Common
       common: {
         error: 'Something went wrong',
@@ -222,7 +223,7 @@ export const resources = {
         required: 'Required',
         invalid: 'Invalid',
       },
-      
+
       // Validation
       validation: {
         email: 'Please enter a valid email address',
@@ -231,7 +232,7 @@ export const resources = {
         address: 'Please enter your address',
         phone: 'Please enter a valid phone number',
       },
-      
+
       // Shipping & Returns
       shipping: {
         title: 'Shipping Information',
@@ -241,14 +242,14 @@ export const resources = {
         estimated: 'Estimated Delivery',
         details: 'Shipping Details',
       },
-      
+
       returns: {
         title: 'Returns & Exchanges',
         policy: 'Return Policy',
         process: 'How to Return',
         contact: 'Contact Us',
       },
-      
+
       // Privacy & Terms
       privacy: {
         title: 'Privacy Policy',
@@ -273,7 +274,7 @@ export const resources = {
         admin: 'الإدارة',
         search: 'بحث...',
       },
-      
+
       // Home
       home: {
         title: 'NERVE',
@@ -289,7 +290,7 @@ export const resources = {
         subscribe: 'اشترك',
         footer: '© ٢٠٢٦ NERVE. جميع الحقوق محفوظة.',
       },
-      
+
       // Shop
       shop: {
         title: 'تسوق',
@@ -305,7 +306,7 @@ export const resources = {
         addToCart: 'أضف إلى السلة',
         outOfStock: 'نفدت الكمية',
       },
-      
+
       // Product Detail
       product: {
         addToCart: 'أضف إلى السلة',
@@ -318,7 +319,7 @@ export const resources = {
         reviews: 'التقييمات',
         similarProducts: 'منتجات مشابهة',
       },
-      
+
       // Cart
       cart: {
         title: 'سلتك',
@@ -332,7 +333,7 @@ export const resources = {
         remove: 'حذف',
         updating: 'جاري التحديث...',
       },
-      
+
       // Checkout
       checkout: {
         title: 'إتمام الطلب',
@@ -355,7 +356,7 @@ export const resources = {
         processing: 'جاري المعالجة...',
         success: 'تم الطلب بنجاح!',
       },
-      
+
       // Account
       account: {
         title: 'حسابي',
@@ -366,7 +367,7 @@ export const resources = {
         settings: 'الإعدادات',
         logout: 'خروج',
       },
-      
+
       // Orders
       orders: {
         title: 'طلباتي',
@@ -381,13 +382,13 @@ export const resources = {
         shipped: 'تم الشحن',
         delivered: 'تم التوصيل',
       },
-      
+
       // Collections
       collections: {
         title: 'المجموعات',
         seeAll: 'عرض الكل',
       },
-      
+
       // About
       about: {
         title: 'عن NERVE',
@@ -395,7 +396,7 @@ export const resources = {
         mission: 'رسالتنا',
         values: 'قيمنا',
       },
-      
+
       // Contact
       contact: {
         title: 'اتصل بنا',
@@ -406,7 +407,7 @@ export const resources = {
         send: 'إرسال الرسالة',
         sent: 'تم إرسال الرسالة بنجاح!',
       },
-      
+
       // Auth
       auth: {
         login: 'تسجيل الدخول',
@@ -419,7 +420,7 @@ export const resources = {
         haveAccount: 'لديك حساب بالفعل؟',
         logout: 'خروج',
       },
-      
+
       // Common
       common: {
         error: 'حدث خطأ ما',
@@ -431,7 +432,7 @@ export const resources = {
         required: 'إجباري',
         invalid: 'غير صالح',
       },
-      
+
       // Validation
       validation: {
         email: 'يرجى إدخال بريد إلكتروني صالح',
@@ -440,7 +441,7 @@ export const resources = {
         address: 'يرجى إدخال عنوانك',
         phone: 'يرجى إدخال رقم هاتف صالح',
       },
-      
+
       // Shipping & Returns
       shipping: {
         title: 'معلومات الشحن',
@@ -450,14 +451,14 @@ export const resources = {
         estimated: 'التوصيل المتوقع',
         details: 'تفاصيل الشحن',
       },
-      
+
       returns: {
         title: 'الإرجاع والاستبدال',
         policy: 'سياسة الإرجاع',
         process: 'كيفية الإرجاع',
         contact: 'اتصل بنا',
       },
-      
+
       // Privacy & Terms
       privacy: {
         title: 'سياسة الخصوصية',
@@ -494,7 +495,7 @@ export default i18n;
 // Hook for React components
 export const useTranslation = () => {
   return {
-    t: i18n.getFixedT(),
+    t: i18n.getFixedT(i18n.language, 'translation'),
     i18n,
     language: i18n.language,
     isRTL: i18n.language === 'ar',
@@ -509,17 +510,19 @@ export function getDirection(lang?: string): 'ltr' | 'rtl' {
 // Helper to format Arabic numbers
 export function arabicNumbers(str: string): string {
   const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-  return str.replace(/\d/g, (d) => arabicDigits[parseInt(d)] || d);
+  return str.replace(/\d/g, d => arabicDigits[parseInt(d)] || d);
 }
 
 // Helper to format English numbers
 export function englishNumbers(str: string): string {
   const englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-  return str.replace(/[٠-٩]/g, (d) => englishDigits['٠١٢٣٤٥٦٧٨٩'.indexOf(d)] || d);
+  return str.replace(/[٠-٩]/g, d => englishDigits['٠١٢٣٤٥٦٧٨٩'.indexOf(d)] || d);
 }
 
 // Type exports
-export type TranslationKey = keyof typeof resources['en']['translation'];
+export type TranslationKey = keyof (typeof resources)['en']['translation'];
 export type NestedKey<T> = T extends object
-  ? { [K in keyof T]: T[K] extends object ? `${K}.${NestedKey<T[K]>}` : `${K}` }[keyof T]
+  ? {
+      [K in keyof T & (string | number)]: T[K] extends object ? `${K}.${NestedKey<T[K]>}` : `${K}`;
+    }[keyof T & (string | number)]
   : string;

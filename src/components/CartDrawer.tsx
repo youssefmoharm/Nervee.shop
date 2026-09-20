@@ -83,6 +83,7 @@ export default function CartDrawer() {
                         {line.name}
                       </Link>
                       <button
+                        type="button"
                         aria-label="Remove item"
                         data-testid="remove-item"
                         onClick={() => removeLine(line.productId, line.color, line.size)}
@@ -97,6 +98,7 @@ export default function CartDrawer() {
                     <div className="flex items-center justify-between mt-3">
                       <div className="flex items-center border border-navy/20">
                         <button
+                          type="button"
                           aria-label="Decrease quantity"
                           onClick={() =>
                             updateQuantity(line.productId, line.color, line.size, line.quantity - 1)
@@ -107,6 +109,7 @@ export default function CartDrawer() {
                         </button>
                         <span className="w-8 text-center text-sm">{line.quantity}</span>
                         <button
+                          type="button"
                           aria-label="Increase quantity"
                           onClick={() =>
                             updateQuantity(line.productId, line.color, line.size, line.quantity + 1)
@@ -137,6 +140,7 @@ export default function CartDrawer() {
             </div>
             <p className="text-xs text-navy/50">Shipping and taxes calculated at checkout.</p>
             <button
+              type="button"
               onClick={e => {
                 e.stopPropagation();
                 e.preventDefault();
@@ -149,6 +153,7 @@ export default function CartDrawer() {
               Checkout
             </button>
             <button
+              type="button"
               onClick={e => {
                 e.stopPropagation();
                 e.preventDefault();
