@@ -60,16 +60,27 @@ export default function ComparisonModal({
 
   return (
     <FocusTrap active={products.length > 0} onClickOutside={onClose}>
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="compare-modal-title"
-        aria-hidden="false"
+      <button
+        type="button"
+        aria-label="Close comparison modal backdrop"
+        className="fixed inset-0 z-50 bg-black/50 p-4"
+        onClick={e => {
+          e.stopPropagation();
+        }}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: 'none',
+          padding: 'var(--tw-padding, 1rem)',
+          background: 'rgba(0, 0, 0, 0.5)',
+        }}
       >
         <div
           className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col outline-none"
-          role="document"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="compare-modal-title"
         >
           {/* Header */}
           <div className="flex items-center justify-between p-4 md:p-6 border-b border-navy/10">
@@ -263,7 +274,7 @@ export default function ComparisonModal({
             </Button>
           </div>
         </div>
-      </div>
+      </button>
     </FocusTrap>
   );
 }
