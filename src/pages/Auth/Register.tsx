@@ -22,8 +22,26 @@ export default function Register() {
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // Strong password validation
     if (password.length < 8) {
       setError('Password must be at least 8 characters.');
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      setError('Password must contain at least one uppercase letter.');
+      return;
+    }
+    if (!/[a-z]/.test(password)) {
+      setError('Password must contain at least one lowercase letter.');
+      return;
+    }
+    if (!/[0-9]/.test(password)) {
+      setError('Password must contain at least one number.');
+      return;
+    }
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
+      setError('Password must contain at least one special character.');
       return;
     }
     if (password !== confirmPassword) {
@@ -117,7 +135,9 @@ export default function Register() {
               onChange={e => setPassword(e.target.value)}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors"
             />
-            <span className="text-xs text-navy/40 mt-1 block">At least 8 characters.</span>
+            <span className="text-xs text-navy/40 mt-1 block">
+              Must be 8+ characters with uppercase, lowercase, number, and special character.
+            </span>
 
             {/* Password strength guidance */}
             <div className="mt-3">

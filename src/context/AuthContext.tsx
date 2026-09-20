@@ -84,18 +84,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const signUp: AuthContextValue['signUp'] = async (email, password, firstName, lastName, meta) => {
-    const userData = { first_name: firstName, last_name: lastName, ...(meta ?? {}) };
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: userData },
-    });
-    return { error: error?.message ?? null };
+    // Try Edge Function first (rate-limited), fall back to Supabase Auth
+    try {
+      const response = await fetch('/api/auth-sign-up', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+          firstName,
+          lastName,
+          meta,
+        }),
+      });
+
+      if (response.ok) {
+        // Sign in after successful registration to get session
+        await supabase.auth.signInWithPassword({ email, password });
+        return { error: null };
+      }
+
+      const errorData = await response.json().catch(() => ({}));
+      return { error: errorData.error || 'Registration failed. Please try again.' };
+    } catch (edgeError) {
+      // Fallback to Supabase Auth if Edge Function fails
+      console.warn('Edge Function failed, using Supabase Auth:', edgeError);
+      const userData = { first_name: firstName, last_name: lastName, ...(meta ?? {}) };
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: userData },
+      });
+      return { error: error?.message ?? null };
+    }
   };
 
   const signIn: AuthContextValue['signIn'] = async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message ?? null };
+    // Try Edge Function first (rate-limited), fall back to Supabase Auth
+    try {
+      const response = await fetch('/api/auth-sign-in', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      if (response.ok) {
+        // Session will be updated via auth state listener
+        return { error: null };
+      }
+
+      const errorData = await response.json().catch(() => ({}));
+      return { error: errorData.error || 'Sign in failed. Please try again.' };
+    } catch (edgeError) {
+      // Fallback to Supabase Auth if Edge Function fails
+      console.warn('Edge Function failed, using Supabase Auth:', edgeError);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      return { error: error?.message ?? null };
+    }
   };
 
   const signOut = async () => {
