@@ -87,13 +87,9 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
       <div className="relative aspect-[4/5] overflow-hidden bg-mist">
         <Link to={`/product/${product.slug}`} aria-label={product.name}>
           <OptimizedImage
-            slug={product.slug}
-            color={color.name}
-            imageType={hovered ? '02-back' : '01-front'}
-            size="card"
-            productName={product.name}
+            src={hovered && color.hoverImage ? color.hoverImage : color.image}
+            alt={product.name}
             className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.045]"
-            testId="product-card-image"
           />
         </Link>
 

@@ -339,13 +339,10 @@ export default function ProductDetail() {
           <div>
             <div className="aspect-[4/5] bg-mist overflow-hidden mb-3">
               <OptimizedImage
-                slug={product.slug}
-                color={color.name}
-                imageType="01-front"
-                size="full"
-                productName={product.name}
+                src={product.gallery[activeImage] || color.image}
+                alt={`${product.name} - ${color.name}`}
                 className="w-full h-full object-cover"
-                testId="product-detail-main-image"
+                priority
               />
             </div>
             <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
@@ -358,17 +355,8 @@ export default function ProductDetail() {
                   aria-pressed={activeImage === i}
                 >
                   <OptimizedImage
-                    slug={product.slug}
-                    color={color.name}
-                    imageType={
-                      ['01-front', '02-back', '03-detail', '04-on-model'][i] as
-                        | '01-front'
-                        | '02-back'
-                        | '03-detail'
-                        | '04-on-model'
-                    }
-                    size="card"
-                    productName={product.name}
+                    src={g}
+                    alt={`${product.name} - image ${i + 1}`}
                     className="w-full h-full object-cover"
                   />
                 </button>
