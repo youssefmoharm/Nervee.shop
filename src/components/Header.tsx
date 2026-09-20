@@ -70,7 +70,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
                   data-testid={`nav-${l.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
                   className={({ isActive }) =>
                     `nv-eyebrow transition-colors hover:text-white ${
-                      isActive ? 'text-white' : 'text-silver'
+                      isActive ? 'text-white' : 'text-white'
                     }`
                   }
                 >
