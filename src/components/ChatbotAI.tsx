@@ -70,8 +70,11 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
     setIsLoading(true);
 
     try {
+      const endpoint = getEndpoint('CHAT_AI');
+      console.log('Chatbot: Calling endpoint:', endpoint);
+
       // Call AI chat function
-      const response = await fetch(getEndpoint('CHAT_AI'), {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -86,10 +89,13 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
         }),
       });
 
+      console.log('Chatbot: Response status:', response.status);
+
       const data = await response.json();
+      console.log('Chatbot: Response data:', data);
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to get response');
+        throw new Error(data.error || `HTTP ${response.status}: Failed to get response`);
       }
 
       // Set conversation ID from first response
@@ -122,8 +128,10 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
         setMessages(prev => [...prev, escalationMsg]);
       }
     } catch (error) {
+      console.error('Chatbot error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logError('Chat error:', error);
-      showToast('Failed to send message. Please try again.', 'error');
+      showToast(`Failed to send message: ${errorMessage}`, 'error');
 
       const errorMsg: Message = {
         id: (Date.now() + 1).toString(),
