@@ -92,7 +92,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
                 to={user ? '/account' : '/login'}
                 aria-label="Account"
                 data-testid="account-link"
-                className="hidden sm:flex w-10 h-10 items-center justify-center hover:bg-mist rounded transition-colors"
+                className="flex w-10 h-10 items-center justify-center hover:bg-mist rounded transition-colors"
               >
                 <User size={20} strokeWidth={1.75} />
               </Link>
