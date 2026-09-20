@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader2, TrendingUp, TrendingDown, ShoppingCart, DollarSign, Users, Box } from 'lucide-react';
+import { Loader2, TrendingUp, ShoppingCart, DollarSign, Users, Box } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import { logError } from '../../lib/sentry';
 import AdminLayout from './AdminLayout';
@@ -64,9 +64,7 @@ export default function AnalyticsDashboard() {
   if (!stats) {
     return (
       <AdminLayout>
-        <div className="text-center py-12 text-navy/50">
-          Failed to load dashboard data
-        </div>
+        <div className="text-center py-12 text-navy/50">Failed to load dashboard data</div>
       </AdminLayout>
     );
   }
@@ -80,16 +78,14 @@ export default function AnalyticsDashboard() {
     <AdminLayout>
       <div className="flex justify-between items-center mb-8">
         <h1 className="nv-heading text-4xl">Analytics</h1>
-        
+
         <div className="flex bg-navy/5 rounded-lg p-1">
-          {(['7d', '30d', '90d'] as const).map((range) => (
+          {(['7d', '30d', '90d'] as const).map(range => (
             <button
               key={range}
               onClick={() => setTimeRange(range)}
               className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                timeRange === range
-                  ? 'bg-navy text-white'
-                  : 'text-navy/70 hover:text-navy'
+                timeRange === range ? 'bg-navy text-white' : 'text-navy/70 hover:text-navy'
               }`}
             >
               {range === '7d' ? 'Last 7 Days' : range === '30d' ? 'Last 30 Days' : 'Last 90 Days'}
@@ -168,8 +164,8 @@ export default function AnalyticsDashboard() {
             </div>
           </div>
           <p className="text-sm text-navy/50">
-            {stats.totalCartAbandonments > 0 
-              ? 'Ready for recovery email' 
+            {stats.totalCartAbandonments > 0
+              ? 'Ready for recovery email'
               : 'No abandoned carts detected'}
           </p>
         </div>
@@ -186,7 +182,7 @@ export default function AnalyticsDashboard() {
                 const height = (item.revenue / max) * 100;
                 return (
                   <div key={i} className="flex-1 flex flex-col items-center group">
-                    <div 
+                    <div
                       className="w-full bg-navy/20 rounded-t-sm hover:bg-navy/40 transition-all relative"
                       style={{ height: `${height}%` }}
                     >
@@ -213,7 +209,7 @@ export default function AnalyticsDashboard() {
                 const height = (item.count / max) * 100;
                 return (
                   <div key={i} className="flex-1 flex flex-col items-center group">
-                    <div 
+                    <div
                       className="w-full bg-blue-400 rounded-t-sm hover:bg-blue-500 transition-all relative"
                       style={{ height: `${height}%` }}
                     >
@@ -238,9 +234,7 @@ export default function AnalyticsDashboard() {
           <h2 className="font-semibold">Recent Orders</h2>
         </div>
         {stats.recentOrders.length === 0 ? (
-          <div className="p-8 text-center text-navy/50">
-            No orders yet
-          </div>
+          <div className="p-8 text-center text-navy/50">No orders yet</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
@@ -264,12 +258,17 @@ export default function AnalyticsDashboard() {
                     </td>
                     <td className="px-6 py-3 font-medium">EGP {order.total.toLocaleString()}</td>
                     <td className="px-6 py-3">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                        order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          order.status === 'completed'
+                            ? 'bg-green-100 text-green-800'
+                            : order.status === 'processing'
+                            ? 'bg-blue-100 text-blue-800'
+                            : order.status === 'pending'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
                         {order.status}
                       </span>
                     </td>
