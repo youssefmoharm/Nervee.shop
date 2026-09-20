@@ -118,7 +118,7 @@ export default function Checkout() {
     const cleaned = form.phone.replace(/[\s-]/g, '');
     // Normalize: strip leading +20 or 0020
     const normalized = cleaned.replace(/^(\+20|0020)/, '');
-    const phoneRegex = /^01[0-2,5][0-9]{8}$/;
+    const phoneRegex = /^01[0125][0-9]{8}$/;
 
     if (!phoneRegex.test(normalized)) {
       e.phone = 'Enter a valid Egyptian phone number (e.g., 01012345678).';
@@ -257,18 +257,20 @@ export default function Checkout() {
   return (
     <div className="bg-white text-navy min-h-screen pt-24 md:pt-28 px-5 md:px-8 pb-24">
       <div className="mx-auto max-w-5xl">
-        {/* Session recovery banner */}
-        {session && step < 5 && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800 flex items-start gap-3">
-            <span className="text-lg">ℹ️</span>
-            <div>
-              <p className="font-semibold">Your checkout was saved</p>
-              <p className="text-xs text-blue-700 mt-1">
-                We recovered your cart and form data. You&apos;re on step {step} of 4.
-              </p>
+        {/* Session recovery banner - only show when there's actual checkout progress */}
+        {session &&
+          step < 5 &&
+          (session.checkoutStep > 1 || Object.keys(session.formState ?? {}).length > 0) && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800 flex items-start gap-3">
+              <span className="text-lg">ℹ️</span>
+              <div>
+                <p className="font-semibold">Your checkout was saved</p>
+                <p className="text-xs text-blue-700 mt-1">
+                  We recovered your cart and form data. You&apos;re on step {step} of 4.
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         {step !== 4 && (
           <>
