@@ -23,13 +23,7 @@ import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
 import { getCorsHeaders } from '../_shared/cors.ts'
 import { orderConfirmedEmail, sendEmail } from '../_shared/email.ts'
-import { distributedRateLimit, getRateLimitHeaders } from '../_shared/ratelimit.ts'
-import {
-  logOrderSuccess,
-  logOrderFailure,
-  logRateLimitHit,
-  PerformanceTimer
-} from '../_shared/monitoring.ts'
+import { distributedRateLimit, getRateLimitHeaders, generateCorrelationId, logEvent, logOrderSuccess, logOrderFailure, logRateLimitHit, PerformanceTimer } from '../_shared/monitoring.ts'
 import {
   validateOrderRequest,
   validateRequestSize,
@@ -171,12 +165,41 @@ serve(async (req) => {
     )
 
     timer.end()
-    return json({ order }, 200, corsHeaders)
+
+    // Add correlation ID to response headers for tracing
+    const correlationId = generateCorrelationId()
+    req.headers.set('x-correlation-id', correlationId)
+    const responseHeaders = {
+      ...corsHeaders,
+      'X-Correlation-Id': correlationId,
+      'RateLimit-Limit': '10',
+      'RateLimit-Remaining': String(rateLimitResult.remaining),
+      'RateLimit-Reset': String(Math.floor(rateLimitResult.resetTime / 1000))
+    }
+    logEvent({
+      type: 'info',
+      category: 'ORDER_CREATED',
+      message: `Order ${order.order_number} created successfully`,
+      data: { orderId: order.id, total: order.total },
+      correlationId
+    })
+
+    return json({ order }, 200, responseHeaders)
   } catch (err) {
     console.error('create-order error:', err)
-    logOrderFailure((err as Error).message, 'unknown', null)
+    const correlationId = generateCorrelationId()
+    const errorHeaders = {
+      ...getCorsHeaders(req),
+      'X-Correlation-Id': correlationId
+    }
+    logEvent({
+      type: 'error',
+      category: 'ORDER_ERROR',
+      message: `Order creation failed: ${(err as Error).message}`,
+      correlationId
+    })
     timer.end()
-    return json({ error: 'Something went wrong placing your order. Please try again.' }, 500, getCorsHeaders(req))
+    return json({ error: 'Something went wrong placing your order. Please try again.' }, 500, errorHeaders)
   }
 })
 
