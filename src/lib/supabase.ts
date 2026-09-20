@@ -10,13 +10,12 @@ const isProdBuild = import.meta.env.PROD;
 
 if (!envUrl || !envKey) {
   if (isProdBuild) {
-    throw new Error(
+    console.error(
       '[supabase] Missing required build-time env: VITE_SUPABASE_URL and/or your_removed_credential_here. ' +
         'Set them in your hosting provider (e.g. Vercel → Settings → Environment Variables) and rebuild. ' +
-        'Refusing to silently fall back to mock/demo data in production.',
+        'The app will render but backend features (auth, cart sync, orders) will not work.',
     );
-  }
-  if (import.meta.env.DEV) {
+  } else if (import.meta.env.DEV) {
     console.warn(
       '[supabase] VITE_SUPABASE_URL / your_removed_credential_here not set — running in demo/mock mode (development only).',
     );
