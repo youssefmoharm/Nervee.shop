@@ -157,6 +157,7 @@ export default function ProductDetail() {
     setColorIdx(0);
     setSize(null);
     setActiveImage(0);
+    setQty(1);
     setNotifySize(null);
     setNotifyStatus('idle');
     productService.getBySlug(slug).then(async p => {
@@ -530,7 +531,7 @@ export default function ProductDetail() {
                 <span className="w-10 text-center">{qty}</span>
                 <button
                   aria-label="Increase quantity"
-                  onClick={() => setQty(q => q + 1)}
+                  onClick={() => setQty(q => Math.min(99, q + 1))}
                   className="w-11 h-14 flex items-center justify-center hover:bg-mist"
                 >
                   <Plus size={14} />
