@@ -15,6 +15,28 @@ export interface MonitoringEvent {
   message: string
   data?: Record<string, any>
   timestamp?: string
+  correlationId?: string
+}
+
+// Correlation ID header name (can be customized)
+export const CORRELATION_ID_HEADER = 'x-correlation-id'
+
+/**
+ * Generate a unique correlation ID
+ */
+export function generateCorrelationId(): string {
+  return `req_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+}
+
+/**
+ * Extract correlation ID from request headers or generate new one
+ */
+export function getCorrelationId(req: Request): string {
+  const existing = req.headers.get(CORRELATION_ID_HEADER)
+  if (existing && existing.length > 0) {
+    return existing
+  }
+  return generateCorrelationId()
 }
 
 /**
@@ -28,7 +50,11 @@ export function logEvent(event: MonitoringEvent) {
 
   // Log to console (visible in Supabase logs)
   const prefix = `[${event.type.toUpperCase()}] [${event.category}]`
-  console.log(prefix, event.message, event.data || '')
+  if (event.correlationId) {
+    console.log(prefix, `[${event.correlationId}]`, event.message, event.data || '')
+  } else {
+    console.log(prefix, event.message, event.data || '')
+  }
 
   // In production, send to monitoring service
   // Example: await fetch('https://your-monitoring-endpoint', { method: 'POST', body: JSON.stringify(fullEvent) })

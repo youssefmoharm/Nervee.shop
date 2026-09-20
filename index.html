@@ -4,13 +4,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
+
   <!-- Primary Meta Tags -->
   <title>NERVE — Cool but Chic | Contemporary Egyptian Concept Store EST 2026</title>
   <meta name="title" content="NERVE — Cool but Chic | Contemporary Egyptian Concept Store" />
   <meta name="description"
     content="NERVE is a contemporary concept store built around individuality, movement, and the pieces that become part of your everyday identity. Cool but chic. Based in everyone's closet. Shop curated fashion, streetwear, and lifestyle products." />
-  <meta name="keywords" content="fashion, streetwear, concept store, Egyptian fashion, clothing, lifestyle, cool fashion, chic style" />
+  <meta name="keywords"
+    content="fashion, streetwear, concept store, Egyptian fashion, clothing, lifestyle, cool fashion, chic style" />
   <meta name="author" content="NERVE" />
   <meta name="robots" content="index, follow" />
   <meta name="revisit-after" content="7 days" />
@@ -42,6 +43,8 @@
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="/nervee-logo-favicon.png" />
+  <link rel="apple-touch-icon" href="/nervee-logo-favicon.png" />
+  <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/nervee-logo-favicon.png" />
 
   <!-- Preconnect for performance -->
@@ -116,6 +119,33 @@
 <body class="bg-navy text-paper font-body antialiased">
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
+  <script>
+    // Register service worker for PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((registration) => {
+            console.log('[SW] Registered:', registration.scope);
+
+            // Check for updates
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // New service worker available, prompt user to refresh
+                  if (confirm('New version available! Refresh to update.')) {
+                    window.location.reload();
+                  }
+                }
+              });
+            });
+          })
+          .catch((error) => {
+            console.log('[SW] Registration failed:', error);
+          });
+      });
+    }
+  </script>
 </body>
 
 </html>

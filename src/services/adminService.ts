@@ -24,12 +24,50 @@ export const adminService = {
       .filter(o => o.status !== 'cancelled')
       .reduce((sum, o) => sum + (o.total ?? 0), 0);
 
+    // Calculate monthly revenue (last 12 months)
+    const monthlyRevenue = await supabase
+      .from('orders')
+      .select('total, created_at')
+      .gte('created_at', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString())
+      .order('created_at', { ascending: true });
+
+    const monthlyStats: { month: string; revenue: number }[] = [];
+    if (monthlyRevenue.data) {
+      const monthlyMap = new Map<string, number>();
+      monthlyRevenue.data.forEach(o => {
+        const month = new Date(o.created_at).toLocaleString('default', { month: 'short' });
+        monthlyMap.set(month, (monthlyMap.get(month) || 0) + (o.total || 0));
+      });
+      monthlyMap.forEach((rev, month) => monthlyStats.push({ month, revenue: rev }));
+    }
+
+    // Calculate daily order count (last 30 days)
+    const dailyOrders = await supabase
+      .from('orders')
+      .select('created_at')
+      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+      .order('created_at', { ascending: true });
+
+    const dailyStats: { day: string; count: number }[] = [];
+    if (dailyOrders.data) {
+      const dailyMap = new Map<string, number>();
+      dailyOrders.data.forEach(o => {
+        const day = new Date(o.created_at).toLocaleString('default', { weekday: 'short' });
+        dailyMap.set(day, (dailyMap.get(day) || 0) + 1);
+      });
+      dailyMap.forEach((count, day) => dailyStats.push({ day, count }));
+    }
+
     return {
       totalRevenue: revenue,
       totalOrders: orderCount ?? 0,
       totalCustomers: customerCount ?? 0,
+      totalProducts: 0, // Can be fetched separately if needed
+      totalCartAbandonments: 0, // Can be fetched from cart_abandonment_tracking table
       recentOrders: orders?.slice(0, 10) ?? [],
       lowStock: lowStock ?? [],
+      monthlyRevenue: monthlyStats,
+      dailyOrders: dailyStats,
     };
   },
 

@@ -1,0 +1,33 @@
+{
+  "name": "NERVE",
+  "short_name": "NERVE",
+  "description": "A contemporary Egyptian concept store built around individuality, movement, and the pieces that become part of your everyday identity. Cool but chic.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#061735",
+  "orientation": "portrait-primary",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["shopping", "entertainment"],
+  "icons": [
+    {
+      "src": "/nervee-logo-favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/nervee-logo-favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "url": "https://www.nerveey.shop",
+  "author": "NERVE",
+  "keywords": "fashion, streetwear, concept store, Egyptian fashion, clothing, lifestyle"
+}
