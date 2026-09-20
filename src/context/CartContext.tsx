@@ -11,6 +11,7 @@ import type { CartLine } from '../types';
 import { useAuth } from './AuthContext';
 import { cartService } from '../services/cartService';
 import { saveCheckoutSession, clearCheckoutSession } from '../lib/checkoutSessionManager';
+import { useToast } from './ToastContext';
 
 interface CartContextValue {
   lines: CartLine[];
@@ -49,6 +50,7 @@ function readGuestCart(): CartLine[] {
  */
 export function CartProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [lines, setLines] = useState<CartLine[]>(() => readGuestCart());
   const [isOpen, setIsOpen] = useState(false);
   const [lastAdded, setLastAdded] = useState<CartLine | null>(null);
@@ -151,6 +153,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
     if (user) {
       void cartService.removeLine(productId, color, size).catch(err => {
+        // Revert the optimistic update on error
+        const removedLine = lines.find(
+          l => l.productId === productId && l.color === color && l.size === size,
+        );
+        if (removedLine) {
+          setLines(prev => [...prev, removedLine]);
+        }
+        showToast('Failed to remove item. Please try again.', 'error');
         console.error('Cart DB sync failed after removeLine:', err);
       });
     }
@@ -158,6 +168,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const updateQuantity = (productId: string, color: string, size: string, quantity: number) => {
     const safeQuantity = Math.max(1, Math.min(99, quantity));
+    const prevLines = lines;
+
     setLines(prev =>
       prev.map(l =>
         l.productId === productId && l.color === color && l.size === size
@@ -165,8 +177,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
           : l,
       ),
     );
+
     if (user) {
       void cartService.updateQuantity(productId, color, size, safeQuantity).catch(err => {
+        // Revert the optimistic update on error
+        setLines(prevLines);
+        showToast('Failed to update quantity. Please try again.', 'error');
         console.error('Cart DB sync failed after updateQuantity:', err);
       });
     }
