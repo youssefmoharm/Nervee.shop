@@ -1,4 +1,4 @@
-﻿import { Suspense, lazy, useState } from 'react';
+﻿import { Suspense, lazy, useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -25,11 +25,6 @@ import { initSentry, trackError } from './lib/sentry';
 import { initAnalytics, usePageTracking } from './lib/analytics';
 import { initPerformanceMonitoring } from './lib/performance';
 import { useAbandonedCartRecovery } from './hooks/useAbandonedCartRecovery';
-
-// Initialize Sentry error tracking and analytics
-initSentry();
-initAnalytics();
-initPerformanceMonitoring();
 
 import Home from './pages/Home';
 const Shop = lazy(() => import('./pages/Shop'));
@@ -128,6 +123,26 @@ function AppContent() {
   const [searchOpen, setSearchOpen] = useState(false);
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
+
+  // Initialize Sentry, analytics, and performance monitoring inside React lifecycle
+  // so a crash in any of them doesn't kill the entire module graph
+  useEffect(() => {
+    try {
+      initSentry();
+    } catch {
+      /* Sentry init failed, continue without it */
+    }
+    try {
+      initAnalytics();
+    } catch {
+      /* Analytics init failed */
+    }
+    try {
+      initPerformanceMonitoring();
+    } catch {
+      /* Perf init failed */
+    }
+  }, []);
 
   // Track page views automatically
   usePageTracking();
