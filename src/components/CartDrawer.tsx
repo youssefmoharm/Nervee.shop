@@ -138,13 +138,15 @@ export default function CartDrawer() {
             <Link
               to="/checkout"
               onClick={closeCart}
-              className="block text-center bg-navy text-white nv-eyebrow py-4 hover:bg-navy-2 transition-colors"
+              data-testid="cart-checkout"
+              className="block text-center bg-navy text-white nv-eyebrow py-4 hover:bg-navy-2 transition-colors active:bg-navy/90 w-full"
             >
               Checkout
             </Link>
             <Link
               to="/cart"
               onClick={closeCart}
+              data-testid="view-bag"
               className="block text-center nv-eyebrow py-3 text-navy/60 hover:text-navy transition-colors"
             >
               View Bag

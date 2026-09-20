@@ -213,7 +213,7 @@ export default function Cart() {
                 <Link
                   to="/checkout"
                   data-testid="proceed-to-checkout"
-                  className="block text-center bg-navy text-white nv-eyebrow py-4 hover:bg-navy-2 transition-colors"
+                  className="block text-center bg-navy text-white nv-eyebrow py-4 hover:bg-navy-2 transition-colors active:bg-navy/90 w-full min-h-[56px] flex items-center justify-center"
                 >
                   Proceed to Checkout
                 </Link>
