@@ -343,7 +343,7 @@ export function ChatbotAITrigger({ onClick }: ChatbotTriggerProps) {
   return (
     <button
       onClick={onClick}
-      className="fixed bottom-4 right-4 z-[80] w-12 h-12 bg-navy text-white rounded-full shadow-lg hover:bg-navy-2 transition-all hover:scale-110 flex items-center justify-center"
+      className="fixed bottom-4 right-4 z-[85] w-14 h-14 md:w-12 md:h-12 bg-navy text-white rounded-full shadow-lg hover:bg-navy-2 transition-all hover:scale-110 flex items-center justify-center"
       aria-label="Open AI chat support"
     >
       <MessageCircle size={20} />
