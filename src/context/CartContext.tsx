@@ -70,6 +70,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [lines, user]);
 
+  // Persist cart to checkout session for all users (guest and logged in)
+  // This ensures checkout session is always up-to-date
+  useEffect(() => {
+    if (lines.length > 0) {
+      saveCheckoutSession({ cartLines: lines });
+    }
+  }, [lines]);
+
   // On sign-in: merge the guest cart into the DB cart once, then load the
   // authoritative DB cart. On sign-out: fall back to (now-empty) guest cart.
   useEffect(() => {
