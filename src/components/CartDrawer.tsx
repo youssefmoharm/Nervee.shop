@@ -137,7 +137,9 @@ export default function CartDrawer() {
             </div>
             <p className="text-xs text-navy/50">Shipping and taxes calculated at checkout.</p>
             <button
-              onClick={() => {
+              onClick={e => {
+                e.stopPropagation();
+                e.preventDefault();
                 closeCart();
                 navigate('/checkout');
               }}
@@ -147,7 +149,9 @@ export default function CartDrawer() {
               Checkout
             </button>
             <button
-              onClick={() => {
+              onClick={e => {
+                e.stopPropagation();
+                e.preventDefault();
                 closeCart();
                 navigate('/cart');
               }}
