@@ -345,8 +345,12 @@ async function callGemini(
     )
 
     if (!response.ok) {
-      const error = await response.text()
-      console.error('Gemini error:', error)
+      const errorText = await response.text()
+      console.error('Gemini API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText.slice(0, 500),
+      })
       return null
     }
 
@@ -355,20 +359,23 @@ async function callGemini(
     try {
       data = JSON.parse(raw)
     } catch {
-      console.error('GEMINI_RAW_BODY status', response.status, 'body_starts', JSON.stringify(raw.slice(0, 200)))
-      throw new Error(`Gemini returned non-JSON (HTTP ${response.status}): ${raw.slice(0, 200)}`)
+      console.error('Gemini: non-JSON response', {
+        status: response.status,
+        body_starts: raw.slice(0, 200),
+      })
+      return null
     }
 
     const d = data as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>; usageMetadata?: { totalTokenCount?: number } }
     const text = d.candidates?.[0]?.content?.parts?.[0]?.text
     if (!text) {
-      console.error('Gemini: no response text', JSON.stringify(data).slice(0, 500))
+      console.error('Gemini: no response text in candidates', JSON.stringify(d).slice(0, 500))
       return null
     }
 
     return { response: text, tokensUsed: d.usageMetadata?.totalTokenCount ?? 0 }
   } catch (err) {
-    console.error('Gemini API call failed:', err)
+    console.error('Gemini API call failed:', err instanceof Error ? err.message : String(err))
     return null
   }
 }
