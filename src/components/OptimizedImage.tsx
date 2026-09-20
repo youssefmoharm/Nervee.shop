@@ -12,7 +12,7 @@
 
 import { useState, useEffect, HTMLAttributes } from 'react';
 
-interface OptimizedImageProps extends Omit<HTMLAttributes<HTMLImageElement>, 'src'> {
+interface OptimizedImageProps extends Omit<HTMLAttributes<HTMLImageElement>, 'src' | 'alt'> {
   src?: string;
   alt?: string;
   width?: number;
@@ -24,13 +24,10 @@ interface OptimizedImageProps extends Omit<HTMLAttributes<HTMLImageElement>, 'sr
   priority?: boolean;
   objectFit?: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
   loading?: 'eager' | 'lazy';
-  // Allow custom props for image generation
-  slug?: string;
-  color?: string;
-  imageType?: string;
-  size?: string;
-  productName?: string;
-  testId?: string;
+}
+
+interface OptimizedImageWithExtraProps extends OptimizedImageProps {
+  [key: string]: unknown;
 }
 
 export default function OptimizedImage({
@@ -46,14 +43,8 @@ export default function OptimizedImage({
   objectFit = 'cover',
   loading,
   style,
-  _slug,
-  _color,
-  _imageType,
-  _size,
-  _productName,
-  _testId,
   ...props
-}: OptimizedImageProps) {
+}: OptimizedImageWithExtraProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [formats, setFormats] = useState<string[]>([]);
