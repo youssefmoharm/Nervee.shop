@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Minus, Plus, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useRef, useEffect } from 'react';
@@ -6,6 +6,7 @@ import { useRef, useEffect } from 'react';
 export default function CartDrawer() {
   const { lines, isOpen, closeCart, removeLine, updateQuantity, subtotal } = useCart();
   const firstItemRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   // Focus management: move focus to first item when drawer opens
   useEffect(() => {
@@ -20,7 +21,7 @@ export default function CartDrawer() {
         type="button"
         aria-label="Close overlay"
         className={`fixed inset-0 z-[60] bg-navy/60 backdrop-blur-sm transition-opacity duration-300 ${
-          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         } border-0 p-0`}
         onClick={closeCart}
       />
@@ -135,22 +136,26 @@ export default function CartDrawer() {
               </span>
             </div>
             <p className="text-xs text-navy/50">Shipping and taxes calculated at checkout.</p>
-            <Link
-              to="/checkout"
-              onClick={closeCart}
+            <button
+              onClick={() => {
+                closeCart();
+                navigate('/checkout');
+              }}
               data-testid="cart-checkout"
               className="block text-center bg-navy text-white nv-eyebrow py-4 hover:bg-navy-2 transition-colors active:bg-navy/90 w-full"
             >
               Checkout
-            </Link>
-            <Link
-              to="/cart"
-              onClick={closeCart}
+            </button>
+            <button
+              onClick={() => {
+                closeCart();
+                navigate('/cart');
+              }}
               data-testid="view-bag"
               className="block text-center nv-eyebrow py-3 text-navy/60 hover:text-navy transition-colors"
             >
               View Bag
-            </Link>
+            </button>
           </div>
         )}
       </aside>
