@@ -127,13 +127,12 @@ function AppContent() {
   const isAdminRoute = location.pathname.startsWith('/admin');
 
   // Initialize Sentry, analytics, and performance monitoring inside React lifecycle
-  // so a crash in any of them doesn't kill the entire module graph
+  // so a crash in any of them doesn't kill the entire module graph.
+  // initSentry is async (dynamic import) — fire-and-forget.
   useEffect(() => {
-    try {
-      initSentry();
-    } catch {
+    initSentry().catch(() => {
       /* Sentry init failed, continue without it */
-    }
+    });
     try {
       initAnalytics();
     } catch {
