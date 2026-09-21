@@ -77,6 +77,13 @@ export default defineConfig({
       'tests/e2e/**',
       'tests/fixtures/**',
       '**/Nervee.shop/**',
+      // Agent/worktree scratch dirs: they contain duplicate copies of src/,
+      // which would otherwise run the same specs twice (and report failures
+      // against files that are not part of this project's source).
+      '**/.kilo/**',
+      '**/.freebuff/**',
+      '**/playwright-report/**',
+      '**/test-results/**',
     ],
     coverage: {
       reporter: ['text', 'json', 'html'],
@@ -95,6 +102,8 @@ export default defineConfig({
         'src/main.tsx',
         'src/vite-env.d.ts',
         'Nervee.shop/**',
+        '.kilo/**',
+        '.freebuff/**',
       ],
     },
   },

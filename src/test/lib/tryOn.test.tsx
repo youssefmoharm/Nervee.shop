@@ -156,6 +156,62 @@ describe('VirtualTryOnButton gating', () => {
   });
 });
 
+describe('VITE_TRYON_DEV_CONFIG sandbox', () => {
+  const SANDBOX = {
+    apiToken: 'sandbox-token',
+    lenses: {
+      'nerve-oversized-tee': { lensId: REAL_CONFIG.lensId, lensGroupId: REAL_CONFIG.lensGroupId },
+      'p-003': { enabled: true, lensId: 'b1b2b3b4b5b6b7b8b9b0c1c2c3c4c5c6' },
+      'p-004': { enabled: true, lensId: 'YOUR_LENS_ID' },
+      'p-005': { enabled: false, lensId: 'c1c2c3c4c5c6c7c8c9c0d1d2d3d4c5c6' },
+    },
+  };
+
+  beforeEach(() => {
+    for (const key of Object.keys(staticTryOnOverrides)) delete staticTryOnOverrides[key];
+    vi.stubEnv('VITE_TRYON_DEV_CONFIG', JSON.stringify(SANDBOX));
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('resolves a sandbox lens by product slug', () => {
+    expect(resolveProductTryOnConfig(product())).toEqual(REAL_CONFIG);
+  });
+
+  it('resolves a sandbox lens by product id', () => {
+    const p = product({ id: 'p-003', slug: 'some-other-product' });
+    expect(resolveProductTryOnConfig(p)?.lensId).toBe('b1b2b3b4b5b6b7b8b9b0c1c2c3c4c5c6');
+  });
+
+  it('takes precedence over product-level and static catalog config', () => {
+    staticTryOnOverrides['p-002'] = { enabled: true, lensId: 'd1d2d3d4d5d6d7d8d9d0e1e2e3e4d5d6' };
+    const p = product({
+      virtualTryOn: { enabled: true, lensId: 'e1e2e3e4e5e6e7e8e9e0f1f2f3f4e5e6' },
+    });
+    expect(resolveProductTryOnConfig(p)).toEqual(REAL_CONFIG);
+  });
+
+  it('ignores disabled and placeholder sandbox entries', () => {
+    expect(resolveProductTryOnConfig(product({ id: 'p-004', slug: 'p-004' }))).toBeNull();
+    expect(resolveProductTryOnConfig(product({ id: 'p-005', slug: 'p-005' }))).toBeNull();
+  });
+
+  it('supplies the sandbox api token to the session config', () => {
+    vi.stubEnv('VITE_SNAPCHAT_API_TOKEN', '');
+    expect(getSnapchatApiToken()).toBe('sandbox-token');
+    const result = getTryOnSessionConfig(product());
+    expect('config' in result && result.config.lensGroupId).toBe(REAL_CONFIG.lensGroupId);
+  });
+
+  it('ignores malformed JSON instead of crashing resolution', () => {
+    vi.stubEnv('VITE_TRYON_DEV_CONFIG', '{not json');
+    expect(resolveProductTryOnConfig(product())).toBeNull();
+    expect(resolveProductTryOnConfig(product({ virtualTryOn: REAL_CONFIG }))).toEqual(REAL_CONFIG);
+  });
+});
+
 describe('detectDevice', () => {
   it('treats desktop UA as non-mobile', () => {
     Object.defineProperty(window, 'navigator', {

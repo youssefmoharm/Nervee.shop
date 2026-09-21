@@ -3,7 +3,10 @@
 -- =============================================================================
 -- Adds a per-product AR configuration column so each product can point at its
 -- own Snapchat Lens without code changes. The storefront reads this column via
--- src/lib/tryOnConfig.ts (fetchTryOnConfigs / resolveProductTryOnConfig).
+-- src/services/productService.ts (transformProduct → resolveProductTryOnConfig).
+--
+-- PREFERRED WAY TO SET IT: Admin → "AR Try-On" (/admin/try-on), which validates
+-- lens IDs and writes this column for you. The SQL below is only for bulk edits.
 --
 -- Example row update:
 --   UPDATE products SET virtual_try_on = jsonb_build_object(

@@ -61,6 +61,7 @@ App available at `http://localhost:5173`
 - **[SECURITY_IMPLEMENTATION.md](./SECURITY_IMPLEMENTATION.md)** - Security details
 - **[TESTING.md](./TESTING.md)** - Testing checklist
 - **[PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md)** - Deploy checklist
+- **[SNAPCHAT_SETUP.md](./SNAPCHAT_SETUP.md)** - AR Virtual Try-On setup (Snap Camera Kit, Lenses, QR flow)
 
 ## Project Structure
 

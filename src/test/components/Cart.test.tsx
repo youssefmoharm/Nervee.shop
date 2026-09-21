@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import { CartProvider, useCart } from '../../context/CartContext';
 import { AuthProvider } from '../../context/AuthContext';
+import { ToastProvider } from '../../context/ToastContext';
 import type { CartLine } from '../../types';
 
 // Mock cartService
@@ -93,11 +94,15 @@ const CartTestComponent = () => {
   );
 };
 
+// CartProvider calls useToast (add-to-bag feedback), so ToastProvider must wrap
+// it — mirrors the real provider order in App.tsx.
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
   <BrowserRouter>
-    <AuthProvider>
-      <CartProvider>{children}</CartProvider>
-    </AuthProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <CartProvider>{children}</CartProvider>
+      </AuthProvider>
+    </ToastProvider>
   </BrowserRouter>
 );
 

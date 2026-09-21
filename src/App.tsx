@@ -59,6 +59,7 @@ const AccountWishlist = lazy(() => import('./pages/Account/Wishlist'));
 // admins ever visit, so it shouldn't add to the storefront's initial load.
 const ARTryOnPage = lazy(() => import('./pages/ARTryOnPage'));
 const AdminDashboard = lazy(() => import('./pages/Admin/Dashboard'));
+const AdminVirtualTryOn = lazy(() => import('./pages/Admin/VirtualTryOn'));
 const AdminProducts = lazy(() => import('./pages/Admin/Products'));
 const AdminProductForm = lazy(() => import('./pages/Admin/ProductForm'));
 const AdminOrders = lazy(() => import('./pages/Admin/Orders'));
@@ -291,6 +292,14 @@ function AppContent() {
                 element={
                   <AdminRoute>
                     <AdminProductForm />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="try-on"
+                element={
+                  <AdminRoute>
+                    <AdminVirtualTryOn />
                   </AdminRoute>
                 }
               />
