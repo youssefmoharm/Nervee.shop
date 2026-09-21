@@ -165,7 +165,7 @@ export default function ComparisonModal({
                                 borderColor: color.hex === '#FFFFFF' ? '#A7A7A7' : color.hex,
                               }}
                             />
-                            <span className="hidden md:inline">{color.name}</span>
+                            <span className="hidden md:inline text-navy">{color.name}</span>
                           </div>
                         ))}
                       </div>
