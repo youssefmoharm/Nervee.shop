@@ -89,10 +89,10 @@ export default function ComparisonModal({
             </h2>
             <button
               onClick={onClose}
-              className="p-1 hover:bg-navy/10 rounded-full transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-navy"
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-navy/10 text-navy hover:bg-navy/20 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-navy"
               aria-label="Close modal"
             >
-              <X size={24} />
+              <X size={18} />
             </button>
           </div>
 
@@ -102,11 +102,11 @@ export default function ComparisonModal({
               <tbody>
                 {/* Product images row */}
                 <tr className="border-b border-navy/10">
-                  <th className="bg-mist text-left p-3 md:p-4 font-semibold text-navy min-w-[120px] sticky left-0 z-10">
+                  <th className="bg-mist text-left p-3 md:p-4 font-semibold text-navy min-w-[120px] w-[140px] sticky left-0 z-10">
                     Product
                   </th>
                   {products.map(product => (
-                    <td key={product.id} className="p-3 md:p-4 text-center min-w-[200px]">
+                    <td key={product.id} className="p-3 md:p-4 text-center w-1/3">
                       <div className="space-y-2">
                         <img
                           src={product.colors[0].image}
@@ -131,7 +131,7 @@ export default function ComparisonModal({
                     Price
                   </th>
                   {products.map(product => (
-                    <td key={`${product.id}-price`} className="p-3 md:p-4 text-center">
+                    <td key={`${product.id}-price`} className="p-3 md:p-4 text-center w-1/3">
                       <span className="font-bold text-navy">
                         EGP {product.price.toLocaleString()}
                       </span>
@@ -150,7 +150,7 @@ export default function ComparisonModal({
                     Colors
                   </th>
                   {products.map(product => (
-                    <td key={`${product.id}-colors`} className="p-3 md:p-4 text-center">
+                    <td key={`${product.id}-colors`} className="p-3 md:p-4 text-center w-1/3">
                       <div className="flex flex-wrap gap-2 justify-center">
                         {product.colors.map(color => (
                           <div
@@ -179,7 +179,7 @@ export default function ComparisonModal({
                     Sizes
                   </th>
                   {products.map(product => (
-                    <td key={`${product.id}-sizes`} className="p-3 md:p-4 text-center">
+                    <td key={`${product.id}-sizes`} className="p-3 md:p-4 text-center w-1/3">
                       <div className="flex flex-wrap gap-1 justify-center">
                         {product.sizes.map(size => (
                           <span
@@ -204,7 +204,7 @@ export default function ComparisonModal({
                     Material
                   </th>
                   {products.map(product => (
-                    <td key={`${product.id}-material`} className="p-3 md:p-4 text-center">
+                    <td key={`${product.id}-material`} className="p-3 md:p-4 text-center w-1/3">
                       <p className="text-navy">{product.material}</p>
                     </td>
                   ))}
@@ -216,7 +216,7 @@ export default function ComparisonModal({
                     Care
                   </th>
                   {products.map(product => (
-                    <td key={`${product.id}-care`} className="p-3 md:p-4 text-center">
+                    <td key={`${product.id}-care`} className="p-3 md:p-4 text-center w-1/3">
                       <ul className="text-xs md:text-sm text-navy space-y-1">
                         {product.care.map((instruction, i) => (
                           <li key={i}>• {instruction}</li>
@@ -232,7 +232,7 @@ export default function ComparisonModal({
                     Badge
                   </th>
                   {products.map(product => (
-                    <td key={`${product.id}-badge`} className="p-3 md:p-4 text-center">
+                    <td key={`${product.id}-badge`} className="p-3 md:p-4 text-center w-1/3">
                       {product.badge ? (
                         <span className="inline-block bg-navy text-white text-xs font-semibold tracking-widest px-2 py-1 rounded">
                           {product.badge}
@@ -250,7 +250,7 @@ export default function ComparisonModal({
                     Action
                   </th>
                   {products.map(product => (
-                    <td key={`${product.id}-action`} className="p-3 md:p-4 text-center">
+                    <td key={`${product.id}-action`} className="p-3 md:p-4 text-center w-1/3">
                       <button
                         onClick={() => handleAddToCart(product)}
                         className="w-full bg-navy text-white text-xs md:text-sm font-semibold py-2 rounded hover:bg-navy-2 transition-colors"
