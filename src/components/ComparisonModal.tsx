@@ -19,7 +19,7 @@ export default function ComparisonModal({
   onRemove,
   onClear,
 }: ComparisonModalProps) {
-  const { addLine } = useCart();
+  const { addLine, isOpen: isCartOpen } = useCart();
   const { showToast } = useToast();
 
   // Escape key handler - must be before early return
@@ -59,7 +59,7 @@ export default function ComparisonModal({
   };
 
   return (
-    <FocusTrap active={products.length > 0} onClickOutside={onClose}>
+    <FocusTrap active={products.length > 0 && !isCartOpen} onClickOutside={onClose}>
       <button
         type="button"
         aria-label="Close comparison modal backdrop"
