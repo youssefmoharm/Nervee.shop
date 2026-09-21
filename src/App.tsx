@@ -57,6 +57,7 @@ const AccountWishlist = lazy(() => import('./pages/Account/Wishlist'));
 
 // Lazy-loaded: the admin dashboard is a distinct, heavier bundle that only
 // admins ever visit, so it shouldn't add to the storefront's initial load.
+const ARTryOnPage = lazy(() => import('./pages/ARTryOnPage'));
 const AdminDashboard = lazy(() => import('./pages/Admin/Dashboard'));
 const AdminProducts = lazy(() => import('./pages/Admin/Products'));
 const AdminProductForm = lazy(() => import('./pages/Admin/ProductForm'));
@@ -188,6 +189,16 @@ function AppContent() {
       <Route path="/size-guide" element={<SizeGuide />} />
       <Route path="/newsletter" element={<Newsletter />} />
       <Route path="/track-order" element={<TrackOrder />} />
+
+      {/* Standalone AR try-on page — QR destination; re-resolves the lens per product slug */}
+      <Route
+        path="/ar/:slug"
+        element={
+          <Suspense fallback={<SimpleSkeleton />}>
+            <ARTryOnPage />
+          </Suspense>
+        }
+      />
 
       <Route path="/guest-order" element={<GuestOrder />} />
       <Route path="/wishlist/:shareCode" element={<SharedWishlist />} />
