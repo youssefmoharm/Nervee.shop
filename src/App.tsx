@@ -368,20 +368,20 @@ function AppContent() {
 
 export default function App() {
   return (
-    <CartProvider>
-      <WishlistProvider>
-        <BrowsingHistoryProvider>
-          <BundleProvider>
-            <ToastProvider>
+    <ToastProvider>
+      <CartProvider>
+        <WishlistProvider>
+          <BrowsingHistoryProvider>
+            <BundleProvider>
               <QuickViewProvider>
                 <ComparisonProvider>
                   <AppContent />
                 </ComparisonProvider>
               </QuickViewProvider>
-            </ToastProvider>
-          </BundleProvider>
-        </BrowsingHistoryProvider>
-      </WishlistProvider>
-    </CartProvider>
+            </BundleProvider>
+          </BrowsingHistoryProvider>
+        </WishlistProvider>
+      </CartProvider>
+    </ToastProvider>
   );
 }
