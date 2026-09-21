@@ -56,6 +56,7 @@ export default function ARTryOn({ isOpen, onClose, product, colorName }: ARTryOn
           role="dialog"
           aria-modal="true"
           aria-labelledby="tryon-modal-title"
+          data-testid="tryon-modal"
           className="relative bg-white w-full max-w-md max-h-[92vh] overflow-y-auto nv-scroll shadow-2xl"
         >
           {/* Header */}

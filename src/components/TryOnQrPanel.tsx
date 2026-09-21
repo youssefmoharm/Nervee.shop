@@ -48,6 +48,7 @@ export default function TryOnQrPanel({
 
   return (
     <div
+      data-testid="tryon-qr"
       className={`rounded-lg p-5 text-center ${
         inverted ? 'bg-white' : 'bg-mist/60 border border-navy/10'
       }`}

@@ -13,7 +13,6 @@
  * it is NOT a secret like the Snap API key; access is locked to your domains).
  */
 
-import { isSupabaseConfigured, supabase } from './supabase';
 import { staticTryOnOverrides } from '../data/tryOnCatalog';
 import type { Product } from '../types';
 import type {
@@ -23,11 +22,65 @@ import type {
 } from '../types/virtualTryOn';
 
 /**
+ * DEV-ONLY try-on sandbox, supplied as JSON in `VITE_TRYON_DEV_CONFIG`:
+ *
+ *   VITE_TRYON_DEV_CONFIG='{"apiToken":"<token>","lenses":{
+ *      "nerve-oversized-tee":{"lensId":"<32 hex>","lensGroupId":"<32 hex>"}}}'
+ *
+ * Lens keys may be a product slug or id. It exists so developers, QA and E2E
+ * runs can exercise the whole try-on surface (gating → gate → QR → live
+ * session) for a product without waiting for Snap Camera Kit access — it is
+ * equally useful for pointing a staging product at a scratch lens.
+ *
+ * It never weakens production: the whole branch is behind `import.meta.env.DEV`,
+ * which is false in a production build, so a deploy still needs real Snap
+ * credentials. And it cannot fake AR — an invalid lens here fails inside
+ * Camera Kit with a real error, shown by the normal error states.
+ */
+interface DevTryOnSandbox {
+  apiToken?: string;
+  lenses: Record<string, VirtualTryOnConfig>;
+}
+
+function getDevTryOnSandbox(): DevTryOnSandbox | null {
+  if (!import.meta.env.DEV) return null;
+  const raw = import.meta.env.VITE_TRYON_DEV_CONFIG as string | undefined;
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw) as { apiToken?: unknown; lenses?: unknown };
+    const lenses: Record<string, VirtualTryOnConfig> = {};
+    if (parsed?.lenses && typeof parsed.lenses === 'object') {
+      for (const [key, value] of Object.entries(parsed.lenses as Record<string, unknown>)) {
+        // Listed lenses are enabled by default — `enabled: false` opts back out.
+        const cfg = normalizeTryOnConfig({ enabled: true, ...(value as object) });
+        if (cfg) lenses[key] = cfg;
+      }
+    }
+    return {
+      ...(typeof parsed?.apiToken === 'string' && parsed.apiToken
+        ? { apiToken: parsed.apiToken }
+        : {}),
+      lenses,
+    };
+  } catch {
+    if (import.meta.env.DEV) {
+      console.warn('[tryOnConfig] VITE_TRYON_DEV_CONFIG is not valid JSON — ignoring it.');
+    }
+    return null;
+  }
+}
+
+/**
  * Public client token for Camera Kit (from Snap Kit Developer Portal).
  * Read dynamically (not at module load) so builds/tests can vary the env.
  */
 export function getSnapchatApiToken(): string | undefined {
-  return (import.meta.env.VITE_SNAPCHAT_API_TOKEN as string | undefined) || undefined;
+  return (
+    getDevTryOnSandbox()?.apiToken ||
+    (import.meta.env.VITE_SNAPCHAT_API_TOKEN as string | undefined) ||
+    undefined
+  );
 }
 
 /** Optional default Lens Group for the single-lens fallback config. */
@@ -75,6 +128,16 @@ export function normalizeTryOnConfig(raw: unknown): VirtualTryOnConfig | null {
 
 /** Compute the effective try-on config for a product (sync; DB layer overrides applied at load). */
 export function resolveProductTryOnConfig(product: Product): VirtualTryOnConfig | null {
+  // 0. DEV-only sandbox lens (VITE_TRYON_DEV_CONFIG) — highest precedence so a
+  //    developer can point at a scratch lens without touching the database.
+  const sandbox = getDevTryOnSandbox();
+  if (sandbox) {
+    const sandboxConfig =
+      normalizeTryOnConfig(sandbox.lenses[product.slug]) ||
+      normalizeTryOnConfig(sandbox.lenses[product.id]);
+    if (sandboxConfig) return sandboxConfig;
+  }
+
   // 1. Explicit per-product config already mapped onto the Product object
   //    (either from Supabase `virtual_try_on` jsonb or from static catalog data).
   const own = normalizeTryOnConfig((product as Product & { virtualTryOn?: unknown }).virtualTryOn);
@@ -212,24 +275,4 @@ export function classifyTryOnError(err: unknown): TryOnErrorDetail {
     hint: 'Please try again in a moment.',
     raw,
   };
-}
-
-/** Fetch per-product try-on configs from Supabase (no-op when unconfigured). */
-export async function fetchTryOnConfigs(productIds: string[]): Promise<Record<string, unknown>> {
-  if (!isSupabaseConfigured || productIds.length === 0) return {};
-  try {
-    const { data, error } = await supabase
-      .from('products')
-      .select('id, virtual_try_on')
-      .in('id', productIds);
-    if (error) throw error;
-    const out: Record<string, unknown> = {};
-    for (const row of data ?? []) {
-      if (row?.id && row?.virtual_try_on) out[row.id as string] = row.virtual_try_on;
-    }
-    return out;
-  } catch {
-    // Never break the storefront because AR config could not be fetched.
-    return {};
-  }
 }
