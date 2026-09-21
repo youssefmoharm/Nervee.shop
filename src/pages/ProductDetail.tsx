@@ -17,6 +17,7 @@ import ReviewPhotoGallery from '../components/ReviewPhotoGallery';
 import CompleteTheLook from '../components/CompleteTheLook';
 import PersonalizedRecommendations from '../components/PersonalizedRecommendations';
 import ARTryOn from '../components/ARTryOn';
+import VirtualTryOnButton from '../components/VirtualTryOnButton';
 import Skeleton from '../components/Skeleton';
 import OptimizedImage from '../components/OptimizedImage';
 
@@ -561,13 +562,8 @@ export default function ProductDetail() {
               Buy Now
             </button>
 
-            {/* AR Try-On Button */}
-            <button
-              onClick={() => setArOpen(true)}
-              className="mt-3 w-full border border-yellow-500 text-yellow-600 nv-eyebrow py-4 hover:bg-yellow-50 transition-colors flex items-center justify-center gap-2"
-            >
-              <span>📱</span> Try in AR
-            </button>
+            {/* AR Try-On Button — hidden entirely for products without a lens */}
+            <VirtualTryOnButton product={product} onClick={() => setArOpen(true)} />
 
             {/* Tabs */}
             <div className="mt-10 border-t border-navy/10">
@@ -963,7 +959,12 @@ export default function ProductDetail() {
       </div>
       {sizeGuideOpen && <SizeGuideModal onClose={() => setSizeGuideOpen(false)} />}
       {product && (
-        <ARTryOn isOpen={arOpen} onClose={() => setArOpen(false)} productName={product.name} />
+        <ARTryOn
+          isOpen={arOpen}
+          onClose={() => setArOpen(false)}
+          product={product}
+          colorName={product.colors[colorIdx]?.name}
+        />
       )}
     </div>
   );

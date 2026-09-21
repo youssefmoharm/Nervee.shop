@@ -2,6 +2,8 @@ export type Size = 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL';
 
 export type Badge = 'NEW' | 'BEST SELLER' | 'LIMITED' | 'SALE' | 'RESTOCKED' | null;
 
+import type { VirtualTryOnConfig } from './virtualTryOn';
+
 export interface ProductColor {
   name: string;
   hex: string;
@@ -33,6 +35,8 @@ export interface Product {
   isBestSeller: boolean;
   createdAt: string;
   fitNotes?: string;
+  /** Snap AR try-on config (present only when the product supports Virtual Try-On). */
+  virtualTryOn?: VirtualTryOnConfig;
 }
 
 export type Category =
