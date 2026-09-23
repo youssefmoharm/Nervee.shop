@@ -32,7 +32,6 @@
   <meta name="twitter:title" content="NERVE — Cool but Chic" />
   <meta name="twitter:description" content="A contemporary Egyptian concept store. Cool but chic. EST 2026." />
   <meta name="twitter:image" content="https://www.nerveey.shop/nervee-logo-favicon.png" />
-  <meta name="twitter:creator" content="@nervee_shop" />
 
   <!-- Additional Meta Tags -->
   <meta name="color-scheme" content="light" />
@@ -114,7 +113,65 @@
 </head>
 
 <body class="bg-navy text-paper font-body antialiased">
-  <div id="root"></div>
+  <div id="root">
+    <!-- Static crawlable content — React replaces this on mount -->
+    <header>
+      <nav aria-label="Main">
+        <a href="/">NERVE</a>
+        <a href="/shop">Shop</a>
+        <a href="/collections">Collections</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/faq">FAQ</a>
+      </nav>
+    </header>
+    <main>
+      <h1>NERVE — Cool but Chic | Contemporary Egyptian Concept Store EST 2026</h1>
+      <p>
+        NERVE is a contemporary concept store built around individuality, movement, and the pieces
+        that become part of your everyday identity. Cool but chic. Based in Alexandria, Egypt.
+        Shop curated fashion, streetwear, and lifestyle products with free standard shipping on
+        orders over EGP 2,000 and cash on delivery across Egypt.
+      </p>
+      <section>
+        <h2>Shop</h2>
+        <ul>
+          <li><a href="/shop">All products</a></li>
+          <li><a href="/shop?category=New%20Arrivals">New Drop</a></li>
+          <li><a href="/collections">Collections</a></li>
+          <li><a href="/size-guide">Size Guide</a></li>
+          <li><a href="/track-order">Track Order</a></li>
+        </ul>
+      </section>
+      <section>
+        <h2>Help</h2>
+        <ul>
+          <li><a href="/shipping">Shipping &amp; Delivery</a></li>
+          <li><a href="/returns">Returns &amp; Exchanges</a></li>
+          <li><a href="/faq">Frequently Asked Questions</a></li>
+          <li><a href="/contact">Contact Us</a></li>
+          <li><a href="mailto:nerveey.shop@gmail.com">nerveey.shop@gmail.com</a></li>
+          <li><a href="https://www.instagram.com/gotthenerve58">Instagram @gotthenerve58</a></li>
+        </ul>
+      </section>
+      <section>
+        <h2>Legal</h2>
+        <ul>
+          <li><a href="/privacy">Privacy Policy</a></li>
+          <li><a href="/terms">Terms &amp; Conditions</a></li>
+        </ul>
+      </section>
+    </main>
+    <footer>
+      <p>© 2026 NERVE. All rights reserved. Alexandria, Egypt.</p>
+    </footer>
+    <noscript>
+      <p>
+        JavaScript is required for the full shopping experience. Email
+        <a href="mailto:nerveey.shop@gmail.com">nerveey.shop@gmail.com</a> to order.
+      </p>
+    </noscript>
+  </div>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 

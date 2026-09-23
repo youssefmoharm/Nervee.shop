@@ -11,6 +11,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { useBrowsingHistory } from '../context/BrowsingHistoryContext';
 import { useToast } from '../context/ToastContext';
 import { useSEO, useStructuredData } from '../lib/seo';
+import { ecommerce } from '../lib/analytics';
 import ProductCard from '../components/ProductCard';
 import SizeGuideModal from '../components/SizeGuideModal';
 import ReviewPhotoGallery from '../components/ReviewPhotoGallery';
@@ -166,6 +167,7 @@ export default function ProductDetail() {
         return;
       }
       setProduct(p);
+      ecommerce.viewProduct(p.id, p.name, p.category, p.price);
       // eslint-disable-next-line react-hooks/exhaustive-deps
       addView(p.id, p.category); // addView is stable - no need to add to deps
       const rel = await productService.getRelated(p);

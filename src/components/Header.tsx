@@ -9,6 +9,7 @@ const links = [
   { to: '/shop?category=New%20Arrivals', label: 'New Drop' },
   { to: '/collections', label: 'Collections' },
   { to: '/about', label: 'About' },
+  { to: '/contact', label: 'Contact' },
 ];
 
 export default function Header({ onSearch }: { onSearch: () => void }) {

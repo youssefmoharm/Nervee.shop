@@ -3,10 +3,17 @@ import { ChevronRight, HelpCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SizeGuideTool from '../components/SizeGuideTool';
 import { sizeCharts, materialFitGuides, faqItems, fitDescriptions } from '../data/sizingData';
+import { useSEO } from '../lib/seo';
 import Button from '../components/Button';
 
 export default function SizeGuide() {
   const [toolOpen, setToolOpen] = useState(false);
+
+  useSEO({
+    title: 'Size Guide | NERVE',
+    description:
+      'Find your perfect fit with NERVE size charts, measurement guide, and fit notes for Slim, Regular, and Oversized styles.',
+  });
 
   return (
     <div className="min-h-screen bg-white">

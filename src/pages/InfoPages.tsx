@@ -1,7 +1,10 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { contactService } from '../services/contactService';
-import { useSEO } from '../lib/seo';
+import { useSEO, getFAQSchema } from '../lib/seo';
+import { useStructuredData } from '../hooks/useStructuredData';
+import { faqItems } from '../data/sizingData';
 
 const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || 'nerveey.shop@gmail.com';
 
@@ -177,6 +180,105 @@ export function Returns() {
       </p>
       <p>To start a return, contact {SUPPORT_EMAIL} with your order number.</p>
       <p>Sale and limited/archive items are final sale unless faulty.</p>
+    </Shell>
+  );
+}
+
+const shopFaqs = [
+  {
+    question: 'How long does delivery take?',
+    answer:
+      'Standard delivery is 2–5 business days across Egypt (free over EGP 2,000). Express delivery is 1–2 business days for EGP 200. Orders process within 24 hours on business days.',
+  },
+  {
+    question: 'Do you offer cash on delivery?',
+    answer:
+      'Yes. Cash on delivery is available across Egypt — payment is due to the courier when your order arrives. We never collect or store payment card details.',
+  },
+  {
+    question: 'How do I track my order?',
+    answer:
+      'Use the Track Order page with your order number, or check the tracking link emailed once your order ships. You can also email nerveey.shop@gmail.com.',
+  },
+  {
+    question: 'Can I return or exchange an item?',
+    answer:
+      'Unworn items with tags can be returned within 14 days of delivery for a full refund. Free size exchanges are available within 30 days. Sale and limited items are final sale unless faulty.',
+  },
+  {
+    question: 'How do I choose the right size?',
+    answer:
+      'Visit the Size Guide for measurements and fit notes. Slim fits run tailored, Regular is classic comfort, and Oversized is relaxed. Contact us if you are between sizes.',
+  },
+  {
+    question: 'Where are you based?',
+    answer:
+      'NERVE is a contemporary Egyptian concept store based in Alexandria, Egypt. We ship nationwide.',
+  },
+  {
+    question: 'How do I contact customer support?',
+    answer:
+      'Email nerveey.shop@gmail.com or DM @gotthenerve58 on Instagram. We usually reply within 24 hours, Saturday to Thursday 10 AM – 10 PM.',
+  },
+];
+
+export function Faq() {
+  useSEO({
+    title: 'FAQ | NERVE — Shipping, Returns & Sizing',
+    description:
+      'Answers about NERVE shipping, cash on delivery, returns, exchanges, sizing, and how to reach us. Free standard shipping over EGP 2,000.',
+  });
+  useStructuredData({
+    '@context': 'https://schema.org',
+    ...getFAQSchema([...faqItems, ...shopFaqs]),
+  });
+  return (
+    <Shell title="FAQ">
+      <p>
+        Quick answers on shipping, returns, sizing, and orders. Still stuck? Email{' '}
+        <a href={`mailto:${SUPPORT_EMAIL}`} className="underline hover:text-navy/80">
+          {SUPPORT_EMAIL}
+        </a>
+        .
+      </p>
+      <h2 className="text-navy font-semibold text-lg pt-4">Orders &amp; Delivery</h2>
+      {shopFaqs.slice(0, 3).map(faq => (
+        <div key={faq.question} className="pt-3">
+          <h3 className="font-semibold text-navy">{faq.question}</h3>
+          <p>{faq.answer}</p>
+        </div>
+      ))}
+      <h2 className="text-navy font-semibold text-lg pt-4">Returns &amp; Sizing</h2>
+      {shopFaqs
+        .slice(3, 5)
+        .concat(faqItems.slice(0, 3))
+        .map(faq => (
+          <div key={faq.question} className="pt-3">
+            <h3 className="font-semibold text-navy">{faq.question}</h3>
+            <p>{faq.answer}</p>
+          </div>
+        ))}
+      <h2 className="text-navy font-semibold text-lg pt-4">More Questions</h2>
+      {shopFaqs.slice(5).map(faq => (
+        <div key={faq.question} className="pt-3">
+          <h3 className="font-semibold text-navy">{faq.question}</h3>
+          <p>{faq.answer}</p>
+        </div>
+      ))}
+      <p className="pt-6">
+        <Link to="/contact" className="underline hover:text-navy/80">
+          Contact us
+        </Link>{' '}
+        or visit{' '}
+        <Link to="/shipping" className="underline hover:text-navy/80">
+          Shipping
+        </Link>{' '}
+        and{' '}
+        <Link to="/returns" className="underline hover:text-navy/80">
+          Returns
+        </Link>{' '}
+        for full policies.
+      </p>
     </Shell>
   );
 }

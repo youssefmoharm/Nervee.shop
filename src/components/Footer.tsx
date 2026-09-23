@@ -14,6 +14,8 @@ const NAV_LINKS = [
 const INFO_LINKS = [
   { name: 'Shipping', href: '/shipping' },
   { name: 'Returns', href: '/returns' },
+  { name: 'FAQ', href: '/faq' },
+  { name: 'Size Guide', href: '/size-guide' },
   { name: 'Privacy', href: '/privacy' },
   { name: 'Terms', href: '/terms' },
 ];

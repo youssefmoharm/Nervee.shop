@@ -9,6 +9,7 @@ import SearchOverlay from './components/SearchOverlay';
 import ProductQuickView from './components/ProductQuickView';
 import ChatbotAI, { ChatbotAITrigger } from './components/ChatbotAI';
 import CrispChat from './components/CrispChat';
+import CookieConsent, { getCookieConsent } from './components/CookieConsent';
 import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
@@ -39,7 +40,7 @@ import SizeGuide from './pages/SizeGuide';
 import GuestOrder from './pages/GuestOrder';
 import SharedWishlist from './pages/SharedWishlist';
 import NotFound from './pages/NotFound';
-import { Contact, Shipping, Returns, Privacy, Terms } from './pages/InfoPages';
+import { Contact, Shipping, Returns, Privacy, Terms, Faq } from './pages/InfoPages';
 import Unsubscribe from './pages/Unsubscribe';
 import { Newsletter } from './pages/Newsletter';
 import { TrackOrder } from './pages/TrackOrder';
@@ -90,6 +91,18 @@ function StorefrontChrome({
   setSearchOpen: (v: boolean) => void;
 }) {
   const [chatbotOpen, setChatbotOpen] = useState(false);
+  const [showChatTrigger, setShowChatTrigger] = useState(false);
+
+  useEffect(() => {
+    setShowChatTrigger(getCookieConsent() !== null);
+    const onConsent = () => setShowChatTrigger(getCookieConsent() !== null);
+    window.addEventListener('nerve:cookie-consent', onConsent);
+    window.addEventListener('storage', onConsent);
+    return () => {
+      window.removeEventListener('nerve:cookie-consent', onConsent);
+      window.removeEventListener('storage', onConsent);
+    };
+  }, []);
 
   return (
     <>
@@ -107,12 +120,13 @@ function StorefrontChrome({
       <ProductQuickView />
       <ComparisonWidget />
       <CrispChat />
+      <CookieConsent />
       <main id="main">{children}</main>
       <Footer />
 
       {/* Chatbot */}
       <ChatbotAI isOpen={chatbotOpen} onClose={() => setChatbotOpen(false)} />
-      {!chatbotOpen && <ChatbotAITrigger onClick={() => setChatbotOpen(true)} />}
+      {showChatTrigger && !chatbotOpen && <ChatbotAITrigger onClick={() => setChatbotOpen(true)} />}
     </>
   );
 }
@@ -131,16 +145,25 @@ function AppContent() {
     initSentry().catch(() => {
       /* Sentry init failed, continue without it */
     });
-    try {
-      initAnalytics();
-    } catch {
-      /* Analytics init failed */
-    }
+    // Analytics only after explicit cookie consent (GDPR / privacy policy)
+    const maybeInitAnalytics = () => {
+      if (getCookieConsent() === 'granted') {
+        try {
+          initAnalytics();
+        } catch {
+          /* Analytics init failed */
+        }
+      }
+    };
+    maybeInitAnalytics();
+    const onConsent = () => maybeInitAnalytics();
+    window.addEventListener('nerve:cookie-consent', onConsent);
     try {
       initPerformanceMonitoring();
     } catch {
       /* Perf init failed */
     }
+    return () => window.removeEventListener('nerve:cookie-consent', onConsent);
   }, []);
 
   // Track page views automatically
@@ -191,6 +214,7 @@ function AppContent() {
       <Route path="/guest-order" element={<GuestOrder />} />
       <Route path="/wishlist/:shareCode" element={<SharedWishlist />} />
       <Route path="/contact" element={<Contact />} />
+      <Route path="/faq" element={<Faq />} />
       <Route path="/shipping" element={<Shipping />} />
       <Route path="/returns" element={<Returns />} />
       <Route path="/privacy" element={<Privacy />} />

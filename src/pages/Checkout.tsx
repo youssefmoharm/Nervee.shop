@@ -93,6 +93,14 @@ export default function Checkout() {
     });
   }, [form, appliedDiscount, step, lines]);
 
+  // Fire begin_checkout once when checkout opens with items
+  useEffect(() => {
+    if (lines.length > 0 && step < 5) {
+      ecommerce.beginCheckout(subtotal);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Email field should be disabled for authenticated users
   const isEmailDisabled = !!user?.email;
 

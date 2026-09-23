@@ -28,6 +28,8 @@ const staticUrls = [
   { loc: `${STORE_URL}/shop`, changefreq: 'daily', priority: '0.9' },
   { loc: `${STORE_URL}/collections`, changefreq: 'weekly', priority: '0.8' },
   { loc: `${STORE_URL}/about`, changefreq: 'monthly', priority: '0.5' },
+  { loc: `${STORE_URL}/faq`, changefreq: 'monthly', priority: '0.6' },
+  { loc: `${STORE_URL}/size-guide`, changefreq: 'monthly', priority: '0.5' },
   { loc: `${STORE_URL}/contact`, changefreq: 'yearly', priority: '0.4' },
   { loc: `${STORE_URL}/shipping`, changefreq: 'yearly', priority: '0.3' },
   { loc: `${STORE_URL}/returns`, changefreq: 'yearly', priority: '0.3' },

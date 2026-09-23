@@ -70,6 +70,45 @@ export default function Home() {
     <>
       <HeroCarousel />
 
+      {/* Crawlable brand / SEO copy — also visible to users below the fold */}
+      <section
+        className="bg-white text-navy py-14 md:py-20 px-5 md:px-8"
+        aria-labelledby="brand-heading"
+      >
+        <div className="mx-auto max-w-4xl text-center">
+          <p className="nv-eyebrow text-navy/50 mb-3">Alexandria, Egypt · EST 2026</p>
+          <h2 id="brand-heading" className="nv-heading text-3xl md:text-5xl mb-6">
+            NERVE — Cool but Chic
+          </h2>
+          <p className="text-navy/70 leading-relaxed max-w-2xl mx-auto">
+            NERVE is a contemporary Egyptian concept store built around individuality, movement, and
+            the pieces that become part of your everyday identity. Shop curated fashion, streetwear,
+            and lifestyle products — with free standard shipping on orders over EGP 2,000 and cash
+            on delivery across Egypt.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-4 text-sm">
+            <Link to="/shop" className="nv-eyebrow underline underline-offset-4 hover:opacity-60">
+              Shop all
+            </Link>
+            <Link to="/faq" className="nv-eyebrow underline underline-offset-4 hover:opacity-60">
+              FAQ
+            </Link>
+            <Link
+              to="/shipping"
+              className="nv-eyebrow underline underline-offset-4 hover:opacity-60"
+            >
+              Shipping
+            </Link>
+            <Link
+              to="/returns"
+              className="nv-eyebrow underline underline-offset-4 hover:opacity-60"
+            >
+              Returns
+            </Link>
+          </div>
+        </div>
+      </section>
+
       <section className="bg-navy py-16 md:py-24 px-5 md:px-8">
         <div className="mx-auto max-w-[1600px]">
           <p className="nv-eyebrow text-silver mb-2">Curated Edits</p>

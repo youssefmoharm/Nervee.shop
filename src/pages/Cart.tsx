@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import { productService } from '../services/productService';
 import { discountService } from '../services/discountService';
 import { useSEO } from '../lib/seo';
+import { ecommerce } from '../lib/analytics';
 import { useToast } from '../context/ToastContext';
 import { loadCheckoutSession, saveCheckoutSession } from '../lib/checkoutSessionManager';
 import type { Product } from '../types';
@@ -29,6 +30,13 @@ export default function Cart() {
   const discountAmount = appliedDiscount
     ? discountService.calculateDiscount(appliedDiscount.discount, subtotal)
     : 0;
+
+  useEffect(() => {
+    if (lines.length > 0) {
+      ecommerce.viewCart(subtotal);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lines.length]);
 
   useEffect(() => {
     productService

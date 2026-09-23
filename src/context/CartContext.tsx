@@ -11,6 +11,7 @@ import type { CartLine } from '../types';
 import { useAuth } from './AuthContext';
 import { cartService } from '../services/cartService';
 import { saveCheckoutSession, clearCheckoutSession } from '../lib/checkoutSessionManager';
+import { ecommerce } from '../lib/analytics';
 import { useToast } from './ToastContext';
 
 interface CartContextValue {
@@ -133,6 +134,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
     setLastAdded(line);
     setIsOpen(true);
+    ecommerce.addToCart(line.productId, line.name, line.price, line.quantity);
     if (user) {
       void cartService
         .upsertLine(line)
@@ -148,9 +150,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const removeLine = (productId: string, color: string, size: string) => {
+    const removed = lines.find(
+      l => l.productId === productId && l.color === color && l.size === size,
+    );
     setLines(prev =>
       prev.filter(l => !(l.productId === productId && l.color === color && l.size === size)),
     );
+    if (removed) {
+      ecommerce.removeFromCart(removed.productId, removed.name, removed.price, removed.quantity);
+    }
     if (user) {
       void cartService.removeLine(productId, color, size).catch(err => {
         // Revert the optimistic update on error
