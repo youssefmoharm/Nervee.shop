@@ -22,7 +22,7 @@ const INFO_LINKS = [
 
 export default function Footer() {
   return (
-    <footer className="bg-white border-t border-navy/10">
+    <footer className="bg-white text-navy border-t border-navy/10">
       <div className="mx-auto max-w-7xl px-5 md:px-8 py-12">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}

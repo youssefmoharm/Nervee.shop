@@ -115,7 +115,8 @@ export default function Unsubscribe() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-navy to-navy-2 flex items-center justify-center px-4 py-12">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8">
+      {/* White card on a navy page: states its own foreground. */}
+      <div className="max-w-md w-full bg-white text-navy rounded-lg shadow-xl p-8">
         {/* Loading State */}
         {status === 'loading' && (
           <div className="text-center">

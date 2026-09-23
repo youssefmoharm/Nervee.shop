@@ -42,7 +42,9 @@ export default function SizeGuideTool({ isOpen, onClose, productMaterial }: Size
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+      {/* The white panel states its own foreground so the tool renders correctly
+          no matter which page (or theme) it is mounted from. */}
+      <div className="bg-white text-navy rounded-lg w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 md:p-6 border-b border-navy/10">
           <h2 className="text-xl md:text-2xl font-bold text-navy">Find Your Size</h2>

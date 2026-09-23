@@ -15,8 +15,10 @@ export default function SizeGuide() {
       'Find your perfect fit with NERVE size charts, measurement guide, and fit notes for Slim, Regular, and Oversized styles.',
   });
 
+  // The app body is `bg-navy text-paper`, so every white surface has to
+  // re-state its foreground — otherwise inherited text renders white on white.
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white text-navy">
       <div className="max-w-4xl mx-auto px-4 md:px-8 py-12">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm mb-8">

@@ -56,7 +56,7 @@ export default function SharedWishlist() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-white text-navy flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-navy/20 border-t-navy rounded-full animate-spin mx-auto mb-4" />
           <p className="text-navy/60">Loading wishlist...</p>
@@ -67,7 +67,7 @@ export default function SharedWishlist() {
 
   if (notFound || wishlistProducts.length === 0) {
     return (
-      <div className="min-h-screen bg-white pt-24">
+      <div className="min-h-screen bg-white text-navy pt-24">
         <div className="max-w-4xl mx-auto px-4 md:px-8 text-center py-12">
           <h1 className="nv-heading text-3xl md:text-4xl mb-3">Wishlist Not Found</h1>
           <p className="text-navy/70 mb-6">This wishlist has expired or is no longer available.</p>
@@ -83,7 +83,7 @@ export default function SharedWishlist() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white text-navy">
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm mb-8">
