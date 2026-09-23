@@ -12,7 +12,7 @@ import { getCorsHeaders } from '../_shared/cors.ts'
 import { PerformanceTimer, logEvent } from '../_shared/monitoring.ts'
 
 const GEMINI_API_KEY =
-  Deno.env.get('GOOGLE_GEMINI_API_KEY') ?? Deno.env.get('OPENAI_API_KEY')
+  Deno.env.get('GOOGLE_GEMINI_API_KEY') ?? Deno.env.get('OPENAI_API_KEY') ?? ''
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta'
 const GEMINI_MODEL = 'gemini-3.6-flash'
 

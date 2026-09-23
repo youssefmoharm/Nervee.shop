@@ -38,8 +38,8 @@ test.describe('Security — client-side guards and validation', () => {
     await page.getByTestId('register-firstName-input').fill('Test')
     await page.getByTestId('register-lastName-input').fill('User')
     await page.getByTestId('register-email-input').fill('test@example.com')
-    await page.getByTestId('register-password-input').fill('password123')
-    await page.getByTestId('register-confirm-password-input').fill('different123')
+    await page.getByTestId('register-password-input').fill('Password123!')
+    await page.getByTestId('register-confirm-password-input').fill('Different123!')
     // dob and gender required natively — fill them so React's handler runs
     await page.locator('#register-dob').fill('2000-01-01')
     await page.locator('#register-gender').selectOption('female')

@@ -105,3 +105,11 @@ export function redactObject(obj: Record<string, unknown>): Record<string, unkno
   }
   return redacted;
 }
+
+/**
+ * Log a security-related event with redacted context
+ */
+export function logSecurityEvent(event: string, data?: Record<string, unknown>) {
+  const safeData = data ? redactObject(data) : undefined;
+  console.log(`[SECURITY] ${event}`, safeData ? JSON.stringify(safeData) : '');
+}

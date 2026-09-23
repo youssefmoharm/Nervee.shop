@@ -55,27 +55,27 @@ serve(async (req) => {
     const body: AuthSignUpBody = await req.json()
 
     // Validate email
-    const emailValidation = validateEmail(body.email)
-    if (!emailValidation.valid) {
-      return json({ error: emailValidation.error }, 400, corsHeaders)
+    const emailErrors = validateEmail(body.email)
+    if (emailErrors.length > 0) {
+      return json({ error: emailErrors[0].message, details: emailErrors }, 400, corsHeaders)
     }
-    const sanitizedEmail = emailValidation.value
+    const sanitizedEmail = body.email.trim().toLowerCase()
 
     // Validate password with strong requirements
-    const passwordValidation = validatePassword(body.password)
-    if (!passwordValidation.valid) {
-      return json({ error: passwordValidation.error }, 400, corsHeaders)
+    const passwordErrors = validatePassword(body.password)
+    if (passwordErrors.length > 0) {
+      return json({ error: passwordErrors[0].message, details: passwordErrors }, 400, corsHeaders)
     }
 
     // Validate names
-    const firstNameValidation = validateName(body.firstName, 'First name')
-    if (!firstNameValidation.valid) {
-      return json({ error: firstNameValidation.error }, 400, corsHeaders)
+    const firstNameErrors = validateName(body.firstName, 'First name')
+    if (firstNameErrors.length > 0) {
+      return json({ error: firstNameErrors[0].message, details: firstNameErrors }, 400, corsHeaders)
     }
 
-    const lastNameValidation = validateName(body.lastName, 'Last name')
-    if (!lastNameValidation.valid) {
-      return json({ error: lastNameValidation.error }, 400, corsHeaders)
+    const lastNameErrors = validateName(body.lastName, 'Last name')
+    if (lastNameErrors.length > 0) {
+      return json({ error: lastNameErrors[0].message, details: lastNameErrors }, 400, corsHeaders)
     }
 
     // Attempt sign up
@@ -84,8 +84,8 @@ serve(async (req) => {
       password: body.password,
       options: {
         data: {
-          first_name: firstNameValidation.value,
-          last_name: lastNameValidation.value,
+          first_name: body.firstName.trim(),
+          last_name: body.lastName.trim(),
           ...body.meta,
         },
       },

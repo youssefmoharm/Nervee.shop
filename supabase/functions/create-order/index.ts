@@ -23,7 +23,8 @@ import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
 import { getCorsHeaders } from '../_shared/cors.ts'
 import { orderConfirmedEmail, sendEmail } from '../_shared/email.ts'
-import { distributedRateLimit, getRateLimitHeaders, generateCorrelationId, logEvent, logOrderSuccess, logOrderFailure, logRateLimitHit, PerformanceTimer } from '../_shared/monitoring.ts'
+import { generateCorrelationId, logEvent, logOrderSuccess, logOrderFailure, logRateLimitHit, PerformanceTimer } from '../_shared/monitoring.ts'
+import { distributedRateLimit, getRateLimitHeaders } from '../_shared/ratelimit.ts'
 import {
   validateOrderRequest,
   validateRequestSize,
