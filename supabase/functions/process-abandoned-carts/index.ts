@@ -197,7 +197,7 @@ function generateCartAbandonmentEmail(cart: AbandonedCart, recoveryUrl: string):
           </div>
           <p style="margin-top: 30px; font-size: 14px; color: #666; text-align: center;">This offer expires in 24 hours. ⏰</p>
         </div>
-        <div style="background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px;"><p style="margin: 0;">NERVE - Cool but Chic | Cairo, Egypt</p></div>
+        <div style="background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px;"><p style="margin: 0;">NERVE - Cool but Chic | Alexandria, Egypt</p></div>
       </div>
     </body></html>
   `

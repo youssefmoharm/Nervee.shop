@@ -183,7 +183,7 @@ function generateBackInStockEmail(productName: string, size: string | null, prod
           <div style="margin: 30px 0;"><a href="${productUrl}" style="background: #061735; color: white; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; display: inline-block;">Shop Now →</a></div>
           <p style="color: #999; font-size: 14px;">⏰ Limited stock - don't wait too long!</p>
         </div>
-        <div style="background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px;"><p style="margin: 0;">NERVE - Cool but Chic | Cairo, Egypt</p></div>
+        <div style="background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px;"><p style="margin: 0;">NERVE - Cool but Chic | Alexandria, Egypt</p></div>
       </div>
     </body></html>
   `

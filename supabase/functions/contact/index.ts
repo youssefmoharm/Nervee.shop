@@ -11,8 +11,7 @@ import {
   validateContactForm, 
   validateEmail, 
   validateRequestSize,
-  sanitizeText,
-  ValidationException 
+  sanitizeText
 } from '../_shared/validation.ts'
 import { 
   logRateLimitHit,

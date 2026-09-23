@@ -35,7 +35,8 @@ export function redactSecrets(text: string | unknown): string {
   if (!text || typeof text !== 'string') return String(text);
 
   let result = text;
-  SECRETS_TO_REDACT.forEach(secret => {
+  // The pattern replaces token-like sequences (20+ alphanumeric chars)
+  SECRETS_TO_REDACT.forEach(() => {
     // Match environment variable values (rough pattern)
     result = result.replace(
       new RegExp(`(Bearer\\s+)?[A-Za-z0-9_-]{20,}`, 'g'),

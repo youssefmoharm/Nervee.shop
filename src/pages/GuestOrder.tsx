@@ -147,8 +147,11 @@ export default function GuestOrder() {
               <h3 className="nv-eyebrow text-sm mb-2">Need to return?</h3>
               <p className="text-xs text-navy/60 mb-3">
                 Delivered orders can be returned within 14 days. Contact{' '}
-                <a href="mailto:hello@nerveey.shop" className="underline">
-                  hello@nerveey.shop
+                <a
+                  href={`mailto:${import.meta.env.VITE_SUPPORT_EMAIL || 'nerveey.shop@gmail.com'}`}
+                  className="underline"
+                >
+                  {import.meta.env.VITE_SUPPORT_EMAIL || 'nerveey.shop@gmail.com'}
                 </a>{' '}
                 with your order number and reason — or use the return form in your account if you
                 create one.

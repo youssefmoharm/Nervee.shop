@@ -108,7 +108,7 @@ export default function ProductDetail() {
           name: 'NERVE',
           url: STORE_URL,
           sameAs: [
-            'https://www.instagram.com/gothennerve58/',
+            'https://www.instagram.com/gotthenerve58/',
             'https://www.tiktok.com/@user795916160817',
             'https://www.linkedin.com/in/nerve-shop-b67623429',
           ],
