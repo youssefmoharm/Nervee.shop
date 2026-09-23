@@ -117,54 +117,10 @@ import AWS from 'aws-sdk';
 
 ---
 
-## ✓ ENHANCEMENT #14: AR TRY-ON (Snapchat Lens)
-
-**Files Created:**
-- `src/components/ARTryOn.tsx` - AR try-on modal component
-
-**Implementation Details:**
-- Beautiful modal with QR code for Snapchat Lens
-- Direct link to open Snapchat app
-- Instructions for using Lens
-- Fallback to web version if app not available
-- Responsive design for mobile and desktop
-
-**Integration:**
-- Added to `src/pages/ProductDetail.tsx`
-- "Try in AR" button below "Buy Now" button
-- Modal opens when button clicked
-- Full screen on mobile, centered on desktop
-
-**Features:**
-- ✓ QR code to scan in Snapchat
-- ✓ Direct link to Snapchat Lens
-- ✓ Step-by-step instructions
-- ✓ Download Snapchat link
-- ✓ Beta badge notification
-- ✓ Responsive design
-- ✓ Accessible UI
-
-**Setup Instructions:**
-1. Create Lens in Snap AR Studio (free)
-2. Design virtual try-on (AR shirt, hoodie, etc.)
-3. Deploy Lens to Snapchat
-4. Get Lens ID from Snapchat Studio
-5. Add to `.env.local`: `VITE_SNAPCHAT_LENS_ID=YOUR_LENS_ID`
-6. AR Try-On button will be live
-
-**Future Enhancements:**
-- [ ] Multiple products with different AR lenses
-- [ ] Analytics on AR try-on clicks
-- [ ] A/B test AR try-on impact on conversion
-- [ ] WebAR fallback for non-Snapchat browsers
-
----
-
 ## ✓ ENHANCEMENT #15: TYPES & ENV VARIABLES
 
 **Files Modified:**
 - `src/types/index.ts` - Updated User type with optional phone field, added AbandonedCart interface
-- `.env.example` - Added VITE_CRISP_ID and VITE_SNAPCHAT_LENS_ID
 
 **Type Definitions:**
 ```typescript
@@ -226,7 +182,6 @@ npm run build
 **Pre-Deployment:**
 - [ ] Set environment variables in production:
   - `VITE_CRISP_ID` - from crisp.chat dashboard
-  - `VITE_SNAPCHAT_LENS_ID` - from Snap AR Studio
 - [ ] Set up backend integrations (optional):
   - [ ] Twilio/AWS SNS for SMS in production
   - [ ] SendGrid/Resend for abandoned cart emails
@@ -235,7 +190,6 @@ npm run build
 **Post-Deployment:**
 - [ ] Test Live Chat widget on production
 - [ ] Test SMS notifications with test order
-- [ ] Verify AR Try-On button works with Snapchat
 - [ ] Monitor abandoned cart recovery metrics
 
 ---
@@ -248,8 +202,6 @@ npm run build
 # Crisp Chat (optional, but recommended)
 VITE_CRISP_ID=your_crisp_website_id
 
-# Snapchat AR (optional, for try-on feature)
-VITE_SNAPCHAT_LENS_ID=your_snapchat_lens_id
 ```
 
 ### Production Email/SMS Setup
@@ -297,7 +249,6 @@ async function sendAbandonedCartEmail(cart, type) {
 - Crisp Chat: Messages sent, conversations initiated, resolution time
 - SMS Notifications: Delivery rate, click-through rate to tracking
 - Abandoned Cart: Carts tracked, recovery rate, revenue recovered
-- AR Try-On: Button clicks, conversion impact, engagement
 
 ---
 
@@ -308,14 +259,12 @@ async function sendAbandonedCartEmail(cart, type) {
 - [ ] SMS sent successfully on order placement
 - [ ] Abandoned cart detection works (add 2+ items, leave site)
 - [ ] Recovery emails appear in email client
-- [ ] AR Try-On button opens Snapchat (or web fallback)
 - [ ] Mobile responsiveness verified
 
 **Browser Testing:**
 - [ ] Chrome/Edge: All features working
 - [ ] Firefox: All features working
 - [ ] Safari: All features working
-- [ ] Mobile Safari: AR Try-On and SMS work
 
 ---
 
@@ -326,7 +275,6 @@ async function sendAbandonedCartEmail(cart, type) {
 TIER 4 Implementation:
 ├── src/components/
 │   ├── CrispChat.tsx                    (Live Chat)
-│   └── ARTryOn.tsx                      (AR Try-On)
 ├── src/services/
 │   ├── smsService.ts                    (SMS Notifications)
 │   └── abandonedCartService.ts          (Abandoned Cart Recovery)
@@ -334,7 +282,6 @@ TIER 4 Implementation:
 │   └── useAbandonedCartRecovery.ts      (Cart Tracking Hook)
 ├── src/pages/
 │   ├── Checkout.tsx                     (SMS Integration)
-│   └── ProductDetail.tsx                (AR Try-On Button)
 ├── src/types/
 │   └── index.ts                         (Type Updates)
 ├── src/App.tsx                          (Integration)
@@ -367,7 +314,6 @@ TIER 4 Implementation:
 11. ✓ Live Chat Widget (Crisp)
 12. ✓ Order Tracking SMS
 13. ✓ Abandoned Cart Recovery
-14. ✓ AR Try-On
 15. ✓ Types & Environment Setup
 
 **Status:** 🚀 **READY FOR PRODUCTION**
@@ -380,7 +326,6 @@ TIER 4 Implementation:
 
 ## 🎯 NEXT STEPS
 
-1. **Set Environment Variables:** Add Crisp ID and Snapchat Lens ID to `.env.local`
 2. **Deploy:** Run `npm run build && vercel deploy`
 3. **Test:** Verify all features on production
 4. **Monitor:** Track metrics and user engagement

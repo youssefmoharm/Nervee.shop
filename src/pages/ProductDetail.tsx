@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Heart, Loader2, Minus, Plus, RotateCcw, Ruler, Truck, Star } from 'lucide-react';
 import type { Product, Size, ProductReview } from '../types';
@@ -16,8 +16,6 @@ import SizeGuideModal from '../components/SizeGuideModal';
 import ReviewPhotoGallery from '../components/ReviewPhotoGallery';
 import CompleteTheLook from '../components/CompleteTheLook';
 import PersonalizedRecommendations from '../components/PersonalizedRecommendations';
-import ARTryOn from '../components/ARTryOn';
-import VirtualTryOnButton from '../components/VirtualTryOnButton';
 import Skeleton from '../components/Skeleton';
 import OptimizedImage from '../components/OptimizedImage';
 
@@ -44,7 +42,6 @@ export default function ProductDetail() {
   const [tab, setTab] = useState<Tab>('description');
   const [sizeError, setSizeError] = useState(false);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
-  const [arOpen, setArOpen] = useState(false);
   const [notifySize, setNotifySize] = useState<Size | null>(null);
   const [notifyEmail, setNotifyEmail] = useState('');
   const [notifyStatus, setNotifyStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
@@ -562,9 +559,6 @@ export default function ProductDetail() {
               Buy Now
             </button>
 
-            {/* AR Try-On Button — hidden entirely for products without a lens */}
-            <VirtualTryOnButton product={product} onClick={() => setArOpen(true)} />
-
             {/* Tabs */}
             <div className="mt-10 border-t border-navy/10">
               {(
@@ -958,14 +952,6 @@ export default function ProductDetail() {
         </div>
       </div>
       {sizeGuideOpen && <SizeGuideModal onClose={() => setSizeGuideOpen(false)} />}
-      {product && (
-        <ARTryOn
-          isOpen={arOpen}
-          onClose={() => setArOpen(false)}
-          product={product}
-          colorName={product.colors[colorIdx]?.name}
-        />
-      )}
     </div>
   );
 }

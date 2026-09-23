@@ -1,5 +1,4 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { normalizeTryOnConfig } from '../lib/tryOnConfig';
 import { logError } from '../lib/sentry';
 import { ProductRow, ColorRow, InventoryRow, CollectionRow } from './types';
 import {
@@ -54,10 +53,6 @@ function transformProduct(row: ProductRow): Product {
     description: row.description,
     material: row.material || '',
     care: row.care || [],
-    // Snap AR try-on config (jsonb column; may be null for non-AR products).
-    virtualTryOn:
-      normalizeTryOnConfig((row as ProductRow & { virtual_try_on?: unknown }).virtual_try_on) ??
-      undefined,
     gallery:
       (row.gallery as string[]) ||
       (row.product_colors as ProductColorRow[] | undefined)?.map(c => c.image).filter(Boolean) ||

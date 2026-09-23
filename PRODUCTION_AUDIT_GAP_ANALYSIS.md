@@ -270,10 +270,9 @@ NERVE is a **professionally-built React SPA** with strong architectural foundati
 - **P3.2:** Multi-language support (English/Arabic)
 - **P3.3:** Advanced ML recommendations
 - **P3.4:** Personalized homepage
-- **P3.5:** Augmented reality try-on (Snapchat Lens integration)
-- **P3.6:** PWA installability
-- **P3.7:** Newsletter email designer
-- **P3.8:** Influencer/ambassador program
+- **P3.5:** PWA installability
+- **P3.6:** Newsletter email designer
+- **P3.7:** Influencer/ambassador program
 
 ---
 

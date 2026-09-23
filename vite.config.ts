@@ -42,13 +42,6 @@ export default defineConfig({
             return 'context-other'
           }
 
-          // Snap Camera Kit AR SDK — heavy and only needed inside the
-          // Try-On experience, which is dynamically imported on demand.
-          // Must stay in its own chunk so it never loads with the storefront.
-          if (id.includes('node_modules/@snap/')) {
-            return 'snap-camera-kit'
-          }
-
           // Catch-all for other node_modules
           if (id.includes('node_modules')) {
             return 'vendor'

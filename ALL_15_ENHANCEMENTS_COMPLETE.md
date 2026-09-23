@@ -216,22 +216,6 @@ All 15 enhancements successfully implemented, tested, and ready for production d
   - localStorage persistence (production: backend)
 - **Impact:** Recovers 10-15% of abandoned carts
 
-### #15: AR Try-On (Snapchat Lens) ✅
-- **File:** `src/components/ARTryOn.tsx`
-- **Integration:** `src/pages/ProductDetail.tsx`
-- **Features:**
-  - QR code for Snapchat Lens scanning
-  - Direct link to open Snapchat app
-  - Step-by-step instructions
-  - Fallback to web version
-  - Beta badge notification
-  - Mobile-responsive
-- **Setup:**
-  1. Create Lens in Snap AR Studio (free)
-  2. Get Lens ID
-  3. Add `VITE_SNAPCHAT_LENS_ID` to `.env.local`
-- **Impact:** +30% engagement, differentiates from competitors
-
 ---
 
 ## 📦 FILE STRUCTURE
@@ -260,7 +244,6 @@ src/components/
   ├── PersonalizedRecommendations.tsx
   ├── WishlistShareModal.tsx
   ├── CrispChat.tsx
-  └── ARTryOn.tsx
 
 src/services/
   ├── searchService.ts
@@ -294,7 +277,6 @@ src/pages/
   ├── Checkout.tsx (added SMS integration)
   ├── Account/Wishlist.tsx (added share button)
 
-.env.example (added VITE_CRISP_ID, VITE_SNAPCHAT_LENS_ID)
 ```
 
 ---
@@ -340,12 +322,10 @@ src/pages/
 **Before Production:**
 - [ ] Set environment variables:
   - `VITE_CRISP_ID` - from crisp.chat dashboard
-  - `VITE_SNAPCHAT_LENS_ID` - from Snap AR Studio
 - [ ] Configure backend integrations (optional):
   - [ ] Twilio/AWS SNS for SMS (production)
   - [ ] SendGrid/Resend for abandoned cart emails
   - [ ] Database for cart recovery tracking
-- [ ] Create Snapchat Lens (free on Snap AR Studio)
 - [ ] Set up Crisp account (free tier available)
 - [ ] Test all features on staging
 - [ ] Run performance audit
@@ -354,7 +334,6 @@ src/pages/
 - [ ] Monitor Live Chat metrics
 - [ ] Track SMS delivery rate
 - [ ] Monitor abandoned cart recovery
-- [ ] A/B test AR Try-On impact
 - [ ] Track comparison tool usage
 - [ ] Monitor wishlist sharing viral coefficient
 
@@ -376,7 +355,6 @@ src/pages/
 - **Personalized Recommendations:** +15-30% engagement
 - **Wishlist Sharing:** +10-25% viral coefficient
 - **Scarcity Badges:** +5-10% urgency triggers
-- **AR Try-On:** +30% product page time
 
 ### Revenue Impact
 - **Expected AOV Increase:** +25-35%
@@ -432,7 +410,6 @@ This implementation demonstrates:
 - Accessibility best practices
 - Performance optimization
 - localStorage API usage
-- Third-party integrations (Crisp, Snapchat)
 
 ---
 
@@ -465,7 +442,6 @@ This implementation demonstrates:
 **To Customize:**
 1. Adjust free shipping threshold in `ShippingProgressBar.tsx`
 2. Configure Crisp ID for live chat
-3. Create Snapchat Lens for AR try-on
 4. Customize discount codes in `abandonedCartService.ts`
 
 **To Extend:**
