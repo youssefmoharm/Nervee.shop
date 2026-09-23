@@ -291,7 +291,7 @@ CREATE TABLE product_reviews (
 );
 
 -- Review summary view
-CREATE VIEW product_review_stats AS
+CREATE VIEW product_review_stats WITH (security_invoker = true) AS
 SELECT 
   p.id AS product_id,
   COUNT(r.id) AS review_count,
