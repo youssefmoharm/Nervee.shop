@@ -10,6 +10,11 @@ import { SUPABASE_URL } from './supabase';
 const FUNCTIONS_BASE = `${SUPABASE_URL}/functions/v1`;
 
 export const API_ENDPOINTS = {
+  // Auth (rate-limited edge functions — never call relative /api/* paths;
+  // Vercel SPA rewrites those to index.html and break registration/login)
+  AUTH_SIGN_UP: `${FUNCTIONS_BASE}/auth-sign-up`,
+  AUTH_SIGN_IN: `${FUNCTIONS_BASE}/auth-sign-in`,
+
   // Chat & Support
   CHAT_AI: `${FUNCTIONS_BASE}/chat-ai`,
   CREATE_SUPPORT_TICKET: `${FUNCTIONS_BASE}/create-support-ticket`,

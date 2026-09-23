@@ -17,7 +17,6 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { BrowsingHistoryProvider } from './context/BrowsingHistoryContext';
-import { BundleProvider } from './context/BundleContext';
 import { ToastProvider } from './context/ToastContext';
 import { QuickViewProvider } from './context/QuickViewContext';
 import { ComparisonProvider } from './context/ComparisonContext';
@@ -395,13 +394,11 @@ export default function App() {
       <CartProvider>
         <WishlistProvider>
           <BrowsingHistoryProvider>
-            <BundleProvider>
-              <QuickViewProvider>
-                <ComparisonProvider>
-                  <AppContent />
-                </ComparisonProvider>
-              </QuickViewProvider>
-            </BundleProvider>
+            <QuickViewProvider>
+              <ComparisonProvider>
+                <AppContent />
+              </ComparisonProvider>
+            </QuickViewProvider>
           </BrowsingHistoryProvider>
         </WishlistProvider>
       </CartProvider>

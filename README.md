@@ -108,6 +108,8 @@ npm run test:e2e      # Run E2E tests
 Deploy the Edge Functions to Supabase:
 
 ***REMOVED***
+supabase functions deploy auth-sign-up
+supabase functions deploy auth-sign-in
 supabase functions deploy create-order
 supabase functions deploy update-order-status
 supabase functions deploy process-restock
@@ -140,7 +142,6 @@ supabase secrets set STORE_URL=https://your-production-domain.com
 
 - Row Level Security (RLS) enabled on all tables
 - Distributed rate limiting
-- Input validation & sanitization
 - Input validation & sanitization
 - SQL injection prevention via parameterized queries
 

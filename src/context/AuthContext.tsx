@@ -1,6 +1,14 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, SUPABASE_ANON_KEY } from '../lib/supabase';
+import { API_ENDPOINTS } from '../lib/apiEndpoints';
+
+async function readJsonError(response: Response): Promise<string | null> {
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) return null;
+  const data = await response.json().catch(() => ({}));
+  return typeof data?.error === 'string' && data.error ? data.error : null;
+}
 
 interface AuthContextValue {
   user: User | null;
@@ -84,31 +92,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const signUp: AuthContextValue['signUp'] = async (email, password, firstName, lastName, meta) => {
-    // Try Edge Function first (rate-limited), fall back to Supabase Auth
-    try {
-      const response = await fetch('/api/auth-sign-up', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          password,
-          firstName,
-          lastName,
-          meta,
-        }),
-      });
+    if (!isSupabaseConfigured) {
+      return {
+        error:
+          'Authentication is not configured. Set VITE_SUPABASE_URL and your_removed_credential_here.',
+      };
+    }
 
-      if (response.ok) {
-        // Sign in after successful registration to get session
-        await supabase.auth.signInWithPassword({ email, password });
-        return { error: null };
-      }
-
-      const errorData = await response.json().catch(() => ({}));
-      return { error: errorData.error || 'Registration failed. Please try again.' };
-    } catch (edgeError) {
-      // Fallback to Supabase Auth if Edge Function fails
-      console.warn('Edge Function failed, using Supabase Auth:', edgeError);
+    const fallbackSignUp = async () => {
       const userData = { first_name: firstName, last_name: lastName, ...(meta ?? {}) };
       const { error } = await supabase.auth.signUp({
         email,
@@ -116,33 +107,81 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         options: { data: userData },
       });
       return { error: error?.message ?? null };
+    };
+
+    try {
+      const response = await fetch(API_ENDPOINTS.AUTH_SIGN_UP, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ email, password, firstName, lastName, meta }),
+      });
+
+      if (response.ok) {
+        // Edge function created the account (email confirmation flow —
+        // Register UI shows "Check Your Email"; no browser session yet).
+        return { error: null };
+      }
+
+      if (response.status === 429) {
+        const edgeError = await readJsonError(response);
+        return { error: edgeError || 'Too many registration attempts. Please try again later.' };
+      }
+
+      const edgeError = await readJsonError(response);
+      if (edgeError) return { error: edgeError };
+
+      // Non-JSON / unexpected response (e.g. edge function not deployed) → direct signUp
+      return await fallbackSignUp();
+    } catch {
+      return await fallbackSignUp();
     }
   };
 
   const signIn: AuthContextValue['signIn'] = async (email, password) => {
-    // Try Edge Function first (rate-limited), fall back to Supabase Auth
-    try {
-      const response = await fetch('/api/auth-sign-in', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      });
+    if (!isSupabaseConfigured) {
+      return {
+        error:
+          'Authentication is not configured. Set VITE_SUPABASE_URL and your_removed_credential_here.',
+      };
+    }
 
-      if (response.ok) {
-        // Session will be updated via auth state listener
-        return { error: null };
-      }
-
-      const errorData = await response.json().catch(() => ({}));
-      return { error: errorData.error || 'Sign in failed. Please try again.' };
-    } catch (edgeError) {
-      // Fallback to Supabase Auth if Edge Function fails
-      console.warn('Edge Function failed, using Supabase Auth:', edgeError);
+    const directSignIn = async () => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       return { error: error?.message ?? null };
+    };
+
+    try {
+      const response = await fetch(API_ENDPOINTS.AUTH_SIGN_IN, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.status === 429) {
+        const edgeError = await readJsonError(response);
+        return { error: edgeError || 'Too many login attempts. Please try again later.' };
+      }
+
+      if (response.ok) {
+        // Edge validated credentials under rate limits; establish the browser
+        // session with the client SDK (edge session is server-side only).
+        return await directSignIn();
+      }
+
+      const edgeError = await readJsonError(response);
+      if (edgeError) return { error: edgeError };
+
+      return await directSignIn();
+    } catch {
+      return await directSignIn();
     }
   };
 

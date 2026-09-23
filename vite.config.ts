@@ -16,11 +16,6 @@ export default defineConfig({
           if (id.includes('node_modules/lucide-react/')) {
             return 'vendor-ui'
           }
-          // State management
-          if (id.includes('node_modules/zustand/')) {
-            return 'vendor-state'
-          }
-          
           // Supabase client in separate chunk
           if (id.includes('lib/supabase') || id.includes('node_modules/@supabase/')) {
             return 'supabase'
