@@ -1,0 +1,126 @@
+From 33945c13fe190f904498078c7ec9c2d9229bc44f Mon Sep 17 00:00:00 2001
+From: Claude <local@example.invalid>
+Date: Wed, 23 Sep 2026 19:06:45 +0000
+Subject: [PATCH] fix: recreate public views with security_invoker to clear
+ Supabase advisor
+
+Migration 023 attempted to fix the SECURITY DEFINER views flagged by the
+Supabase Security Advisor (product_review_stats, product_availability) by
+dropping and recreating them with CREATE OR REPLACE VIEW, on the mistaken
+assumption that views default to SECURITY INVOKER. Postgres views actually
+run with the owner's privileges unless created WITH (security_invoker =
+true), so both views remained SECURITY DEFINER and the advisor still fails.
+
+Add migration 026 which drops and recreates both views with
+WITH (security_invoker = true) (CREATE OR REPLACE VIEW cannot reliably
+change reloptions on an existing view, hence the DROP+CREATE), re-grants
+SELECT to anon/authenticated, and includes a verification query. Sync
+supabase/schema.sql and ARCHITECTURE.md's documented DDL for
+product_review_stats to match.
+
+Underlying table RLS (products, product_reviews, product_inventory) already
+allows public SELECT, so security-invoker mode preserves current read
+behavior. No changes to SECURITY DEFINER functions/RPCs (place_order) or to
+active_conversations/tickets_needing_attention, which are out of scope.
+---
+ ARCHITECTURE.md                               |  2 +-
+ .../migrations/026_security_invoker_views.sql | 60 +++++++++++++++++++
+ supabase/schema.sql                           |  2 +-
+ 3 files changed, 62 insertions(+), 2 deletions(-)
+ create mode 100644 supabase/migrations/026_security_invoker_views.sql
+
+diff --git a/ARCHITECTURE.md b/ARCHITECTURE.md
+index dabd259..668a1c1 100644
+--- a/ARCHITECTURE.md
++++ b/ARCHITECTURE.md
+@@ -136,7 +136,7 @@ CREATE TABLE product_reviews (
+   UNIQUE(product_id, customer_id)
+ );
+ 
+-CREATE VIEW product_review_stats AS
++CREATE VIEW product_review_stats WITH (security_invoker = true) AS
+ SELECT 
+   p.id AS product_id,
+   COUNT(r.id) AS review_count,
+diff --git a/supabase/migrations/026_security_invoker_views.sql b/supabase/migrations/026_security_invoker_views.sql
+new file mode 100644
+index 0000000..b8f02ac
+--- /dev/null
++++ b/supabase/migrations/026_security_invoker_views.sql
+@@ -0,0 +1,60 @@
++-- Migration 026: Actually fix SECURITY DEFINER views (security_invoker)
++--
++-- WHY 023 WAS INSUFFICIENT:
++-- Migration 023 attempted to fix product_review_stats and product_availability
++-- by dropping and recreating them with `CREATE OR REPLACE VIEW ... AS SELECT ...`,
++-- reasoning that views are "SECURITY INVOKER by default". That premise is wrong:
++-- PostgreSQL views run with the view OWNER's privileges (effectively
++-- SECURITY DEFINER behavior, bypassing the querying user's RLS) unless they
++-- are explicitly created WITH (security_invoker = true). Because 023 never set
++-- that reloption, both views remained SECURITY DEFINER and the Supabase
++-- Security Advisor continued to flag them.
++--
++-- FIX: Drop each view and recreate it with WITH (security_invoker = true).
++-- Note CREATE OR REPLACE VIEW cannot reliably change reloptions on an
++-- existing view, which is why this migration uses DROP VIEW IF EXISTS
++-- followed by CREATE VIEW rather than CREATE OR REPLACE VIEW.
++--
++-- Safe to run more than once (idempotent): each view is dropped if it
++-- exists and recreated identically.
++
++-- 1. product_review_stats
++DROP VIEW IF EXISTS product_review_stats CASCADE;
++CREATE VIEW product_review_stats WITH (security_invoker = true) AS
++SELECT
++  p.id AS product_id,
++  COUNT(r.id) AS review_count,
++  COALESCE(ROUND(AVG(r.rating)::numeric, 1), 0) AS average_rating
++FROM products p
++LEFT JOIN product_reviews r ON p.id = r.product_id
++GROUP BY p.id;
++
++-- 2. product_availability
++DROP VIEW IF EXISTS product_availability CASCADE;
++CREATE VIEW product_availability WITH (security_invoker = true) AS
++SELECT product_id, size, in_stock FROM product_inventory;
++
++-- Restore public read access on both views (grants do not survive DROP VIEW)
++GRANT SELECT ON product_review_stats TO anon, authenticated;
++GRANT SELECT ON product_availability TO anon, authenticated;
++
++-- Verification: confirm security_invoker=true is now set on both views.
++-- (Run manually / read the NOTICE output; SELECT statements are not
++-- guaranteed to surface in every SQL Editor result pane.)
++DO $$
++DECLARE
++  r RECORD;
++BEGIN
++  FOR r IN
++    SELECT relname, reloptions
++    FROM pg_class
++    WHERE relname IN ('product_review_stats', 'product_availability')
++      AND relkind = 'v'
++  LOOP
++    RAISE NOTICE 'view=% reloptions=%', r.relname, r.reloptions;
++  END LOOP;
++END $$;
++
++-- Equivalent verification query for interactive use in the SQL Editor:
++-- SELECT relname, reloptions FROM pg_class
++-- WHERE relname IN ('product_review_stats', 'product_availability') AND relkind = 'v';
+diff --git a/supabase/schema.sql b/supabase/schema.sql
+index fab87ef..3048719 100644
+--- a/supabase/schema.sql
++++ b/supabase/schema.sql
+@@ -291,7 +291,7 @@ CREATE TABLE product_reviews (
+ );
+ 
+ -- Review summary view
+-CREATE VIEW product_review_stats AS
++CREATE VIEW product_review_stats WITH (security_invoker = true) AS
+ SELECT 
+   p.id AS product_id,
+   COUNT(r.id) AS review_count,
+-- 
+2.43.0
+
