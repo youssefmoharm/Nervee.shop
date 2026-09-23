@@ -33,7 +33,6 @@ These are safe to commit (use placeholders):
 | `VITE_GA_ID` | ✗ | String | Vercel only (production) |
 | `VITE_META_PIXEL_ID` | ✗ | String | Vercel only (production) |
 | `VITE_CRISP_ID` | ✗ | String | Optional |
-| `VITE_SNAPCHAT_LENS_ID` | ✗ | String | Optional |
 
 **Development**: Use placeholders in `.env` and `.env.local`  
 **Production**: Set real values in Vercel (`Settings → Environment Variables → Production`)

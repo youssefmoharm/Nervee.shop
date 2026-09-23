@@ -11,20 +11,12 @@ preview. It records **procedures only** — never secret values.
    npm ci      # or: npm install
    ```
 
-   The AR try-on feature needs two deps that are in `package.json`:
-   `@snap/camera-kit` (Snap Camera Kit Web SDK, lazily imported) and
-   `qrcode.react` (renders the real QR code). `npm ci` installs both.
-
 2. **Copy environment files from your primary checkout** (they are gitignored):
    - `.env` and `.env.local` — copy them from the checkout of this repo that
      holds the real values.
    - Use **copy, not symlink**: values such as ports/URLs may need adapting per
      worktree.
    - These are the only environment files the app reads at build/dev time.
-   - Snap AR variables (`VITE_SNAPCHAT_API_TOKEN`, `VITE_SNAPCHAT_LENS_ID`,
-     `VITE_SNAPCHAT_LENS_GROUP_ID`) are optional for a preview — see
-     `.env.example`. When absent, the Try-On button is simply hidden and no AR
-     code is downloaded; nothing crashes. Do not invent values for them.
 
 3. Nothing else is generated ahead of time: the sitemap step in `npm run build`
    is only for production builds, and `npm run dev` needs no prebuild step.
@@ -72,22 +64,7 @@ Then:
 ### Routes worth previewing
 
 - `/` — storefront home
-- `/product/nerve-oversized-tee` — product page (TRY ON button is hidden while no
-  lens is configured)
-- `/ar/nerve-oversized-tee` — the standalone QR destination page; with no lens
-  configured it renders the honest "Virtual Try-On is not available for this
-  product yet." state
-
-There is no real lens configured here, so **TRY ON is intentionally hidden**.
-To see the try-on UI itself in the preview, start the dev server with the
-DEV-only sandbox instead (one product resolves a fake, non-credential lens):
-
-```bash
-VITE_TRYON_DEV_CONFIG='{"lenses":{"nerve-oversized-tee":{"lensId":"0f1e2d3c4b5a69788796a5b4c3d2e1f0","lensGroupId":"1a2b3c4d5e6f708192a3b4c5d6e7f809"}}}' npm run dev
-```
-
-That renders the real gate + QR states (the live AR session still fails without
-a real `apiToken` — it does not pretend to work).
+- `/product/nerve-oversized-tee` — product page
 
 ### Logs
 
@@ -97,19 +74,12 @@ a real `apiToken` — it does not pretend to work).
 
 ```bash
 npm run test:e2e            # whole suite
-npx playwright test tests/e2e/try-on.spec.ts --reporter=list   # try-on only
 ```
 
 Playwright starts **its own dev server on port 5174** (`playwright.config.ts`),
-not 5173, and always starts a fresh one (`reuseExistingServer: false`). Two
-reasons: it must not disturb a preview server on 5173, and it must control the
-dev-server env below. If 5174 is occupied, stop that process — the run fails
-rather than silently using a server without the env.
+not 5173, and always starts a fresh one (`reuseExistingServer: false`). Reason:
+it must not disturb a preview server on 5173. If 5174 is occupied, stop that
+process — the run fails rather than silently using a server on the wrong port.
 
-The web server gets one extra variable, `VITE_TRYON_DEV_CONFIG`, a DEV-only
-try-on sandbox that points a single product (`nerve-oversized-tee`) at fake,
-non-credential lens ids so gating/QR/modal states are deterministic. It is
-ignored by production builds; see `.env.example` and `SNAPCHAT_SETUP.md`.
-
-Known pre-existing failure (not try-on related, fails on a clean checkout too):
+Known pre-existing failure (fails on a clean checkout too):
 `security.spec.ts › register form enforces matching passwords`.

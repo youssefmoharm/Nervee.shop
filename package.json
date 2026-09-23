@@ -36,7 +36,6 @@
   },
   "dependencies": {
     "@sentry/react": "^10.69.0",
-    "@snap/camera-kit": "^1.22.0",
     "@supabase/supabase-js": "^2.110.8",
     "@tanstack/react-query": "^4.40.0",
     "@tanstack/react-query-devtools": "^4.40.0",
@@ -45,7 +44,6 @@
     "focus-trap-react": "^12.0.3",
     "fuse.js": "^7.5.0",
     "lucide-react": "^0.383.0",
-    "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.18.0"

@@ -27,7 +27,7 @@
 ### 2. Dynamic Imports 🎯
 **Candidates for lazy loading:**
 - Admin pages (only accessed by admins)
-- Modals (SizeGuideModal, ARTryOn, etc.)
+- Modals (SizeGuideModal, etc.)
 - Heavy components (ProductDetail)
 
 ```tsx

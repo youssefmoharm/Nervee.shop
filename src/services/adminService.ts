@@ -1,6 +1,5 @@
 import { logError } from '../lib/sentry';
 import { supabase } from '../lib/supabase';
-import type { VirtualTryOnConfig } from '../types/virtualTryOn';
 
 export const adminService = {
   async getDashboardStats() {
@@ -170,33 +169,6 @@ export const adminService = {
 
   async deleteProduct(id: string) {
     const { error } = await supabase.from('products').delete().eq('id', id);
-    return { error: error?.message ?? null };
-  },
-
-  // ---- Virtual Try-On (Snap AR lens assignment) ----
-
-  /**
-   * Products with their current AR config. Requires migration 024
-   * (`products.virtual_try_on`); the error is returned so the UI can prompt.
-   */
-  async listProductsForTryOn() {
-    const { data, error } = await supabase
-      .from('products')
-      .select('id, name, slug, category, is_active, virtual_try_on')
-      .order('name', { ascending: true });
-    if (error) logError('Failed to load products for try-on', error);
-    return { data: data ?? [], error: error?.message ?? null };
-  },
-
-  /**
-   * Write a product's AR lens config. `null` clears it (AR off).
-   * The payload is built by buildVirtualTryOnPayload() in lib/tryOnAdmin.ts.
-   */
-  async updateProductVirtualTryOn(id: string, config: VirtualTryOnConfig | null) {
-    const { error } = await supabase
-      .from('products')
-      .update({ virtual_try_on: config })
-      .eq('id', id);
     return { error: error?.message ?? null };
   },
 
