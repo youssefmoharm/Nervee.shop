@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { getSharedWishlist } from '../services/wishlistShareService';
 import { productService } from '../services/productService';
 import ProductCard from '../components/ProductCard';
+import { useSEO } from '../hooks/useSEO';
 import type { Product } from '../types';
 
 export default function SharedWishlist() {
@@ -13,6 +14,13 @@ export default function SharedWishlist() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+
+  useSEO({
+    title: 'Shared Wishlist — NERVE',
+    description:
+      'A curated wishlist shared from NERVE. Shop the selected pieces before they sell out.',
+    robots: 'noindex, follow',
+  });
 
   useEffect(() => {
     if (!shareCode) return;

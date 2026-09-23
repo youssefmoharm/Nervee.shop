@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import PasswordStrengthIndicator from '../../components/PasswordStrengthIndicator';
+import { useSEO } from '../../hooks/useSEO';
 
 export default function Register() {
   const { signUp } = useAuth();
@@ -18,6 +19,13 @@ export default function Register() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+
+  useSEO({
+    title: 'Create Account — NERVE',
+    description:
+      'Create a NERVE account to track orders, save your wishlist, and check out faster.',
+    robots: 'noindex, nofollow',
+  });
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();

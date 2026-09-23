@@ -1,27 +1,34 @@
-import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
-import { Loader2 } from 'lucide-react'
-import { useAuth } from '../../context/AuthContext'
+import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { useSEO } from '../../hooks/useSEO';
 
 export default function ForgotPassword() {
-  const { requestPasswordReset } = useAuth()
-  const [email, setEmail] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [sent, setSent] = useState(false)
+  const { requestPasswordReset } = useAuth();
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+
+  useSEO({
+    title: 'Reset Password — NERVE',
+    description: 'Request a password reset link for your NERVE account.',
+    robots: 'noindex, nofollow',
+  });
 
   const onSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
-    const { error } = await requestPasswordReset(email)
-    setLoading(false)
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    const { error } = await requestPasswordReset(email);
+    setLoading(false);
     if (error) {
-      setError(error)
-      return
+      setError(error);
+      return;
     }
-    setSent(true)
-  }
+    setSent(true);
+  };
 
   return (
     <div className="bg-white text-navy min-h-screen pt-32 pb-24 px-5 md:px-8">
@@ -43,7 +50,7 @@ export default function ForgotPassword() {
                 type="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors"
               />
             </label>
@@ -58,10 +65,13 @@ export default function ForgotPassword() {
           </form>
         )}
 
-        <Link to="/login" className="inline-block mt-6 text-sm text-navy/60 hover:text-navy underline">
+        <Link
+          to="/login"
+          className="inline-block mt-6 text-sm text-navy/60 hover:text-navy underline"
+        >
           Back to Sign In
         </Link>
       </div>
     </div>
-  )
+  );
 }

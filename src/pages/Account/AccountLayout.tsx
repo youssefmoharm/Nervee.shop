@@ -1,16 +1,23 @@
-import { type ReactNode } from 'react'
-import { NavLink } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { type ReactNode } from 'react';
+import { NavLink } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { useSEO } from '../../hooks/useSEO';
 
 const links = [
   { to: '/account', label: 'Profile', end: true },
   { to: '/account/orders', label: 'Orders' },
   { to: '/account/addresses', label: 'Addresses' },
   { to: '/account/wishlist', label: 'Wishlist' },
-]
+];
 
 export default function AccountLayout({ children }: { children: ReactNode }) {
-  const { signOut } = useAuth()
+  const { signOut } = useAuth();
+
+  useSEO({
+    title: 'My Account — NERVE',
+    description: 'Manage your NERVE profile, orders, addresses, and wishlist.',
+    robots: 'noindex, nofollow',
+  });
 
   return (
     <div className="bg-white text-navy min-h-screen pt-24 md:pt-28 px-5 md:px-8 pb-24">
@@ -18,7 +25,7 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
         <aside>
           <h1 className="nv-heading text-3xl mb-6">Account</h1>
           <nav className="flex md:flex-col gap-1 overflow-x-auto">
-            {links.map((l) => (
+            {links.map(l => (
               <NavLink
                 key={l.to}
                 to={l.to}
@@ -43,5 +50,5 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
         <div className="min-w-0">{children}</div>
       </div>
     </div>
-  )
+  );
 }

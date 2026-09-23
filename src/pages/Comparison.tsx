@@ -2,9 +2,16 @@ import { Link } from 'react-router-dom';
 import { useComparison } from '../hooks/useComparison';
 import ComparisonModal from '../components/ComparisonModal';
 import { ChevronRight } from 'lucide-react';
+import { useSEO } from '../hooks/useSEO';
 
 export default function Comparison() {
   const { items, remove, clear } = useComparison();
+
+  useSEO({
+    title: 'Product Comparison — NERVE',
+    description: 'Compare up to 3 NERVE products side-by-side and pick the best fit.',
+    robots: 'noindex, follow',
+  });
 
   return (
     <div className="min-h-screen bg-white">

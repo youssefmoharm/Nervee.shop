@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useSEO } from '../../hooks/useSEO';
 
 export default function Login() {
   const { signIn } = useAuth();
@@ -11,6 +12,12 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useSEO({
+    title: 'Sign In — NERVE',
+    description: 'Sign in to your NERVE account to track orders, save addresses, and more.',
+    robots: 'noindex, nofollow',
+  });
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();

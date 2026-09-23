@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { getEndpoint } from '../lib/apiEndpoints';
 import { logError } from '../lib/sentry';
+import { useSEO } from '../hooks/useSEO';
 
 type Status = 'loading' | 'success' | 'error' | 'resubscribe';
 
@@ -19,6 +20,12 @@ export default function Unsubscribe() {
   const [status, setStatus] = useState<Status>('loading');
   const [result, setResult] = useState<UnsubscribeResult | null>(null);
   const [feedback, setFeedback] = useState('');
+
+  useSEO({
+    title: 'Unsubscribe — NERVE',
+    description: 'Manage email preferences for the NERVE newsletter.',
+    robots: 'noindex, nofollow',
+  });
 
   const token = searchParams.get('token');
 

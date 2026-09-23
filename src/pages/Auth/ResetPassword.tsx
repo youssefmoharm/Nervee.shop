@@ -1,36 +1,43 @@
-import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Loader2 } from 'lucide-react'
-import { useAuth } from '../../context/AuthContext'
+import { useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { useSEO } from '../../hooks/useSEO';
 
 export default function ResetPassword() {
-  const { updatePassword } = useAuth()
-  const navigate = useNavigate()
-  const [password, setPassword] = useState('')
-  const [confirm, setConfirm] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const { updatePassword } = useAuth();
+  const navigate = useNavigate();
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useSEO({
+    title: 'Set New Password — NERVE',
+    description: 'Choose a new password for your NERVE account.',
+    robots: 'noindex, nofollow',
+  });
 
   const onSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    setError(null)
+    e.preventDefault();
+    setError(null);
     if (password.length < 8) {
-      setError('Password must be at least 8 characters.')
-      return
+      setError('Password must be at least 8 characters.');
+      return;
     }
     if (password !== confirm) {
-      setError('Passwords do not match.')
-      return
+      setError('Passwords do not match.');
+      return;
     }
-    setLoading(true)
-    const { error } = await updatePassword(password)
-    setLoading(false)
+    setLoading(true);
+    const { error } = await updatePassword(password);
+    setLoading(false);
     if (error) {
-      setError(error)
-      return
+      setError(error);
+      return;
     }
-    navigate('/account')
-  }
+    navigate('/account');
+  };
 
   return (
     <div className="bg-white text-navy min-h-screen pt-32 pb-24 px-5 md:px-8">
@@ -48,7 +55,7 @@ export default function ResetPassword() {
               required
               minLength={8}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors"
             />
           </label>
@@ -59,7 +66,7 @@ export default function ResetPassword() {
               required
               minLength={8}
               value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
+              onChange={e => setConfirm(e.target.value)}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors"
             />
           </label>
@@ -74,5 +81,5 @@ export default function ResetPassword() {
         </form>
       </div>
     </div>
-  )
+  );
 }
