@@ -169,16 +169,21 @@ export function getOrganizationSchema() {
     name: 'NERVE',
     url: 'https://www.nerveey.shop',
     logo: 'https://www.nerveey.shop/nervee-logo-favicon.png',
-    sameAs: ['https://www.instagram.com/nervee.shop', 'https://www.facebook.com/nervee.shop'],
+    sameAs: [
+      'https://www.instagram.com/gotthenerve58',
+      'https://www.facebook.com/nervee.shop',
+      'https://www.tiktok.com/@user795916160817',
+      'https://www.linkedin.com/in/nerve-shop-b67623429',
+    ],
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'Customer Service',
-      email: 'hello@nerveey.shop',
+      email: import.meta.env.VITE_SUPPORT_EMAIL || 'nerveey.shop@gmail.com',
     },
     address: {
       '@type': 'PostalAddress',
       addressCountry: 'EG',
-      addressLocality: 'Cairo',
+      addressLocality: 'Alexandria',
     },
   };
 }

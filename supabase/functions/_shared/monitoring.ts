@@ -43,21 +43,12 @@ export function getCorrelationId(req: Request): string {
  * Log a structured event with context
  */
 export function logEvent(event: MonitoringEvent) {
-  const fullEvent = {
-    ...event,
-    timestamp: event.timestamp || new Date().toISOString(),
-  }
-
-  // Log to console (visible in Supabase logs)
   const prefix = `[${event.type.toUpperCase()}] [${event.category}]`
   if (event.correlationId) {
     console.log(prefix, `[${event.correlationId}]`, event.message, event.data || '')
   } else {
     console.log(prefix, event.message, event.data || '')
   }
-
-  // In production, send to monitoring service
-  // Example: await fetch('https://your-monitoring-endpoint', { method: 'POST', body: JSON.stringify(fullEvent) })
 }
 
 /**

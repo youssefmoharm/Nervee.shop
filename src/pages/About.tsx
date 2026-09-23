@@ -75,7 +75,7 @@ export function About() {
           <section className="mb-12">
             <h2 className="text-navy font-semibold text-2xl mb-6">Our Story</h2>
             <p className="text-lg leading-relaxed mb-6">
-              Started in 2024, NERVE was born from a simple idea: to create a fashion brand that
+              Started in 2026, NERVE was born from a simple idea: to create a fashion brand that
               combines international trends with local craftsmanship, offering Egyptian customers
               premium streetwear that reflects their identity.
             </p>

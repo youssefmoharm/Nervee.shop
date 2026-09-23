@@ -27,7 +27,6 @@ import { distributedRateLimit, getRateLimitHeaders, generateCorrelationId, logEv
 import {
   validateOrderRequest,
   validateRequestSize,
-  ValidationException,
   sanitizeText
 } from '../_shared/validation.ts'
 

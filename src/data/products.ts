@@ -1,10 +1,6 @@
 import type { Collection, Product } from '../types';
 
-// Production images are served from Supabase Storage.
-
-// Helper to get product image for seeded products
-// For now, returns placeholder. Will integrate with Supabase Storage for real images.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// Production images are served from Supabase Storage; local placeholder until then.
 const img = (_productSlug?: string, _color?: string) => `/placeholder-product.jpg`;
 
 export const collections: Collection[] = [

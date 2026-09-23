@@ -13,7 +13,7 @@ export default defineConfig({
             return 'vendor-react'
           }
           // UI Libraries
-          if (id.includes('node_modules/lucide-react/') || id.includes('node_modules/framer-motion/') || id.includes('node_modules/@radix-ui/')) {
+          if (id.includes('node_modules/lucide-react/')) {
             return 'vendor-ui'
           }
           // State management

@@ -64,7 +64,7 @@ export function Contact() {
       <p className="pt-2">
         <strong>Instagram DM:</strong>{' '}
         <a
-          href="https://www.instagram.com/gotthenerve58"
+          href="https://www.instagram.com/gotthenerve58/"
           target="_blank"
           rel="noopener noreferrer"
           className="underline hover:text-navy/80"

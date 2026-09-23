@@ -71,7 +71,6 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
 
     try {
       const endpoint = getEndpoint('CHAT_AI');
-      console.log('Chatbot: Calling endpoint:', endpoint);
 
       // Call AI chat function
       const response = await fetch(endpoint, {
@@ -89,10 +88,7 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
         }),
       });
 
-      console.log('Chatbot: Response status:', response.status);
-
       const data = await response.json();
-      console.log('Chatbot: Response data:', data);
 
       if (!response.ok) {
         throw new Error(data.error || `HTTP ${response.status}: Failed to get response`);

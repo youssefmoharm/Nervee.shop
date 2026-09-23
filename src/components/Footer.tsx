@@ -27,7 +27,7 @@ export default function Footer() {
           <div className="space-y-4">
             <div className="flex items-center">
               <img
-                src="/assets/images/nervee logo.png"
+                src="/assets/images/nerve final logo.png"
                 alt="NERVE"
                 className="h-8 w-auto"
                 onError={e => {

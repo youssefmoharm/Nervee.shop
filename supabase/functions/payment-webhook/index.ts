@@ -53,17 +53,6 @@ serve(async (req) => {
         'is_standalone_payment', 'is_voided', 'order.id', 'owner', 'pending',
         'source_data.pan', 'source_data.sub_type', 'source_data.type', 'success',
       ]
-      function getNested(obj: Record<string, unknown>, path: string): string {
-        const parts = path.split('.')
-        let cur: unknown = obj
-        for (const p of parts) {
-          if (cur && typeof cur === 'object' && p in (cur as Record<string, unknown>)) cur = (cur as Record<string, unknown>)[p]
-          else return ''
-        }
-        if (cur === null || cur === undefined) return ''
-        if (typeof cur === 'boolean') return cur ? 'true' : 'false'
-        return String(cur)
-      }
       // Paymob sends the transaction under obj / transaction / data.object — support all shapes
       const root = (body.obj as Record<string, unknown>) ?? (body.transaction as Record<string, unknown>) ?? body
       const concatenated = hmacFields.map((f) => getNested(root as Record<string, unknown>, f)).join('')
@@ -176,4 +165,16 @@ serve(async (req) => {
 function json(body: unknown, status = 200, headers: Record<string, string> = {}) {
   const h = headers
   return new Response(JSON.stringify(body), { status, headers: { ...h, 'Content-Type': 'application/json' } })
+}
+
+function getNested(obj: Record<string, unknown>, path: string): string {
+  const parts = path.split('.')
+  let cur: unknown = obj
+  for (const p of parts) {
+    if (cur && typeof cur === 'object' && p in (cur as Record<string, unknown>)) cur = (cur as Record<string, unknown>)[p]
+    else return ''
+  }
+  if (cur === null || cur === undefined) return ''
+  if (typeof cur === 'boolean') return cur ? 'true' : 'false'
+  return String(cur)
 }

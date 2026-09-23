@@ -10,8 +10,7 @@ import {
   validateEmail, 
   validateUUID, 
   validateSize, 
-  validateRequestSize,
-  ValidationException 
+  validateRequestSize
 } from '../_shared/validation.ts'
 import { 
   logRateLimitHit,
