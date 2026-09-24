@@ -6,9 +6,22 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # Mapped at job level so step `if:` guards can read them (empty when the
+      # secret is not configured — the Sentry upload step then skips).
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+      SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
     steps:
       - uses: actions/checkout@v7
 
@@ -17,34 +30,55 @@ jobs:
         with:
           node-version: 24
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Install Playwright browsers
         id: playwright-install
         run: npx playwright install --with-deps
-      
+
       - name: Typecheck
         run: npm run typecheck
-      
+
       - name: Lint
         run: npm run lint
-      
+
+      - name: Format check
+        run: npm run format:check
+
       - name: Run unit tests (Vitest)
         run: npm run test -- --run --coverage
-      
+
       - name: Upload Vitest coverage
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: vitest-coverage
           path: coverage
           retention-days: 7
           if-no-files-found: ignore
-      
+
       - name: Build
+        env:
+          # Public VITE_* values (bundled into browser JS) — required by prebuild sitemap.
+          # Prefer GitHub secrets; fall back to the known public project values.
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://gfmxvvjqlhrnmidutjwx.supabase.co' }}
+          your_removed_credential_here: ${{ secrets.your_removed_credential_here || 'your_removed_credential_here' }}
         run: npm run build
+
+      # prebuild generates public/sitemap.xml; this gate fails the build if the
+      # sitemap or robots.txt is missing/empty or missing required directives.
+      - name: Verify SEO artifacts (sitemap + robots)
+        run: node scripts/verify-seo.mjs
+
+      - name: Set APP_VERSION
+        run: echo "APP_VERSION=$(node -p "require('./package.json').version")" >> "$GITHUB_ENV"
+
+      # Only runs when SENTRY_AUTH_TOKEN is configured — skipped otherwise.
+      - name: Upload Sentry source maps
+        if: env.SENTRY_AUTH_TOKEN != ''
+        run: npx @sentry/cli@2 sourcemaps upload --release "@nerve@${APP_VERSION}" dist
 
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
@@ -56,7 +90,9 @@ jobs:
 
       - name: Deno check edge functions
         run: deno check supabase/functions/**/*.ts
-      
+
+      # Local dev-server E2E only — @live specs are excluded by default
+      # (grepInvert in playwright.config.ts) and run via live-smoke.yml.
       - name: Run Playwright E2E
         if: ${{ !cancelled() && steps.playwright-install.outcome == 'success' }}
         env:
@@ -66,9 +102,42 @@ jobs:
 
       - name: Upload Playwright Report
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
           if-no-files-found: warn
+
+  # Advisory Lighthouse budgets (performance ≥ 0.7, accessibility ≥ 0.9).
+  # continue-on-error: a red LHCI run never blocks the PR. LHCI_GITHUB_APP_TOKEN
+  # is optional — without it, lhci skips posting status checks and only asserts.
+  lighthouse:
+    name: Lighthouse CI (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://gfmxvvjqlhrnmidutjwx.supabase.co' }}
+          your_removed_credential_here: ${{ secrets.your_removed_credential_here || 'your_removed_credential_here' }}
+        run: npm run build
+
+      - name: Verify SEO artifacts (sitemap + robots)
+        run: node scripts/verify-seo.mjs
+
+      - name: Run Lighthouse CI
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+        run: npx lhci autorun

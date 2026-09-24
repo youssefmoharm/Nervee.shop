@@ -1,260 +1,83 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect } from 'vitest';
+import {
+  validateEgyptianPhone,
+  validateEgyptianPostalCode,
+  validateGovernorate,
+  validateCity,
+  validateAddress,
+  validateEmail,
+} from '../../lib/egyptianValidation';
 
-// Input validation functions to test
-export function validateEmail(email: string): { valid: boolean; error?: string } {
-  if (!email) {
-    return { valid: false, error: 'Email is required' }
-  }
-  
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailRegex.test(email)) {
-    return { valid: false, error: 'Invalid email format' }
-  }
-  
-  if (email.length > 254) {
-    return { valid: false, error: 'Email too long' }
-  }
-  
-  return { valid: true }
-}
-
-export function validatePhone(phone: string): { valid: boolean; error?: string } {
-  if (!phone) {
-    return { valid: false, error: 'Phone number is required' }
-  }
-  
-  const digitsOnly = phone.replace(/\D/g, '')
-  if (digitsOnly.length < 10 || digitsOnly.length > 15) {
-    return { valid: false, error: 'Phone number must be 10-15 digits' }
-  }
-  
-  return { valid: true }
-}
-
-export function validateSize(size: string): { valid: boolean; error?: string } {
-  if (!size) {
-    return { valid: false, error: 'Size is required' }
-  }
-  
-  const validSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
-  if (!validSizes.includes(size)) {
-    return { valid: false, error: 'Invalid size' }
-  }
-  
-  return { valid: true }
-}
-
-export function validateColor(color: string): { valid: boolean; error?: string } {
-  if (!color || color.trim().length === 0) {
-    return { valid: false, error: 'Color is required' }
-  }
-  
-  if (color.length > 50) {
-    return { valid: false, error: 'Color name too long' }
-  }
-  
-  return { valid: true }
-}
-
-export function validatePaymentMethod(method: string): { valid: boolean; error?: string } {
-  if (!method) {
-    return { valid: false, error: 'Payment method is required' }
-  }
-  
-  const validMethods = ['cod', 'card']
-  if (!validMethods.includes(method)) {
-    return { valid: false, error: 'Invalid payment method' }
-  }
-  
-  return { valid: true }
-}
-
-export function validateDeliveryMethod(method: string): { valid: boolean; error?: string } {
-  if (!method) {
-    return { valid: false, error: 'Delivery method is required' }
-  }
-  
-  const validMethods = ['standard', 'express']
-  if (!validMethods.includes(method)) {
-    return { valid: false, error: 'Invalid delivery method' }
-  }
-  
-  return { valid: true }
-}
-
-describe('Input Validation', () => {
-  describe('validateEmail', () => {
+describe('Input validation (production sources only)', () => {
+  describe('validateEmail (lib/egyptianValidation)', () => {
     it('accepts valid emails', () => {
-      expect(validateEmail('test@example.com')).toEqual({ valid: true })
-      expect(validateEmail('user+tag@domain.co.uk')).toEqual({ valid: true })
-      expect(validateEmail('123@test.org')).toEqual({ valid: true })
-    })
+      expect(validateEmail('test@example.com').valid).toBe(true);
+      expect(validateEmail('user+tag@domain.co.uk').valid).toBe(true);
+    });
 
-    it('rejects empty email', () => {
-      expect(validateEmail('')).toEqual({
-        valid: false,
-        error: 'Email is required'
-      })
-    })
+    it('rejects invalid emails', () => {
+      expect(validateEmail('').valid).toBe(false);
+      expect(validateEmail('invalid').valid).toBe(false);
+      expect(validateEmail('invalid@').valid).toBe(false);
+      expect(validateEmail('@invalid.com').valid).toBe(false);
+    });
+  });
 
-    it('rejects invalid format', () => {
-      expect(validateEmail('invalid')).toEqual({
-        valid: false,
-        error: 'Invalid email format'
-      })
-      expect(validateEmail('invalid@')).toEqual({
-        valid: false,
-        error: 'Invalid email format'
-      })
-      expect(validateEmail('@invalid.com')).toEqual({
-        valid: false,
-        error: 'Invalid email format'
-      })
-    })
+  describe('Egyptian phone (lib/egyptianValidation)', () => {
+    it('accepts normalized Egyptian mobiles', () => {
+      expect(validateEgyptianPhone('01012345678').valid).toBe(true);
+      expect(validateEgyptianPhone('+20 101 234 5678').valid).toBe(true);
+      expect(validateEgyptianPhone('01234567890').valid).toBe(true);
+      expect(validateEgyptianPhone('01501234567').valid).toBe(true);
+    });
 
-    it('rejects overly long emails', () => {
-      const longEmail = 'a'.repeat(250) + '@example.com'
-      expect(validateEmail(longEmail)).toEqual({
-        valid: false,
-        error: 'Email too long'
-      })
-    })
-  })
+    it('rejects empty, short, long, and non-Egyptian numbers', () => {
+      expect(validateEgyptianPhone('').valid).toBe(false);
+      expect(validateEgyptianPhone('123456789').valid).toBe(false);
+      expect(validateEgyptianPhone('1234567890123456').valid).toBe(false);
+      expect(validateEgyptianPhone('+1-234-567-8900').valid).toBe(false);
+      expect(validateEgyptianPhone('(555) 123-4567').valid).toBe(false);
+    });
+  });
 
-  describe('validatePhone', () => {
-    it('accepts valid phone numbers', () => {
-      expect(validatePhone('1234567890')).toEqual({ valid: true })
-      expect(validatePhone('+1-234-567-8900')).toEqual({ valid: true })
-      expect(validatePhone('(555) 123-4567')).toEqual({ valid: true })
-    })
+  describe('postal code', () => {
+    it('accepts optional 4-5 digit codes', () => {
+      expect(validateEgyptianPostalCode('').valid).toBe(true);
+      expect(validateEgyptianPostalCode('1234').valid).toBe(true);
+      expect(validateEgyptianPostalCode('12345').valid).toBe(true);
+    });
 
-    it('rejects empty phone', () => {
-      expect(validatePhone('')).toEqual({
-        valid: false,
-        error: 'Phone number is required'
-      })
-    })
+    it('rejects non-numeric codes', () => {
+      expect(validateEgyptianPostalCode('123456').valid).toBe(false);
+      expect(validateEgyptianPostalCode('abcd').valid).toBe(false);
+    });
+  });
 
-    it('rejects too short phone numbers', () => {
-      expect(validatePhone('123456789')).toEqual({
-        valid: false,
-        error: 'Phone number must be 10-15 digits'
-      })
-    })
+  describe('governorate', () => {
+    it('accepts all canonical governorates', () => {
+      expect(validateGovernorate('Cairo').valid).toBe(true);
+      expect(validateGovernorate('Alexandria').valid).toBe(true);
+      expect(validateGovernorate('Giza').valid).toBe(true);
+    });
 
-    it('rejects too long phone numbers', () => {
-      expect(validatePhone('1234567890123456')).toEqual({
-        valid: false,
-        error: 'Phone number must be 10-15 digits'
-      })
-    })
+    it('rejects unknown governorates', () => {
+      expect(validateGovernorate('Atlantis').valid).toBe(false);
+      expect(validateGovernorate('').valid).toBe(false);
+    });
+  });
 
-    it('handles phone numbers with formatting', () => {
-      expect(validatePhone('+20-123-456-7890')).toEqual({ valid: true })
-    })
-  })
+  describe('city / address', () => {
+    it('validates city rules', () => {
+      expect(validateCity('Cairo').valid).toBe(true);
+      expect(validateCity('New Cairo').valid).toBe(true);
+      expect(validateCity('X').valid).toBe(false);
+      expect(validateCity('').valid).toBe(false);
+    });
 
-  describe('validateSize', () => {
-    it('accepts valid sizes', () => {
-      const validSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
-      validSizes.forEach(size => {
-        expect(validateSize(size)).toEqual({ valid: true })
-      })
-    })
-
-    it('rejects empty size', () => {
-      expect(validateSize('')).toEqual({
-        valid: false,
-        error: 'Size is required'
-      })
-    })
-
-    it('rejects invalid sizes', () => {
-      expect(validateSize('XXXL')).toEqual({
-        valid: false,
-        error: 'Invalid size'
-      })
-      expect(validateSize('medium')).toEqual({
-        valid: false,
-        error: 'Invalid size'
-      })
-    })
-  })
-
-  describe('validateColor', () => {
-    it('accepts valid colors', () => {
-      expect(validateColor('Red')).toEqual({ valid: true })
-      expect(validateColor('Navy Blue')).toEqual({ valid: true })
-      expect(validateColor('Black')).toEqual({ valid: true })
-    })
-
-    it('rejects empty color', () => {
-      expect(validateColor('')).toEqual({
-        valid: false,
-        error: 'Color is required'
-      })
-      expect(validateColor('   ')).toEqual({
-        valid: false,
-        error: 'Color is required'
-      })
-    })
-
-    it('rejects overly long color names', () => {
-      const longColor = 'a'.repeat(51)
-      expect(validateColor(longColor)).toEqual({
-        valid: false,
-        error: 'Color name too long'
-      })
-    })
-  })
-
-  describe('validatePaymentMethod', () => {
-    it('accepts valid payment methods', () => {
-      expect(validatePaymentMethod('cod')).toEqual({ valid: true })
-      expect(validatePaymentMethod('card')).toEqual({ valid: true })
-    })
-
-    it('rejects empty payment method', () => {
-      expect(validatePaymentMethod('')).toEqual({
-        valid: false,
-        error: 'Payment method is required'
-      })
-    })
-
-    it('rejects invalid payment methods', () => {
-      expect(validatePaymentMethod('paypal')).toEqual({
-        valid: false,
-        error: 'Invalid payment method'
-      })
-      expect(validatePaymentMethod('crypto')).toEqual({
-        valid: false,
-        error: 'Invalid payment method'
-      })
-    })
-  })
-
-  describe('validateDeliveryMethod', () => {
-    it('accepts valid delivery methods', () => {
-      expect(validateDeliveryMethod('standard')).toEqual({ valid: true })
-      expect(validateDeliveryMethod('express')).toEqual({ valid: true })
-    })
-
-    it('rejects empty delivery method', () => {
-      expect(validateDeliveryMethod('')).toEqual({
-        valid: false,
-        error: 'Delivery method is required'
-      })
-    })
-
-    it('rejects invalid delivery methods', () => {
-      expect(validateDeliveryMethod('overnight')).toEqual({
-        valid: false,
-        error: 'Invalid delivery method'
-      })
-      expect(validateDeliveryMethod('pickup')).toEqual({
-        valid: false,
-        error: 'Invalid delivery method'
-      })
-    })
-  })
-})
+    it('validates address rules', () => {
+      expect(validateAddress('15 Nile Corniche, Zamalek').valid).toBe(true);
+      expect(validateAddress('short').valid).toBe(false);
+      expect(validateAddress('email me@example.com here').valid).toBe(false);
+    });
+  });
+});

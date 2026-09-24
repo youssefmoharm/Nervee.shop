@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { LayoutGrid, List, Search } from 'lucide-react';
 import type { Product, SortOption } from '../types';
 import { productService, type ShopFilters } from '../services/productService';
 import { categories } from '../data/products';
-import { useSEO } from '../lib/seo';
+import { useSEO, getItemListSchema } from '../lib/seo';
+import { useStructuredData } from '../hooks/useStructuredData';
 import { logError } from '../lib/sentry';
 import ProductCard from '../components/ProductCard';
 import { SectionErrorBoundary } from '../components/ErrorBoundary';
@@ -12,9 +13,11 @@ import Skeleton from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
 import { filterProducts, getSearchSuggestions } from '../lib/productDiscovery';
 import { Breadcrumb } from '../components/Breadcrumb';
+import { formatEGP } from '../lib/format';
 
 const ALL_COLORS = ['Navy', 'White', 'Black', 'Gray', 'Silver', 'Raw Indigo', 'Washed Black'];
 const ALL_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const PRICE_SLIDER_MAX = 10000;
 
 const sortLabels: Record<SortOption, string> = {
   featured: 'Featured',
@@ -24,6 +27,22 @@ const sortLabels: Record<SortOption, string> = {
   'best-selling': 'Best Selling',
 };
 
+const SORT_OPTIONS: SortOption[] = [
+  'featured',
+  'newest',
+  'price-asc',
+  'price-desc',
+  'best-selling',
+];
+
+function parseList(value: string | null): string[] {
+  if (!value) return [];
+  return value
+    .split(',')
+    .map(v => v.trim())
+    .filter(Boolean);
+}
+
 export default function Shop() {
   useSEO({
     title: 'Shop | NERVE — Cool but Chic',
@@ -31,40 +50,97 @@ export default function Shop() {
     keywords: 'fashion, clothing, streetwear, shop, buy online',
   });
   const [params, setParams] = useSearchParams();
+
+  // URL is the single source of truth for all shareable filters.
+  const qParam = params.get('q') ?? '';
   const category = params.get('category') as ShopFilters['category'];
+  const colorsParam = params.get('colors') ?? '';
+  const sizesParam = params.get('sizes') ?? '';
+  const priceMaxParam = params.get('priceMax') ?? '';
+  const sortParam = params.get('sort') ?? '';
+  const priceMaxRaw = Number(priceMaxParam);
+  const priceMax =
+    priceMaxParam && Number.isFinite(priceMaxRaw) && priceMaxRaw > 0
+      ? Math.min(priceMaxRaw, PRICE_SLIDER_MAX)
+      : PRICE_SLIDER_MAX;
+  const sort: SortOption = (SORT_OPTIONS as string[]).includes(sortParam)
+    ? (sortParam as SortOption)
+    : 'featured';
+
   const [products, setProducts] = useState<Product[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]); // All products fetched
   const [loading, setLoading] = useState(true);
+  const hasLoadedRef = useRef(false);
   const [displayCount, setDisplayCount] = useState(12); // Initially show 12 products
-  const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [sort, setSort] = useState<SortOption>('featured');
-  const [colors, setColors] = useState<string[]>([]);
-  const [sizes, setSizes] = useState<string[]>([]);
-  const [priceMax, setPriceMax] = useState(3500);
+  const [searchQuery, setSearchQuery] = useState(qParam);
+  const [debouncedQuery, setDebouncedQuery] = useState(qParam);
   const [view, setView] = useState<'grid' | 'list'>('grid');
+  // Local slider value so dragging doesn't rewrite the URL (and refetch) on every pixel.
+  const [sliderValue, setSliderValue] = useState(priceMax);
+
+  useEffect(() => {
+    setSliderValue(priceMax);
+  }, [priceMax]);
+
+  // Adopt external URL changes (back/forward, shared links) without clobbering in-progress typing.
+  useEffect(() => {
+    setSearchQuery(prev => (prev.trim() === qParam ? prev : qParam));
+    setDebouncedQuery(qParam);
+  }, [qParam]);
+
+  const colors = useMemo(() => parseList(colorsParam), [colorsParam]);
+  const sizes = useMemo(() => parseList(sizesParam), [sizesParam]);
 
   const filters: ShopFilters = useMemo(
-    () => ({ category, colors, sizes, priceMax, sort }),
+    () => ({
+      category,
+      colors,
+      sizes,
+      // At slider max, apply no price filter.
+      priceMax: priceMax >= PRICE_SLIDER_MAX ? undefined : priceMax,
+      sort,
+    }),
     [category, colors, sizes, priceMax, sort],
   );
 
-  // Debounce search input (300ms) to avoid expensive filtering on every keystroke
+  const filtersKey = useMemo(
+    () => [category, colorsParam, sizesParam, priceMaxParam, sort].join('|'),
+    [category, colorsParam, sizesParam, priceMaxParam, sort],
+  );
+
+  const updateParams = (updater: (prev: URLSearchParams) => URLSearchParams) => {
+    setParams(prev => updater(new URLSearchParams(prev)), { replace: true });
+  };
+
+  const setParam = (key: string, value: string | null) =>
+    updateParams(prev => {
+      if (value) prev.set(key, value);
+      else prev.delete(key);
+      return prev;
+    });
+
+  // Debounce search input (300ms) for filtering/fetching; also mirrors q into the URL.
   useEffect(() => {
-    const id = setTimeout(() => setDebouncedQuery(searchQuery), 300);
+    const id = setTimeout(() => {
+      const q = searchQuery.trim();
+      setDebouncedQuery(prev => {
+        if (prev !== q) setParam('q', q || null);
+        return q;
+      });
+    }, 300);
     return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
-  // Sync debounced query to URL for shareable links
+  // Commit slider → URL after the user stops dragging (avoids refetch thrash + layout collapse).
   useEffect(() => {
-    const q = debouncedQuery.trim();
-    setParams(prev => {
-      const next = new URLSearchParams(prev);
-      if (q) next.set('q', q);
-      else next.delete('q');
-      return next;
-    });
-  }, [debouncedQuery]);
+    if (sliderValue === priceMax) return;
+    const id = setTimeout(() => {
+      setParam('priceMax', sliderValue >= PRICE_SLIDER_MAX ? null : String(sliderValue));
+    }, 250);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sliderValue, priceMax]);
 
   const suggestions = useMemo(
     () => getSearchSuggestions(allProducts, debouncedQuery),
@@ -73,8 +149,10 @@ export default function Shop() {
 
   useEffect(() => {
     let mounted = true;
-    setLoading(true);
-    setDisplayCount(12); // Reset display count when filters change
+    // Skeleton only on first load — keep the previous grid mounted while
+    // refetching so a filter change doesn't collapse page height (which
+    // makes the browser clamp scroll and jump toward the top).
+    if (!hasLoadedRef.current) setLoading(true);
     productService
       .list(filters)
       .then(data => {
@@ -82,7 +160,9 @@ export default function Shop() {
           const visible = filterProducts(data, debouncedQuery, category, colors, sizes, priceMax);
           setAllProducts(visible);
           setProducts(visible.slice(0, 12));
+          setDisplayCount(Math.min(12, visible.length));
           setLoading(false);
+          hasLoadedRef.current = true;
         }
       })
       .catch(error => {
@@ -91,19 +171,55 @@ export default function Shop() {
           setProducts([]);
           setAllProducts([]);
           setLoading(false);
+          hasLoadedRef.current = true;
         }
       });
     return () => {
       mounted = false;
     };
-  }, [category, colors, filters, priceMax, debouncedQuery, sizes]);
+  }, [filtersKey, debouncedQuery, filters, category, colors, sizes, priceMax]);
 
   const toggleColor = (c: string) =>
-    setColors(prev => (prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]));
-  const toggleSize = (s: string) =>
-    setSizes(prev => (prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]));
+    updateParams(prev => {
+      const list = parseList(prev.get('colors'));
+      const next = list.includes(c) ? list.filter(x => x !== c) : [...list, c];
+      if (next.length) prev.set('colors', next.join(','));
+      else prev.delete('colors');
+      return prev;
+    });
 
-  const activeFilterCount = colors.length + sizes.length + (priceMax < 3500 ? 1 : 0);
+  const toggleSize = (s: string) =>
+    updateParams(prev => {
+      const list = parseList(prev.get('sizes'));
+      const next = list.includes(s) ? list.filter(x => x !== s) : [...list, s];
+      if (next.length) prev.set('sizes', next.join(','));
+      else prev.delete('sizes');
+      return prev;
+    });
+
+  const activeFilterCount = colors.length + sizes.length + (priceMax < PRICE_SLIDER_MAX ? 1 : 0);
+
+  const itemListViewKey = allProducts.map(p => p.id).join(',');
+  const itemListView = useMemo(
+    () =>
+      getItemListSchema(
+        allProducts.map(p => ({
+          name: p.name,
+          url: `https://www.nerveey.shop/product/${p.slug ?? p.id}`,
+          ...(p.colors?.[0]?.image && { image: p.colors[0].image }),
+        })),
+        category ? `NERVE ${category}` : 'NERVE Products',
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [itemListViewKey, category],
+  );
+  useStructuredData(itemListView);
+
+  const clearAllFilters = () => {
+    setSearchQuery('');
+    setDebouncedQuery('');
+    setParams({}, { replace: true });
+  };
 
   const FilterPanel = (
     <div className="space-y-8">
@@ -112,12 +228,7 @@ export default function Shop() {
         <ul className="space-y-2">
           <li>
             <button
-              onClick={() =>
-                setParams(p => {
-                  p.delete('category');
-                  return p;
-                })
-              }
+              onClick={() => setParam('category', null)}
               className={`text-sm ${
                 !category ? 'font-semibold' : 'text-navy/60'
               } hover:text-navy transition-colors`}
@@ -128,7 +239,7 @@ export default function Shop() {
           {categories.map(c => (
             <li key={c}>
               <button
-                onClick={() => setParams({ category: c })}
+                onClick={() => setParam('category', c)}
                 className={`text-sm ${
                   category === c ? 'font-semibold' : 'text-navy/60'
                 } hover:text-navy transition-colors`}
@@ -179,25 +290,22 @@ export default function Shop() {
       </div>
 
       <div>
-        <h4 className="nv-eyebrow mb-3">Max Price — EGP {priceMax.toLocaleString()}</h4>
+        <h4 className="nv-eyebrow mb-3">Max Price — {formatEGP(sliderValue)}</h4>
         <input
           type="range"
+          aria-label="Maximum price"
           min={500}
-          max={3500}
+          max={PRICE_SLIDER_MAX}
           step={50}
-          value={priceMax}
-          onChange={e => setPriceMax(Number(e.target.value))}
+          value={sliderValue}
+          onChange={e => setSliderValue(Number(e.target.value))}
           className="w-full accent-navy"
         />
       </div>
 
       {activeFilterCount > 0 && (
         <button
-          onClick={() => {
-            setColors([]);
-            setSizes([]);
-            setPriceMax(3500);
-          }}
+          onClick={clearAllFilters}
           className="text-xs underline text-navy/60 hover:text-navy"
         >
           Clear all filters
@@ -211,7 +319,7 @@ export default function Shop() {
       <div className="mx-auto max-w-[1600px] px-5 md:px-8 pb-24">
         <Breadcrumb items={[{ label: 'Shop' }]} />
         <div className="mb-8 md:mb-12">
-          <p className="nv-eyebrow text-navy/50 mb-2">{category || 'Shop All'}</p>
+          <p className="nv-eyebrow text-navy/60 mb-2">{category || 'Shop All'}</p>
           <h1 className="nv-heading text-5xl md:text-7xl">{category || 'Shop'}</h1>
         </div>
 
@@ -260,7 +368,7 @@ export default function Shop() {
           )}
         </div>
 
-        {(searchQuery || colors.length || sizes.length || priceMax < 3500) && (
+        {(searchQuery || colors.length || sizes.length || priceMax < PRICE_SLIDER_MAX) && (
           <div className="mb-6 flex flex-wrap gap-2">
             {searchQuery && (
               <span className="rounded-full bg-mist px-3 py-1 text-xs text-navy/70">
@@ -277,16 +385,16 @@ export default function Shop() {
                 Size: {size}
               </span>
             ))}
-            {priceMax < 3500 && (
+            {priceMax < PRICE_SLIDER_MAX && (
               <span className="rounded-full bg-mist px-3 py-1 text-xs text-navy/70">
-                Up to EGP {priceMax.toLocaleString()}
+                Up to {formatEGP(priceMax)}
               </span>
             )}
           </div>
         )}
 
         <div className="flex items-center justify-between border-y border-navy/10 py-3 mb-8 sticky top-16 md:top-20 bg-white z-20">
-          <span className="text-sm text-navy/50">
+          <span className="text-sm text-navy/60">
             {loading
               ? 'Loading…'
               : `Showing ${products.length} of ${allProducts.length} product${
@@ -297,7 +405,7 @@ export default function Shop() {
           <div className="flex items-center gap-4">
             <select
               value={sort}
-              onChange={e => setSort(e.target.value as SortOption)}
+              onChange={e => setParam('sort', e.target.value)}
               className="text-sm border border-navy/20 px-3 py-2 bg-white focus:outline-none"
               aria-label="Sort products"
               data-testid="sort-select"
@@ -349,13 +457,7 @@ export default function Shop() {
                 title="No products match that search"
                 body="Try a broader keyword, clear a filter, or browse our full collection."
                 actionLabel="Reset filters"
-                onAction={() => {
-                  setColors([]);
-                  setSizes([]);
-                  setPriceMax(3500);
-                  setSearchQuery('');
-                  setParams({});
-                }}
+                onAction={clearAllFilters}
               />
             ) : (
               <SectionErrorBoundary

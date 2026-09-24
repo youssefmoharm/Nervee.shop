@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { ChevronRight, HelpCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SizeGuideTool from '../components/SizeGuideTool';
-import { sizeCharts, materialFitGuides, faqItems, fitDescriptions } from '../data/sizingData';
+import SizeChartTable from '../components/SizeChartTable';
+import { materialFitGuides, faqItems, fitDescriptions } from '../data/sizingData';
 import { useSEO } from '../lib/seo';
 import Button from '../components/Button';
 
@@ -59,34 +60,7 @@ export default function SizeGuide() {
         {/* Size Chart */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold text-navy mb-6">Size Chart</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-navy text-white">
-                  <th className="border border-navy/20 px-4 py-3 text-left font-semibold">Size</th>
-                  <th className="border border-navy/20 px-4 py-3 text-left font-semibold">Chest</th>
-                  <th className="border border-navy/20 px-4 py-3 text-left font-semibold">Waist</th>
-                  <th className="border border-navy/20 px-4 py-3 text-left font-semibold">
-                    Length
-                  </th>
-                  <th className="border border-navy/20 px-4 py-3 text-left font-semibold">Fit</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sizeCharts.default.map((size, i) => (
-                  <tr key={size.size} className={i % 2 === 0 ? 'bg-white' : 'bg-mist/50'}>
-                    <td className="border border-navy/10 px-4 py-3 font-semibold text-navy">
-                      {size.size}
-                    </td>
-                    <td className="border border-navy/10 px-4 py-3 text-navy/80">{size.chest}</td>
-                    <td className="border border-navy/10 px-4 py-3 text-navy/80">{size.waist}</td>
-                    <td className="border border-navy/10 px-4 py-3 text-navy/80">{size.length}</td>
-                    <td className="border border-navy/10 px-4 py-3 text-navy/70">{size.fit}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <SizeChartTable variant="page" />
         </section>
 
         {/* How to Measure */}

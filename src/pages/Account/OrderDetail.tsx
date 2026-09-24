@@ -6,6 +6,7 @@ import { logError } from '../../lib/sentry';
 import { supabase } from '../../lib/supabase';
 import { getEndpoint } from '../../lib/apiEndpoints';
 import AccountLayout from './AccountLayout';
+import { formatEGP } from '../../lib/format';
 
 interface OrderItem {
   id: string;
@@ -157,7 +158,7 @@ export default function OrderDetail() {
                 {item.color} / {item.size} · Qty {item.quantity}
               </p>
             </div>
-            <span className="text-sm">EGP {item.subtotal.toLocaleString()}</span>
+            <span className="text-sm">{formatEGP(item.subtotal)}</span>
           </li>
         ))}
       </ul>
@@ -166,21 +167,21 @@ export default function OrderDetail() {
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-navy/60">Subtotal</span>
-            <span>EGP {order.subtotal.toLocaleString()}</span>
+            <span>{formatEGP(order.subtotal)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-navy/60">Shipping</span>
-            <span>{order.shipping_cost === 0 ? 'Free' : `EGP ${order.shipping_cost}`}</span>
+            <span>{order.shipping_cost === 0 ? 'Free' : formatEGP(order.shipping_cost)}</span>
           </div>
           {order.discount_amount > 0 && (
             <div className="flex justify-between">
               <span className="text-navy/60">Discount</span>
-              <span>-EGP {order.discount_amount.toLocaleString()}</span>
+              <span>- {formatEGP(order.discount_amount)}</span>
             </div>
           )}
           <div className="flex justify-between font-semibold text-base pt-2 border-t border-navy/10">
             <span>Total</span>
-            <span>EGP {order.total.toLocaleString()}</span>
+            <span>{formatEGP(order.total)}</span>
           </div>
         </div>
         <div className="text-sm">

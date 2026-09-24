@@ -7,6 +7,7 @@ The NERVE email automation system is now fully implemented with server-side send
 ## What's Been Implemented
 
 ### 1. Database Schema (Migration 006)
+
 - **newsletter_subscribers** - Tracks newsletter signups
 - **email_logs** - Logs all sent emails for analytics and debugging
 - **back_in_stock_requests** - Stores customer requests for out-of-stock product notifications
@@ -17,6 +18,7 @@ RLS policies ensure data privacy and proper access control.
 ### 2. Edge Functions
 
 #### `send-email` (Main Email Service)
+
 - **Purpose**: Secure server-side email sending via Resend API
 - **Route**: `/functions/v1/send-email`
 - **Method**: POST
@@ -28,6 +30,7 @@ RLS policies ensure data privacy and proper access control.
   - CORS enabled
 
 **Request Body**:
+
 ```json
 {
   "to": "customer@example.com",
@@ -39,18 +42,21 @@ RLS policies ensure data privacy and proper access control.
 ```
 
 #### `process-abandoned-carts` (Scheduled Job)
-- **Purpose**: Detect and email abandoned carts every 4 hours
-- **Trigger**: Scheduled via pg_cron (0 */4 * * *)
+
+- **Purpose**: Detect and email abandoned carts
+- **Trigger**: pg_cron daily at 10:00 UTC — `process_abandoned_carts_daily`
+  (migration 032; migration 007 registers the weekly SQL cleanups)
 - **Process**:
   1. Finds carts inactive for 24+ hours
-  2. Generates recovery email with 10% discount code
+  2. Generates recovery email with 10% discount code (`COMEBACK10`)
   3. Sends via `send-email` Edge Function
   4. Marks cart abandonment as emailed
   5. Logs metrics
 
-#### `send-back-in-stock` (On-Demand)
+#### `send-back-in-stock` (Scheduled)
+
 - **Purpose**: Send back-in-stock notifications when inventory changes
-- **Trigger**: Called when product inventory is restocked
+- **Trigger**: pg_cron hourly — `send_back_in_stock_hourly` (migration 032)
 - **Process**:
   1. Finds all customers who requested notifications
   2. Sends personalized back-in-stock email
@@ -58,6 +64,7 @@ RLS policies ensure data privacy and proper access control.
   4. Deactivates the request
 
 ### 3. Frontend Service (Updated)
+
 - **File**: `src/lib/emailAutomation.ts`
 - **New Methods**:
   - `sendCartAbandonmentEmail()` - Triggers cart recovery email
@@ -66,19 +73,26 @@ RLS policies ensure data privacy and proper access control.
   - `trackCartActivity()` - Updates cart abandonment tracker
   - `markCartAsRecovered()` - Marks cart as purchased (prevents duplicate emails)
 
-### 4. Scheduled Jobs (Migration 007)
+### 4. Scheduled Jobs (Migrations 007 + 032)
+
 Requires `pg_cron` extension enabled on Supabase:
 
-1. **process_abandoned_carts** - Every 4 hours
+1. **send_back_in_stock_hourly** - Hourly (migration 032)
+
+   - Finds pending back-in-stock requests
+   - Sends notifications
+
+2. **process_abandoned_carts_daily** - Daily at 10:00 UTC (migration 032)
+
    - Finds 24+ hour abandoned carts
    - Sends recovery emails
-   - Cleans up sent records
 
-2. **cleanup_old_email_logs** - Weekly (Monday 3 AM UTC)
+3. **cleanup_old_email_logs** - Weekly (Monday 3 AM UTC, migration 007)
+
    - Deletes email logs older than 90 days
    - Saves database storage
 
-3. **cleanup_old_cart_tracking** - Weekly (Monday 4 AM UTC)
+4. **cleanup_old_cart_tracking** - Weekly (Monday 4 AM UTC, migration 007)
    - Deletes old cart abandonment records
    - Keeps last 30 days
 
@@ -117,16 +131,18 @@ supabase functions deploy send-back-in-stock --no-verify
 ### Step 4: Set Environment Variables
 
 In Vercel/your deployment platform, add:
+
 ```
 VITE_SUPABASE_URL=https://your-project.supabase.co
 your_removed_credential_here=your-anon-key
 ```
 
 In Supabase Edge Function secrets:
+
 ***REMOVED***
 supabase secrets set RESEND_API_KEY=re_xxxxx
 supabase secrets set RESEND_FROM_EMAIL="NERVE <orders@yourdomain.com>"
-supabase secrets set STORE_URL="https://nerve-store.com"
+supabase secrets set STORE_URL="https://www.nerveey.shop"
 ```
 
 ### Step 5: Verify Scheduled Jobs
@@ -138,15 +154,18 @@ SELECT * FROM cron.job;
 ```
 
 Expected output:
-- `process_abandoned_carts` - 0 */4 * * *
-- `cleanup_old_email_logs` - 0 3 * * 1
-- `cleanup_old_cart_tracking` - 0 4 * * 1
+
+- `send_back_in_stock_hourly` - hourly
+- `process_abandoned_carts_daily` - daily 10:00 UTC
+- `cleanup_old_email_logs` - 0 3 \* \* 1
+- `cleanup_old_cart_tracking` - 0 4 \* \* 1
 
 ## Usage Examples
 
 ### Track Cart Activity (from Cart Context/Hook)
+
 ```typescript
-import { emailAutomation, useCartAbandonmentTracking } from './lib/emailAutomation'
+import { emailAutomation, useCartAbandonmentTracking } from './lib/emailAutomation';
 
 // When cart changes
 useEffect(() => {
@@ -154,52 +173,56 @@ useEffect(() => {
     emailAutomation.trackCartActivity(
       email,
       cart,
-      cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-    )
+      cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    );
   }
-}, [cart, email])
+}, [cart, email]);
 ```
 
 ### Subscribe to Newsletter
+
 ```typescript
-const { subscribeToNewsletter } = emailAutomation
+const { subscribeToNewsletter } = emailAutomation;
 
 const handleSubscribe = async (email: string, firstName?: string) => {
   const success = await subscribeToNewsletter({
     email,
-    firstName
-  })
-  
+    firstName,
+  });
+
   if (success) {
-    toast.success('Welcome to our newsletter!')
+    toast.success('Welcome to our newsletter!');
   }
-}
+};
 ```
 
 ### Request Back-in-Stock Notification
+
 ```typescript
 const handleBackInStockRequest = async () => {
   const success = await emailAutomation.requestBackInStockNotification(
     productId,
     userEmail,
-    selectedSize
-  )
-  
+    selectedSize,
+  );
+
   if (success) {
-    toast.success('We\'ll notify you when it\'s back in stock!')
+    toast.success("We'll notify you when it's back in stock!");
   }
-}
+};
 ```
 
 ### Mark Cart as Recovered (on order placement)
+
 ```typescript
 // In checkout/order completion
-await emailAutomation.markCartAsRecovered(customerEmail)
+await emailAutomation.markCartAsRecovered(customerEmail);
 ```
 
 ## Database Schema
 
 ### newsletter_subscribers
+
 ```sql
 id (UUID)
 email (TEXT, UNIQUE)
@@ -212,6 +235,7 @@ updated_at (TIMESTAMPTZ)
 ```
 
 ### email_logs
+
 ```sql
 id (UUID)
 recipient_email (TEXT)
@@ -227,6 +251,7 @@ created_at (TIMESTAMPTZ)
 ```
 
 ### back_in_stock_requests
+
 ```sql
 id (UUID)
 product_id (TEXT, FK)
@@ -238,6 +263,7 @@ is_active (BOOLEAN)
 ```
 
 ### cart_abandonment_tracking
+
 ```sql
 id (UUID)
 customer_email (TEXT)
@@ -264,8 +290,9 @@ The system tracks and sends the following email types:
 ## Analytics & Reporting
 
 ### View Email Send Statistics
+
 ```sql
-SELECT 
+SELECT
   email_type,
   COUNT(*) as count,
   COUNT(CASE WHEN status = 'sent' THEN 1 END) as sent,
@@ -276,13 +303,15 @@ GROUP BY email_type;
 ```
 
 ### View Newsletter Subscribers
+
 ```sql
 SELECT COUNT(*) FROM newsletter_subscribers WHERE is_active = true;
 ```
 
 ### View Pending Back-in-Stock Requests
+
 ```sql
-SELECT 
+SELECT
   bisr.product_id,
   p.name,
   bisr.size,
@@ -294,8 +323,9 @@ GROUP BY bisr.product_id, p.name, bisr.size;
 ```
 
 ### View Recent Abandoned Carts
+
 ```sql
-SELECT 
+SELECT
   customer_email,
   cart_value,
   last_activity_at,
@@ -309,22 +339,26 @@ LIMIT 20;
 ## Troubleshooting
 
 ### Emails not sending?
+
 1. Check RESEND_API_KEY is set in Supabase secrets
 2. Verify email_logs table for failed entries
 3. Check Edge Function logs: Supabase > Edge Functions > send-email
 4. Verify Resend account is active and not rate limited
 
 ### Cron jobs not running?
+
 1. Verify pg_cron extension is installed: `SELECT * FROM cron.job;`
 2. Check cron job logs: `SELECT * FROM cron.job_run_details;`
 3. Ensure STORE_URL secret is set
 4. Check Edge Function logs for process-abandoned-carts
 
 ### Cart abandonment emails not being sent?
+
 1. Verify cart_abandonment_tracking has entries
 2. Check email_logs for attempts
 3. Ensure carts are inactive for 24+ hours (test with manual SQL)
-4. Check process-abandoned-carts Edge Function logs
+4. Confirm the `process_abandoned_carts_daily` job exists (`SELECT * FROM cron.job;`)
+5. Check process-abandoned-carts Edge Function logs
 
 ## Future Enhancements
 
@@ -347,6 +381,7 @@ LIMIT 20;
 - **Bandwidth**: Minimal (just API calls)
 
 For 10,000 emails/month:
+
 - Resend: ~$5
 - Supabase: Included
 - Total: ~$5
@@ -354,6 +389,7 @@ For 10,000 emails/month:
 ## Support
 
 For issues or questions:
+
 1. Check Edge Function logs in Supabase dashboard
 2. Review email_logs table for error details
 3. Check cron.job_run_details for scheduled job failures

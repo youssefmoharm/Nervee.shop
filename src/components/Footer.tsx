@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Instagram, Linkedin, Mail, MapPin } from 'lucide-react';
+import { useI18n } from '../lib/i18n';
 
 const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || 'nerveey.shop@gmail.com';
 
@@ -21,6 +22,7 @@ const INFO_LINKS = [
 ];
 
 export default function Footer() {
+  const { t } = useI18n();
   return (
     <footer className="bg-white text-navy border-t border-navy/10">
       <div className="mx-auto max-w-7xl px-5 md:px-8 py-12">
@@ -41,7 +43,9 @@ export default function Footer() {
               <h2 className="nv-heading text-2xl text-navy hidden">NERVE</h2>
             </div>
             <p className="text-sm text-navy/60">
-              Premium streetwear for the bold and the beautiful. Egyptian design, global standards.
+              {t(
+                'Premium streetwear for the bold and the beautiful. Egyptian design, global standards.',
+              )}
             </p>
             <div className="flex items-center gap-3">
               <a
@@ -84,12 +88,12 @@ export default function Footer() {
 
           {/* Links */}
           <div>
-            <h3 className="nv-heading text-lg mb-4">Shop</h3>
+            <h3 className="nv-heading text-lg mb-4">{t('Shop')}</h3>
             <ul className="space-y-2 text-sm text-navy/60">
               {NAV_LINKS.map(link => (
                 <li key={link.name}>
                   <Link to={link.href} className="hover:text-navy transition-colors">
-                    {link.name}
+                    {t(link.name)}
                   </Link>
                 </li>
               ))}
@@ -97,12 +101,12 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="nv-heading text-lg mb-4">Help</h3>
+            <h3 className="nv-heading text-lg mb-4">{t('Help')}</h3>
             <ul className="space-y-2 text-sm text-navy/60">
               {INFO_LINKS.map(link => (
                 <li key={link.name}>
                   <Link to={link.href} className="hover:text-navy transition-colors">
-                    {link.name}
+                    {t(link.name)}
                   </Link>
                 </li>
               ))}
@@ -111,7 +115,7 @@ export default function Footer() {
 
           {/* Contact */}
           <div>
-            <h3 className="nv-heading text-lg mb-4">Contact</h3>
+            <h3 className="nv-heading text-lg mb-4">{t('Contact')}</h3>
             <ul className="space-y-2 text-sm text-navy/60">
               <li className="flex items-center gap-2">
                 <Mail size={16} />
@@ -121,15 +125,15 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <MapPin size={16} />
-                <span>Alexandria, Egypt</span>
+                <span>{t('Alexandria, Egypt')}</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="mt-12 pt-8 border-t border-navy/10 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-navy/40">
-            © {new Date().getFullYear()} NERVE. All rights reserved.
+          <p className="text-sm text-navy/60">
+            © {new Date().getFullYear()} NERVE. {t('All rights reserved')}.
           </p>
           <p className="text-sm text-navy/60">
             Made with{' '}

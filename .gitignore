@@ -1,11 +1,23 @@
 # Logs
 logs
 *.log
+*.log.err
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+
+# Agent / tool scratch dirs (never part of the build)
+.freebuff/
+.kilo/
+
+# Root-level patch scratch files
+/*.patch
+
+# Deno lockfile (npm/package-lock.json is the source of truth; Deno only
+# runs Supabase edge functions and does not need a committed lockfile)
+deno.lock
 
 # Test artifacts
 playwright-report/

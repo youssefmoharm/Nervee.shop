@@ -1,24 +1,48 @@
 import { logError } from '../lib/sentry';
 import { supabase } from '../lib/supabase';
+import { LOW_STOCK_DEFAULT_THRESHOLD } from '../lib/storeConfig';
 
 export const adminService = {
   async getDashboardStats() {
-    const [{ count: orderCount }, { count: customerCount }, { data: orders }, { data: lowStock }] =
-      await Promise.all([
-        supabase.from('orders').select('*', { count: 'exact', head: true }),
-        supabase.from('customers').select('*', { count: 'exact', head: true }),
-        supabase
-          .from('orders')
-          .select('total, created_at, status')
-          .order('created_at', { ascending: false })
-          .limit(200),
-        supabase
-          .from('product_inventory')
-          .select('product_id, size, stock_quantity, low_stock_threshold, products(name)')
-          .lte('stock_quantity', 5)
-          .order('stock_quantity', { ascending: true })
-          .limit(20),
-      ]);
+    const [{ count: orderCount }, { count: customerCount }, { data: orders }] = await Promise.all([
+      supabase.from('orders').select('*', { count: 'exact', head: true }),
+      supabase.from('customers').select('*', { count: 'exact', head: true }),
+      supabase
+        .from('orders')
+        .select('total, created_at, status')
+        .order('created_at', { ascending: false })
+        .limit(200),
+    ]);
+
+    // Two-step low stock query: find the highest threshold first, then fetch candidates.
+    const { data: maxThresholdRow } = await supabase
+      .from('product_inventory')
+      .select('low_stock_threshold')
+      .not('low_stock_threshold', 'is', null)
+      .order('low_stock_threshold', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const maxThreshold =
+      typeof maxThresholdRow?.low_stock_threshold === 'number'
+        ? maxThresholdRow.low_stock_threshold
+        : LOW_STOCK_DEFAULT_THRESHOLD;
+
+    const { data: lowStockCandidates } = await supabase
+      .from('product_inventory')
+      .select('product_id, size, stock_quantity, low_stock_threshold, products(name)')
+      .lte('stock_quantity', maxThreshold)
+      .order('stock_quantity', { ascending: true });
+
+    const lowStock = (lowStockCandidates ?? [])
+      .filter(row => {
+        const threshold =
+          typeof row.low_stock_threshold === 'number'
+            ? row.low_stock_threshold
+            : LOW_STOCK_DEFAULT_THRESHOLD;
+        return row.stock_quantity <= threshold;
+      })
+      .slice(0, 20);
 
     const revenue = (orders ?? [])
       .filter(o => o.status !== 'cancelled')
@@ -65,7 +89,7 @@ export const adminService = {
       totalProducts: 0, // Can be fetched separately if needed
       totalCartAbandonments: 0, // Can be fetched from cart_abandonment_tracking table
       recentOrders: orders?.slice(0, 10) ?? [],
-      lowStock: lowStock ?? [],
+      lowStock,
       monthlyRevenue: monthlyStats,
       dailyOrders: dailyStats,
     };

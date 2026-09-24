@@ -25,12 +25,11 @@ export const API_ENDPOINTS = {
 
   // Guest Orders
   VERIFY_GUEST_ORDER: `${FUNCTIONS_BASE}/verify-guest-order`,
+  RESEND_GUEST_VERIFICATION: `${FUNCTIONS_BASE}/resend-guest-verification`,
+  RECORD_ABANDONED_CART: `${FUNCTIONS_BASE}/record-abandoned-cart`,
 
   // Account & Orders
   REQUEST_RETURN: `${FUNCTIONS_BASE}/request-return`,
-
-  // Payment (if enabled via backend)
-  CREATE_PAYMENT: `${FUNCTIONS_BASE}/create-payment`,
 };
 
 /**

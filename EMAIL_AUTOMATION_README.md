@@ -7,14 +7,16 @@
 ## 📋 What's Included
 
 ### Backend (Supabase)
-- **3 Edge Functions** for secure email sending and processing
+
+- **Edge Functions** for secure email sending and processing (`send-email`, `process-abandoned-carts`, `send-back-in-stock`)
 - **4 Database Tables** for tracking and analytics
-- **6 Stored Procedures** for business logic
-- **3 Scheduled Jobs** via pg_cron for automation
+- **Stored Procedures** for business logic
+- **Scheduled Jobs** via pg_cron (migrations 007 + 032)
 - **Full RLS** for data security
 - **Comprehensive Logging** for debugging
 
 ### Frontend (React/TypeScript)
+
 - **Updated Email Service** with Edge Function integration
 - **Cart Abandonment Tracking** hook
 - **Newsletter Integration** examples
@@ -22,6 +24,7 @@
 - **Full TypeScript Support**
 
 ### Documentation
+
 - Complete setup & deployment guides
 - Integration code examples
 - Troubleshooting reference
@@ -32,17 +35,20 @@
 ## 🚀 5-Minute Quick Start
 
 ### Step 1: Deploy Database (1 min)
+
 ***REMOVED***
 cd supabase
 supabase migration up  # Runs migrations 006, 007, 008
 ```
 
 ### Step 2: Enable pg_cron (2 min)
+
 1. Go to Supabase Dashboard > Database > Extensions
 2. Search for "pg_cron" and click Install
 3. Wait for installation
 
 ### Step 3: Deploy Edge Functions (1 min)
+
 ***REMOVED***
 supabase functions deploy send-email --no-verify
 supabase functions deploy process-abandoned-carts --no-verify
@@ -50,13 +56,15 @@ supabase functions deploy send-back-in-stock --no-verify
 ```
 
 ### Step 4: Set Secrets (1 min)
+
 ***REMOVED***
 supabase secrets set RESEND_API_KEY=re_your_removed_credential_here
 supabase secrets set RESEND_FROM_EMAIL="NERVE <orders@yourdomain.com>"
-supabase secrets set STORE_URL="https://nerve-store.com"
+supabase secrets set STORE_URL="https://www.nerveey.shop"
 ```
 
 ### Step 5: Test (Instant)
+
 ***REMOVED***
 # Send test email
 ***REMOVED*** -X POST https://YOUR_PROJECT.supabase.co/functions/v1/send-email \
@@ -80,15 +88,16 @@ supabase secrets set STORE_URL="https://nerve-store.com"
 supabase/
 ├── migrations/
 │   ├── 006_email_automation.sql              # Tables & functions
-│   ├── 007_email_automation_cron.sql         # Scheduled jobs
-│   └── 008_email_automation_verification.sql # Testing queries
+│   ├── 007_email_automation_cron.sql         # Weekly cleanup jobs
+│   ├── 008_email_automation_verification.sql # Testing queries
+│   └── 032_email_automation_cron_jobs.sql    # Hourly/daily HTTP cron jobs
 ├── functions/
 │   ├── send-email/
 │   │   └── index.ts                          # Core email service
 │   ├── process-abandoned-carts/
-│   │   └── index.ts                          # 4-hour scheduled job
+│   │   └── index.ts                          # Daily scheduled job (10:00 UTC)
 │   ├── send-back-in-stock/
-│   │   └── index.ts                          # On-demand notifier
+│   │   └── index.ts                          # Hourly notifier
 │   └── _shared/                              # Utilities (unchanged)
 
 src/
@@ -96,12 +105,6 @@ src/
 │   └── emailAutomation.ts                    # Updated service
 └── components/
     └── (Integration examples in docs)
-
-Documentation/
-├── EMAIL_AUTOMATION_README.md                # This file
-├── EMAIL_AUTOMATION_SUMMARY.md               # Quick reference
-├── EMAIL_AUTOMATION_SETUP.md                 # Detailed setup
-└── EMAIL_AUTOMATION_INTEGRATION.md           # Code examples
 ```
 
 ---
@@ -109,58 +112,62 @@ Documentation/
 ## 🎯 Core Features
 
 ### 1. Newsletter Subscriptions
+
 - Sign up via Email form
 - Automatic welcome email
 - Unsubscribe support
 - Subscriber tracking in database
 
 **Usage:**
+
 ```typescript
 const success = await emailAutomation.subscribeToNewsletter({
   email: 'user@example.com',
-  firstName: 'John'
-})
+  firstName: 'John',
+});
 ```
 
 ### 2. Cart Abandonment Recovery
+
 - Tracks cart activity in real-time
 - Sends recovery email after 24 hours of inactivity
-- Includes 10% discount code
+- Includes 10% discount code (`COMEBACK10`)
 - Marks carts as recovered to prevent duplicates
 
 **Usage:**
+
 ```typescript
 // Track cart
-emailAutomation.trackCartActivity(email, cartItems, cartValue)
+emailAutomation.trackCartActivity(email, cartItems, cartValue);
 
 // Mark recovered after order
-emailAutomation.markCartAsRecovered(email)
+emailAutomation.markCartAsRecovered(email);
 ```
 
 ### 3. Back-in-Stock Notifications
+
 - Customers request notifications for out-of-stock items
 - Automatic emails when inventory is restocked
 - Size-specific notifications
 - Prevents duplicate notifications
 
 **Usage:**
+
 ```typescript
-const success = await emailAutomation.requestBackInStockNotification(
-  productId,
-  email,
-  size
-)
+const success = await emailAutomation.requestBackInStockNotification(productId, email, size);
 ```
 
 ### 4. Email Analytics
+
 - Full audit trail in `email_logs` table
 - Track email type, status, timing
 - Monitor delivery rates
 - Debug failed sends
 
 **Query:**
+
 ```sql
-SELECT email_type, COUNT(*), 
+SELECT email_type, COUNT(*),
   SUM(CASE WHEN status = 'sent' THEN 1 END) as delivered
 FROM email_logs
 GROUP BY email_type;
@@ -189,6 +196,7 @@ Analytics & Debugging
 ### Data Flow
 
 **Newsletter Signup:**
+
 ```
 Newsletter Form
   ↓ subscribeToNewsletter()
@@ -200,12 +208,13 @@ Newsletter Form
 ```
 
 **Cart Abandonment:**
+
 ```
 User adds item to cart
   ↓ trackCartActivity()
   ↓ Update cart_abandonment_tracking
   ↓ (24+ hours later)
-  ↓ pg_cron triggers process-abandoned-carts
+  ↓ pg_cron triggers process-abandoned-carts (daily 10:00 UTC)
   ↓ Query abandoned_carts
   ↓ Call send-email for each
   ↓ Mark email_sent_at
@@ -213,6 +222,7 @@ User adds item to cart
 ```
 
 **Back-in-Stock:**
+
 ```
 Inventory updated to in_stock
   ↓ Call send-back-in-stock function
@@ -227,6 +237,7 @@ Inventory updated to in_stock
 ## 📊 Database Schema
 
 ### newsletter_subscribers
+
 Tracks newsletter signups and subscriptions.
 
 ```sql
@@ -240,6 +251,7 @@ created_at & updated_at
 ```
 
 ### email_logs
+
 Complete audit trail of all emails sent.
 
 ```sql
@@ -257,6 +269,7 @@ created_at (TIMESTAMPTZ)
 ```
 
 ### back_in_stock_requests
+
 Tracks customer requests for out-of-stock items.
 
 ```sql
@@ -270,6 +283,7 @@ is_active (BOOLEAN)
 ```
 
 ### cart_abandonment_tracking
+
 Tracks inactive carts for recovery campaigns.
 
 ```sql
@@ -288,11 +302,13 @@ created_at & updated_at
 ## 🔌 Edge Functions
 
 ### send-email
+
 **Purpose**: Secure email sending service  
 **Route**: `POST /functions/v1/send-email`  
 **Rate Limit**: 50 emails/min per IP
 
 **Request:**
+
 ```json
 {
   "to": "user@example.com",
@@ -304,6 +320,7 @@ created_at & updated_at
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -314,11 +331,13 @@ created_at & updated_at
 ```
 
 ### process-abandoned-carts
+
 **Purpose**: Scheduled job to detect and email abandoned carts  
-**Trigger**: pg_cron every 4 hours (0 */4 * * *)  
+**Trigger**: pg_cron daily at 10:00 UTC (migration 032, job `process_abandoned_carts_daily`)  
 **Duration**: ~5-30 seconds depending on cart volume
 
 **What it does:**
+
 1. Finds carts inactive for 24+ hours
 2. Generates recovery email HTML
 3. Calls send-email Edge Function
@@ -326,11 +345,13 @@ created_at & updated_at
 5. Returns statistics
 
 ### send-back-in-stock
-**Purpose**: On-demand back-in-stock notifications  
+
+**Purpose**: Back-in-stock notification job  
 **Route**: `POST /functions/v1/send-back-in-stock`  
-**Trigger**: Called when product inventory changes
+**Trigger**: pg_cron hourly (migration 032, job `send_back_in_stock_hourly`)
 
 **Request:**
+
 ```json
 {
   "product_id": "product-123"
@@ -338,6 +359,7 @@ created_at & updated_at
 ```
 
 **What it does:**
+
 1. Finds all customers requesting notification
 2. Calls send-email for each
 3. Marks notified_at timestamp
@@ -348,23 +370,27 @@ created_at & updated_at
 ## 🔐 Security
 
 ### Input Validation
+
 - Email RFC 5322 validation
 - Request size limits (50KB max)
 - XSS prevention via HTML sanitization
 - Field-specific validation for all inputs
 
 ### Rate Limiting
+
 - 50 emails/min per IP (send-email)
 - Distributed via database + in-memory fallback
 - Automatic cleanup of expired limits
 
 ### RLS Policies
+
 - `newsletter_subscribers`: Users see own, admins see all
 - `email_logs`: Admins only (service role access)
 - `back_in_stock_requests`: Users CRUD own
 - `cart_abandonment_tracking`: Service role only (scheduled job)
 
 ### Secrets Management
+
 - All API keys in Supabase secrets (never in code)
 - Service role key never exposed to client
 - Resend API key used server-side only
@@ -374,15 +400,16 @@ created_at & updated_at
 ## 📊 Monitoring & Analytics
 
 ### Real-time Metrics
+
 Check email statistics any time:
 
 ```sql
 -- Total emails sent this month
-SELECT COUNT(*) FROM email_logs 
+SELECT COUNT(*) FROM email_logs
 WHERE created_at > DATE_TRUNC('month', NOW());
 
 -- Success rate
-SELECT 
+SELECT
   SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END)::float / COUNT(*) * 100 as success_rate
 FROM email_logs;
 
@@ -393,6 +420,7 @@ GROUP BY email_type;
 ```
 
 ### View Cron Job Status
+
 ```sql
 -- Last 10 job runs
 SELECT job_name, start_time, status, return_message
@@ -402,6 +430,7 @@ LIMIT 10;
 ```
 
 ### Troubleshooting Dashboard
+
 ```sql
 -- Recent failures
 SELECT recipient_email, email_type, status, error_message, sent_at
@@ -416,16 +445,19 @@ LIMIT 20;
 ## 💰 Pricing
 
 ### Resend API
+
 - First 1,000 emails: **Free** (trial)
 - After: **$0.0005 per email**
 - Example: 10,000 emails = $5/month
 
 ### Supabase
+
 - Edge Functions: **Included** in Pro plan
 - Database storage: ~500 bytes per email
 - Example: 10,000 emails = ~5MB storage
 
 ### Total Cost
+
 - 10,000 emails/month: **~$5/month**
 - 100,000 emails/month: **~$50/month**
 
@@ -434,6 +466,7 @@ LIMIT 20;
 ## 🧪 Testing
 
 ### Manual Test Email
+
 ***REMOVED***
 ***REMOVED*** -X POST https://YOUR_PROJECT.supabase.co/functions/v1/send-email \
   -H "Authorization: Bearer your_removed_credential_here" \
@@ -447,6 +480,7 @@ LIMIT 20;
 ```
 
 ### Verify Setup
+
 ***REMOVED***
 # Run verification queries from supabase/migrations/008_email_automation_verification.sql
 # This checks:
@@ -458,25 +492,32 @@ LIMIT 20;
 ```
 
 ### Integration Testing
-See `EMAIL_AUTOMATION_INTEGRATION.md` for React component examples.
+
+See `EMAIL_AUTOMATION_README.md` usage examples above, and the Vitest suite
+under `src/test/` for client-side coverage.
 
 ---
 
 ## 🐛 Troubleshooting
 
 ### Emails not sending?
+
 1. Check RESEND_API_KEY is set: `supabase secrets list`
 2. Check Resend account is active
 3. Check email_logs table for error messages
 4. Check Edge Function logs in Supabase dashboard
 
 ### Cron jobs not running?
-1. Verify pg_cron installed: Query in migration 008
+
+1. Verify pg_cron installed: `SELECT * FROM cron.job;`
 2. Check cron.job_run_details for errors
 3. Verify Edge Function is deployed
 4. Check STORE_URL secret is set
+5. Confirm the jobs from migrations 007 + 032 exist (hourly back-in-stock,
+   daily abandoned carts at 10:00 UTC)
 
 ### Cart abandonment not working?
+
 1. Verify cart_abandonment_tracking has entries
 2. Check last_activity_at is 24+ hours ago
 3. Check email_sent_at is NULL
@@ -486,15 +527,14 @@ See `EMAIL_AUTOMATION_INTEGRATION.md` for React component examples.
 
 ## 📚 Documentation Files
 
-| File | Purpose |
-|------|---------|
-| `EMAIL_AUTOMATION_README.md` | This file - overview & quick start |
-| `EMAIL_AUTOMATION_SUMMARY.md` | Quick reference & checklist |
-| `EMAIL_AUTOMATION_SETUP.md` | Detailed setup & configuration |
-| `EMAIL_AUTOMATION_INTEGRATION.md` | Code examples & patterns |
-| Migration 006 | Database schema |
-| Migration 007 | Scheduled jobs |
-| Migration 008 | Verification queries |
+| File                         | Purpose                                                      |
+| ---------------------------- | ------------------------------------------------------------ |
+| `EMAIL_AUTOMATION_README.md` | This file - overview & quick start                           |
+| `EMAIL_AUTOMATION_SETUP.md`  | Detailed setup & configuration                               |
+| Migration 006                | Database schema                                              |
+| Migration 007                | Weekly cleanup jobs                                          |
+| Migration 032                | HTTP cron jobs (hourly back-in-stock, daily abandoned carts) |
+| Migration 033                | Seeds `BUNDLE10` / `COMEBACK10` recovery discount codes      |
 
 ---
 
@@ -546,6 +586,7 @@ A: Can be added using similar pattern with SMS provider
 ## 📞 Support
 
 For issues:
+
 1. Check EMAIL_AUTOMATION_SETUP.md troubleshooting section
 2. Review Edge Function logs in Supabase dashboard
 3. Check email_logs table for error details
@@ -557,6 +598,7 @@ For issues:
 ## ✨ You're All Set!
 
 The complete email automation system is ready to use. Everything is:
+
 - ✅ Deployed
 - ✅ Tested
 - ✅ Documented
@@ -566,4 +608,4 @@ The complete email automation system is ready to use. Everything is:
 
 ---
 
-*Built for NERVE - Cool but Chic*
+_Built for NERVE - Cool but Chic_

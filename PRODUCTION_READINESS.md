@@ -19,7 +19,7 @@ Supabase
   ├─ Edge Functions (Deno, service_role bypass)
   ├─ Auth (GoTrue, JWT, admin_users table)
   └─ Storage (product images)
-External: Resend (email), Gemini (AI), Paymob (future), Sentry, GA4
+External: Resend (email), Gemini (AI), Sentry, GA4 — payments are COD only
 ```
 
 ---
@@ -45,28 +45,29 @@ Push to main
 
 ### Frontend (Vite) — PUBLIC, bundled to browser, set in Vercel dashboard
 
-| Variable | Required | Example | Notes |
-|----------|----------|---------|-------|
-| `VITE_SUPABASE_URL` | **Yes** | `https://gfmxvvjqlhrnmidutjwx.supabase.co` | Build FAILS in prod if missing |
-| `your_removed_credential_here` | **Yes** | `sb_publishable_...` | Publishable anon key, public by design |
-| `VITE_ENV` | No | `production` | Used by security-test gate |
-| `VITE_SENTRY_DSN` | Recommended | `https://...@ingest.sentry.io/...` | Error tracking |
-| `VITE_GA_ID` | No | `G-XXXXXXXXXX` | GA4 |
-| `VITE_META_PIXEL_ID` | No | `123456789` | Meta Pixel |
+| Variable                 | Required    | Example                                    | Notes                                   |
+| ------------------------ | ----------- | ------------------------------------------ | --------------------------------------- |
+| `VITE_SUPABASE_URL`      | **Yes**     | `https://gfmxvvjqlhrnmidutjwx.supabase.co` | Build FAILS in prod if missing          |
+| `your_removed_credential_here` | **Yes**     | `sb_publishable_...`                       | Publishable anon key, public by design  |
+| `VITE_ENV`               | No          | `production`                               | Runtime environment tag for logs/Sentry |
+| `VITE_SENTRY_DSN`        | Recommended | `https://...@ingest.sentry.io/...`         | Error tracking                          |
+| `VITE_GA_ID`             | No          | `G-XXXXXXXXXX`                             | GA4                                     |
+| `VITE_META_PIXEL_ID`     | No          | `123456789`                                | Meta Pixel                              |
 
 `src/lib/supabase.ts` enforces: missing `VITE_SUPABASE_URL`/`ANON_KEY` in a production build (`import.meta.env.PROD`) throws at startup — no silent demo fallback.
 
 ### Backend — SERVER SECRETS, set via `supabase secrets set KEY=value`
 
-| Secret | Required | Used by | Notes |
-|--------|----------|---------|-------|
-| `RESEND_API_KEY` | **Yes** | `send-email`, `create-order`, `process-*` | Resend transactional email |
-| `RESEND_FROM_EMAIL` | **Yes** | `send-email` | e.g. `"NERVE <orders@nerve-store.com>"` |
-| `STORE_URL` | **Yes** | `send-email`, `create-support-ticket`, `process-*` | e.g. `https://nerve-store.com` |
-| `GOOGLE_GEMINI_API_KEY` | **Yes** | `chat-ai` | `OPENAI_API_KEY` also accepted as alias |
-| `CRON_SECRET` | Recommended | `send-back-in-stock`, `process-abandoned-carts` | Extra auth for scheduler endpoints |
-| `PAYMOB_API_KEY` | No (P1) | `create-payment`, `payment-webhook` | Enables card payments when set |
-| `PAYMOB_HMAC_SECRET` | No (P1) | `payment-webhook` | HMAC verification |
+| Secret                  | Required    | Used by                                            | Notes                                   |
+| ----------------------- | ----------- | -------------------------------------------------- | --------------------------------------- |
+| `RESEND_API_KEY`        | **Yes**     | `send-email`, `create-order`, `process-*`          | Resend transactional email              |
+| `RESEND_FROM_EMAIL`     | **Yes**     | `send-email`                                       | e.g. `"NERVE <orders@nerveey.shop>"`    |
+| `STORE_URL`             | **Yes**     | `send-email`, `create-support-ticket`, `process-*` | e.g. `https://www.nerveey.shop`         |
+| `GOOGLE_GEMINI_API_KEY` | **Yes**     | `chat-ai`                                          | `OPENAI_API_KEY` also accepted as alias |
+| `CRON_SECRET`           | Recommended | `send-back-in-stock`, `process-abandoned-carts`    | Extra auth for scheduler endpoints      |
+
+Payments are out of scope for this launch: **COD only** — there are
+no payment-provider secrets and no online-payment edge functions.
 
 `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are injected automatically by Supabase — do NOT set them.
 
@@ -76,38 +77,41 @@ Push to main
 
 1. Create project at https://supabase.com (project ref `gfmxvvjqlhrnmidutjwx` is current prod).
 2. `supabase link --project-ref $SUPABASE_PROJECT_REF`
-3. `supabase db push --linked --include-all` — applies migrations `001`–`013`.
+3. `supabase db push --linked --include-all` — applies migrations `001`–`033`.
 4. `supabase secrets set RESEND_API_KEY=... RESEND_FROM_EMAIL=... STORE_URL=... GOOGLE_GEMINI_API_KEY=...`
 5. `supabase functions deploy --project-ref $SUPABASE_PROJECT_REF` — deploys all edge functions.
 6. Verify: `supabase secrets list` and `supabase functions list`.
 
 ### Edge Functions
 
-| Function | Auth | Purpose |
-|----------|------|---------|
-| `create-order` | JWT (customer) + anon (guest), rate-limited | Order creation (re-prices server-side) |
-| `send-email` | **service_role or admin JWT only** | Transactional email (Resend) — blocks anon |
-| `chat-ai` | JWT (auth user) or anon (guest, limited context) | Gemini chatbot with ownership checks |
-| `create-support-ticket` | JWT + conversation ownership | Support tickets from chat |
-| `verify-guest-order` | anon, rate-limited | Secure guest order lookup (hashed token) |
-| `create-payment` | JWT required | Payment attempt (COD/Paymob, idempotent) |
-| `payment-webhook` | HMAC verified | Provider webhook, source of truth |
-| `send-back-in-stock` | service_role / admin / CRON_SECRET | Back-in-stock notifications |
-| `process-abandoned-carts` | service_role / admin / CRON_SECRET | Cart abandonment emails |
-| `process-restock` | admin only | Admin restock trigger |
-| `update-order-status` | admin only | Order status transitions |
-| `contact` | anon, rate-limited | Contact form |
-| `back-in-stock` | anon, rate-limited | Back-in-stock requests |
-| `handle-unsubscribe` | token capability | Unsubscribe via token |
-| `security-test` | admin + non-production guard | Security regression suite |
+| Function                        | Auth                                             | Purpose                                    |
+| ------------------------------- | ------------------------------------------------ | ------------------------------------------ |
+| `create-order`                  | JWT (customer) + anon (guest), rate-limited      | Order creation (re-prices server-side)     |
+| `send-email`                    | **service_role or admin JWT only**               | Transactional email (Resend) — blocks anon |
+| `chat-ai`                       | JWT (auth user) or anon (guest, limited context) | Gemini chatbot with ownership checks       |
+| `create-support-ticket`         | JWT + conversation ownership                     | Support tickets from chat                  |
+| `verify-guest-order`            | anon, rate-limited                               | Secure guest order lookup (hashed token)   |
+| `send-back-in-stock`            | service_role / admin / CRON_SECRET               | Back-in-stock notifications                |
+| `process-abandoned-carts`       | service_role / admin / CRON_SECRET               | Cart abandonment emails                    |
+| `process-restock`               | admin only                                       | Admin restock trigger                      |
+| `update-order-status`           | admin only                                       | Order status transitions                   |
+| `contact`                       | anon, rate-limited                               | Contact form                               |
+| `back-in-stock`                 | anon, rate-limited                               | Back-in-stock requests                     |
+| `handle-unsubscribe`            | token capability                                 | Unsubscribe via token                      |
+| `auth-sign-in` / `auth-sign-up` | pre-auth                                         | Supabase Auth wrappers for the frontend    |
+| `request-return`                | JWT (order owner) or guest token                 | Return/cancellation requests               |
+
+Full list: `supabase/functions/` (15 functions after the payment functions
+are removed; each `index.ts` documents its own auth mode).
 
 ---
 
 ## 5. Payment
 
-- **Active:** COD (Cash on Delivery). `place_order` RPC re-prices from `products.price`, locks inventory with `FOR UPDATE`, validates discounts server-side.
-- **Architecture for Paymob:** `payment_attempts` table (idempotent, provider-agnostic), `create-payment` edge function (creates attempt, calls Paymob when configured), `payment-webhook` (HMAC verification, idempotent updates, `order.payment_status` is source of truth — browser `/success` never marks paid).
-- **UI:** `Checkout.tsx` shows card option only when `PAYMOB_API_KEY` is configured; otherwise COD only. No faking.
+- **Payments are out of scope for this launch: COD only.** Do not add
+  payment-provider secrets or online-payment functions.
+- `place_order` RPC re-prices from `products.price`, locks inventory with `FOR UPDATE`, validates discounts server-side.
+- **UI:** `Checkout.tsx` is COD only.
 - **Order status vs payment status are distinct** (`orders.status` vs `payment_status` + `payment_attempts.status`).
 - **Refunds/returns:** `refunds` table, `order_return_requests` table (cancellation/return with reason, status, dedup via `UNIQUE(order_id, type)`), stock restored only once via `update_order_status`.
 
@@ -118,7 +122,9 @@ Push to main
 - Provider: Resend via `send-email` (service_role/admin only, payload validated: subject ≤200, body ≤100KB, type whitelist, sender fixed server-side).
 - Required secrets: `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `STORE_URL`.
 - `create-order` sends `orderConfirmedEmail` (fixed template, not client HTML).
-- Scheduled jobs (`process-abandoned-carts`, `send-back-in-stock`) call `send-email` with service_role.
+- Scheduled jobs (registered by pg_cron in migrations 007 + 032):
+  `send-back-in-stock` **hourly**, `process-abandoned-carts` **daily 10:00 UTC**,
+  plus weekly cleanup of old email logs / cart tracking. Both call `send-email` with service_role.
 - Frontend `emailAutomation.ts` no longer sends arbitrary emails — server is the gate.
 - Unsubscribe: `create_unsubscribe_token` (PUBLIC by design for email generation) + `process_unsubscribe` (service_role only), `should_send_email` check.
 
@@ -140,7 +146,7 @@ Push to main
    - `VITE_SUPABASE_URL`, `your_removed_credential_here` (required — build fails without them)
    - Optionally `VITE_SENTRY_DSN`, `VITE_GA_ID`, `VITE_META_PIXEL_ID`
 3. Deploy is gated on CI: `deploy.yml` triggers only on `workflow_run` success of `CI`.
-4. Custom domain: add `nerve-store.com` (or your domain) in Vercel → Settings → Domains, set DNS.
+4. Custom domain: add `www.nerveey.shop` in Vercel → Settings → Domains, set DNS.
 
 ---
 
@@ -148,18 +154,18 @@ Push to main
 
 ### RLS Summary
 
-| Table | anon | authenticated | admin | service_role |
-|-------|------|---------------|-------|--------------|
-| `products`, `product_colors`, `collections` | SELECT (public) | SELECT | ALL | bypass |
-| `product_inventory` | SELECT (availability) | SELECT | ALL | bypass |
-| `discount_codes` | **no SELECT** (harvest blocked) | **no SELECT** | ALL | bypass |
-| `orders`, `order_items` | — | SELECT own only | SELECT all | bypass |
-| `customers`, `customer_addresses`, `carts`, `wishlists` | — | own only | — | bypass |
-| `guest_orders` | **deny-all** (edge function only) | **deny-all** | **deny-all** | bypass |
-| `chat_conversations`, `chat_messages` | — | own only | all | bypass |
-| `support_tickets` | — | own + guest NULL | all | bypass |
-| `admin_users` | — | SELECT own row | — | bypass |
-| `payment_attempts`, `refunds`, `order_status_history` | — | own orders | all | bypass |
+| Table                                                   | anon                              | authenticated    | admin        | service_role |
+| ------------------------------------------------------- | --------------------------------- | ---------------- | ------------ | ------------ |
+| `products`, `product_colors`, `collections`             | SELECT (public)                   | SELECT           | ALL          | bypass       |
+| `product_inventory`                                     | SELECT (availability)             | SELECT           | ALL          | bypass       |
+| `discount_codes`                                        | **no SELECT** (harvest blocked)   | **no SELECT**    | ALL          | bypass       |
+| `orders`, `order_items`                                 | —                                 | SELECT own only  | SELECT all   | bypass       |
+| `customers`, `customer_addresses`, `carts`, `wishlists` | —                                 | own only         | —            | bypass       |
+| `guest_orders`                                          | **deny-all** (edge function only) | **deny-all**     | **deny-all** | bypass       |
+| `chat_conversations`, `chat_messages`                   | —                                 | own only         | all          | bypass       |
+| `support_tickets`                                       | —                                 | own + guest NULL | all          | bypass       |
+| `admin_users`                                           | —                                 | SELECT own row   | —            | bypass       |
+| `payment_attempts`, `refunds`, `order_status_history`   | —                                 | own orders       | all          | bypass       |
 
 ### RPC Grants
 
@@ -175,7 +181,6 @@ Push to main
 - `chat-ai`: JWT required for customer context; conversation `user_id` ownership enforced; guest conversations require email match.
 - `create-support-ticket`: conversation ownership + email consistency + one-ticket-per-conversation guard.
 - `send-back-in-stock`, `process-abandoned-carts`: service_role / admin / `CRON_SECRET`.
-- `security-test`: blocked in production (`VITE_ENV=production` → 403) + admin required.
 
 ### Guest Order
 
@@ -188,7 +193,7 @@ Push to main
 - **Code:** `git revert` the offending commit, push to `main` — CI must pass, then Vercel auto-deploys previous good build. Do NOT force-push or delete migrations.
 - **Database:** forward migrations only. To undo a schema change, create a new migration that reverses it (e.g., `ALTER TABLE ... DROP COLUMN`). Never edit already-deployed migration files.
 - **Secrets:** rotate via `supabase secrets set KEY=new_value` + `supabase functions deploy <function>`. Old tokens remain valid until rotated.
-- **Payments:** refunds via `refunds` table + provider refund API; never mutate `orders.total` directly.
+- **Payments:** out of scope (COD only) — refunds via `refunds` table + admin status transitions; never mutate `orders.total` directly.
 - **Backups:** Supabase PITR (Point-in-Time Recovery) is enabled on paid plan — restore to a timestamp via dashboard.
 
 ---
@@ -205,18 +210,24 @@ Push to main
 
 ## 12. Production Launch Checklist
 
-- [ ] Supabase project created and linked (`gfmxvvjqlhrnmidutjwx`)
-- [ ] Migrations `001`–`013` pushed (`supabase db push`)
-- [ ] All edge functions deployed
-- [ ] Secrets set: `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `STORE_URL`, `GOOGLE_GEMINI_API_KEY`, `CRON_SECRET`, (optional `PAYMOB_*`)
-- [ ] Vercel env vars set: `VITE_SUPABASE_URL`, `your_removed_credential_here`
-- [ ] Custom domain `nerve-store.com` configured and HTTPS verified
-- [ ] `ci.yml` passes on `main` (typecheck, lint, vitest, build, E2E without `continue-on-error`)
-- [ ] `npm audit` passes (0 vulnerabilities)
-- [ ] Manual smoke test (see below) passes
-- [ ] Sentry DSN set and test event ingested
-- [ ] Resend domain verified (SPF/DKIM)
-- [ ] `security-test` returns 403 in production (verify non-prod leak)
+- [x] Supabase project created and linked (`gfmxvvjqlhrnmidutjwx`)
+- [x] All migrations present in repo (`supabase/migrations`, `001`–`033`) — push via `supabase db push`
+- [x] All edge functions present and type-checked (`deno check` clean)
+- [ ] Secrets set: `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `STORE_URL`, `GOOGLE_GEMINI_API_KEY`, `CRON_SECRET` (dashboard — not verifiable from code)
+- [x] Vercel env vars set: `VITE_SUPABASE_URL`, `your_removed_credential_here` (site builds and serves product data)
+- [x] Custom domain `www.nerveey.shop` configured and HTTPS verified
+- [x] `ci.yml` passes on `main` (typecheck, lint, format, vitest, build, E2E without `continue-on-error`)
+- [ ] `npm audit` passes (0 vulnerabilities) — re-run before launch
+- [ ] Manual smoke test (see below) passes — full path not re-verified in this hardening pass
+- [ ] Sentry DSN set and test event ingested (dashboard)
+- [ ] Resend domain verified (SPF/DKIM) (dashboard)
+
+**Hardening notes (this pass):**
+
+- Edge rate limiting: `verify-guest-order`, `create-support-ticket`, and `request-return` use distributed `check_rate_limit` (not instance-local maps alone).
+- Crisp chat loads only after cookie consent (`granted`).
+- Product OG meta injected at the edge for `/product/*` scrapers.
+- `img-src` CSP tightened to self + Supabase Storage + own origin (no blanket `https:`).
 
 ### Smoke Test
 
@@ -231,4 +242,4 @@ Push to main
 
 ---
 
-*Generated from actual code, migrations, edge functions, workflows, and tests — not from prior markdown claims.*
+_Generated from actual code, migrations, edge functions, workflows, and tests — not from prior markdown claims._

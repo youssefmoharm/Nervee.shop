@@ -65,6 +65,9 @@ export default function ProductForm() {
   const [inventory, setInventory] = useState<Record<string, number>>(
     Object.fromEntries(SIZES.map(s => [s, 0])),
   );
+  const [thresholds, setThresholds] = useState<Record<string, number>>(
+    Object.fromEntries(SIZES.map(s => [s, 5])),
+  );
   const [initialInventory, setInitialInventory] = useState<Record<string, number>>(
     Object.fromEntries(SIZES.map(s => [s, 0])),
   );
@@ -114,8 +117,15 @@ export default function ProductForm() {
             );
           }
           const inv: Record<string, number> = Object.fromEntries(SIZES.map(s => [s, 0]));
-          for (const row of data.product_inventory ?? []) inv[row.size] = row.stock_quantity;
+          const thr: Record<string, number> = Object.fromEntries(SIZES.map(s => [s, 5]));
+          for (const row of data.product_inventory ?? []) {
+            inv[row.size] = row.stock_quantity;
+            if (typeof row.low_stock_threshold === 'number') {
+              thr[row.size] = row.low_stock_threshold;
+            }
+          }
           setInventory(inv);
+          setThresholds(thr);
           setInitialInventory(inv);
           setLoading(false);
         },
@@ -178,13 +188,14 @@ export default function ProductForm() {
       );
     }
 
-    // Upsert inventory rows for every size
+    // Upsert inventory rows for every size (stock + per-size low-stock threshold)
     await supabase.from('product_inventory').upsert(
       SIZES.map(size => ({
         product_id: productId,
         size,
         stock_quantity: inventory[size] ?? 0,
         in_stock: (inventory[size] ?? 0) > 0,
+        low_stock_threshold: thresholds[size] ?? 5,
       })),
       { onConflict: 'product_id,size' },
     );
@@ -218,6 +229,7 @@ export default function ProductForm() {
             <span className="text-xs font-medium text-navy/60 mb-1.5 block">Name</span>
             <input
               required
+              data-testid="product-name-input"
               value={name}
               onChange={e => setName(e.target.value)}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
@@ -272,6 +284,7 @@ export default function ProductForm() {
               required
               type="number"
               min={0}
+              data-testid="product-price-input"
               value={price}
               onChange={e => setPrice(e.target.value)}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
@@ -317,6 +330,7 @@ export default function ProductForm() {
           <textarea
             required
             rows={3}
+            data-testid="product-description-input"
             value={description}
             onChange={e => setDescription(e.target.value)}
             className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
@@ -326,6 +340,7 @@ export default function ProductForm() {
           <span className="text-xs font-medium text-navy/60 mb-1.5 block">Material</span>
           <input
             required
+            data-testid="product-material-input"
             value={material}
             onChange={e => setMaterial(e.target.value)}
             className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
@@ -435,26 +450,45 @@ export default function ProductForm() {
           <span className="nv-eyebrow text-xs text-navy/50 mb-3 block">Inventory by Size</span>
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
             {SIZES.map(size => (
-              <label key={size} className="block">
-                <span className="text-xs text-navy/60 mb-1 block">{size}</span>
-                <input
-                  type="number"
-                  min={0}
-                  value={inventory[size]}
-                  onChange={e =>
-                    setInventory(prev => ({ ...prev, [size]: Number(e.target.value) }))
-                  }
-                  className="w-full border border-navy/20 px-2 py-2 text-sm focus:outline-none focus:border-navy"
-                />
-              </label>
+              <div key={size} className="space-y-2">
+                <label className="block">
+                  <span className="text-xs text-navy/60 mb-1 block">{size} stock</span>
+                  <input
+                    type="number"
+                    min={0}
+                    value={inventory[size]}
+                    onChange={e =>
+                      setInventory(prev => ({ ...prev, [size]: Number(e.target.value) }))
+                    }
+                    className="w-full border border-navy/20 px-2 py-2 text-sm focus:outline-none focus:border-navy"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs text-navy/45 mb-1 block">Low-stock at</span>
+                  <input
+                    type="number"
+                    min={0}
+                    value={thresholds[size]}
+                    onChange={e =>
+                      setThresholds(prev => ({ ...prev, [size]: Number(e.target.value) }))
+                    }
+                    data-testid={`low-stock-threshold-${size}`}
+                    className="w-full border border-navy/15 px-2 py-1.5 text-xs text-navy/70 focus:outline-none focus:border-navy"
+                  />
+                </label>
+              </div>
             ))}
           </div>
+          <p className="text-xs text-navy/40 mt-2">
+            The storefront low-stock badge uses each size&apos;s threshold (default 5).
+          </p>
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         <button
           type="submit"
+          data-testid="product-save-button"
           disabled={saving}
           className="bg-navy text-white nv-eyebrow px-8 py-3.5 hover:bg-navy-2 transition-colors disabled:opacity-60"
         >

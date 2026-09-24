@@ -1,0 +1,41 @@
+name: Uptime
+
+# Daily liveness probe against the production site. Fails the run on any
+# non-2xx response so a broken deploy surfaces in the Actions tab (and via
+# GitHub's default failure notifications for scheduled workflows).
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check production homepage
+        run: |
+          code=$(***REMOVED*** -sS -L -o /dev/null -w '%{http_code}' --max-time 30 \
+            https://www.nerveey.shop/)
+          echo "GET https://www.nerveey.shop/ -> $code"
+          if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then
+            echo "::error::Homepage returned non-2xx ($code)"
+            exit 1
+          fi
+
+      - name: Check production sitemap
+        run: |
+          code=$(***REMOVED*** -sS -L -o /dev/null -w '%{http_code}' --max-time 30 \
+            https://www.nerveey.shop/sitemap.xml)
+          echo "GET https://www.nerveey.shop/sitemap.xml -> $code"
+          if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then
+            echo "::error::Sitemap returned non-2xx ($code)"
+            exit 1
+          fi

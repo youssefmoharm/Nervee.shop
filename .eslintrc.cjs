@@ -10,7 +10,6 @@ module.exports = {
     browser: true,
     es2021: true,
     node: true,
-    jest: true,
   },
   plugins: ['@typescript-eslint', 'react', 'react-hooks', 'jsx-a11y'],
   extends: [
@@ -28,10 +27,21 @@ module.exports = {
     'react/react-in-jsx-scope': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'warn',
-    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+    ],
     'react/jsx-no-target-blank': ['error', { allowReferrer: false, enforceDynamicLinks: 'always' }],
     'jsx-a11y/label-has-associated-control': ['error', { required: { some: ['nesting', 'id'] } }],
     'react/prop-types': 'off',
   },
-  overrides: [],
-}
+  overrides: [
+    {
+      // Vitest (not Jest) powers unit tests; globals are enabled in vite.config.
+      files: ['tests/**/*.{ts,tsx}', 'src/**/*.test.{ts,tsx}', 'src/test/**/*.{ts,tsx}'],
+      env: {
+        node: true,
+      },
+    },
+  ],
+};

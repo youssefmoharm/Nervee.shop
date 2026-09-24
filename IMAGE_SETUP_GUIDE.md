@@ -5,15 +5,18 @@
 ## Current Image Configuration
 
 ### Image Fallback System ✅
+
 The system is now configured with a **3-tier image fallback strategy**:
 
 1. **Primary:** Supabase Storage (production images)
+
    - Path: `/products/{slug}/{color}/{01-front|02-back|03-detail|04-on-model}.jpg`
    - Format: JPEG
    - Transformation: Automatic sizing via Supabase transform API
    - Cache: 1 year immutable
 
 2. **Secondary:** Local fallback placeholder
+
    - Path: `/placeholder-product.jpg`
    - Used when Supabase is not configured or image doesn't exist
    - Size: 450x563px (card size)
@@ -23,6 +26,7 @@ The system is now configured with a **3-tier image fallback strategy**:
    - Console warning logged for debugging
 
 ### Browser Support ✅
+
 - **Picture Element:** Modern format negotiation (WebP/AVIF with JPEG fallback)
 - **Responsive Images:** Automatic srcSet generation (300px, 600px, 900px, 1200px, 1800px)
 - **Lazy Loading:** Native browser lazy loading on all images
@@ -35,6 +39,7 @@ The system is now configured with a **3-tier image fallback strategy**:
 ### Option 1: Supabase Storage (Recommended)
 
 #### Step 1: Create Storage Bucket
+
 1. Go to [Supabase Dashboard](https://app.supabase.com)
 2. Select your project (NERVE)
 3. Navigate to **Storage**
@@ -44,7 +49,9 @@ The system is now configured with a **3-tier image fallback strategy**:
    - File size limit: 50 MB
 
 #### Step 2: Create Folder Structure
+
 Upload images in this exact structure:
+
 ```
 product-images/
   └── products/
@@ -56,7 +63,8 @@ product-images/
               └── 04-on-model.jpg
 ```
 
-**Example:** 
+**Example:**
+
 ```
 products/nerve-core-tee/navy/01-front.jpg
 products/nerve-core-tee/navy/02-back.jpg
@@ -64,13 +72,16 @@ products/nerve-core-tee/white/01-front.jpg
 ```
 
 #### Step 3: Upload Images
+
 1. Supabase Dashboard → Storage → product-images
 2. Click **Upload** in each folder
 3. Select images (JPG, PNG, WebP, AVIF supported)
 4. Files are immediately public
 
 #### Step 4: Verify URLs
+
 Generated URLs automatically follow pattern:
+
 ```
 https://{project-id}.supabase.co/storage/v1/object/public/product-images/products/{slug}/{color}/{imageType}.jpg
 ```
@@ -86,9 +97,9 @@ import { uploadProductImage } from '../services/imageService';
 const handleImageUpload = async (file: File) => {
   const result = await uploadProductImage(
     file,
-    'nerve-core-tee',    // product slug
-    'navy',              // color
-    '01-front'           // image type
+    'nerve-core-tee', // product slug
+    'navy', // color
+    '01-front', // image type
   );
 
   if (result.success) {
@@ -100,6 +111,7 @@ const handleImageUpload = async (file: File) => {
 ```
 
 **Supported Image Types:**
+
 - `01-front` — Front view of product
 - `02-back` — Back view
 - `03-detail` — Close-up detail shot
@@ -116,6 +128,7 @@ products/nerve-tank-top/charcoal/
 ```
 
 Then upload images via:
+
 1. Supabase Dashboard (manual)
 2. Supabase CLI: `supabase storage upload`
 3. Your admin panel upload interface
@@ -125,17 +138,20 @@ Then upload images via:
 ## Image Specifications
 
 ### File Requirements
-| Property | Requirement | Note |
-|----------|-------------|------|
-| **Format** | JPG, PNG, WebP, AVIF | JPG recommended for web |
-| **Size** | Max 5MB per image | Automatic compression available |
-| **Dimensions** | 900x1125px+ | Higher res for quality |
-| **Aspect Ratio** | 4:5 (portrait) | Standard fashion product ratio |
-| **Color Space** | sRGB | Web standard |
-| **Quality** | 80%+ quality | Balance file size vs quality |
+
+| Property         | Requirement          | Note                            |
+| ---------------- | -------------------- | ------------------------------- |
+| **Format**       | JPG, PNG, WebP, AVIF | JPG recommended for web         |
+| **Size**         | Max 5MB per image    | Automatic compression available |
+| **Dimensions**   | 900x1125px+          | Higher res for quality          |
+| **Aspect Ratio** | 4:5 (portrait)       | Standard fashion product ratio  |
+| **Color Space**  | sRGB                 | Web standard                    |
+| **Quality**      | 80%+ quality         | Balance file size vs quality    |
 
 ### Responsive Breakpoints
+
 Images automatically generated at:
+
 - **300px wide** (mobile thumbnails)
 - **600px wide** (tablet cards)
 - **900px wide** (desktop cards)
@@ -143,7 +159,9 @@ Images automatically generated at:
 - **1800px wide** (retina displays)
 
 ### Format Optimization
+
 Modern formats automatically negotiated:
+
 1. **AVIF** — Best compression (newest browsers)
 2. **WebP** — Good compression (modern browsers)
 3. **JPEG** — Universal fallback
@@ -153,12 +171,14 @@ Modern formats automatically negotiated:
 ## Configuration (Already Done)
 
 ### Environment Variables Required ✅
+
 ```env
 VITE_API_URL=https://[project-id].supabase.co
 VITE_ANON_KEY=[your-anon-key]
 ```
 
 ### Supabase RLS Policies ✅
+
 ```sql
 -- Allow public read access to product images
 CREATE POLICY "Allow public read" ON storage.objects
@@ -175,6 +195,7 @@ CREATE POLICY "Allow admin upload" ON storage.objects
 ## Current Status
 
 ### Before Images Are Uploaded ✅
+
 - ✅ Placeholder image used: `/placeholder-product.jpg`
 - ✅ Responsive framework working
 - ✅ Component rendering correctly
@@ -182,6 +203,7 @@ CREATE POLICY "Allow admin upload" ON storage.objects
 - ✅ No errors in console
 
 ### After Images Are Uploaded ✅
+
 - ✅ Real images from Supabase Storage
 - ✅ Automatic format negotiation
 - ✅ Responsive srcSet generation
@@ -193,22 +215,26 @@ CREATE POLICY "Allow admin upload" ON storage.objects
 ## Testing Images Locally
 
 ### View in Development
+
 ***REMOVED***
 npm run dev
 ```
 
 Navigate to:
+
 - `/shop` — Product listing (uses placeholder)
 - `/product/{slug}` — Product detail (uses placeholder)
 - Open DevTools → Network → check image URLs
 
 ### Test Placeholder Functionality
+
 1. Network tab → filter images
 2. Should see `/placeholder-product.jpg` requests
 3. 200 status (successful)
 4. Responsive srcSet working (multiple requests at different sizes)
 
 ### After Uploading to Supabase
+
 1. Images should automatically use new URLs
 2. Format negotiation visible in Network tab
 3. WebP/AVIF variants tested in modern browsers
@@ -219,6 +245,7 @@ Navigate to:
 ## Admin Upload Panel
 
 ### Setup (Optional)
+
 Create admin upload interface in:
 `src/pages/Admin/ProductForm.tsx`
 
@@ -228,11 +255,11 @@ import { uploadProductImage } from '../../services/imageService';
 export function ProductImageUpload({ productSlug, color }: Props) {
   const handleDrop = async (e: React.DragEvent) => {
     const files = Array.from(e.dataTransfer.files);
-    
+
     for (const file of files) {
       const imageType = determineImageType(file.name); // Extract from filename
       const result = await uploadProductImage(file, productSlug, color, imageType);
-      
+
       if (result.success) {
         console.log(`✅ Uploaded: ${imageType} → ${result.url}`);
       }
@@ -252,29 +279,37 @@ export function ProductImageUpload({ productSlug, color }: Props) {
 ## Troubleshooting
 
 ### Issue: Placeholder Always Showing
+
 **Cause:** Supabase not configured  
 **Solution:**
+
 1. Check `.env.local` has `VITE_API_URL` and `VITE_ANON_KEY`
 2. Verify Supabase credentials are correct
 3. Create `product-images` bucket in Supabase
 
 ### Issue: Images Load But Wrong Size
+
 **Cause:** Responsive srcSet not working  
 **Solution:**
+
 1. Clear browser cache
 2. Verify image dimensions in Supabase
 3. Check network tab for srcSet requests
 
 ### Issue: WebP/AVIF Not Loading
+
 **Cause:** Browser doesn't support format  
 **Solution:**
+
 1. Automatic fallback to JPEG (expected behavior)
 2. Check network tab for format negotiation
 3. Test in different browsers
 
 ### Issue: Console Warnings About Images
+
 **Cause:** Image failed to load  
 **Solution:**
+
 1. Check file exists in Supabase Storage
 2. Verify path structure: `products/{slug}/{color}/{imageType}.jpg`
 3. Confirm public access enabled on bucket
@@ -284,12 +319,14 @@ export function ProductImageUpload({ productSlug, color }: Props) {
 ## Performance Metrics
 
 ### With Placeholder Images ✅
+
 - Main bundle: 285.43 kB
 - Gzip: 76.86 kB
 - Image loading: <500ms (cached)
 - Lighthouse Performance: >90
 
 ### After Real Images Uploaded
+
 - Main bundle: **Same** (images in Supabase)
 - Gzip: **Same** (content cached separately)
 - Image loading: <1s (first load), instant (cached)
@@ -300,6 +337,7 @@ export function ProductImageUpload({ productSlug, color }: Props) {
 ## Production Deployment
 
 ### Before Go-Live ✅
+
 - [x] Image component working (placeholder)
 - [x] Responsive srcSet functional
 - [x] Lazy loading active
@@ -307,6 +345,7 @@ export function ProductImageUpload({ productSlug, color }: Props) {
 - [x] Build passing
 
 ### After Supabase Upload
+
 - [ ] Test 5-10 products with real images
 - [ ] Verify srcSet requests in Network tab
 - [ ] Check different device sizes
@@ -314,6 +353,7 @@ export function ProductImageUpload({ productSlug, color }: Props) {
 - [ ] Measure image loading performance
 
 ### Live Monitoring
+
 1. **Sentry:** Image load failures
 2. **GA4:** Image impressions tracking
 3. **Lighthouse:** Performance score tracking
@@ -324,17 +364,20 @@ export function ProductImageUpload({ productSlug, color }: Props) {
 ## Next Steps
 
 ### Immediate (Today)
+
 1. ✅ System is working with placeholder
 2. ✅ Deploy to production
 3. ✅ Verify placeholder loads correctly
 
 ### Week 1
+
 1. Create Supabase `product-images` bucket
 2. Upload 5-10 test product images
 3. Verify responsive srcSet working
 4. Check Lighthouse scores improve
 
 ### Week 2+
+
 1. Upload all product images
 2. Test WebP/AVIF support across browsers
 3. Monitor image loading performance
@@ -345,6 +388,7 @@ export function ProductImageUpload({ productSlug, color }: Props) {
 ## File Summary
 
 **Modified Files:**
+
 - `src/services/imageService.ts` — Fallback to local placeholder
 - `src/components/OptimizedImage.tsx` — Error handling improvement
 

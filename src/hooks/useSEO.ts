@@ -9,7 +9,7 @@ interface UseSEOOptions {
   ogDescription?: string;
   ogImage?: string;
   ogType?: string;
-  type?: 'website' | 'product' | 'article'; // Alias for ogType
+  type?: 'website' | 'product' | 'article';
   twitterCard?: 'summary' | 'summary_large_image';
   twitterTitle?: string;
   twitterDescription?: string;
@@ -22,33 +22,32 @@ interface UseSEOOptions {
 }
 
 /**
- * Hook to update SEO metadata dynamically
- * Usage: useSEO({ title: 'My Page', description: 'Page description' })
+ * Hook to update SEO metadata dynamically.
+ * Scroll-to-top is handled by ScrollToTop on pathname change — not here.
  */
 export function useSEO(options: UseSEOOptions) {
+  // Serialize so the effect only re-runs when SEO values actually change,
+  // not on every parent re-render (inline object literals are new each time).
+  const key = JSON.stringify(options);
+
   useEffect(() => {
     const baseUrl = 'https://www.nerveey.shop';
-
-    // Handle 'type' as alias for 'ogType'
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const ogType = options.ogType || options.type || 'website';
+    const opts: UseSEOOptions = JSON.parse(key);
+    const ogType = opts.ogType || opts.type || 'website';
 
     updateMetaTags({
-      title: options.title,
-      description: options.description,
-      canonical: options.canonical || `${baseUrl}${window.location.pathname}`,
-      ogTitle: options.ogTitle,
-      ogDescription: options.ogDescription,
-      ogImage: options.ogImage,
-      ogType: ogType as any,
-      twitterCard: options.twitterCard,
-      twitterTitle: options.twitterTitle,
-      twitterDescription: options.twitterDescription,
-      keywords: options.keywords,
-      robots: options.robots,
+      title: opts.title,
+      description: opts.description,
+      canonical: opts.canonical || `${baseUrl}${window.location.pathname}`,
+      ogTitle: opts.ogTitle,
+      ogDescription: opts.ogDescription,
+      ogImage: opts.ogImage,
+      ogType: ogType as 'website' | 'product' | 'article',
+      twitterCard: opts.twitterCard,
+      twitterTitle: opts.twitterTitle,
+      twitterDescription: opts.twitterDescription,
+      keywords: opts.keywords,
+      robots: opts.robots,
     });
-
-    // Scroll to top when page changes (good for SEO + UX)
-    window.scrollTo(0, 0);
-  }, [options]);
+  }, [key]);
 }

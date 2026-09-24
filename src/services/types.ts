@@ -53,8 +53,19 @@ export interface InventoryRow {
   size: string;
   stock_quantity: number;
   in_stock: boolean;
+  low_stock_threshold?: number | null;
   created_at: string;
   updated_at: string;
+}
+
+/**
+ * Row shape from the product_availability view
+ * (product_id, size, in_stock — no quantities exposed to the storefront)
+ */
+export interface AvailabilityRow {
+  product_id: string;
+  size: string;
+  in_stock: boolean;
 }
 
 /**

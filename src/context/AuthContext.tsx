@@ -20,7 +20,7 @@ interface AuthContextValue {
     password: string,
     firstName: string,
     lastName: string,
-    meta?: Record<string, any>,
+    meta?: Record<string, unknown>,
   ) => Promise<{ error: string | null }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -171,16 +171,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (response.ok) {
-        // Edge validated credentials under rate limits; establish the browser
-        // session with the client SDK (edge session is server-side only).
+        const data = await response.json().catch(() => ({}));
+        const accessToken = typeof data?.access_token === 'string' ? data.access_token : null;
+        const refreshToken = typeof data?.refresh_token === 'string' ? data.refresh_token : null;
+
+        if (accessToken && refreshToken) {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          return { error: error?.message ?? null };
+        }
+
+        // Edge validated credentials but returned no tokens — establish the
+        // session with the client SDK (legacy edge behaviour).
         return await directSignIn();
       }
 
       const edgeError = await readJsonError(response);
       if (edgeError) return { error: edgeError };
 
-      return await directSignIn();
+      return { error: 'Unable to sign in. Please try again.' };
     } catch {
+      // Network / unexpected failure — fall back to direct GoTrue sign-in.
       return await directSignIn();
     }
   };

@@ -136,19 +136,20 @@ export function getProductSchema(product: {
   url?: string;
 }) {
   const baseUrl = 'https://www.nerveey.shop';
+  const productUrl = product.url || `${baseUrl}/product/${product.id}`;
   return {
     '@type': 'Product',
-    '@id': `${baseUrl}/products/${product.id}`,
+    '@id': productUrl,
     name: product.name,
     description: product.description,
     image: product.image || `${baseUrl}/nervee-logo-favicon.png`,
-    url: product.url || `${baseUrl}/product/${product.id}`,
+    url: productUrl,
     offers: {
       '@type': 'Offer',
       price: product.price.toString(),
       priceCurrency: 'EGP',
       availability: product.inStock ? 'InStock' : 'OutOfStock',
-      url: product.url || `${baseUrl}/product/${product.id}`,
+      url: productUrl,
     },
     ...(product.rating && {
       aggregateRating: {
@@ -222,6 +223,27 @@ export function getCollectionSchema(collection: {
     ...(collection.productCount && {
       numberOfItems: collection.productCount,
     }),
+  };
+}
+
+/**
+ * Generate ItemList schema for product listing pages (Shop, collections)
+ */
+export function getItemListSchema(
+  items: Array<{ name: string; url: string; image?: string }>,
+  name = 'NERVE Products',
+) {
+  return {
+    '@type': 'ItemList',
+    name,
+    numberOfItems: items.length,
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.name,
+      url: item.url,
+      ...(item.image && { image: item.image }),
+    })),
   };
 }
 

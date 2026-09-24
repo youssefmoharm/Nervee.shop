@@ -1,0 +1,12 @@
+# Lockfiles / generated
+package-lock.json
+deno.lock
+public/sitemap.xml
+coverage/
+playwright-report/
+test-results/
+dist/
+
+# Vendored / agent scratch
+.freebuff/
+.kilo/

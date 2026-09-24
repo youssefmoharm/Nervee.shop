@@ -59,19 +59,19 @@ verify_jwt = false
 [functions.handle-unsubscribe]
 verify_jwt = false
 
-[functions.payment-webhook]
-verify_jwt = false
-
 [functions.verify-guest-order]
 verify_jwt = false
 
 [functions.request-return]
 verify_jwt = false
 
-# Admin/service functions (JWT required, admin check in code)
-[functions.create-payment]
-verify_jwt = true
+[functions.record-abandoned-cart]
+verify_jwt = false
 
+[functions.resend-guest-verification]
+verify_jwt = false
+
+# Admin/service functions (JWT required, admin check in code)
 [functions.process-abandoned-carts]
 verify_jwt = false
 
@@ -85,7 +85,4 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.update-order-status]
-verify_jwt = true
-
-[functions.security-test]
 verify_jwt = true

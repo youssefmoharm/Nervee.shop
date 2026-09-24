@@ -4,16 +4,16 @@
 
 NERVE uses environment variables to manage configuration and secrets. This document explains how they're organized, which ones are safe to commit, and how to manage production secrets.
 
-## Key Principle: VITE_ = PUBLIC
+## Key Principle: VITE\_ = PUBLIC
 
 Anything prefixed with `VITE_` is bundled into the browser JavaScript bundle and is **visible to anyone**. Never put secrets there.
 
 ```js
 // ❌ WRONG — This will be visible in the browser
-VITE_SECRET_API_KEY=your_removed_credential_here
+VITE_SECRET_API_KEY = your_removed_credential_here;
 
 // ✅ RIGHT — Server secrets use no prefix
-RESEND_API_KEY=re_abc123  // Set in Supabase secrets, not in .env
+RESEND_API_KEY = re_abc123; // Set in Supabase secrets, not in .env
 ```
 
 ## Environment Variables Reference
@@ -22,17 +22,17 @@ RESEND_API_KEY=re_abc123  // Set in Supabase secrets, not in .env
 
 These are safe to commit (use placeholders):
 
-| Variable | Required | Type | Location |
-|----------|----------|------|----------|
-| `VITE_SUPABASE_URL` | ✓ | URL | `.env`, Vercel |
-| `your_removed_credential_here` | ✓ | String | `.env`, Vercel |
-| `VITE_ENV` | ✓ | `development`\|`staging`\|`production` | `.env`, Vercel |
-| `VITE_APP_URL` | ✓ | URL | `.env`, Vercel |
-| `VITE_SUPPORT_EMAIL` | ✓ | Email | `.env`, Vercel |
-| `VITE_SENTRY_DSN` | ✗ | URL | Vercel only (production) |
-| `VITE_GA_ID` | ✗ | String | Vercel only (production) |
-| `VITE_META_PIXEL_ID` | ✗ | String | Vercel only (production) |
-| `VITE_CRISP_ID` | ✗ | String | Optional |
+| Variable                 | Required | Type                                   | Location                 |
+| ------------------------ | -------- | -------------------------------------- | ------------------------ |
+| `VITE_SUPABASE_URL`      | ✓        | URL                                    | `.env`, Vercel           |
+| `your_removed_credential_here` | ✓        | String                                 | `.env`, Vercel           |
+| `VITE_ENV`               | ✓        | `development`\|`staging`\|`production` | `.env`, Vercel           |
+| `VITE_APP_URL`           | ✓        | URL                                    | `.env`, Vercel           |
+| `VITE_SUPPORT_EMAIL`     | ✓        | Email                                  | `.env`, Vercel           |
+| `VITE_SENTRY_DSN`        | ✗        | URL                                    | Vercel only (production) |
+| `VITE_GA_ID`             | ✗        | String                                 | Vercel only (production) |
+| `VITE_META_PIXEL_ID`     | ✗        | String                                 | Vercel only (production) |
+| `VITE_CRISP_ID`          | ✗        | String                                 | Optional                 |
 
 **Development**: Use placeholders in `.env` and `.env.local`  
 **Production**: Set real values in Vercel (`Settings → Environment Variables → Production`)
@@ -45,25 +45,21 @@ These are **never** prefixed with `VITE_`. Set in Supabase only, never in `.env`
 # Set in Supabase (not in git)
 supabase secrets set RESEND_API_KEY=re_abc123
 supabase secrets set GOOGLE_GEMINI_API_KEY=sk_xyz789
-supabase secrets set PAYMOB_API_KEY=...
-supabase secrets set PAYMOB_HMAC_SECRET=...
 
 # List all secrets
 supabase secrets list
 ```
 
-| Secret | Purpose | Service | Notes |
-|--------|---------|---------|-------|
-| `RESEND_API_KEY` | Transactional emails | Resend.com | Required for order emails |
-| `RESEND_FROM_EMAIL` | Email sender | Resend.com | e.g., `orders@nerveey.shop` |
-| `STORE_URL` | Base URL | Resend | Used in email templates |
-| `GOOGLE_GEMINI_API_KEY` | AI chatbot | Google AI Studio | Optional (P1) |
-| `OPENAI_API_KEY` | AI (alternate) | OpenAI | Alias for Gemini |
-| `PAYMOB_API_KEY` | Card payments | Paymob | Optional (P1) |
-| `PAYMOB_HMAC_SECRET` | Payment verification | Paymob | Optional (P1) |
-| `PAYMOB_IFRAME_ID` | Payment form | Paymob | Optional (P1) |
-| `PAYMOB_INTEGRATION_ID` | Payment integration | Paymob | Optional (P1) |
-| `CRON_SECRET` | Job scheduling | Custom | Optional; protects scheduler endpoints |
+| Secret                  | Purpose              | Service          | Notes                                  |
+| ----------------------- | -------------------- | ---------------- | -------------------------------------- |
+| `RESEND_API_KEY`        | Transactional emails | Resend.com       | Required for order emails              |
+| `RESEND_FROM_EMAIL`     | Email sender         | Resend.com       | e.g., `orders@nerveey.shop`            |
+| `STORE_URL`             | Base URL             | Resend           | Used in email templates                |
+| `GOOGLE_GEMINI_API_KEY` | AI chatbot           | Google AI Studio | Optional (P1)                          |
+| `OPENAI_API_KEY`        | AI (alternate)       | OpenAI           | Alias for Gemini                       |
+| `CRON_SECRET`           | Job scheduling       | Custom           | Optional; protects scheduler endpoints |
+
+The store is **Cash on Delivery only** — no payment-provider secrets exist.
 
 ### Auto-Injected by Supabase
 
@@ -77,11 +73,13 @@ These are **automatically available** inside Edge Functions. Never set them your
 ### Local Development
 
 1. **Copy `.env.example` to `.env`:**
+
    ***REMOVED***
    cp .env.example .env
    ```
 
 2. **Update `.env` with local Supabase credentials:**
+
    ```env
    VITE_SUPABASE_URL=https://gfmxvvjqlhrnmidutjwx.supabase.co
    your_removed_credential_here=your_removed_credential_here
@@ -95,10 +93,12 @@ These are **automatically available** inside Edge Functions. Never set them your
 ### Production (Vercel)
 
 1. **Set public variables in Vercel:**
+
    ```
    Settings → Environment Variables
    Select: Production + Preview (not Development)
    ```
+
    - `VITE_SUPABASE_URL`
    - `your_removed_credential_here`
    - `VITE_ENV=production`
@@ -108,6 +108,7 @@ These are **automatically available** inside Edge Functions. Never set them your
    - `VITE_META_PIXEL_ID` (real ID)
 
 2. **Set server secrets in Supabase:**
+
    ***REMOVED***
    supabase secrets set RESEND_API_KEY=re_abc123
    supabase secrets set RESEND_FROM_EMAIL="NERVE <orders@nerveey.shop>"
@@ -146,6 +147,7 @@ These are **automatically available** inside Edge Functions. Never set them your
 **Cause**: `RESEND_API_KEY` not set in Supabase secrets
 
 **Solution**:
+
 ***REMOVED***
 supabase secrets set RESEND_API_KEY=re_abc123
 supabase secrets set STORE_URL=https://www.nerveey.shop
@@ -160,16 +162,17 @@ supabase secrets set STORE_URL=https://www.nerveey.shop
 ## What's in Git
 
 ✅ **SAFE TO COMMIT:**
+
 - `.env.example` — Template with instructions
-- `.env` — Dev/staging credentials only (Supabase test keys)
-- `.env.local` — Gitignored anyway
 - Code that reads env vars (`import.meta.env.VITE_*`)
 
 ❌ **NEVER COMMIT:**
+
+- `.env` / `.env.local` — both are gitignored; they hold local credentials
 - Real API keys (`sk_live_`, `re_prod_`, etc.)
 - Production Sentry DSN
 - Real database credentials
-- Paymob secrets
+- Paymob / provider secrets (none are used — COD only)
 
 ## References
 

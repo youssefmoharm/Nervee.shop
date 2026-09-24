@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, Check } from 'lucide-react';
-import { getRecommendedSize, sizeCharts, materialFitGuides, faqItems } from '../data/sizingData';
+import { getRecommendedSize, materialFitGuides, faqItems } from '../data/sizingData';
+import SizeChartTable from './SizeChartTable';
 
 interface SizeGuideToolProps {
   isOpen: boolean;
@@ -180,34 +181,7 @@ export default function SizeGuideTool({ isOpen, onClose, productMaterial }: Size
               {/* Size Chart Preview */}
               <div>
                 <h3 className="text-lg font-semibold text-navy mb-4">Size Chart</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm border-collapse">
-                    <thead>
-                      <tr className="bg-mist">
-                        <th className="border border-navy/10 px-3 py-2 text-left">Size</th>
-                        <th className="border border-navy/10 px-3 py-2 text-left">Chest</th>
-                        <th className="border border-navy/10 px-3 py-2 text-left">Waist</th>
-                        <th className="border border-navy/10 px-3 py-2 text-left">Length</th>
-                        <th className="border border-navy/10 px-3 py-2 text-left">Fit</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sizeCharts.default.map(size => (
-                        <tr key={size.size} className="hover:bg-mist/50">
-                          <td className="border border-navy/10 px-3 py-2 font-semibold">
-                            {size.size}
-                          </td>
-                          <td className="border border-navy/10 px-3 py-2">{size.chest}</td>
-                          <td className="border border-navy/10 px-3 py-2">{size.waist}</td>
-                          <td className="border border-navy/10 px-3 py-2">{size.length}</td>
-                          <td className="border border-navy/10 px-3 py-2 text-navy/70">
-                            {size.fit}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <SizeChartTable variant="tool" />
               </div>
 
               {/* Material fit guide */}

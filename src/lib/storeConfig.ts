@@ -1,0 +1,7 @@
+export const FREE_SHIPPING_THRESHOLD = 2000;
+
+export const STANDARD_SHIPPING_COST = 100;
+
+export const EXPRESS_SHIPPING_COST = 200;
+
+export const LOW_STOCK_DEFAULT_THRESHOLD = 5;

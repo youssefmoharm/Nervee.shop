@@ -1,18 +1,28 @@
 import { test, expect, type Page } from '@playwright/test';
 
 /**
+ * WCAG contrast checks for text on painted surfaces.
+ *
  * The app body is `bg-navy text-paper`, so any element that does not set its own
  * text colour inherits white. On a white or mist surface that makes the text
  * invisible — the bug these tests guard against (see SizeGuide / Footer).
  *
- * `minTextContrast` measures the lowest WCAG contrast ratio between the text of
- * every matching element and the first ancestor background that is actually
- * painted. 1.0 means "text colour == background colour", i.e. unreadable.
+ * Thresholds follow WCAG 2.1 AA:
+ * - normal text: >= 4.5:1
+ * - large text (>= 24px, or >= 18.66px bold): >= 3:1
+ *
+ * `contrastReport` measures the lowest ratio per size class between the text of
+ * every matching element and the first ancestor background that is painted.
  */
-async function minTextContrast(
-  page: Page,
-  selector: string,
-): Promise<{ min: number; count: number; worst: string | null }> {
+interface ContrastReport {
+  minNormal: number;
+  minLarge: number;
+  normalCount: number;
+  largeCount: number;
+  worst: string | null;
+}
+
+async function contrastReport(page: Page, selector: string): Promise<ContrastReport> {
   return page.evaluate(sel => {
     const parse = (value: string) => {
       const m = value.match(/rgba?\(([^)]+)\)/);
@@ -37,9 +47,12 @@ async function minTextContrast(
       return { r: 255, g: 255, b: 255 };
     };
 
-    let min = Infinity;
-    let count = 0;
+    let minNormal = Infinity;
+    let minLarge = Infinity;
+    let normalCount = 0;
+    let largeCount = 0;
     let worst: string | null = null;
+
     document.querySelectorAll(sel).forEach(el => {
       const text = Array.from(el.childNodes)
         .filter(n => n.nodeType === 3)
@@ -57,14 +70,62 @@ async function minTextContrast(
       const l1 = Math.max(lum(fg), lum(bg));
       const l2 = Math.min(lum(fg), lum(bg));
       const ratio = (l1 + 0.05) / (l2 + 0.05);
-      count++;
-      if (ratio < min) {
-        min = ratio;
-        worst = `${el.tagName} "${text.slice(0, 24)}" ${cs.color} on rgb(${bg.r},${bg.g},${bg.b})`;
+
+      const fontSize = parseFloat(cs.fontSize) || 16;
+      const fontWeight = parseInt(cs.fontWeight, 10) || 400;
+      // WCAG "large scale" text
+      const isLarge = fontSize >= 24 || (fontSize >= 18.66 && fontWeight >= 700);
+
+      const describe = `${el.tagName} "${text.slice(0, 24)}" ${cs.color} on rgb(${bg.r},${bg.g},${
+        bg.b
+      }) (${ratio.toFixed(2)}:1)`;
+
+      if (isLarge) {
+        largeCount++;
+        if (ratio < minLarge) {
+          minLarge = ratio;
+          if (!worst || ratio < parseFloat(worst.match(/\(([\d.]+):1\)/)?.[1] ?? '999')) {
+            worst = describe;
+          }
+        }
+      } else {
+        normalCount++;
+        if (ratio < minNormal) {
+          minNormal = ratio;
+          if (!worst || ratio < parseFloat(worst.match(/\(([\d.]+):1\)/)?.[1] ?? '999')) {
+            worst = describe;
+          }
+        }
       }
     });
-    return { min: count ? min : Infinity, count, worst };
+
+    return {
+      minNormal: normalCount ? minNormal : Infinity,
+      minLarge: largeCount ? minLarge : Infinity,
+      normalCount,
+      largeCount,
+      worst,
+    };
   }, selector);
+}
+
+function expectA11yContrast(report: ContrastReport, label: string) {
+  expect(
+    report.normalCount + report.largeCount,
+    `${label}: elements should render`,
+  ).toBeGreaterThan(0);
+  if (report.normalCount > 0) {
+    expect(
+      report.minNormal,
+      `${label} — lowest normal-text contrast: ${report.worst}`,
+    ).toBeGreaterThanOrEqual(4.5);
+  }
+  if (report.largeCount > 0) {
+    expect(
+      report.minLarge,
+      `${label} — lowest large-text contrast: ${report.worst}`,
+    ).toBeGreaterThanOrEqual(3.0);
+  }
 }
 
 test.describe('Contrast — text never matches the surface behind it', () => {
@@ -77,15 +138,17 @@ test.describe('Contrast — text never matches the surface behind it', () => {
     // (navy-headed) chart table is not counted.
     const modal = 'div.fixed.inset-0.z-50';
 
-    const cells = await minTextContrast(page, `${modal} table th, ${modal} table td`);
-    expect(cells.count, 'size chart cells should render').toBeGreaterThan(10);
-    expect(cells.min, `lowest contrast: ${cells.worst}`).toBeGreaterThan(2);
+    const cells = await contrastReport(page, `${modal} table th, ${modal} table td`);
+    expect(cells.normalCount + cells.largeCount, 'size chart cells should render').toBeGreaterThan(
+      10,
+    );
+    expectA11yContrast(cells, 'size chart cells');
 
-    const modalText = await minTextContrast(
+    const modalText = await contrastReport(
       page,
       `${modal} h2, ${modal} h3, ${modal} label, ${modal} p`,
     );
-    expect(modalText.min, `lowest contrast: ${modalText.worst}`).toBeGreaterThan(2);
+    expectA11yContrast(modalText, 'size calculator text');
 
     // A typed measurement must be readable too (inputs inherit their colour).
     await page.locator('#chest-input').fill('96');
@@ -102,20 +165,23 @@ test.describe('Contrast — text never matches the surface behind it', () => {
       const fg = 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
       return 1.05 / (fg + 0.05);
     });
-    expect(inputContrast, 'typed text must contrast with the white input').toBeGreaterThan(2);
+    expect(
+      inputContrast,
+      'typed text must contrast with the white input (WCAG AA normal)',
+    ).toBeGreaterThanOrEqual(4.5);
   });
 
   test('footer headings and links are legible', async ({ page }) => {
     await page.goto('/', { waitUntil: 'networkidle' });
-    const footer = await minTextContrast(page, 'footer h3, footer p, footer a, footer span');
-    expect(footer.count).toBeGreaterThan(5);
-    expect(footer.min, `lowest contrast: ${footer.worst}`).toBeGreaterThan(2);
+    const footer = await contrastReport(page, 'footer h3, footer p, footer a, footer span');
+    expect(footer.normalCount + footer.largeCount).toBeGreaterThan(5);
+    expectA11yContrast(footer, 'footer');
   });
 
   test('shared wishlist headings are legible', async ({ page }) => {
     await page.goto('/wishlist/does-not-exist', { waitUntil: 'networkidle' });
-    const heading = await minTextContrast(page, 'h1, h2, p');
-    expect(heading.count).toBeGreaterThan(0);
-    expect(heading.min, `lowest contrast: ${heading.worst}`).toBeGreaterThan(2);
+    const heading = await contrastReport(page, 'h1, h2, p');
+    expect(heading.normalCount + heading.largeCount).toBeGreaterThan(0);
+    expectA11yContrast(heading, 'shared wishlist');
   });
 });

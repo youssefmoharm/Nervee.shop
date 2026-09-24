@@ -13,37 +13,36 @@
 //
 // Admin-only: verified via requireAdmin() against admin_users.
 
-import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
-import { getCorsHeaders } from '../_shared/cors.ts'
-import { requireAdmin } from '../_shared/admin.ts'
+import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
+import { getCorsHeaders } from '../_shared/cors.ts';
+import { requireAdmin } from '../_shared/admin.ts';
 import {
   sendEmail,
   orderShippedEmail,
   orderDeliveredEmail,
   orderCancelledEmail,
   orderRefundedEmail,
-} from '../_shared/email.ts'
+} from '../_shared/email.ts';
 
-const VALID_STATUSES = ['placed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded']
+const VALID_STATUSES = ['placed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'];
 
-serve(async (req) => {
-  
-  const corsHeaders = getCorsHeaders(req)
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+serve(async req => {
+  const corsHeaders = getCorsHeaders(req);
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  )
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+  );
 
   try {
-    const admin = await requireAdmin(req, supabase)
-    if (!admin) return json({ error: 'Admin access required.' }, 403, corsHeaders)
+    const admin = await requireAdmin(req, supabase);
+    if (!admin) return json({ error: 'Admin access required.' }, 403, corsHeaders);
 
-    const { orderId, status, trackingNumber, trackingUrl } = await req.json()
+    const { orderId, status, trackingNumber, trackingUrl } = await req.json();
     if (!orderId || !VALID_STATUSES.includes(status)) {
-      return json({ error: 'orderId and a valid status are required.' }, 400, corsHeaders)
+      return json({ error: 'orderId and a valid status are required.' }, 400, corsHeaders);
     }
 
     const { data: order, error } = await supabase.rpc('update_order_status', {
@@ -51,45 +50,73 @@ serve(async (req) => {
       p_status: status,
       p_tracking_number: trackingNumber ?? null,
       p_tracking_url: trackingUrl ?? null,
-    })
+    });
 
     if (error || !order) {
-      return json({ error: error?.message ?? 'Could not update this order.' }, 400, corsHeaders)
+      return json({ error: error?.message ?? 'Could not update this order.' }, 400, corsHeaders);
     }
 
     const { data: items } = await supabase
       .from('order_items')
       .select('product_name, color, size, quantity, subtotal')
-      .eq('order_id', orderId)
+      .eq('order_id', orderId);
 
     switch (status) {
-      case 'shipped':
-        await sendEmail(order.email, `Order Shipped — #${order.order_number}`, orderShippedEmail(order, items ?? []))
-        break
-      case 'delivered':
-        await sendEmail(order.email, `Order Delivered — #${order.order_number}`, orderDeliveredEmail(order))
-        break
-      case 'cancelled':
-        await sendEmail(order.email, `Order Cancelled — #${order.order_number}`, orderCancelledEmail(order))
-        break
-      case 'refunded':
-        await sendEmail(order.email, `Order Refunded — #${order.order_number}`, orderRefundedEmail(order))
-        break
+      case 'shipped': {
+        const r = await sendEmail(
+          order.email,
+          `Order Shipped — #${order.order_number}`,
+          orderShippedEmail(order, items ?? []),
+          'order_shipped',
+        );
+        if (!r.success) console.error('Shipped email failed:', r.error);
+        break;
+      }
+      case 'delivered': {
+        const r = await sendEmail(
+          order.email,
+          `Order Delivered — #${order.order_number}`,
+          orderDeliveredEmail(order),
+          'order_delivered',
+        );
+        if (!r.success) console.error('Delivered email failed:', r.error);
+        break;
+      }
+      case 'cancelled': {
+        const r = await sendEmail(
+          order.email,
+          `Order Cancelled — #${order.order_number}`,
+          orderCancelledEmail(order),
+          'transactional',
+        );
+        if (!r.success) console.error('Cancelled email failed:', r.error);
+        break;
+      }
+      case 'refunded': {
+        const r = await sendEmail(
+          order.email,
+          `Order Refunded — #${order.order_number}`,
+          orderRefundedEmail(order),
+          'transactional',
+        );
+        if (!r.success) console.error('Refunded email failed:', r.error);
+        break;
+      }
       // 'placed' and 'processing' get no email: 'placed' already triggered
       // the order-received email at checkout, and 'processing' is a
       // low-signal internal step.
     }
 
-    return json({ order }, 200, corsHeaders)
+    return json({ order }, 200, corsHeaders);
   } catch (err) {
-    console.error('update-order-status error:', err)
-    return json({ error: 'Something went wrong updating this order.' }, 500, getCorsHeaders(req))
+    console.error('update-order-status error:', err);
+    return json({ error: 'Something went wrong updating this order.' }, 500, getCorsHeaders(req));
   }
-})
+});
 
 function json(body: unknown, status = 200, headers: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...headers, 'Content-Type': 'application/json' },
-  })
+  });
 }

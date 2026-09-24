@@ -15,7 +15,7 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
     <nav className="mb-6" aria-label="Breadcrumb">
       <ol className="flex items-center space-x-2">
         <li>
-          <Link to="/" className="text-navy/50 hover:text-navy transition-colors" aria-label="Home">
+          <Link to="/" className="text-navy/60 hover:text-navy transition-colors" aria-label="Home">
             Home
           </Link>
         </li>

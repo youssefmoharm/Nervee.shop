@@ -5,6 +5,8 @@ import { contactService } from '../services/contactService';
 import { useSEO, getFAQSchema } from '../lib/seo';
 import { useStructuredData } from '../hooks/useStructuredData';
 import { faqItems } from '../data/sizingData';
+import { EXPRESS_SHIPPING_COST, FREE_SHIPPING_THRESHOLD } from '../lib/storeConfig';
+import { formatEGP } from '../lib/format';
 
 const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || 'nerveey.shop@gmail.com';
 
@@ -151,13 +153,17 @@ export function Contact() {
 export function Shipping() {
   useSEO({
     title: 'Shipping & Delivery | NERVE',
-    description:
-      'Standard and express delivery across Egypt. Free standard shipping on orders over EGP 2,000. Cash on delivery available.',
+    description: `Standard and express delivery across Egypt. Free standard shipping on orders over ${formatEGP(
+      FREE_SHIPPING_THRESHOLD,
+    )}. Cash on delivery available.`,
   });
   return (
     <Shell title="Shipping">
-      <p>Standard delivery: 2–5 business days across Egypt. Free on orders over EGP 2,000.</p>
-      <p>Express delivery: 1–2 business days, EGP 200.</p>
+      <p>
+        Standard delivery: 2–5 business days across Egypt. Free on orders over{' '}
+        {formatEGP(FREE_SHIPPING_THRESHOLD)}.
+      </p>
+      <p>Express delivery: 1–2 business days, {formatEGP(EXPRESS_SHIPPING_COST)}.</p>
       <p>
         Orders are processed within 24 hours on business days. You&apos;ll receive a tracking link
         by email once your order ships.
@@ -187,8 +193,11 @@ export function Returns() {
 const shopFaqs = [
   {
     question: 'How long does delivery take?',
-    answer:
-      'Standard delivery is 2–5 business days across Egypt (free over EGP 2,000). Express delivery is 1–2 business days for EGP 200. Orders process within 24 hours on business days.',
+    answer: `Standard delivery is 2–5 business days across Egypt (free over ${formatEGP(
+      FREE_SHIPPING_THRESHOLD,
+    )}). Express delivery is 1–2 business days for ${formatEGP(
+      EXPRESS_SHIPPING_COST,
+    )}. Orders process within 24 hours on business days.`,
   },
   {
     question: 'Do you offer cash on delivery?',
@@ -225,8 +234,9 @@ const shopFaqs = [
 export function Faq() {
   useSEO({
     title: 'FAQ | NERVE — Shipping, Returns & Sizing',
-    description:
-      'Answers about NERVE shipping, cash on delivery, returns, exchanges, sizing, and how to reach us. Free standard shipping over EGP 2,000.',
+    description: `Answers about NERVE shipping, cash on delivery, returns, exchanges, sizing, and how to reach us. Free standard shipping over ${formatEGP(
+      FREE_SHIPPING_THRESHOLD,
+    )}.`,
   });
   useStructuredData({
     '@context': 'https://schema.org',

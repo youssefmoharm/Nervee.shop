@@ -1,12 +1,15 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { X, Share2 } from 'lucide-react';
 import { useWishlist } from '../../context/WishlistContext';
 import WishlistShareModal from '../../components/WishlistShareModal';
+import EmptyState from '../../components/EmptyState';
 import AccountLayout from './AccountLayout';
+import { formatEGP } from '../../lib/format';
 
 export default function Wishlist() {
   const { items, toggle } = useWishlist();
+  const navigate = useNavigate();
   const [shareModalOpen, setShareModalOpen] = useState(false);
 
   return (
@@ -25,12 +28,12 @@ export default function Wishlist() {
       </div>
 
       {items.length === 0 ? (
-        <div className="text-center py-16 border border-navy/10">
-          <p className="text-navy/60 mb-4">Your wishlist is empty.</p>
-          <Link to="/shop" className="nv-eyebrow underline">
-            Browse Products
-          </Link>
-        </div>
+        <EmptyState
+          title="Your wishlist is empty"
+          body="Save pieces you love so you can find them here later."
+          actionLabel="Browse Products"
+          onAction={() => navigate('/shop')}
+        />
       ) : (
         <>
           <ul className="grid grid-cols-2 sm:grid-cols-3 gap-5">
@@ -48,7 +51,7 @@ export default function Wishlist() {
                     <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                   </div>
                   <p className="nv-edit text-xs font-semibold uppercase truncate">{item.name}</p>
-                  <p className="text-xs text-navy/60 mt-0.5">EGP {item.price.toLocaleString()}</p>
+                  <p className="text-xs text-navy/60 mt-0.5">{formatEGP(item.price)}</p>
                 </Link>
               </li>
             ))}

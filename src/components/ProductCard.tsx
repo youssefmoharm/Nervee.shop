@@ -8,6 +8,8 @@ import { useToast } from '../context/ToastContext';
 import { useQuickView } from '../context/QuickViewContext';
 import { useComparison } from '../hooks/useComparison';
 import OptimizedImage from './OptimizedImage';
+import { LOW_STOCK_DEFAULT_THRESHOLD } from '../lib/storeConfig';
+import { formatEGP } from '../lib/format';
 
 const ProductCard = memo(function ProductCard({ product }: { product: Product }) {
   const [colorIdx, setColorIdx] = useState(0);
@@ -28,12 +30,14 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
     product.colors[0] ?? { name: '', hex: '#ccc', image: '/placeholder-product.jpg' };
   const wished = has(product.id);
 
-  // Check for low stock (any size < 5 items)
-  const minStock =
-    product.sizes.length > 0
-      ? Math.min(...product.sizes.map(() => 1)) // Simplified - would need stock data
-      : 0;
-  const hasLowStock = product.sizes.some(s => s.inStock) && minStock < 5;
+  // Low stock: prefer the server-computed product_stock_status flag; fall
+  // back to comparing stock quantities against the per-product threshold.
+  const stockValues = product.sizes
+    .map(s => s.stock)
+    .filter((v): v is number => typeof v === 'number');
+  const threshold = product.lowStockThreshold ?? LOW_STOCK_DEFAULT_THRESHOLD;
+  const hasLowStock =
+    product.isLowStock ?? (stockValues.length > 0 && Math.min(...stockValues) <= threshold);
 
   // Check if product is new (created within last 7 days)
   const createdDate = new Date(product.createdAt);
@@ -93,12 +97,6 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
           />
         </Link>
 
-        {product.badge && (
-          <span className="absolute top-3 left-3 bg-navy text-white text-[10px] font-semibold tracking-widest2 uppercase px-2.5 py-1">
-            {product.badge}
-          </span>
-        )}
-
         {/* Scarcity badges */}
         <div className="absolute top-3 left-3 space-y-2 flex flex-col">
           {product.badge && (
@@ -107,7 +105,7 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
             </span>
           )}
 
-          {hasLowStock && !product.badge && (
+          {hasLowStock && (
             <span className="block bg-red-600 text-white text-[10px] font-semibold tracking-widest2 uppercase px-2.5 py-1">
               Low Stock
             </span>
@@ -194,11 +192,11 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
         </div>
         <div className="flex items-center gap-2 mt-1">
           <span data-testid="product-price" className="text-sm font-medium">
-            EGP {product.price.toLocaleString()}
+            {formatEGP(product.price)}
           </span>
           {product.compareAtPrice && (
-            <span className="text-sm text-navy/40 line-through">
-              EGP {product.compareAtPrice.toLocaleString()}
+            <span className="text-sm text-navy/60 line-through">
+              {formatEGP(product.compareAtPrice)}
             </span>
           )}
         </div>

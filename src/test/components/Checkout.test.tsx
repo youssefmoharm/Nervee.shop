@@ -1,424 +1,176 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { BrowserRouter } from 'react-router-dom';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import Checkout from '../../pages/Checkout';
+import { getCheckoutSummary, estimateShippingCost, EGYPT_VAT_RATE } from '../../lib/checkout';
+import {
+  saveCheckoutSession,
+  loadCheckoutSession,
+  clearCheckoutSession,
+  hasValidCheckoutSession,
+} from '../../lib/checkoutSessionManager';
 
-// Mock checkout validation component
-const MockCheckoutForm = () => {
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const formData = new FormData(e.target as HTMLFormElement);
-    const email = formData.get('email') as string;
-    const phone = formData.get('phone') as string;
-    const address = formData.get('address') as string;
-    const governorate = formData.get('governorate') as string;
-    const paymentMethod = formData.get('paymentMethod') as string;
+interface TestCartLine {
+  productId: string;
+  name: string;
+  slug: string;
+  image: string;
+  price: number;
+  color: string;
+  size: string;
+  quantity: number;
+}
 
-    // Checkout validation
-    if (!email || !phone || !address || !governorate || !paymentMethod) {
-      alert('All fields are required');
-      return;
-    }
+// Mock the contexts/services Checkout consumes at render time.
+const cartMock = vi.hoisted(() => ({
+  lines: [] as TestCartLine[],
+  subtotal: 0,
+  clear: (() => {}) as () => void,
+}));
 
-    if (!email.includes('@')) {
-      alert('Invalid email format');
-      return;
-    }
+vi.mock('../../context/CartContext', () => ({
+  useCart: () => cartMock,
+}));
 
-    if (phone.length < 11) {
-      alert('Phone number must be at least 11 digits');
-      return;
-    }
+vi.mock('../../context/AuthContext', () => ({
+  useAuth: () => ({ user: null }),
+}));
 
-    if (address.length < 10) {
-      alert('Address must be at least 10 characters');
-      return;
-    }
+vi.mock('../../context/ToastContext', () => ({
+  useToast: () => ({ showToast: vi.fn() }),
+}));
 
-    // Mock successful checkout
-    alert('Order placed successfully');
-  };
+vi.mock('../../services/orderService', () => ({
+  orderService: { placeOrder: vi.fn() },
+}));
 
-  return (
-    <form onSubmit={handleSubmit} data-testid="checkout-form" noValidate>
-      <input name="email" type="email" placeholder="Email" data-testid="email-input" />
-      <input name="phone" type="tel" placeholder="Phone" data-testid="phone-input" />
-      <textarea name="address" placeholder="Address" data-testid="address-input" />
-      <select name="governorate" data-testid="governorate-select">
-        <option value="">Select Governorate</option>
-        <option value="cairo">Cairo</option>
-        <option value="giza">Giza</option>
-        <option value="alexandria">Alexandria</option>
-      </select>
-      <div data-testid="payment-methods">
-        <label>
-          <input type="radio" name="paymentMethod" value="cod" data-testid="cod-radio" />
-          Cash on Delivery
-        </label>
-        <label>
-          <input type="radio" name="paymentMethod" value="card" data-testid="card-radio" />
-          Credit Card
-        </label>
-      </div>
-      <button type="submit" data-testid="place-order-button">
-        Place Order
-      </button>
-    </form>
-  );
+const sampleLine: TestCartLine = {
+  productId: 'p-1',
+  name: 'Oversized Tee',
+  slug: 'oversized-tee',
+  image: '/a.jpg',
+  price: 650,
+  color: 'Navy',
+  size: 'M',
+  quantity: 1,
 };
 
-const MockOrderSummary = ({ total = 299.99, shipping = 50, items = 1 }) => {
-  const subtotal = Math.round((total - shipping) * 100) / 100;
-
-  return (
-    <div data-testid="order-summary">
-      <div data-testid="items-count">{items} items</div>
-      <div data-testid="subtotal">Subtotal: {subtotal} EGP</div>
-      <div data-testid="shipping">Shipping: {shipping} EGP</div>
-      <div data-testid="total">Total: {total} EGP</div>
-    </div>
+function renderCheckout() {
+  return render(
+    <MemoryRouter initialEntries={['/checkout']}>
+      <Checkout />
+    </MemoryRouter>,
   );
-};
+}
 
-const TestWrapper = ({ children }: { children: React.ReactNode }) => (
-  <BrowserRouter>{children}</BrowserRouter>
-);
+beforeEach(() => {
+  localStorage.clear();
+  cartMock.lines = [];
+  cartMock.subtotal = 0;
+  cartMock.clear = vi.fn();
+});
 
-describe('Checkout Validation', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.stubGlobal('alert', vi.fn());
+describe('Checkout page (src/pages/Checkout.tsx)', () => {
+  it('shows the empty-cart state when there are no items', () => {
+    renderCheckout();
+    expect(screen.getByTestId('empty-cart')).toBeInTheDocument();
+    expect(screen.queryByTestId('checkout-form')).not.toBeInTheDocument();
   });
 
-  describe('Form Validation', () => {
-    it('renders checkout form correctly', () => {
-      render(
-        <TestWrapper>
-          <MockCheckoutForm />
-        </TestWrapper>,
-      );
+  it('renders the step-1 form fields when the cart has items', () => {
+    cartMock.lines = [sampleLine];
+    cartMock.subtotal = 650;
 
-      expect(screen.getByTestId('checkout-form')).toBeInTheDocument();
-      expect(screen.getByTestId('email-input')).toBeInTheDocument();
-      expect(screen.getByTestId('phone-input')).toBeInTheDocument();
-      expect(screen.getByTestId('address-input')).toBeInTheDocument();
-      expect(screen.getByTestId('governorate-select')).toBeInTheDocument();
-      expect(screen.getByTestId('payment-methods')).toBeInTheDocument();
-      expect(screen.getByTestId('place-order-button')).toBeInTheDocument();
-    });
+    renderCheckout();
+    expect(screen.getByTestId('checkout-form')).toBeInTheDocument();
+    expect(screen.getByTestId('email-input')).toBeInTheDocument();
+    expect(screen.getByTestId('firstName-input')).toBeInTheDocument();
+    expect(screen.getByTestId('lastName-input')).toBeInTheDocument();
+    expect(screen.getByTestId('phone-input')).toBeInTheDocument();
+    // Address/city/governorate live on step 2 (Shipping Address)
+    expect(screen.queryByTestId('address-input')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('city-input')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('governorate-select')).not.toBeInTheDocument();
+  });
+});
 
-    it('shows validation error for empty required fields', async () => {
-      const user = userEvent.setup();
-
-      render(
-        <TestWrapper>
-          <MockCheckoutForm />
-        </TestWrapper>,
-      );
-
-      await user.click(screen.getByTestId('place-order-button'));
-
-      await waitFor(() => {
-        expect(window.alert).toHaveBeenCalledWith('All fields are required');
-      });
-    });
-
-    it('validates email format', async () => {
-      const user = userEvent.setup();
-
-      render(
-        <TestWrapper>
-          <MockCheckoutForm />
-        </TestWrapper>,
-      );
-
-      await user.type(screen.getByTestId('email-input'), 'invalid-email');
-      await user.type(screen.getByTestId('phone-input'), '01234567890');
-      await user.type(screen.getByTestId('address-input'), '123 Main Street, Cairo');
-      await user.selectOptions(screen.getByTestId('governorate-select'), 'cairo');
-      await user.click(screen.getByTestId('cod-radio'));
-      await user.click(screen.getByTestId('place-order-button'));
-
-      await waitFor(() => {
-        expect(window.alert).toHaveBeenCalledWith('Invalid email format');
-      });
-    });
-
-    it('validates phone number length', async () => {
-      const user = userEvent.setup();
-
-      render(
-        <TestWrapper>
-          <MockCheckoutForm />
-        </TestWrapper>,
-      );
-
-      await user.type(screen.getByTestId('email-input'), 'test@example.com');
-      await user.type(screen.getByTestId('phone-input'), '123');
-      await user.type(screen.getByTestId('address-input'), '123 Main Street, Cairo');
-      await user.selectOptions(screen.getByTestId('governorate-select'), 'cairo');
-      await user.click(screen.getByTestId('cod-radio'));
-      await user.click(screen.getByTestId('place-order-button'));
-
-      await waitFor(() => {
-        expect(window.alert).toHaveBeenCalledWith('Phone number must be at least 11 digits');
-      });
-    });
-
-    it('validates address length', async () => {
-      const user = userEvent.setup();
-
-      render(
-        <TestWrapper>
-          <MockCheckoutForm />
-        </TestWrapper>,
-      );
-
-      await user.type(screen.getByTestId('email-input'), 'test@example.com');
-      await user.type(screen.getByTestId('phone-input'), '01234567890');
-      await user.type(screen.getByTestId('address-input'), 'short');
-      await user.selectOptions(screen.getByTestId('governorate-select'), 'cairo');
-      await user.click(screen.getByTestId('cod-radio'));
-      await user.click(screen.getByTestId('place-order-button'));
-
-      await waitFor(() => {
-        expect(window.alert).toHaveBeenCalledWith('Address must be at least 10 characters');
-      });
-    });
-
-    it('processes valid checkout form', async () => {
-      const user = userEvent.setup();
-
-      render(
-        <TestWrapper>
-          <MockCheckoutForm />
-        </TestWrapper>,
-      );
-
-      await user.type(screen.getByTestId('email-input'), 'test@example.com');
-      await user.type(screen.getByTestId('phone-input'), '01234567890');
-      await user.type(screen.getByTestId('address-input'), '123 Main Street, Cairo, Egypt');
-      await user.selectOptions(screen.getByTestId('governorate-select'), 'cairo');
-      await user.click(screen.getByTestId('cod-radio'));
-      await user.click(screen.getByTestId('place-order-button'));
-
-      await waitFor(() => {
-        expect(window.alert).toHaveBeenCalledWith('Order placed successfully');
-      });
-    });
-
-    it('handles credit card payment method', async () => {
-      const user = userEvent.setup();
-
-      render(
-        <TestWrapper>
-          <MockCheckoutForm />
-        </TestWrapper>,
-      );
-
-      await user.type(screen.getByTestId('email-input'), 'test@example.com');
-      await user.type(screen.getByTestId('phone-input'), '01234567890');
-      await user.type(screen.getByTestId('address-input'), '123 Main Street, Cairo, Egypt');
-      await user.selectOptions(screen.getByTestId('governorate-select'), 'alexandria');
-      await user.click(screen.getByTestId('card-radio'));
-      await user.click(screen.getByTestId('place-order-button'));
-
-      await waitFor(() => {
-        expect(window.alert).toHaveBeenCalledWith('Order placed successfully');
-      });
-    });
+describe('getCheckoutSummary totals', () => {
+  it('adds standard shipping under the free-shipping threshold', () => {
+    const summary = getCheckoutSummary(500, 'standard');
+    expect(summary.shipping).toBe(100);
+    expect(summary.total).toBe(600);
   });
 
-  describe('Order Summary', () => {
-    it('displays order summary correctly', () => {
-      render(
-        <TestWrapper>
-          <MockOrderSummary total={399.99} shipping={50} items={2} />
-        </TestWrapper>,
-      );
-
-      expect(screen.getByTestId('items-count')).toHaveTextContent('2 items');
-      expect(screen.getByTestId('subtotal')).toHaveTextContent('Subtotal: 349.99 EGP');
-      expect(screen.getByTestId('shipping')).toHaveTextContent('Shipping: 50 EGP');
-      expect(screen.getByTestId('total')).toHaveTextContent('Total: 399.99 EGP');
-    });
-
-    it('handles free shipping correctly', () => {
-      render(
-        <TestWrapper>
-          <MockOrderSummary total={1000} shipping={0} items={5} />
-        </TestWrapper>,
-      );
-
-      expect(screen.getByTestId('items-count')).toHaveTextContent('5 items');
-      expect(screen.getByTestId('subtotal')).toHaveTextContent('Subtotal: 1000 EGP');
-      expect(screen.getByTestId('shipping')).toHaveTextContent('Shipping: 0 EGP');
-      expect(screen.getByTestId('total')).toHaveTextContent('Total: 1000 EGP');
-    });
-
-    it('handles single item order', () => {
-      render(
-        <TestWrapper>
-          <MockOrderSummary total={149.99} shipping={50} items={1} />
-        </TestWrapper>,
-      );
-
-      expect(screen.getByTestId('items-count')).toHaveTextContent('1 items');
-      expect(screen.getByTestId('subtotal')).toHaveTextContent('Subtotal: 99.99 EGP');
-      expect(screen.getByTestId('shipping')).toHaveTextContent('Shipping: 50 EGP');
-      expect(screen.getByTestId('total')).toHaveTextContent('Total: 149.99 EGP');
-    });
+  it('gives free standard shipping over EGP 2000', () => {
+    expect(estimateShippingCost(2100, 'standard')).toBe(0);
+    expect(getCheckoutSummary(2100, 'standard').total).toBe(2100);
   });
 
-  describe('Governorate Selection', () => {
-    it('allows selecting different governorates', async () => {
-      const user = userEvent.setup();
-
-      render(
-        <TestWrapper>
-          <MockCheckoutForm />
-        </TestWrapper>,
-      );
-
-      const governorateSelect = screen.getByTestId('governorate-select');
-
-      await user.selectOptions(governorateSelect, 'giza');
-      expect(governorateSelect).toHaveValue('giza');
-
-      await user.selectOptions(governorateSelect, 'alexandria');
-      expect(governorateSelect).toHaveValue('alexandria');
-    });
-
-    it('validates governorate selection', async () => {
-      const user = userEvent.setup();
-
-      render(
-        <TestWrapper>
-          <MockCheckoutForm />
-        </TestWrapper>,
-      );
-
-      await user.type(screen.getByTestId('email-input'), 'test@example.com');
-      await user.type(screen.getByTestId('phone-input'), '01234567890');
-      await user.type(screen.getByTestId('address-input'), '123 Main Street, Cairo, Egypt');
-      // Skip governorate selection
-      await user.click(screen.getByTestId('cod-radio'));
-      await user.click(screen.getByTestId('place-order-button'));
-
-      await waitFor(() => {
-        expect(window.alert).toHaveBeenCalledWith('All fields are required');
-      });
-    });
+  it('charges flat express shipping regardless of subtotal', () => {
+    expect(getCheckoutSummary(5000, 'express').shipping).toBe(200);
   });
 
-  describe('Payment Method Selection', () => {
-    it('allows selecting payment methods', async () => {
-      const user = userEvent.setup();
-
-      render(
-        <TestWrapper>
-          <MockCheckoutForm />
-        </TestWrapper>,
-      );
-
-      const codRadio = screen.getByTestId('cod-radio');
-      const cardRadio = screen.getByTestId('card-radio');
-
-      await user.click(codRadio);
-      expect(codRadio).toBeChecked();
-      expect(cardRadio).not.toBeChecked();
-
-      await user.click(cardRadio);
-      expect(cardRadio).toBeChecked();
-      expect(codRadio).not.toBeChecked();
-    });
-
-    it('validates payment method selection', async () => {
-      const user = userEvent.setup();
-
-      render(
-        <TestWrapper>
-          <MockCheckoutForm />
-        </TestWrapper>,
-      );
-
-      await user.type(screen.getByTestId('email-input'), 'test@example.com');
-      await user.type(screen.getByTestId('phone-input'), '01234567890');
-      await user.type(screen.getByTestId('address-input'), '123 Main Street, Cairo, Egypt');
-      await user.selectOptions(screen.getByTestId('governorate-select'), 'cairo');
-      // Skip payment method selection
-      await user.click(screen.getByTestId('place-order-button'));
-
-      await waitFor(() => {
-        expect(window.alert).toHaveBeenCalledWith('All fields are required');
-      });
-    });
+  it('never lets a larger discount drive the total negative', () => {
+    const summary = getCheckoutSummary(500, 'standard', 10_000);
+    expect(summary.total).toBe(0);
   });
 
-  describe('Edge Cases', () => {
-    it('handles very long address', async () => {
-      const user = userEvent.setup({ delay: null });
+  it('reports VAT as the tax portion of a VAT-inclusive subtotal', () => {
+    // 1140 EGP incl. 14% VAT → exactly 140 EGP of tax
+    expect(getCheckoutSummary(1140, 'standard').vatAmount).toBe(140);
+    expect(getCheckoutSummary(1140, 'standard').vatAmount).toBe(
+      Math.round((1140 * EGYPT_VAT_RATE) / (1 + EGYPT_VAT_RATE)),
+    );
+  });
+});
 
-      render(
-        <TestWrapper>
-          <MockCheckoutForm />
-        </TestWrapper>,
-      );
-
-      const longAddress = 'A'.repeat(500);
-
-      await user.type(screen.getByTestId('email-input'), 'test@example.com');
-      await user.type(screen.getByTestId('phone-input'), '01234567890');
-      await user.type(screen.getByTestId('address-input'), longAddress);
-      await user.selectOptions(screen.getByTestId('governorate-select'), 'cairo');
-      await user.click(screen.getByTestId('cod-radio'));
-      await user.click(screen.getByTestId('place-order-button'));
-
-      await waitFor(() => {
-        expect(window.alert).toHaveBeenCalledWith('Order placed successfully');
-      });
+describe('checkout session persistence (localStorage)', () => {
+  it('round-trips cart lines, form state and step', () => {
+    saveCheckoutSession({
+      cartLines: [sampleLine] as never,
+      formState: { email: 'a@b.com', firstName: 'Mariam' },
+      checkoutStep: 2,
     });
 
-    it('handles special characters in phone number', async () => {
-      const user = userEvent.setup();
+    const loaded = loadCheckoutSession();
+    expect(loaded).not.toBeNull();
+    expect(loaded!.cartLines).toHaveLength(1);
+    expect(loaded!.cartLines[0].productId).toBe('p-1');
+    expect(loaded!.formState.email).toBe('a@b.com');
+    expect(loaded!.checkoutStep).toBe(2);
+    expect(hasValidCheckoutSession()).toBe(true);
+  });
 
-      render(
-        <TestWrapper>
-          <MockCheckoutForm />
-        </TestWrapper>,
-      );
+  it('treats an expired session as absent', () => {
+    localStorage.setItem(
+      'nerve.checkout-session',
+      JSON.stringify({
+        cartLines: [sampleLine],
+        formState: {},
+        appliedDiscount: null,
+        checkoutStep: 1,
+        timestamp: Date.now() - 25 * 60 * 60 * 1000,
+        expiresAt: Date.now() - 60 * 1000, // expired
+      }),
+    );
 
-      await user.type(screen.getByTestId('email-input'), 'test@example.com');
-      await user.type(screen.getByTestId('phone-input'), '+201234567890');
-      await user.type(screen.getByTestId('address-input'), '123 Main Street, Cairo, Egypt');
-      await user.selectOptions(screen.getByTestId('governorate-select'), 'cairo');
-      await user.click(screen.getByTestId('cod-radio'));
-      await user.click(screen.getByTestId('place-order-button'));
+    expect(loadCheckoutSession()).toBeNull();
+    expect(hasValidCheckoutSession()).toBe(false);
+    // Expiry also clears the stale entry
+    expect(localStorage.getItem('nerve.checkout-session')).toBeNull();
+  });
 
-      await waitFor(() => {
-        expect(window.alert).toHaveBeenCalledWith('Order placed successfully');
-      });
-    });
+  it('clearCheckoutSession wipes stored state', () => {
+    saveCheckoutSession({ cartLines: [sampleLine] as never });
+    expect(loadCheckoutSession()).not.toBeNull();
 
-    it('handles international email domains', async () => {
-      const user = userEvent.setup();
+    clearCheckoutSession();
+    expect(loadCheckoutSession()).toBeNull();
+    expect(hasValidCheckoutSession()).toBe(false);
+  });
 
-      render(
-        <TestWrapper>
-          <MockCheckoutForm />
-        </TestWrapper>,
-      );
-
-      await user.type(screen.getByTestId('email-input'), 'test@example.co.uk');
-      await user.type(screen.getByTestId('phone-input'), '01234567890');
-      await user.type(screen.getByTestId('address-input'), '123 Main Street, Cairo, Egypt');
-      await user.selectOptions(screen.getByTestId('governorate-select'), 'cairo');
-      await user.click(screen.getByTestId('cod-radio'));
-      await user.click(screen.getByTestId('place-order-button'));
-
-      await waitFor(() => {
-        expect(window.alert).toHaveBeenCalledWith('Order placed successfully');
-      });
-    });
+  it('reports no valid session when storage is empty', () => {
+    expect(loadCheckoutSession()).toBeNull();
+    expect(hasValidCheckoutSession()).toBe(false);
   });
 });

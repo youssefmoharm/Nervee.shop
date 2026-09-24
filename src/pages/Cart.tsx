@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Lock, Minus, Plus, ShieldCheck, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { productService } from '../services/productService';
@@ -7,19 +7,26 @@ import { discountService } from '../services/discountService';
 import { useSEO } from '../lib/seo';
 import { ecommerce } from '../lib/analytics';
 import { useToast } from '../context/ToastContext';
+import { useI18n } from '../lib/i18n';
+import { formatEGP } from '../lib/format';
 import { loadCheckoutSession, saveCheckoutSession } from '../lib/checkoutSessionManager';
+import { estimateShippingCost } from '../lib/checkout';
 import type { Product } from '../types';
 import ProductCard from '../components/ProductCard';
 import ShippingProgressBar from '../components/ShippingProgressBar';
+import EmptyState from '../components/EmptyState';
 
 export default function Cart() {
+  const { t } = useI18n();
   useSEO({
     title: 'Your Cart | NERVE',
     description:
       'Review the pieces in your NERVE cart. Cash on delivery across Egypt — no card needed.',
+    robots: 'noindex, nofollow',
   });
   const { lines, removeLine, updateQuantity, subtotal } = useCart();
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const [promo, setPromo] = useState('');
   const [promoStatus, setPromoStatus] = useState<'idle' | 'applied' | 'invalid'>('idle');
   const [recommended, setRecommended] = useState<Product[]>([]);
@@ -62,20 +69,22 @@ export default function Cart() {
       return;
     }
 
+    const amt = discountService.calculateDiscount(result.discount, subtotal);
     // Save to checkout session so it persists to Checkout.tsx
     saveCheckoutSession({
       appliedDiscount: {
         code: result.discount.code,
         discount: result.discount,
       },
+      promoCode: result.discount.code,
+      discountAmount: amt,
     });
     setPromoStatus('applied');
-    const discountAmount = discountService.calculateDiscount(result.discount, subtotal);
-    showToast(`You saved EGP ${discountAmount.toLocaleString()}`, 'success', 3000);
+    showToast(`You saved ${formatEGP(amt)}`, 'success', 3000);
   };
 
-  // Calculate shipping estimate only (discount is applied at checkout)
-  const shippingEstimate = subtotal > 2000 || subtotal === 0 ? 0 : 100;
+  // Single source of truth: lib/checkout estimateShippingCost
+  const shippingEstimate = estimateShippingCost(subtotal, 'standard');
 
   return (
     <div className="bg-white text-navy min-h-screen pt-24 md:pt-28 px-5 md:px-8 pb-24">
@@ -83,15 +92,12 @@ export default function Cart() {
         <h1 className="nv-heading text-5xl md:text-7xl mb-10">Your Bag</h1>
 
         {lines.length === 0 ? (
-          <div className="text-center py-24">
-            <p className="nv-edit text-xl text-navy/50 mb-6">Your bag is empty.</p>
-            <Link
-              to="/shop"
-              className="inline-block bg-navy text-white nv-eyebrow px-8 py-4 hover:bg-navy-2 transition-colors"
-            >
-              Shop the Drop
-            </Link>
-          </div>
+          <EmptyState
+            title="Your bag is empty"
+            body="Browse the drop and add pieces you love — checkout is cash on delivery across Egypt."
+            actionLabel="Shop the Drop"
+            onAction={() => navigate('/shop')}
+          />
         ) : (
           <div className="grid lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2 divide-y divide-navy/10 border-y border-navy/10">
@@ -118,13 +124,13 @@ export default function Cart() {
                         {line.color} / {line.size}
                       </p>
                       <p className="text-sm font-medium mt-2 sm:hidden">
-                        EGP {(line.price * line.quantity).toLocaleString()}
+                        {formatEGP(line.price * line.quantity)}
                       </p>
                     </div>
                     <div className="flex items-center gap-6">
                       <div className="flex items-center border border-navy/20">
                         <button
-                          aria-label="Decrease quantity"
+                          aria-label={t('Decrease quantity')}
                           onClick={() =>
                             updateQuantity(line.productId, line.color, line.size, line.quantity - 1)
                           }
@@ -134,7 +140,7 @@ export default function Cart() {
                         </button>
                         <span className="w-9 text-center text-sm">{line.quantity}</span>
                         <button
-                          aria-label="Increase quantity"
+                          aria-label={t('Increase quantity')}
                           onClick={() =>
                             updateQuantity(line.productId, line.color, line.size, line.quantity + 1)
                           }
@@ -144,10 +150,10 @@ export default function Cart() {
                         </button>
                       </div>
                       <span className="hidden sm:block text-sm font-medium w-24 text-right">
-                        EGP {(line.price * line.quantity).toLocaleString()}
+                        {formatEGP(line.price * line.quantity)}
                       </span>
                       <button
-                        aria-label="Remove item"
+                        aria-label={t('Remove item')}
                         onClick={() => removeLine(line.productId, line.color, line.size)}
                         className="text-navy/40 hover:text-navy transition-colors"
                       >
@@ -165,7 +171,7 @@ export default function Cart() {
 
               {/* Order Summary */}
               <div className="bg-mist/50 p-6 space-y-5">
-                <h2 className="nv-eyebrow">Order Summary</h2>
+                <h2 className="nv-eyebrow">{t('Order Summary')}</h2>
 
                 <div className="flex gap-2">
                   <input
@@ -174,7 +180,7 @@ export default function Cart() {
                       setPromo(e.target.value);
                       setPromoStatus('idle');
                     }}
-                    placeholder="Discount code"
+                    placeholder={t('Discount code')}
                     data-testid="promo-input"
                     className="flex-1 border border-navy/20 bg-white px-3 py-2.5 text-sm focus:outline-none focus:border-navy"
                   />
@@ -183,7 +189,7 @@ export default function Cart() {
                     data-testid="promo-apply"
                     className="px-4 border border-navy text-xs font-semibold uppercase hover:bg-navy hover:text-white transition-colors"
                   >
-                    Apply
+                    {t('Apply')}
                   </button>
                 </div>
                 {promoStatus === 'applied' && (
@@ -197,24 +203,24 @@ export default function Cart() {
 
                 <div className="space-y-2 pt-2 border-t border-navy/10 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-navy/60">Subtotal</span>
-                    <span>EGP {subtotal.toLocaleString()}</span>
+                    <span className="text-navy/60">{t('Subtotal')}</span>
+                    <span>{formatEGP(subtotal)}</span>
                   </div>
                   {appliedDiscount && (
                     <div className="flex justify-between text-green-700">
-                      <span>Discount ({appliedDiscount.code})</span>
-                      <span>-EGP {discountAmount.toLocaleString()}</span>
+                      <span>
+                        {t('Discount')} ({appliedDiscount.code})
+                      </span>
+                      <span>- {formatEGP(discountAmount)}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-navy/60">Estimated Shipping</span>
-                    <span>{shippingEstimate === 0 ? 'Free' : `EGP ${shippingEstimate}`}</span>
+                    <span className="text-navy/60">{t('Estimated Shipping')}</span>
+                    <span>{shippingEstimate === 0 ? t('Free') : formatEGP(shippingEstimate)}</span>
                   </div>
                   <div className="flex justify-between text-base font-semibold pt-2 border-t border-navy/10">
-                    <span>Total</span>
-                    <span>
-                      EGP {(subtotal + shippingEstimate - discountAmount).toLocaleString()}
-                    </span>
+                    <span>{t('Total')}</span>
+                    <span>{formatEGP(subtotal + shippingEstimate - discountAmount)}</span>
                   </div>
                 </div>
 
@@ -223,7 +229,7 @@ export default function Cart() {
                   data-testid="proceed-to-checkout"
                   className="block text-center bg-navy text-white nv-eyebrow py-4 hover:bg-navy-2 transition-colors active:bg-navy/90 w-full min-h-[56px] flex items-center justify-center"
                 >
-                  Proceed to Checkout
+                  {t('Proceed to Checkout')}
                 </Link>
                 <p className="flex items-center justify-center gap-2 text-xs text-navy/50">
                   <Lock size={12} /> Secure checkout — SSL encrypted
@@ -238,7 +244,7 @@ export default function Cart() {
 
         {recommended.length > 0 && (
           <div className="mt-24">
-            <h2 className="nv-heading text-3xl md:text-4xl mb-8">You May Also Like</h2>
+            <h2 className="nv-heading text-3xl md:text-4xl mb-8">{t('You May Also Like')}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-10">
               {recommended.map(p => (
                 <ProductCard key={p.id} product={p} />

@@ -16,6 +16,7 @@ export default function Loader({ onDone }: { onDone: () => void }) {
 
   return (
     <div
+      aria-hidden="true"
       className={`fixed inset-0 z-[100] bg-navy flex flex-col items-center justify-center transition-opacity duration-500 ${
         phase === 'exit' ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}

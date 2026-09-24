@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import { logError } from '../../lib/sentry';
 import AdminLayout from './AdminLayout';
+import { formatEGP } from '../../lib/format';
 
 interface OrderRow {
   id: string;
@@ -82,7 +83,7 @@ export default function AdminOrders() {
                 <tr key={o.id}>
                   <td className="px-4 py-3 font-medium">{o.order_number}</td>
                   <td className="px-4 py-3 text-navy/70">{o.email}</td>
-                  <td className="px-4 py-3">EGP {o.total.toLocaleString()}</td>
+                  <td className="px-4 py-3">{formatEGP(o.total)}</td>
                   <td className="px-4 py-3 capitalize text-navy/70">{o.payment_status}</td>
                   <td className="px-4 py-3">
                     <select

@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import { logError } from '../../lib/sentry';
 import AdminLayout from './AdminLayout';
+import { formatEGP } from '../../lib/format';
 
 interface Stats {
   totalRevenue: number;
@@ -42,7 +43,7 @@ export default function Dashboard() {
       <div className="grid sm:grid-cols-3 gap-5 mb-10" data-testid="admin-dashboard">
         <div className="border border-navy/10 p-6" data-testid="total-revenue-card">
           <p className="nv-eyebrow text-xs text-navy/50 mb-2">Total Revenue</p>
-          <p className="text-3xl font-semibold">EGP {stats.totalRevenue.toLocaleString()}</p>
+          <p className="text-3xl font-semibold">{formatEGP(stats.totalRevenue)}</p>
         </div>
         <div className="border border-navy/10 p-6" data-testid="total-orders-card">
           <p className="nv-eyebrow text-xs text-navy/50 mb-2">Total Orders</p>
@@ -65,7 +66,7 @@ export default function Dashboard() {
                 <li key={i} className="flex justify-between px-4 py-3 text-sm">
                   <span>{o.order_number ?? '—'}</span>
                   <span className="text-navy/50 capitalize">{o.status}</span>
-                  <span>EGP {o.total.toLocaleString()}</span>
+                  <span>{formatEGP(o.total)}</span>
                 </li>
               ))}
             </ul>

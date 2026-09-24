@@ -11,10 +11,10 @@ export default {
         ink: '#000000',
         paper: '#FFFFFF',
         // Semantic colors for errors, success, warnings
-        'error': '#DC2626',
-        'success': '#16A34A',
-        'warning': '#EA580C',
-        'info': '#2563EB',
+        error: '#DC2626',
+        success: '#16A34A',
+        warning: '#EA580C',
+        info: '#2563EB',
       },
       fontFamily: {
         display: ['"Anton"', 'sans-serif'],
@@ -59,7 +59,7 @@ export default {
             'transition-duration': '0.01ms !important',
           },
         },
-      })
+      });
     },
   ],
-}
+};

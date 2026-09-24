@@ -5,6 +5,7 @@ import type { Product } from '../types';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import Button from './Button';
+import { formatEGP } from '../lib/format';
 
 interface ComparisonModalProps {
   products: Product[];
@@ -123,12 +124,10 @@ export default function ComparisonModal({
                   </th>
                   {products.map(product => (
                     <td key={`${product.id}-price`} className="p-3 md:p-4 text-center w-1/3">
-                      <span className="font-bold text-navy">
-                        EGP {product.price.toLocaleString()}
-                      </span>
+                      <span className="font-bold text-navy">{formatEGP(product.price)}</span>
                       {product.compareAtPrice && (
                         <div className="text-xs text-navy/60 line-through">
-                          EGP {product.compareAtPrice.toLocaleString()}
+                          {formatEGP(product.compareAtPrice)}
                         </div>
                       )}
                     </td>

@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Menu, Search, ShoppingBag, User, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useI18n } from '../lib/i18n';
 
 const links = [
   { to: '/shop', label: 'Shop' },
@@ -17,6 +18,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { count, openCart } = useCart();
   const { user } = useAuth();
+  const { locale, setLocale, t } = useI18n();
   const location = useLocation();
   const isHome = location.pathname === '/';
 
@@ -40,7 +42,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
         href="#main"
         className="absolute left-0 top-0 z-[100] -translate-x-full px-4 py-2 bg-white text-navy nv-eyebrow focus:translate-x-0"
       >
-        Skip to main content
+        {t('Skip to main content')}
       </a>
       <header
         className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
@@ -75,14 +77,23 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
                     }`
                   }
                 >
-                  {l.label}
+                  {t(l.label)}
                 </NavLink>
               ))}
             </nav>
 
             <div className="flex items-center gap-2 sm:gap-3">
               <button
-                aria-label="Search"
+                type="button"
+                data-testid="lang-toggle"
+                aria-label={locale === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
+                onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
+                className="hidden sm:flex h-10 min-w-[2.5rem] items-center justify-center px-2 text-xs font-semibold tracking-wide hover:bg-mist rounded transition-colors border border-white/20 text-white"
+              >
+                {locale === 'ar' ? 'EN' : 'ع'}
+              </button>
+              <button
+                aria-label={t('Search')}
                 data-testid="search-button"
                 onClick={onSearch}
                 className="w-10 h-10 flex items-center justify-center hover:bg-mist rounded transition-colors"
@@ -91,7 +102,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
               </button>
               <Link
                 to={user ? '/account' : '/login'}
-                aria-label="Account"
+                aria-label={t('Account')}
                 data-testid="account-link"
                 className="flex w-10 h-10 items-center justify-center hover:bg-mist rounded transition-colors"
               >
@@ -114,7 +125,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
                 )}
               </button>
               <button
-                aria-label="Menu"
+                aria-label={t('Menu')}
                 data-testid="menu-button"
                 onClick={() => setMobileOpen(true)}
                 className="lg:hidden w-11 h-11 flex items-center justify-center hover:bg-mist rounded transition-colors"
@@ -152,7 +163,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
             />
             <span className="nv-heading text-2xl hidden">NERVE</span>
           </div>
-          <button aria-label="Close menu" onClick={() => setMobileOpen(false)} className="p-2">
+          <button aria-label={t('Close menu')} onClick={() => setMobileOpen(false)} className="p-2">
             <X size={24} />
           </button>
         </div>
@@ -171,11 +182,19 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
                 }),
               }}
             >
-              {l.label}
+              {t(l.label)}
             </Link>
           ))}
         </nav>
-        <div className="px-6 mt-4 flex gap-6 nv-eyebrow text-silver">
+        <div className="px-6 mt-4 flex flex-wrap items-center gap-4 nv-eyebrow text-silver">
+          <button
+            type="button"
+            data-testid="lang-toggle-mobile"
+            onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
+            className="px-3 py-1.5 border border-white/25 rounded hover:text-white transition-colors"
+          >
+            {locale === 'ar' ? 'English' : 'العربية'}
+          </button>
           <a
             href="https://www.instagram.com/gotthenerve58/"
             target="_blank"

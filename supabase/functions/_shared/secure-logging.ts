@@ -38,10 +38,7 @@ export function redactSecrets(text: string | unknown): string {
   // The pattern replaces token-like sequences (20+ alphanumeric chars)
   SECRETS_TO_REDACT.forEach(() => {
     // Match environment variable values (rough pattern)
-    result = result.replace(
-      new RegExp(`(Bearer\\s+)?[A-Za-z0-9_-]{20,}`, 'g'),
-      '[REDACTED]'
-    );
+    result = result.replace(new RegExp(`(Bearer\\s+)?[A-Za-z0-9_-]{20,}`, 'g'), '[REDACTED]');
   });
   return result;
 }

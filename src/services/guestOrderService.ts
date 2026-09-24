@@ -68,19 +68,29 @@ export const guestOrderService = {
   },
 
   /**
-   * Request a verification link. Currently a no-op placeholder — the order
-   * confirmation email sent by create-order already contains tracking info.
-   * Kept for UI compat.
+   * Re-send the tracking/verification link via the resend-guest-verification
+   * edge function (rotates the token server-side and emails a fresh link).
+   * Generic success response — does not reveal whether the order exists.
    */
   async sendVerificationLink(email: string, orderNumber: string, verificationToken?: string) {
+    void verificationToken;
     try {
-      // Re-use lookup to verify the order exists before claiming to send a link.
-      const { order, error } = await this.lookup(email, orderNumber, verificationToken);
-      if (error || !order) {
-        return { success: false, error: 'Order not found' };
+      const response = await fetch(getEndpoint('RESEND_GUEST_VERIFICATION'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          order_number: orderNumber.trim().toUpperCase(),
+          email: email.trim().toLowerCase(),
+        }),
+      });
+
+      if (!response.ok && response.status !== 429) {
+        return { success: false, error: 'Please try again later.' };
       }
-      // In production, a dedicated edge function would email the link.
-      // For now, return success without sending — the confirmation email is the source of truth.
       return { success: true, error: null };
     } catch (err) {
       logError('guestOrderService.sendVerificationLink failed:', err);

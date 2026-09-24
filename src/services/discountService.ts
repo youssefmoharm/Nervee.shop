@@ -6,6 +6,7 @@ export interface DiscountCode {
   code: string;
   discount_type: 'percentage' | 'fixed';
   discount_value: number;
+  discount_amount?: number;
   minimum_purchase: number | null;
   usage_limit: number | null;
   usage_count: number;
@@ -20,9 +21,34 @@ export interface DiscountResult {
   error?: string;
 }
 
+interface DiscountRow {
+  valid: boolean;
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number;
+  discount_amount?: number;
+  minimum_purchase?: number | null;
+  message?: string | null;
+}
+
+function toDiscount(code: string, row: DiscountRow): DiscountCode {
+  return {
+    id: '',
+    code,
+    discount_type: row.discount_type,
+    discount_value: row.discount_value,
+    discount_amount: row.discount_amount,
+    minimum_purchase: row.minimum_purchase ?? null,
+    usage_limit: null,
+    usage_count: 0,
+    valid_from: null,
+    valid_until: null,
+    is_active: true,
+  };
+}
+
 export const discountService = {
   /**
-   * Validate and apply a discount code
+   * Validate and apply a discount code via the validate_discount_code RPC.
    */
   async validate(code: string, subtotal: number): Promise<DiscountResult> {
     if (!isSupabaseConfigured) {
@@ -34,42 +60,25 @@ export const discountService = {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('discount_codes')
-        .select('*')
-        .eq('code', code.toUpperCase().trim())
-        .single();
+      const { data, error } = await supabase.rpc('validate_discount_code', {
+        p_code: code.toUpperCase().trim(),
+        p_subtotal: Math.round(subtotal),
+      });
 
-      if (error || !data) {
-        return { valid: false, error: 'Invalid discount code' };
+      if (error) {
+        logError('discountService.validate rpc failed:', error);
+        return { valid: false, error: 'Could not validate the discount code. Please try again.' };
       }
 
-      const discount = data as DiscountCode;
-
-      // Check if code is active
-      if (!discount.is_active) {
-        return { valid: false, error: 'This discount code is no longer active' };
-      }
-
-      // Check if minimum purchase is met
-      if (discount.minimum_purchase && subtotal < discount.minimum_purchase) {
+      const row = (Array.isArray(data) ? data[0] : data) as DiscountRow | undefined;
+      if (!row || row.valid !== true) {
         return {
           valid: false,
-          error: `Minimum purchase of ${discount.minimum_purchase / 100} EGP required`,
+          error: row?.message?.trim() || 'Invalid discount code',
         };
       }
 
-      // Check if code has expired
-      if (discount.valid_until && new Date(discount.valid_until) < new Date()) {
-        return { valid: false, error: 'This discount code has expired' };
-      }
-
-      // Check if code has usage limit and limit reached
-      if (discount.usage_limit && discount.usage_count >= discount.usage_limit) {
-        return { valid: false, error: 'This discount code has been used too many times' };
-      }
-
-      return { valid: true, discount };
+      return { valid: true, discount: toDiscount(code.toUpperCase().trim(), row) };
     } catch (err) {
       logError('discountService.validate failed:', err);
       return { valid: false, error: 'Network error. Please try again.' };
@@ -81,10 +90,10 @@ export const discountService = {
    */
   calculateDiscount(discount: DiscountCode, subtotal: number): number {
     if (discount.discount_type === 'percentage') {
-      return (subtotal * discount.discount_value) / 100;
+      return Math.round((subtotal * discount.discount_value) / 100);
     }
-    // Fixed discount
-    return discount.discount_value;
+    // Fixed discount, never exceed subtotal
+    return Math.min(discount.discount_value, subtotal);
   },
 
   /**

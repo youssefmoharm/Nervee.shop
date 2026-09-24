@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Heart, Loader2, Minus, Plus, RotateCcw, Ruler, Truck, Star } from 'lucide-react';
+import { Heart, Loader2, Minus, Plus, RotateCcw, Ruler, Truck, Star, Share2 } from 'lucide-react';
 import type { Product, Size, ProductReview } from '../types';
 import { productService } from '../services/productService';
 import { backInStockService } from '../services/backInStockService';
@@ -19,8 +19,12 @@ import CompleteTheLook from '../components/CompleteTheLook';
 import PersonalizedRecommendations from '../components/PersonalizedRecommendations';
 import Skeleton from '../components/Skeleton';
 import OptimizedImage from '../components/OptimizedImage';
+import { FREE_SHIPPING_THRESHOLD } from '../lib/storeConfig';
+import { formatEGP } from '../lib/format';
 
 const STORE_URL = import.meta.env.VITE_APP_URL || 'https://www.nerveey.shop';
+
+type PendingPhoto = { file: File; preview: string };
 
 type Tab = 'description' | 'size' | 'shipping';
 
@@ -52,10 +56,25 @@ export default function ProductDetail() {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewForm, setReviewForm] = useState({ rating: 5, title: '', comment: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
-  const [reviewPhotos, setReviewPhotos] = useState<string[]>([]);
+  const [reviewPhotos, setReviewPhotos] = useState<PendingPhoto[]>([]);
   const [reviewSort, setReviewSort] = useState<'newest' | 'helpful' | 'rating'>('newest');
   const [reviewFilter, setReviewFilter] = useState<'all' | 'verified' | 'photos'>('all');
   const [helpfulVotes, setHelpfulVotes] = useState<Record<string, boolean>>({});
+  const [shareOpen, setShareOpen] = useState(false);
+
+  const handleShare = async () => {
+    const url = product ? `${STORE_URL}/product/${product.slug}` : window.location.href;
+    const text = product ? `${product.name} | NERVE` : 'NERVE';
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: text, text, url });
+        return;
+      } catch {
+        /* user cancelled or share failed — fall through to menu */
+      }
+    }
+    setShareOpen(v => !v);
+  };
 
   useSEO({
     title: product ? `${product.name} | NERVE` : 'NERVE — Cool but Chic',
@@ -168,15 +187,22 @@ export default function ProductDetail() {
       }
       setProduct(p);
       ecommerce.viewProduct(p.id, p.name, p.category, p.price);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      addView(p.id, p.category); // addView is stable - no need to add to deps
+      addView(p.id, p.category);
       const rel = await productService.getRelated(p);
       if (mounted) setRelated(rel);
 
       // Load reviews with loading state
       setReviewsLoading(true);
+      setHelpfulVotes({});
       const reviewData = await reviewService.getByProduct(p.id);
-      if (reviewData.reviews) setReviews(reviewData.reviews);
+      if (reviewData.reviews) {
+        const voted: Record<string, boolean> = {};
+        reviewData.reviews.forEach(r => {
+          if (reviewService.hasVoted(p.id, r.id)) voted[r.id] = true;
+        });
+        setHelpfulVotes(voted);
+        setReviews(reviewData.reviews);
+      }
       const statsData = await reviewService.getStats(p.id);
       if (statsData.stats) setReviewStats(statsData.stats);
       setReviewsLoading(false);
@@ -186,6 +212,7 @@ export default function ProductDetail() {
     return () => {
       mounted = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
   useEffect(() => {
@@ -270,21 +297,61 @@ export default function ProductDetail() {
     e.preventDefault();
     if (!user) return;
     setSubmittingReview(true);
+
+    let photoUrls: string[] = [];
+    let uploadFailed = 0;
+    if (reviewPhotos.length > 0) {
+      const upload = await reviewService.uploadPhotos(
+        user.id,
+        reviewPhotos.map(p => p.file),
+      );
+      photoUrls = upload.urls;
+      uploadFailed = upload.failed;
+    }
+
     const result = await reviewService.create({
       productId: product.id,
       rating: reviewForm.rating,
       title: reviewForm.title,
       comment: reviewForm.comment,
+      photos: photoUrls,
     });
     if (result.success) {
-      setReviews([...reviews, result.review!]);
+      setReviews([...reviews, { ...result.review!, photos: photoUrls, helpfulCount: 0 }]);
       setReviewForm({ rating: 5, title: '', comment: '' });
+      reviewPhotos.forEach(p => URL.revokeObjectURL(p.preview));
+      setReviewPhotos([]);
       setShowReviewForm(false);
-      showToast('Review submitted successfully', 'success', 2000);
+      if (uploadFailed > 0) {
+        showToast('Review submitted, but some photos failed to upload.', 'info', 4000);
+      } else {
+        showToast('Review submitted successfully', 'success', 2000);
+      }
     } else {
       showToast(result.error || 'Failed to submit review', 'error', 3000);
     }
     setSubmittingReview(false);
+  };
+
+  const handleHelpfulVote = async (review: ProductReview) => {
+    if (helpfulVotes[review.id] || reviewService.hasVoted(product.id, review.id)) {
+      return;
+    }
+    const result = await reviewService.voteHelpful(product.id, review.id);
+    if (result.error) {
+      showToast(result.error, 'error', 3000);
+      return;
+    }
+    setHelpfulVotes(prev => ({ ...prev, [review.id]: true }));
+    if (typeof result.count === 'number') {
+      setReviews(prev =>
+        prev.map(r => (r.id === review.id ? { ...r, helpfulCount: result.count } : r)),
+      );
+    } else if (result.voted) {
+      setReviews(prev =>
+        prev.map(r => (r.id === review.id ? { ...r, helpfulCount: (r.helpfulCount || 0) + 1 } : r)),
+      );
+    }
   };
 
   const getAverageRating = (reviewList: ProductReview[]) => {
@@ -372,17 +439,19 @@ export default function ProductDetail() {
             )}
             <h1 className="nv-heading text-4xl md:text-5xl">{product.name}</h1>
             <div className="flex items-center gap-3 mt-3">
-              <span className="text-xl font-medium">EGP {product.price.toLocaleString()}</span>
+              <span className="text-xl font-medium">{formatEGP(product.price)}</span>
               {product.compareAtPrice && (
                 <span className="text-lg text-navy/40 line-through">
-                  EGP {product.compareAtPrice.toLocaleString()}
+                  {formatEGP(product.compareAtPrice)}
                 </span>
               )}
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2 text-xs text-navy/70">
               <span className="rounded-full bg-mist px-3 py-1">Secure checkout</span>
-              <span className="rounded-full bg-mist px-3 py-1">Free delivery over EGP 2,000</span>
+              <span className="rounded-full bg-mist px-3 py-1">
+                Free delivery over {formatEGP(FREE_SHIPPING_THRESHOLD)}
+              </span>
               <span className="rounded-full bg-mist px-3 py-1">30-day easy returns</span>
             </div>
 
@@ -552,6 +621,55 @@ export default function ProductDetail() {
               >
                 <Heart size={18} className={wished ? 'fill-navy text-navy' : 'text-navy'} />
               </button>
+              <div className="relative flex-shrink-0">
+                <button
+                  type="button"
+                  aria-label="Share this product"
+                  aria-expanded={shareOpen}
+                  onClick={() => void handleShare()}
+                  className="w-14 h-14 border border-navy/25 flex items-center justify-center hover:border-navy transition-colors"
+                >
+                  <Share2 size={18} />
+                </button>
+                {shareOpen && (
+                  <div className="absolute right-0 top-full mt-2 z-30 w-48 rounded-xl border border-navy/10 bg-white p-2 shadow-lg">
+                    <a
+                      href={`https://wa.me/?text=${encodeURIComponent(
+                        `${product.name} — ${STORE_URL}/product/${product.slug}`,
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block rounded-lg px-3 py-2 text-sm text-navy/80 hover:bg-mist"
+                    >
+                      WhatsApp
+                    </a>
+                    <a
+                      href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                        `${STORE_URL}/product/${product.slug}`,
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block rounded-lg px-3 py-2 text-sm text-navy/80 hover:bg-mist"
+                    >
+                      Facebook
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void navigator.clipboard
+                          ?.writeText(`${STORE_URL}/product/${product.slug}`)
+                          .then(() => {
+                            showToast('Link copied', 'success', 2000);
+                            setShareOpen(false);
+                          });
+                      }}
+                      className="block w-full rounded-lg px-3 py-2 text-left text-sm text-navy/80 hover:bg-mist"
+                    >
+                      Copy link
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
             <button
               onClick={handleBuyNow}
@@ -725,19 +843,13 @@ export default function ProductDetail() {
                             accept="image/*"
                             onChange={e => {
                               const files = Array.from(e.currentTarget.files || []);
-                              const limitedFiles = files.slice(0, 3 - reviewPhotos.length);
-                              Promise.all(
-                                limitedFiles.map(
-                                  file =>
-                                    new Promise<string>(resolve => {
-                                      const reader = new FileReader();
-                                      reader.onload = () => resolve(reader.result as string);
-                                      reader.readAsDataURL(file);
-                                    }),
-                                ),
-                              ).then(newPhotos => {
-                                setReviewPhotos(prev => [...prev, ...newPhotos].slice(0, 3));
-                              });
+                              const limited = files.slice(0, 3 - reviewPhotos.length);
+                              const next = limited.map(file => ({
+                                file,
+                                preview: URL.createObjectURL(file),
+                              }));
+                              setReviewPhotos(prev => [...prev, ...next].slice(0, 3));
+                              e.currentTarget.value = '';
                             }}
                             className="w-full text-xs"
                             disabled={reviewPhotos.length >= 3}
@@ -750,15 +862,16 @@ export default function ProductDetail() {
                                   className="relative w-16 h-16 rounded-lg overflow-hidden"
                                 >
                                   <img
-                                    src={photo}
+                                    src={photo.preview}
                                     alt={`Uploaded ${i + 1}`}
                                     className="w-full h-full object-cover"
                                   />
                                   <button
                                     type="button"
-                                    onClick={() =>
-                                      setReviewPhotos(prev => prev.filter((_, idx) => idx !== i))
-                                    }
+                                    onClick={() => {
+                                      URL.revokeObjectURL(photo.preview);
+                                      setReviewPhotos(prev => prev.filter((_, idx) => idx !== i));
+                                    }}
                                     className="absolute top-0 right-0 p-1 bg-red-600 text-white rounded-bl text-xs"
                                   >
                                     ×
@@ -884,21 +997,15 @@ export default function ProductDetail() {
                           {review.customerName || 'Anonymous'}
                         </p>
                         <button
-                          onClick={() => {
-                            const isHelpful = helpfulVotes[review.id];
-                            setHelpfulVotes(prev => ({
-                              ...prev,
-                              [review.id]: !isHelpful,
-                            }));
-                          }}
+                          onClick={() => handleHelpfulVote(review)}
+                          disabled={!!helpfulVotes[review.id]}
                           className={`px-2 py-1 rounded transition-colors ${
                             helpfulVotes[review.id]
-                              ? 'bg-blue-100 text-blue-600'
+                              ? 'bg-blue-100 text-blue-600 cursor-default'
                               : 'bg-mist text-navy hover:bg-mist/75'
                           }`}
                         >
-                          👍 {(review.helpfulCount || 0) + (helpfulVotes[review.id] ? 1 : 0)}{' '}
-                          Helpful
+                          👍 {review.helpfulCount || 0} Helpful
                         </button>
                       </div>
                     </div>

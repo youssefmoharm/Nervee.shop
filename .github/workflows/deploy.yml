@@ -7,6 +7,14 @@ on:
     types: [completed]
     branches: [main]
 
+permissions:
+  contents: read
+
+# Never cancel a production deploy mid-flight; one deploy per head branch at a time.
+concurrency:
+  group: deploy-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -19,6 +27,10 @@ jobs:
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Check out the exact commit CI validated (workflow_run checks out
+          # the default branch HEAD otherwise, which may have moved on).
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Verify Vercel secrets are configured
         run: |
@@ -28,16 +40,15 @@ jobs:
           fi
 
       - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v20
+        uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel-args: '--prod'
-
-# NOTE: Vercel's REMOTE BUILD only reads env vars from the Vercel project
+# NOTE: Vercel's REMOTE BUILD reads env vars from the Vercel project
 # dashboard (Settings → Environment Variables → Production). Required vars:
 #   VITE_SUPABASE_URL       = https://gfmxvvjqlhrnmidutjwx.supabase.co
 #   your_removed_credential_here  = your_removed_credential_here
-# The production build will intentionally FAIL if these are missing
-# (see src/lib/supabase.ts) — no silent mock fallback in production.
+# These must be configured manually in Vercel before deploying — Vercel does
+# not read them from this repository or from .env files.

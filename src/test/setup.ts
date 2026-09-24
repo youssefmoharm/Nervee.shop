@@ -1,7 +1,7 @@
-import '@testing-library/jest-dom'
-import { beforeAll, afterAll, afterEach } from 'vitest'
-import { setupServer } from 'msw/node'
-import { http, HttpResponse } from 'msw'
+import '@testing-library/jest-dom';
+import { beforeAll, afterAll, afterEach } from 'vitest';
+import { setupServer } from 'msw/node';
+import { http, HttpResponse } from 'msw';
 
 // Mock Supabase for testing
 const mockSupabaseHandlers = [
@@ -13,42 +13,42 @@ const mockSupabaseHandlers = [
         id: 'test-user-id',
         email: 'test@example.com',
       },
-    })
+    });
   }),
 
   // Mock database queries
   http.get('*/rest/v1/*', ({ request }) => {
-    const url = new URL(request.url)
-    const table = url.pathname.split('/').pop()
-    
+    const url = new URL(request.url);
+    const table = url.pathname.split('/').pop();
+
     // Return appropriate mock data based on table
     switch (table) {
       case 'products':
-        return HttpResponse.json([])
+        return HttpResponse.json([]);
       case 'orders':
-        return HttpResponse.json([])
+        return HttpResponse.json([]);
       case 'customers':
-        return HttpResponse.json([])
+        return HttpResponse.json([]);
       default:
-        return HttpResponse.json([])
+        return HttpResponse.json([]);
     }
   }),
-]
+];
 
-export const server = setupServer(...mockSupabaseHandlers)
+export const server = setupServer(...mockSupabaseHandlers);
 
 beforeAll(() => {
-  server.listen({ onUnhandledRequest: 'error' })
-})
+  server.listen({ onUnhandledRequest: 'error' });
+});
 
 afterEach(() => {
-  server.resetHandlers()
-})
+  server.resetHandlers();
+});
 
 afterAll(() => {
-  server.close()
-})
+  server.close();
+});
 
 // Mock environment variables
-process.env.VITE_SUPABASE_URL = 'https://test.supabase.co'
-process.env.your_removed_credential_here = 'test-anon-key'
+process.env.VITE_SUPABASE_URL = 'https://test.supabase.co';
+process.env.your_removed_credential_here = 'test-anon-key';

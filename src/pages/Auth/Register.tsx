@@ -4,9 +4,11 @@ import { Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import PasswordStrengthIndicator from '../../components/PasswordStrengthIndicator';
 import { useSEO } from '../../hooks/useSEO';
+import { useI18n } from '../../lib/i18n';
 
 export default function Register() {
   const { signUp } = useAuth();
+  const { t } = useI18n();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -79,13 +81,13 @@ export default function Register() {
   if (done) {
     return (
       <div className="bg-white text-navy min-h-screen pt-32 pb-24 px-5 md:px-8 text-center">
-        <h1 className="nv-heading text-4xl mb-4">Check Your Email</h1>
+        <h1 className="nv-heading text-4xl mb-4">{t('Check Your Email')}</h1>
         <p className="text-navy/60 max-w-md mx-auto">
           We sent a confirmation link to <strong>{email}</strong>. Verify your email, then sign in
           to your account.
         </p>
         <Link to="/login" className="inline-block mt-8 nv-eyebrow underline">
-          Back to Sign In
+          {t('Back to Sign In')}
         </Link>
       </div>
     );
@@ -94,13 +96,15 @@ export default function Register() {
   return (
     <div className="bg-white text-navy min-h-screen pt-32 pb-24 px-5 md:px-8">
       <div className="mx-auto max-w-md">
-        <h1 className="nv-heading text-5xl mb-2">Create Account</h1>
+        <h1 className="nv-heading text-5xl mb-2">{t('Create Account')}</h1>
         <p className="text-navy/60 mb-8">Join NERVE for faster checkout and order tracking.</p>
 
         <form onSubmit={onSubmit} className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
-              <span className="text-xs font-medium text-navy/60 mb-1.5 block">First Name</span>
+              <span className="text-xs font-medium text-navy/60 mb-1.5 block">
+                {t('First Name')}
+              </span>
               <input
                 required
                 data-testid="register-firstName-input"
@@ -110,7 +114,9 @@ export default function Register() {
               />
             </label>
             <label className="block">
-              <span className="text-xs font-medium text-navy/60 mb-1.5 block">Last Name</span>
+              <span className="text-xs font-medium text-navy/60 mb-1.5 block">
+                {t('Last Name')}
+              </span>
               <input
                 required
                 data-testid="register-lastName-input"
@@ -121,7 +127,7 @@ export default function Register() {
             </label>
           </div>
           <label className="block">
-            <span className="text-xs font-medium text-navy/60 mb-1.5 block">Email</span>
+            <span className="text-xs font-medium text-navy/60 mb-1.5 block">{t('Email')}</span>
             <input
               type="email"
               required
@@ -132,7 +138,7 @@ export default function Register() {
             />
           </label>
           <label className="block">
-            <span className="text-xs font-medium text-navy/60 mb-1.5 block">Password</span>
+            <span className="text-xs font-medium text-navy/60 mb-1.5 block">{t('Password')}</span>
             <input
               id="register-password"
               data-testid="register-password-input"
@@ -154,7 +160,9 @@ export default function Register() {
           </label>
 
           <label className="block">
-            <span className="text-xs font-medium text-navy/60 mb-1.5 block">Confirm Password</span>
+            <span className="text-xs font-medium text-navy/60 mb-1.5 block">
+              {t('Confirm Password')}
+            </span>
             <input
               id="register-confirm-password"
               data-testid="register-confirm-password-input"
@@ -169,7 +177,9 @@ export default function Register() {
 
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
-              <span className="text-xs font-medium text-navy/60 mb-1.5 block">Date of Birth</span>
+              <span className="text-xs font-medium text-navy/60 mb-1.5 block">
+                {t('Date of Birth')}
+              </span>
               <input
                 id="register-dob"
                 type="date"
@@ -181,7 +191,7 @@ export default function Register() {
             </label>
 
             <label className="block">
-              <span className="text-xs font-medium text-navy/60 mb-1.5 block">Gender</span>
+              <span className="text-xs font-medium text-navy/60 mb-1.5 block">{t('Gender')}</span>
               <select
                 id="register-gender"
                 required
@@ -230,14 +240,14 @@ export default function Register() {
             disabled={loading}
             className="w-full bg-navy text-white nv-eyebrow py-4 hover:bg-navy-2 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
           >
-            {loading ? <Loader2 size={16} className="animate-spin" /> : 'Create Account'}
+            {loading ? <Loader2 size={16} className="animate-spin" /> : t('Create Account')}
           </button>
         </form>
 
         <p className="mt-6 text-sm text-navy/60">
           Already have an account?{' '}
           <Link to="/login" className="underline hover:text-navy">
-            Sign in
+            {t('Sign in')}
           </Link>
         </p>
       </div>

@@ -17,7 +17,7 @@ This guide walks you through setting up the NERVE e-commerce application from sc
 
 ## Prerequisites
 
-- Node.js 18+ and npm
+- Node.js `>=22.12.0` (`.nvmrc` pins the tested version) and npm
 - A Supabase account (free tier works)
 
 ---
@@ -53,7 +53,7 @@ This guide walks you through setting up the NERVE e-commerce application from sc
      - 12 products
      - 27 product colors
      - 66 inventory records
-     - 3 discount codes
+      - 5 discount codes
    ```
 
 ### 3b. Run the Follow-up Migrations
@@ -144,6 +144,7 @@ Run these next, in order, the same way (new query in SQL Editor, paste, Run):
 ### 3. Folder Structure
 
 Images should be organized as:
+
 ```
 product-images/
 ├── products/
@@ -156,6 +157,7 @@ product-images/
 ```
 
 Example:
+
 ```
 product-images/products/nerve-core-tee/navy/01-front.jpg
 product-images/products/nerve-core-tee/navy/02-back.jpg
@@ -192,12 +194,14 @@ Until the admin dashboard is complete, upload images manually:
 ### 2. Enable OAuth (Optional)
 
 For Google Sign-In:
+
 1. Go to **Authentication** → **Providers**
 2. Enable **Google**
 3. Follow Supabase's guide to create OAuth credentials in Google Cloud Console
 4. Add credentials to Supabase
 
 For Apple Sign-In:
+
 1. Enable **Apple** provider
 2. Configure Apple Developer credentials (requires Apple Developer account)
 
@@ -206,7 +210,7 @@ For Apple Sign-In:
 1. Go to **Authentication** → **URL Configuration**
 2. Add these redirect URLs:
    - `http://localhost:5173/**` (development)
-   - `https://yourdomain.com/**` (production)
+   - `https://www.nerveey.shop/**` (production)
 
 ### 4. Create First Admin User
 
@@ -261,13 +265,18 @@ you don't set those.
    supabase functions deploy send-email
    supabase secrets set RESEND_API_KEY=your_resend_api_key
    supabase secrets set RESEND_FROM_EMAIL="NERVE <orders@yourdomain.com>"
-   supabase secrets set STORE_URL=https://your-production-domain.com
+   supabase secrets set STORE_URL=https://www.nerveey.shop
    ```
 5. Test: place a Cash on Delivery order and confirm the order-received email
    arrives. If `RESEND_API_KEY` isn't set, emails are silently skipped (logged
    to the function's logs) rather than blocking checkout — so the store
    still works end-to-end without email configured, you just won't get
    receipts until you add the key.
+
+Scheduled email jobs are registered by pg_cron in
+`supabase/migrations/032_email_automation_cron_jobs.sql`:
+back-in-stock notifications run **hourly**, abandoned-cart emails run
+**daily at 10:00 UTC** (plus the weekly cleanup jobs from migration 007).
 
 ---
 
@@ -295,6 +304,7 @@ VITE_ENV=development
 ### 3. Secure Your Keys
 
 **IMPORTANT:**
+
 - Never commit `.env` to version control (already in `.gitignore`)
 - Use different keys for development vs. production
 - Rotate keys if they're ever exposed
@@ -309,7 +319,6 @@ This project runs CI on GitHub Actions. Add the following repository secrets in 
 - Any production-only env vars used by Edge Functions should be added to your hosting provider's secret store (Supabase secrets for Edge Functions).
 
 In CI the workflow expects Playwright browsers to be installable via `npx playwright install --with-deps`.
-
 
 ## Local Development
 
@@ -330,6 +339,7 @@ The app will open at `http://localhost:5173`
 ### 3. Verify Setup
 
 Check that:
+
 - Products load on the homepage
 - You can view product details
 - Collections page works
@@ -353,11 +363,12 @@ Check that:
 ### 4. Development Workflow
 
 ***REMOVED***
-# Type check
-npm run build
-
-# Check for issues
-# (No test command yet — add Vitest if needed)
+npm run typecheck       # TypeScript, no emit
+npm run lint            # ESLint
+npm run format:check    # Prettier
+npm run test -- --run   # Vitest unit/component tests (single run)
+npm run test:e2e        # Playwright E2E (@live specs excluded by default)
+npm run ci              # typecheck + lint + unit tests + build
 ```
 
 ---
@@ -379,6 +390,7 @@ vercel
 ```
 
 Follow prompts to:
+
 - Link to your Git repository
 - Select framework preset: **Vite**
 - Set build command: `npm run build`
@@ -387,6 +399,7 @@ Follow prompts to:
 #### 3. Add Environment Variables
 
 In Vercel dashboard:
+
 1. Go to **Project Settings** → **Environment Variables**
 2. Add all variables from `.env`:
    - `VITE_SUPABASE_URL`
@@ -404,7 +417,7 @@ vercel --prod
 #### 5. Configure Custom Domain
 
 1. In Vercel dashboard, go to **Domains**
-2. Add your custom domain (e.g., `nerve-store.com`)
+2. Add your custom domain (e.g., `www.nerveey.shop`)
 3. Follow DNS configuration instructions
 4. SSL certificate will be provisioned automatically
 
@@ -423,28 +436,34 @@ vercel --prod
 After basic setup is complete:
 
 ### Phase 1: Image Migration
+
 - [ ] Photograph all products (professional campaign shots)
 - [ ] Process images (resize, optimize, color-correct)
 - [ ] Upload to Supabase Storage following folder convention
 - [ ] Verify images load correctly on site
 
 ### Phase 2: Admin Dashboard
+
 - [ ] Build admin login page (`/admin/login`)
 - [ ] Create product management UI (CRUD)
 - [ ] Add inventory management
 - [ ] Build order fulfillment interface
 - [ ] Add discount code manager
 
-### Phase 3: Email Setup\s+- [ ] Test order confirmation emails
+### Phase 3: Email Setup
+
+- [ ] Test order confirmation emails
 - [ ] Send order confirmation emails
 
 ### Phase 4: Customer Accounts
+
 - [ ] Build account page (`/account`)
 - [ ] Show order history
 - [ ] Manage saved addresses
 - [ ] Sync cart/wishlist for logged-in users
 
 ### Phase 5: Analytics & SEO
+
 - [ ] Add Google Analytics 4
 - [ ] Add Meta Pixel
 - [ ] Generate dynamic meta tags
@@ -452,6 +471,7 @@ After basic setup is complete:
 - [ ] Add structured data (Product schema)
 
 ### Phase 6: Testing & Launch
+
 - [ ] Load test with expected traffic
 - [ ] Security audit
 - [ ] Accessibility audit (WCAG 2.1 AA)
@@ -468,6 +488,7 @@ After basic setup is complete:
 **Problem:** Seeing placeholder images instead of real ones
 
 **Solution:**
+
 1. Check Supabase Storage bucket is public
 2. Verify images are uploaded with correct naming convention
 3. Check browser console for 404 errors
@@ -478,6 +499,7 @@ After basic setup is complete:
 **Problem:** Can't sign up or log in
 
 **Solution:**
+
 1. Check email provider is enabled in Supabase
 2. Verify redirect URLs are configured
 3. Check browser console for CORS errors
@@ -488,6 +510,7 @@ After basic setup is complete:
 **Problem:** Products not loading, "Network error" messages
 
 **Solution:**
+
 1. Verify `VITE_SUPABASE_URL` is set correctly
 2. Check Supabase project is not paused (free tier pauses after 7 days inactivity)
 3. Restart dev server after changing `.env`
@@ -498,6 +521,7 @@ After basic setup is complete:
 **Problem:** Payment form not submitting, errors on checkout
 
 **Solution:**
+
 1. Check email configuration (COD orders are confirmed by email — if
    `RESEND_API_KEY` is unset, receipts are silently skipped and checkout
    can look "broken")
@@ -509,6 +533,7 @@ After basic setup is complete:
 ## Support
 
 For issues specific to:
+
 - **Supabase:** [Supabase Docs](https://supabase.com/docs) or [Discord](https://discord.supabase.com)
 - **Resend:** [Resend Docs](https://resend.com/docs) or support in the dashboard
 - **NERVE App:** Check GitHub issues or contact the development team
@@ -538,17 +563,3 @@ Before going live:
 ## License
 
 Proprietary - NERVE Concept Store © 2026
-
-
-
-
-
-
-
-
-
-
-
-
-
-

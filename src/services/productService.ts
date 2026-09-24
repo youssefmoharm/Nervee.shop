@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { logError } from '../lib/sentry';
-import { ProductRow, ColorRow, InventoryRow, CollectionRow } from './types';
+import { containsArabic } from '../lib/format';
+import { ProductRow, ColorRow, AvailabilityRow, CollectionRow } from './types';
 import {
   products as mockProducts,
   collections as mockCollections,
@@ -15,8 +16,10 @@ import type {
   Product,
   ProductColor,
   ProductVariantAvailability,
+  Size,
   SortOption,
   Category,
+  Badge,
   Collection,
 } from '../types';
 
@@ -34,22 +37,30 @@ interface ProductColorRow extends ColorRow {
   // Extends ColorRow which has all fields
 }
 
+const SIZE_ORDER: Size[] = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+
+function sortSizes(sizes: ProductVariantAvailability[]): ProductVariantAvailability[] {
+  return [...sizes].sort((a, b) => SIZE_ORDER.indexOf(a.size) - SIZE_ORDER.indexOf(b.size));
+}
+
 /**
- * Transform Supabase row to Product type
+ * Transform Supabase row to Product type (without sizes — filled by attachAvailability)
  */
 function transformProduct(row: ProductRow): Product {
   return {
     id: row.id,
     slug: row.slug,
     name: row.name,
-    category: row.category as any, // Category is constrained to enum; trust Supabase data
+    // Category is a DB enum; trust Supabase data over the static union
+    category: row.category as Category,
     collectionId: row.collection_id || '',
     price: row.price,
     compareAtPrice: row.compare_at_price || undefined,
     currency: (row.currency || 'EGP') as 'EGP',
     colors: row.product_colors || [],
-    sizes: (row.product_inventory || []).map(transformInventory),
-    badge: (row.badge || 'default') as any, // Badge type is constrained; trust data
+    sizes: [],
+    // Badge type is constrained; trust data
+    badge: (row.badge as Badge | null) ?? null,
     description: row.description,
     material: row.material || '',
     care: row.care || [],
@@ -60,6 +71,10 @@ function transformProduct(row: ProductRow): Product {
     isBestSeller: row.is_best_seller || false,
     createdAt: row.created_at,
     fitNotes: row.fit_notes || undefined,
+    lowStockThreshold:
+      typeof (row as { low_stock_threshold?: number | null }).low_stock_threshold === 'number'
+        ? ((row as { low_stock_threshold?: number | null }).low_stock_threshold as number)
+        : undefined,
   };
 }
 
@@ -75,14 +90,77 @@ function transformColor(row: ColorRow): ProductColor {
   };
 }
 
-/**
- * Transform inventory row to ProductVariantAvailability type
- */
-function transformInventory(row: InventoryRow): ProductVariantAvailability {
+function transformAvailability(row: AvailabilityRow): ProductVariantAvailability {
   return {
-    size: row.size as any, // Size is constrained to enum; trust Supabase data
-    inStock: row.in_stock && row.stock_quantity > 0,
+    size: row.size as Size,
+    inStock: !!row.in_stock,
   };
+}
+
+/**
+ * Attach sizes to products from the product_availability view and low-stock
+ * flags from the product_stock_status view (security definer — anon-safe).
+ * On failure, products keep empty sizes (render as unavailable) rather than
+ * embedding product_inventory directly.
+ */
+async function attachAvailability(products: Product[]): Promise<Product[]> {
+  if (products.length === 0) return products;
+
+  try {
+    const ids = products.map(p => p.id);
+    const [{ data: avail, error }, { data: stockRows, error: stockError }] = await Promise.all([
+      supabase
+        .from('product_availability')
+        .select('product_id, size, in_stock')
+        .in('product_id', ids),
+      supabase
+        .from('product_stock_status')
+        .select('product_id, low_stock_threshold, is_low_stock')
+        .in('product_id', ids),
+    ]);
+
+    if (error || !avail) {
+      if (error) logError('product_availability query failed:', error);
+      return products;
+    }
+
+    const byProduct = new Map<string, ProductVariantAvailability[]>();
+    (avail as AvailabilityRow[]).forEach(row => {
+      const list = byProduct.get(row.product_id) ?? [];
+      list.push(transformAvailability(row));
+      byProduct.set(row.product_id, list);
+    });
+
+    const stockByProduct = new Map<string, { lowStockThreshold?: number; isLowStock?: boolean }>();
+    if (!stockError && stockRows) {
+      (
+        stockRows as Array<{
+          product_id: string;
+          low_stock_threshold: number | null;
+          is_low_stock: boolean | null;
+        }>
+      ).forEach(row => {
+        stockByProduct.set(row.product_id, {
+          lowStockThreshold:
+            typeof row.low_stock_threshold === 'number' ? row.low_stock_threshold : undefined,
+          isLowStock: row.is_low_stock === true,
+        });
+      });
+    }
+
+    return products.map(p => {
+      const stockInfo = stockByProduct.get(p.id);
+      return {
+        ...p,
+        sizes: sortSizes(byProduct.get(p.id) ?? []),
+        lowStockThreshold: stockInfo?.lowStockThreshold ?? p.lowStockThreshold,
+        isLowStock: stockInfo?.isLowStock ?? p.isLowStock,
+      };
+    });
+  } catch (error) {
+    logError('attachAvailability failed:', error);
+    return products;
+  }
 }
 
 /**
@@ -96,6 +174,21 @@ function transformCollection(row: CollectionRow): Collection {
     description: row.description,
     image: row.image,
   };
+}
+
+const PRODUCT_SELECT = `
+  *,
+  product_colors (name, hex, image, hover_image, sort_order)
+`;
+
+function mapProductRows(data: ProductRow[] | null): Product[] {
+  return (data || []).map(row => {
+    const product = transformProduct(row);
+    product.colors = (row.product_colors || [])
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+      .map(transformColor);
+    return product;
+  });
 }
 
 export const productService = {
@@ -155,16 +248,7 @@ export const productService = {
     }
 
     try {
-      let query = supabase
-        .from('products')
-        .select(
-          `
-          *,
-          product_colors (name, hex, image, hover_image, sort_order),
-          product_inventory (size, in_stock, stock_quantity)
-        `,
-        )
-        .eq('is_active', true);
+      let query = supabase.from('products').select(PRODUCT_SELECT).eq('is_active', true);
 
       // Apply filters
       if (filters.category && filters.category !== 'New Arrivals') {
@@ -201,50 +285,10 @@ export const productService = {
           query = query.order('created_at', { ascending: false });
       }
 
-      let { data, error } = await query;
-
-      // If we get a permission error on product_inventory, try without it
-      if (error && error.message?.includes('product_inventory')) {
-        let retryQuery = supabase
-          .from('products')
-          .select(
-            `
-          *,
-          product_colors (name, hex, image, hover_image, sort_order)
-        `,
-          )
-          .eq('is_active', true);
-
-        if (filters.category && filters.category !== 'New Arrivals') {
-          retryQuery = retryQuery.eq('category', filters.category);
-        }
-        if (filters.collectionId) {
-          retryQuery = retryQuery.eq('collection_id', filters.collectionId);
-        }
-        if (filters.priceMin != null) {
-          retryQuery = retryQuery.gte('price', filters.priceMin);
-        }
-        if (filters.priceMax != null) {
-          retryQuery = retryQuery.lte('price', filters.priceMax);
-        }
-
-        const { data: retryData, error: retryError } = await retryQuery;
-        if (!retryError) {
-          data = retryData;
-          error = null;
-        }
-      }
-
+      const { data, error } = await query;
       if (error) throw error;
 
-      let products = (data || []).map((row: any) => {
-        const product = transformProduct(row);
-        product.colors = (row.product_colors || [])
-          .sort((a: any, b: any) => a.sort_order - b.sort_order)
-          .map(transformColor);
-        product.sizes = (row.product_inventory || []).map(transformInventory);
-        return product;
-      });
+      let products = await attachAvailability(mapProductRows(data));
 
       // Client-side color filter (can't do in SQL easily)
       if (filters.colors?.length) {
@@ -279,48 +323,17 @@ export const productService = {
     }
 
     try {
-      let { data, error } = await supabase
+      const { data, error } = await supabase
         .from('products')
-        .select(
-          `
-          *,
-          product_colors (name, hex, image, hover_image, sort_order),
-          product_inventory (size, in_stock, stock_quantity)
-        `,
-        )
+        .select(PRODUCT_SELECT)
         .eq('slug', slug)
         .eq('is_active', true)
         .single();
 
-      // If we get a permission error on product_inventory, try without it
-      if (error && error.message?.includes('product_inventory')) {
-        const { data: dataWithoutInventory, error: error2 } = await supabase
-          .from('products')
-          .select(
-            `
-          *,
-          product_colors (name, hex, image, hover_image, sort_order)
-        `,
-          )
-          .eq('slug', slug)
-          .eq('is_active', true)
-          .single();
-
-        if (!error2) {
-          data = dataWithoutInventory;
-          error = null;
-        }
-      }
-
       if (error) throw error;
       if (!data) return undefined;
 
-      const product = transformProduct(data);
-      product.colors = (data.product_colors || [])
-        .sort((a: any, b: any) => a.sort_order - b.sort_order)
-        .map(transformColor);
-      product.sizes = (data.product_inventory || []).map(transformInventory);
-
+      const [product] = await attachAvailability(mapProductRows([data]));
       return product;
     } catch (error) {
       logError('Error fetching product:', error);
@@ -340,83 +353,29 @@ export const productService = {
     }
 
     try {
-      // Try with full relations first
-      const query = supabase
+      const { data, error } = await supabase
         .from('products')
-        .select(
-          `
-          *,
-          product_colors (name, hex, image, hover_image, sort_order),
-          product_inventory (size, in_stock, stock_quantity)
-        `,
-        )
+        .select(PRODUCT_SELECT)
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(8);
 
-      let { data, error } = await query;
+      if (error) throw error;
 
-      // If we get a permission error on product_inventory, try without it
-      if (error && error.message?.includes('product_inventory')) {
-        console.warn(
-          '[productService] product_inventory join failed, retrying without it:',
-          error.message,
-        );
-        const { data: dataWithoutInventory, error: error2 } = await supabase
-          .from('products')
-          .select(
-            `
-          *,
-          product_colors (name, hex, image, hover_image, sort_order)
-        `,
-          )
-          .eq('is_active', true)
-          .order('created_at', { ascending: false })
-          .limit(8);
-
-        if (!error2) {
-          data = dataWithoutInventory;
-          error = null;
-        }
-      }
-
-      if (error) {
-        console.error('[productService] getNewDrop query error:', error.message, error);
-        throw error;
-      }
-
-      // If no data, use mock immediately
       if (!data || data.length === 0) {
-        console.warn(
-          '[productService] getNewDrop: Supabase returned 0 active products, using mock data',
-        );
+        if (import.meta.env.DEV) {
+          console.warn(
+            '[productService] getNewDrop: Supabase returned 0 active products, using mock data',
+          );
+        }
         return getMockNewDrop();
       }
 
-      if (import.meta.env.DEV) {
-        console.info(`[productService] getNewDrop: Supabase returned ${data.length} products`);
-      }
-
-      const results = (data || []).map((row: any) => {
-        const product = transformProduct(row);
-        product.colors = (row.product_colors || [])
-          .sort((a: any, b: any) => a.sort_order - b.sort_order)
-          .map(transformColor);
-        product.sizes = (row.product_inventory || []).map(transformInventory);
-        return product;
-      });
-
-      // If results are empty or all products have no colors, use mock
+      const results = await attachAvailability(mapProductRows(data));
       const valid = results.filter(p => p.colors && p.colors.length > 0);
-      if (valid.length === 0) {
-        console.warn(
-          `[productService] getNewDrop: ${results.length} products had no colors, using mock data`,
-        );
-      }
       return valid.length > 0 ? valid : getMockNewDrop();
     } catch (error) {
       logError('Error fetching new drop:', error);
-      console.error('[productService] getNewDrop failed, falling back to mock data:', error);
       return getMockNewDrop();
     }
   },
@@ -430,51 +389,16 @@ export const productService = {
     }
 
     try {
-      const query = supabase
+      const { data, error } = await supabase
         .from('products')
-        .select(
-          `
-          *,
-          product_colors (name, hex, image, hover_image, sort_order),
-          product_inventory (size, in_stock, stock_quantity)
-        `,
-        )
+        .select(PRODUCT_SELECT)
         .eq('is_best_seller', true)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
-      let { data, error } = await query;
-
-      // If we get a permission error on product_inventory, try without it
-      if (error && error.message?.includes('product_inventory')) {
-        const { data: dataWithoutInventory, error: error2 } = await supabase
-          .from('products')
-          .select(
-            `
-          *,
-          product_colors (name, hex, image, hover_image, sort_order)
-        `,
-          )
-          .eq('is_best_seller', true)
-          .eq('is_active', true)
-          .order('created_at', { ascending: false });
-
-        if (!error2) {
-          data = dataWithoutInventory;
-          error = null;
-        }
-      }
-
       if (error) throw error;
 
-      const results = (data || []).map((row: any) => {
-        const product = transformProduct(row);
-        product.colors = (row.product_colors || [])
-          .sort((a: any, b: any) => a.sort_order - b.sort_order)
-          .map(transformColor);
-        product.sizes = (row.product_inventory || []).map(transformInventory);
-        return product;
-      });
+      const results = await attachAvailability(mapProductRows(data));
       return results.length > 0 ? results : getMockBestSellers();
     } catch (error) {
       logError('Error fetching best sellers:', error);
@@ -491,53 +415,17 @@ export const productService = {
     }
 
     try {
-      const query = supabase
+      const { data, error } = await supabase
         .from('products')
-        .select(
-          `
-          *,
-          product_colors (name, hex, image, hover_image, sort_order),
-          product_inventory (size, in_stock, stock_quantity)
-        `,
-        )
+        .select(PRODUCT_SELECT)
         .eq('category', product.category)
         .eq('is_active', true)
         .neq('id', product.id)
         .limit(4);
 
-      let { data, error } = await query;
-
-      // If we get a permission error on product_inventory, try without it
-      if (error && error.message?.includes('product_inventory')) {
-        const { data: dataWithoutInventory, error: error2 } = await supabase
-          .from('products')
-          .select(
-            `
-          *,
-          product_colors (name, hex, image, hover_image, sort_order)
-        `,
-          )
-          .eq('category', product.category)
-          .eq('is_active', true)
-          .neq('id', product.id)
-          .limit(4);
-
-        if (!error2) {
-          data = dataWithoutInventory;
-          error = null;
-        }
-      }
-
       if (error) throw error;
 
-      return (data || []).map((row: any) => {
-        const relatedProduct = transformProduct(row);
-        relatedProduct.colors = (row.product_colors || [])
-          .sort((a: any, b: any) => a.sort_order - b.sort_order)
-          .map(transformColor);
-        relatedProduct.sizes = (row.product_inventory || []).map(transformInventory);
-        return relatedProduct;
-      });
+      return await attachAvailability(mapProductRows(data));
     } catch (error) {
       logError('Error fetching related products:', error);
       return [];
@@ -598,51 +486,16 @@ export const productService = {
     }
 
     try {
-      const query = supabase
+      const { data, error } = await supabase
         .from('products')
-        .select(
-          `
-          *,
-          product_colors (name, hex, image, hover_image, sort_order),
-          product_inventory (size, in_stock, stock_quantity)
-        `,
-        )
+        .select(PRODUCT_SELECT)
         .eq('collection_id', id)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
-      let { data, error } = await query;
-
-      // If we get a permission error on product_inventory, try without it
-      if (error && error.message?.includes('product_inventory')) {
-        const { data: dataWithoutInventory, error: error2 } = await supabase
-          .from('products')
-          .select(
-            `
-          *,
-          product_colors (name, hex, image, hover_image, sort_order)
-        `,
-          )
-          .eq('collection_id', id)
-          .eq('is_active', true)
-          .order('created_at', { ascending: false });
-
-        if (!error2) {
-          data = dataWithoutInventory;
-          error = null;
-        }
-      }
-
       if (error) throw error;
 
-      return (data || []).map((row: any) => {
-        const product = transformProduct(row);
-        product.colors = (row.product_colors || [])
-          .sort((a: any, b: any) => a.sort_order - b.sort_order)
-          .map(transformColor);
-        product.sizes = (row.product_inventory || []).map(transformInventory);
-        return product;
-      });
+      return await attachAvailability(mapProductRows(data));
     } catch (error) {
       logError('Error fetching collection products:', error);
       return [];
@@ -667,32 +520,21 @@ export const productService = {
     }
 
     try {
-      // Use Postgres full-text search
+      // English queries use the english websearch config; Arabic (or mixed)
+      // queries use the multilingual 'simple' config (index from migration 033).
+      const isArabic = containsArabic(q);
       const { data, error } = await supabase
         .from('products')
-        .select(
-          `
-          *,
-          product_colors (name, hex, image, hover_image, sort_order),
-          product_inventory (size, in_stock, stock_quantity)
-        `,
-        )
+        .select(PRODUCT_SELECT)
         .eq('is_active', true)
         .textSearch('name', q, {
-          type: 'websearch',
-          config: 'english',
+          type: isArabic ? 'plain' : 'websearch',
+          config: isArabic ? 'simple' : 'english',
         });
 
       if (error) throw error;
 
-      return (data || []).map((row: any) => {
-        const product = transformProduct(row);
-        product.colors = (row.product_colors || [])
-          .sort((a: any, b: any) => a.sort_order - b.sort_order)
-          .map(transformColor);
-        product.sizes = (row.product_inventory || []).map(transformInventory);
-        return product;
-      });
+      return await attachAvailability(mapProductRows(data));
     } catch (error) {
       logError('Error searching products:', error);
       return [];

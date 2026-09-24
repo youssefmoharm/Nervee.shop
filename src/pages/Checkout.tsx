@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
-import { Check, ChevronLeft, Loader2, Truck, DollarSign, CreditCard, Package } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Check, ChevronLeft, Loader2, Truck, DollarSign, Package } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { orderService } from '../services/orderService';
@@ -10,16 +10,26 @@ import { useToast } from '../context/ToastContext';
 import { EGYPT_GOVERNORATES } from '../data/governorates';
 import { ecommerce } from '../lib/analytics';
 import { estimateShippingCost, getCheckoutSummary } from '../lib/checkout';
-import { validateEgyptianPostalCode } from '../lib/egyptianValidation';
+import {
+  validateEgyptianPhone,
+  validateEgyptianPostalCode,
+  validateGovernorate,
+  validateCity,
+  validateAddress,
+  validateEmail,
+} from '../lib/egyptianValidation';
 import {
   loadCheckoutSession,
   saveCheckoutSession,
   clearCheckoutSession,
 } from '../lib/checkoutSessionManager';
+import { formatEGP } from '../lib/format';
+import { useI18n } from '../lib/i18n';
+import EmptyState from '../components/EmptyState';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
-const steps = ['Information', 'Shipping', 'Delivery', 'Payment', 'Confirmation'];
+const steps = ['Information', 'Shipping', 'Delivery', 'Payment', 'Confirmation'] as const;
 
 interface FormState {
   email: string | undefined;
@@ -50,11 +60,14 @@ const initialForm: FormState = {
 };
 
 export default function Checkout() {
+  const { t } = useI18n();
   useSEO({
     title: 'Checkout | NERVE',
     description:
       'Complete your NERVE order. Cash on delivery across Egypt — payment is due to the courier when your order arrives.',
+    robots: 'noindex, nofollow',
   });
+  const navigate = useNavigate();
   const { lines, subtotal, clear } = useCart();
   const { user } = useAuth();
 
@@ -85,13 +98,18 @@ export default function Checkout() {
 
   // Persist checkout state to localStorage whenever it changes
   useEffect(() => {
+    if (step === 5) return;
     saveCheckoutSession({
       cartLines: lines,
       formState: form,
       appliedDiscount,
+      promoCode: appliedDiscount?.code ?? null,
+      discountAmount: appliedDiscount
+        ? discountService.calculateDiscount(appliedDiscount.discount, subtotal)
+        : null,
       checkoutStep: step,
     });
-  }, [form, appliedDiscount, step, lines]);
+  }, [form, appliedDiscount, step, lines, subtotal]);
 
   // Fire begin_checkout once when checkout opens with items
   useEffect(() => {
@@ -117,20 +135,13 @@ export default function Checkout() {
 
   const validateStep1 = () => {
     const e: typeof errors = {};
-    if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
-      e.email = 'Enter a valid email.';
+    const emailResult = validateEmail(form.email ?? '');
+    if (!emailResult.valid) e.email = emailResult.error || 'Enter a valid email.';
     if (!form.firstName.trim()) e.firstName = 'Required.';
     if (!form.lastName.trim()) e.lastName = 'Required.';
 
-    // Validate Egyptian phone numbers with carrier prefix validation
-    const cleaned = form.phone.replace(/[\s-]/g, '');
-    // Normalize: strip leading +20 or 0020
-    const normalized = cleaned.replace(/^(\+20|0020)/, '');
-    const phoneRegex = /^01[0125][0-9]{8}$/;
-
-    if (!phoneRegex.test(normalized)) {
-      e.phone = 'Enter a valid Egyptian phone number (e.g., 01012345678).';
-    }
+    const phoneResult = validateEgyptianPhone(form.phone);
+    if (!phoneResult.valid) e.phone = phoneResult.error || 'Enter a valid phone number.';
 
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -159,7 +170,15 @@ export default function Checkout() {
         discount: result.discount,
       });
       const discountAmt = discountService.calculateDiscount(result.discount, subtotal);
-      showToast(`You saved EGP ${discountAmt.toLocaleString()}`, 'success', 3000);
+      saveCheckoutSession({
+        appliedDiscount: {
+          code: result.discount.code,
+          discount: result.discount,
+        },
+        promoCode: result.discount.code,
+        discountAmount: discountAmt,
+      });
+      showToast(`You saved ${formatEGP(discountAmt)}`, 'success', 3000);
     } finally {
       setApplyingDiscount(false);
     }
@@ -168,14 +187,18 @@ export default function Checkout() {
   const handleRemoveDiscount = () => {
     setAppliedDiscount(null);
     setForm(f => ({ ...f, discountCode: '' }));
+    saveCheckoutSession({ appliedDiscount: null, promoCode: null, discountAmount: null });
     showToast('Order total has been updated', 'success', 3000);
   };
 
   const validateStep2 = () => {
     const e: typeof errors = {};
-    if (!form.address.trim()) e.address = 'Required.';
-    if (!form.city.trim()) e.city = 'Required.';
-    if (!form.governorate.trim()) e.governorate = 'Required.';
+    const addressResult = validateAddress(form.address);
+    if (!addressResult.valid) e.address = addressResult.error || 'Required.';
+    const cityResult = validateCity(form.city);
+    if (!cityResult.valid) e.city = cityResult.error || 'Required.';
+    const govResult = validateGovernorate(form.governorate);
+    if (!govResult.valid) e.governorate = govResult.error || 'Required.';
     if (form.postal) {
       const postalResult = validateEgyptianPostalCode(form.postal);
       if (!postalResult.valid) e.postal = postalResult.error!;
@@ -250,14 +273,15 @@ export default function Checkout() {
 
   if (lines.length === 0 && step !== 5) {
     return (
-      <div
-        className="bg-white text-navy min-h-screen pt-32 px-5 text-center"
-        data-testid="empty-cart"
-      >
-        <h1 className="nv-heading text-4xl mb-4">Your bag is empty</h1>
-        <Link to="/shop" className="nv-eyebrow underline">
-          Continue Shopping
-        </Link>
+      <div className="bg-white text-navy min-h-screen pt-32 px-5" data-testid="empty-cart">
+        <div className="mx-auto max-w-xl">
+          <EmptyState
+            title="Your bag is empty"
+            body="Add a piece before checking out — payment is cash on delivery across Egypt."
+            actionLabel="Continue Shopping"
+            onAction={() => navigate('/shop')}
+          />
+        </div>
       </div>
     );
   }
@@ -307,7 +331,7 @@ export default function Checkout() {
                       step === i + 1 ? 'text-navy' : 'text-navy/30'
                     }`}
                   >
-                    {label}
+                    {t(label)}
                   </span>
                   {i < 3 && <div className="w-6 md:w-10 h-px bg-navy/15" />}
                 </div>
@@ -320,7 +344,7 @@ export default function Checkout() {
           <form onSubmit={next} className="md:col-span-2" data-testid="checkout-form">
             {step === 1 && (
               <div className="space-y-5">
-                <h2 className="nv-heading text-3xl mb-4">Customer Information</h2>
+                <h2 className="nv-heading text-3xl mb-4">{t('Customer Information')}</h2>
                 <div className="rounded-2xl border border-navy/10 bg-mist/20 p-4 text-sm text-navy/70">
                   We keep your information secure and only use it to fulfill your order and send
                   delivery updates.
@@ -384,7 +408,7 @@ export default function Checkout() {
 
             {step === 2 && (
               <div className="space-y-5">
-                <h2 className="nv-heading text-3xl mb-4">Shipping Address</h2>
+                <h2 className="nv-heading text-3xl mb-4">{t('Shipping Address')}</h2>
                 <div className="rounded-2xl border border-navy/10 bg-mist/20 p-4 text-sm text-navy/70">
                   We currently deliver across Egypt with the fastest available option for your
                   governorate.
@@ -477,7 +501,7 @@ export default function Checkout() {
                         <p className="text-xs text-navy/60">3-5 business days</p>
                       </div>
                       <span className="text-sm font-semibold text-navy">
-                        EGP {estimateShippingCost(subtotal, 'standard')}
+                        {formatEGP(estimateShippingCost(subtotal, 'standard'))}
                       </span>
                     </label>
                     <label className="flex items-center gap-3 p-4 border border-navy/20 rounded-lg hover:border-navy/50 cursor-pointer transition-colors">
@@ -494,51 +518,38 @@ export default function Checkout() {
                         <p className="text-xs text-navy/60">1-2 business days</p>
                       </div>
                       <span className="text-sm font-semibold text-navy">
-                        EGP {estimateShippingCost(subtotal, 'express')}
+                        {formatEGP(estimateShippingCost(subtotal, 'express'))}
                       </span>
                     </label>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-navy mb-3">Payment Method</h3>
+                  <h3 className="text-sm font-medium text-navy mb-3">{t('Payment Method')}</h3>
                   <div className="space-y-2">
-                    <label className="flex items-center gap-3 p-4 border-2 border-navy/20 rounded-lg hover:border-navy/50 cursor-pointer transition-colors has-[:checked]:border-navy has-[:checked]:bg-mist/30">
+                    <label className="flex items-center gap-3 p-4 border-2 border-navy rounded-lg bg-mist/30 cursor-pointer">
                       <input
                         type="radio"
                         name="paymentMethod"
                         value="cod"
-                        checked={form.paymentMethod === 'cod'}
-                        onChange={e => set('paymentMethod', e.target.value as 'cod' | 'card')}
+                        checked
+                        readOnly
                         className="w-4 h-4 text-navy"
                       />
                       <div className="flex-1 flex items-start gap-3">
                         <DollarSign size={18} className="text-navy mt-0.5 flex-shrink-0" />
                         <div>
-                          <p className="font-medium text-navy">Cash on Delivery</p>
+                          <p className="font-medium text-navy">{t('Cash on Delivery')}</p>
                           <p className="text-xs text-navy/60">
                             Pay to the courier when your order arrives
                           </p>
                         </div>
                       </div>
                     </label>
-                    <label className="flex items-center gap-3 p-4 border-2 border-navy/20 rounded-lg hover:border-navy/50 cursor-pointer transition-colors opacity-50">
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="card"
-                        disabled
-                        className="w-4 h-4 text-navy"
-                      />
-                      <div className="flex-1 flex items-start gap-3">
-                        <CreditCard size={18} className="text-navy/40 mt-0.5 flex-shrink-0" />
-                        <div>
-                          <p className="font-medium text-navy/40">Card Payment</p>
-                          <p className="text-xs text-navy/40">Coming soon</p>
-                        </div>
-                      </div>
-                    </label>
                   </div>
+                  <p className="text-xs text-navy/50 mt-2">
+                    Online card payment is not available — every order is cash on delivery.
+                  </p>
                 </div>
 
                 <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -552,7 +563,7 @@ export default function Checkout() {
 
             {step === 4 && (
               <div className="space-y-5">
-                <h2 className="nv-heading text-3xl mb-4">Review Your Order</h2>
+                <h2 className="nv-heading text-3xl mb-4">{t('Review Your Order')}</h2>
                 <div className="rounded-2xl border border-navy/10 bg-mist/20 p-4 text-sm text-navy/70">
                   Please review all details before placing your order. You can go back to make any
                   changes.
@@ -569,7 +580,9 @@ export default function Checkout() {
                   </div>
 
                   <div className="p-4 border border-navy/10 rounded-lg">
-                    <h3 className="text-sm font-medium text-navy/60 mb-2">Shipping Address</h3>
+                    <h3 className="text-sm font-medium text-navy/60 mb-2">
+                      {t('Shipping Address')}
+                    </h3>
                     <p className="text-sm text-navy">{form.address}</p>
                     <p className="text-sm text-navy/60">
                       {form.city}, {form.governorate}
@@ -580,7 +593,9 @@ export default function Checkout() {
                   </div>
 
                   <div className="p-4 border border-navy/10 rounded-lg">
-                    <h3 className="text-sm font-medium text-navy/60 mb-3">Delivery & Payment</h3>
+                    <h3 className="text-sm font-medium text-navy/60 mb-3">
+                      {t('Delivery & Payment')}
+                    </h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center gap-2">
                         <Package size={16} className="text-navy" />
@@ -588,12 +603,12 @@ export default function Checkout() {
                           {form.delivery === 'standard' ? 'Standard' : 'Express'} Delivery
                         </span>
                         <span className="ml-auto text-navy/60">
-                          EGP {estimateShippingCost(subtotal, form.delivery)}
+                          {formatEGP(estimateShippingCost(subtotal, form.delivery))}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <DollarSign size={16} className="text-navy" />
-                        <span className="text-navy">Cash on Delivery</span>
+                        <span className="text-navy">{t('Cash on Delivery')}</span>
                       </div>
                     </div>
                   </div>
@@ -634,7 +649,7 @@ export default function Checkout() {
                       onClick={back}
                       className="text-sm text-navy/50 hover:text-navy"
                     >
-                      Back
+                      {t('Back')}
                     </button>
                   )}
                   <button
@@ -645,12 +660,12 @@ export default function Checkout() {
                   >
                     {placing ? (
                       <>
-                        <Loader2 size={16} className="animate-spin" /> Placing Order…
+                        <Loader2 size={16} className="animate-spin" /> {t('Placing order…')}
                       </>
                     ) : step === 4 ? (
-                      'Place Order'
+                      t('Place Order')
                     ) : (
-                      'Continue to Next Step'
+                      t('Continue to Next Step')
                     )}
                   </button>
                 </div>
@@ -690,11 +705,11 @@ export default function Checkout() {
                           {l.color} / {l.size}
                         </p>
                         <p className="text-[10px] md:text-xs text-navy/40 mt-1">
-                          EGP {l.price.toLocaleString()} × {l.quantity}
+                          {formatEGP(l.price)} × {l.quantity}
                         </p>
                       </div>
                       <span className="text-xs md:text-sm font-semibold text-navy whitespace-nowrap">
-                        EGP {(l.price * l.quantity).toLocaleString()}
+                        {formatEGP(l.price * l.quantity)}
                       </span>
                     </li>
                   ))}
@@ -708,13 +723,13 @@ export default function Checkout() {
               <div className="px-3 md:px-6 py-3 md:py-4 space-y-2 md:space-y-3 text-xs md:text-sm">
                 <div className="flex justify-between items-center text-navy/60">
                   <span>Subtotal</span>
-                  <span className="font-medium text-navy">EGP {subtotal.toLocaleString()}</span>
+                  <span className="font-medium text-navy">{formatEGP(subtotal)}</span>
                 </div>
 
                 {appliedDiscount && (
                   <div className="flex justify-between items-center text-green-600">
                     <span>Discount ({appliedDiscount.code})</span>
-                    <span className="font-medium">-EGP {discountAmount.toLocaleString()}</span>
+                    <span className="font-medium">- {formatEGP(discountAmount)}</span>
                   </div>
                 )}
 
@@ -724,21 +739,21 @@ export default function Checkout() {
                     {shippingCost === 0 ? (
                       <span className="text-green-600">Free</span>
                     ) : (
-                      `EGP ${shippingCost}`
+                      formatEGP(shippingCost)
                     )}
                   </span>
                 </div>
 
                 <div className="flex justify-between items-center text-navy/40 text-[11px]">
                   <span>VAT (14% incl.)</span>
-                  <span>EGP {vatAmount.toLocaleString()}</span>
+                  <span>{formatEGP(vatAmount)}</span>
                 </div>
 
                 {/* Total */}
                 <div className="pt-2 md:pt-3 border-t border-navy/10 flex justify-between items-center">
                   <span className="font-semibold text-navy">Total</span>
                   <span className="text-base md:text-lg font-bold text-navy">
-                    EGP {finalTotal.toLocaleString()}
+                    {formatEGP(finalTotal)}
                   </span>
                 </div>
               </div>

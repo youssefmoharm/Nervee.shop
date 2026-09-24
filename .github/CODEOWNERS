@@ -1,0 +1,7 @@
+# Default owner for everything in this repository
+* @youssefmoharm
+
+# CI, deployment, and schema changes require owner review
+/.github/ @youssefmoharm
+/supabase/migrations/ @youssefmoharm
+/vercel.json @youssefmoharm

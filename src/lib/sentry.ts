@@ -6,7 +6,9 @@
  * All Sentry API calls are gated behind a lazy-loaded module reference.
  */
 
-const VERSION = '1.0.0';
+declare const __APP_VERSION__: string;
+
+const VERSION = __APP_VERSION__;
 
 // Lazily-loaded Sentry module — never imported at the top level.
 let SentryMod: typeof import('@sentry/react') | null = null;

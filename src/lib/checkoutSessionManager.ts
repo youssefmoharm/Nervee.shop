@@ -37,6 +37,8 @@ export interface CheckoutSession {
     code: string;
     discount: DiscountCode;
   } | null;
+  promoCode: string | null;
+  discountAmount: number | null;
   checkoutStep: number;
   timestamp: number; // When session was last saved
   expiresAt: number; // Session expiry timestamp
@@ -57,7 +59,15 @@ export function saveCheckoutSession(session: Partial<CheckoutSession>): void {
     const merged: CheckoutSession = {
       cartLines: session.cartLines ?? existing?.cartLines ?? [],
       formState: session.formState ?? existing?.formState ?? {},
-      appliedDiscount: session.appliedDiscount ?? existing?.appliedDiscount ?? null,
+      appliedDiscount:
+        session.appliedDiscount !== undefined
+          ? session.appliedDiscount
+          : existing?.appliedDiscount ?? null,
+      promoCode: session.promoCode !== undefined ? session.promoCode : existing?.promoCode ?? null,
+      discountAmount:
+        session.discountAmount !== undefined
+          ? session.discountAmount
+          : existing?.discountAmount ?? null,
       checkoutStep: session.checkoutStep ?? existing?.checkoutStep ?? 1,
       timestamp: now,
       expiresAt: session.expiresAt ?? now + SESSION_DURATION_MS,

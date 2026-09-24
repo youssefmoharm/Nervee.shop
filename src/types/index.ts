@@ -12,6 +12,8 @@ export interface ProductColor {
 export interface ProductVariantAvailability {
   size: Size;
   inStock: boolean;
+  /** Real stock quantity when available (e.g. admin contexts); undefined on storefront view reads */
+  stock?: number;
 }
 
 export interface Product {
@@ -33,6 +35,10 @@ export interface Product {
   isBestSeller: boolean;
   createdAt: string;
   fitNotes?: string;
+  /** Product-level low stock threshold when inventory data is present */
+  lowStockThreshold?: number;
+  /** Server-computed (product_stock_status): min stock <= threshold */
+  isLowStock?: boolean;
 }
 
 export type Category =

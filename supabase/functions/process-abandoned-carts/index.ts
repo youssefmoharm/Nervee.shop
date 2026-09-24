@@ -3,129 +3,180 @@
 // Scheduled job to send cart-abandonment emails. Only callable by
 // service_role / admin / cron secret — not by anonymous browsers.
 
-import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
-import { getCorsHeaders } from '../_shared/cors.ts'
-import { requireAdmin } from '../_shared/admin.ts'
-import { PerformanceTimer, logEvent } from '../_shared/monitoring.ts'
+import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
+import { getCorsHeaders } from '../_shared/cors.ts';
+import { requireAdmin } from '../_shared/admin.ts';
+import { PerformanceTimer, logEvent } from '../_shared/monitoring.ts';
+
+const STORE_URL = Deno.env.get('STORE_URL') || 'https://www.nerveey.shop';
 
 interface AbandonedCart {
-  customer_email: string
-  cart_items: CartItem[]
-  cart_value: number
-  last_activity_at: string
+  customer_email: string;
+  cart_items: CartItem[];
+  cart_value: number;
+  last_activity_at: string;
 }
 interface CartItem {
-  name: string
-  color: string
-  size: string
-  quantity: number
-  price: number
-  image: string
+  name: string;
+  color: string;
+  size: string;
+  quantity: number;
+  price: number;
+  image: string;
 }
 
 function isAuthorizedCron(req: Request): boolean {
-  const cronSecret = Deno.env.get('CRON_SECRET')
+  const cronSecret = Deno.env.get('CRON_SECRET');
   if (cronSecret) {
-    const got = req.headers.get('x-cron-secret') || req.headers.get('x-app-cron-secret') || ''
-    if (got === cronSecret) return true
+    const got = req.headers.get('x-cron-secret') || req.headers.get('x-app-cron-secret') || '';
+    if (got === cronSecret) return true;
   }
-  return false
+  return false;
 }
 
-serve(async (req) => {
-  const corsHeaders = getCorsHeaders(req)
+serve(async req => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders });
   }
   if (req.method !== 'POST') {
-    return json({ error: 'Method not allowed' }, 405, corsHeaders)
+    return json({ error: 'Method not allowed' }, 405, corsHeaders);
   }
 
-  const timer = new PerformanceTimer('process-abandoned-carts')
+  const timer = new PerformanceTimer('process-abandoned-carts');
 
   try {
-    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    );
 
     // ---- Auth: service_role token OR admin JWT OR cron secret ----
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const authHeader = req.headers.get('Authorization') || ''
-    const token = authHeader.replace('Bearer ', '').trim()
-    const cronOk = isAuthorizedCron(req)
-    let authorized = cronOk || token === serviceRoleKey
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const authHeader = req.headers.get('Authorization') || '';
+    const token = authHeader.replace('Bearer ', '').trim();
+    const cronOk = isAuthorizedCron(req);
+    let authorized = cronOk || token === serviceRoleKey;
     if (!authorized && token) {
-      const admin = await requireAdmin(req, supabase)
-      authorized = !!admin
+      const admin = await requireAdmin(req, supabase);
+      authorized = !!admin;
     }
     if (!authorized) {
-      timer.end()
-      return json({ error: 'Unauthorized — service_role, admin, or cron secret required' }, 401, corsHeaders)
+      timer.end();
+      return json(
+        { error: 'Unauthorized — service_role, admin, or cron secret required' },
+        401,
+        corsHeaders,
+      );
     }
 
-    const { data: abandonedCarts, error: fetchError } = await supabase.rpc('find_abandoned_carts_for_email')
+    const { data: abandonedCarts, error: fetchError } = await supabase.rpc(
+      'find_abandoned_carts_for_email',
+    );
 
     if (fetchError) {
-      console.error('Failed to fetch abandoned carts:', fetchError)
-      timer.end()
-      return json({ error: 'Failed to fetch abandoned carts', details: fetchError.message }, 500, corsHeaders)
+      console.error('Failed to fetch abandoned carts:', fetchError);
+      timer.end();
+      return json(
+        { error: 'Failed to fetch abandoned carts', details: fetchError.message },
+        500,
+        corsHeaders,
+      );
     }
 
     if (!abandonedCarts || (abandonedCarts as unknown[]).length === 0) {
-      logEvent({ type: 'info', category: 'ABANDONED_CARTS', message: 'No abandoned carts to process' })
-      timer.end()
-      return json({ success: true, processed: 0, message: 'No abandoned carts found' }, 200, corsHeaders)
+      logEvent({
+        type: 'info',
+        category: 'ABANDONED_CARTS',
+        message: 'No abandoned carts to process',
+      });
+      timer.end();
+      return json(
+        { success: true, processed: 0, message: 'No abandoned carts found' },
+        200,
+        corsHeaders,
+      );
     }
 
     logEvent({
       type: 'info',
       category: 'ABANDONED_CARTS',
       message: `Found ${(abandonedCarts as unknown[]).length} abandoned carts to process`,
-    })
+    });
 
-    let successCount = 0
-    let failureCount = 0
+    let successCount = 0;
+    let failureCount = 0;
+
+    // Dedupe by email: the RPC may return multiple rows for the same address
+    // (one per cart); only email/mark once per address.
+    const seenEmails = new Set<string>();
 
     for (const cart of abandonedCarts as AbandonedCart[]) {
       try {
-        const recoveryUrl = `${Deno.env.get('STORE_URL') || 'https://nerve-store.com'}/cart?recovery=true&email=${encodeURIComponent(cart.customer_email)}`
-        const html = generateCartAbandonmentEmail(cart, recoveryUrl)
+        const cartEmail = cart.customer_email.trim().toLowerCase();
+        if (seenEmails.has(cartEmail)) {
+          continue;
+        }
 
-        const sendResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-email`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            to: cart.customer_email,
-            subject: `You left ${(cart.cart_items as CartItem[]).length} item${(cart.cart_items as CartItem[]).length > 1 ? 's' : ''} in your cart ✨`,
-            html,
-            type: 'cart_abandonment',
-            metadata: {
-              cart_value: cart.cart_value,
-              item_count: (cart.cart_items as CartItem[]).length,
-              recovery_url: recoveryUrl,
+        // Respect per-type unsubscribe opt-outs before spending a send.
+        const { data: allowed } = await supabase.rpc('should_send_email', {
+          p_email: cartEmail,
+          p_email_type: 'cart_abandonment',
+        });
+        if (allowed === false) {
+          // Mark as sent so it doesn't reappear forever.
+          await supabase.rpc('mark_cart_abandonment_email_sent', { p_customer_email: cartEmail });
+          continue;
+        }
+        seenEmails.add(cartEmail);
+
+        const recoveryUrl = `${STORE_URL}/cart?recovery=true&email=${encodeURIComponent(
+          cart.customer_email,
+        )}`;
+        const html = generateCartAbandonmentEmail(cart, recoveryUrl);
+
+        const sendResponse = await fetch(
+          `${Deno.env.get('SUPABASE_URL')}/functions/v1/send-email`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+              'Content-Type': 'application/json',
             },
-          }),
-        })
+            body: JSON.stringify({
+              to: cart.customer_email,
+              subject: `You left ${(cart.cart_items as CartItem[]).length} item${
+                (cart.cart_items as CartItem[]).length > 1 ? 's' : ''
+              } in your cart ✨`,
+              html,
+              type: 'cart_abandonment',
+              metadata: {
+                cart_value: cart.cart_value,
+                item_count: (cart.cart_items as CartItem[]).length,
+                recovery_url: recoveryUrl,
+              },
+            }),
+          },
+        );
 
         if (!sendResponse.ok) {
-          const error = await sendResponse.text()
-          throw new Error(`Send email failed: ${error}`)
+          const error = await sendResponse.text();
+          throw new Error(`Send email failed: ${error}`);
         }
 
         const { error: updateError } = await supabase.rpc('mark_cart_abandonment_email_sent', {
           p_customer_email: cart.customer_email,
-        })
+        });
         if (updateError) {
-          console.error('Failed to mark cart as emailed:', updateError)
-          failureCount++
+          console.error('Failed to mark cart as emailed:', updateError);
+          failureCount++;
         } else {
-          successCount++
+          successCount++;
         }
       } catch (err) {
-        console.error(`Failed to process cart for ${cart.customer_email}:`, err)
-        failureCount++
+        console.error(`Failed to process cart for ${cart.customer_email}:`, err);
+        failureCount++;
       }
     }
 
@@ -134,29 +185,41 @@ serve(async (req) => {
       category: 'ABANDONED_CARTS',
       message: `Processed ${successCount} successful, ${failureCount} failed`,
       data: { success: successCount, failed: failureCount },
-    })
+    });
 
-    timer.end()
+    timer.end();
     return json(
-      { success: true, processed: successCount, failed: failureCount, total: (abandonedCarts as unknown[]).length, message: `Sent ${successCount} abandonment emails` },
+      {
+        success: true,
+        processed: successCount,
+        failed: failureCount,
+        total: (abandonedCarts as unknown[]).length,
+        message: `Sent ${successCount} abandonment emails`,
+      },
       200,
       corsHeaders,
-    )
+    );
   } catch (err) {
-    console.error('Cart abandonment processor error:', err)
-    timer.end()
-    return json({ error: 'An internal error occurred. Please try again.' }, 500, getCorsHeaders(req))
+    console.error('Cart abandonment processor error:', err);
+    timer.end();
+    return json(
+      { error: 'An internal error occurred. Please try again.' },
+      500,
+      getCorsHeaders(req),
+    );
   }
-})
+});
 
 function generateCartAbandonmentEmail(cart: AbandonedCart, recoveryUrl: string): string {
-  const cartItems = cart.cart_items as CartItem[]
+  const cartItems = cart.cart_items as CartItem[];
   const itemsHtml = cartItems
     .map(
-      (item) => `
+      item => `
     <tr>
       <td style="padding: 15px; border-bottom: 1px solid #eee;">
-        <img src="${item.image}" alt="${escapeHtml(item.name)}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+        <img src="${item.image}" alt="${escapeHtml(
+        item.name,
+      )}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
       </td>
       <td style="padding: 15px; border-bottom: 1px solid #eee;">
         <h3 style="margin: 0; font-size: 16px;">${escapeHtml(item.name)}</h3>
@@ -168,7 +231,7 @@ function generateCartAbandonmentEmail(cart: AbandonedCart, recoveryUrl: string):
       </td>
     </tr>`,
     )
-    .join('')
+    .join('');
 
   return `
     <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Complete Your Purchase</title></head>
@@ -180,7 +243,9 @@ function generateCartAbandonmentEmail(cart: AbandonedCart, recoveryUrl: string):
         </div>
         <div style="padding: 30px;">
           <p style="font-size: 18px; margin-bottom: 20px;">Hi there! 👋</p>
-          <p style="margin-bottom: 25px;">You left <strong>${cartItems.length} awesome item${cartItems.length > 1 ? 's' : ''}</strong> worth <strong>EGP ${cart.cart_value.toLocaleString()}</strong> in your bag.</p>
+          <p style="margin-bottom: 25px;">You left <strong>${cartItems.length} awesome item${
+    cartItems.length > 1 ? 's' : ''
+  }</strong> worth <strong>EGP ${cart.cart_value.toLocaleString()}</strong> in your bag.</p>
           <table style="width: 100%; border-collapse: collapse; margin: 25px 0; border: 1px solid #eee; border-radius: 8px; overflow: hidden;">
             ${itemsHtml}
             <tr><td colspan="2" style="padding: 20px; font-weight: 600; font-size: 18px; text-align: right; background: #f8f9fa;">Total: EGP ${cart.cart_value.toLocaleString()}</td></tr>
@@ -200,13 +265,22 @@ function generateCartAbandonmentEmail(cart: AbandonedCart, recoveryUrl: string):
         <div style="background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px;"><p style="margin: 0;">NERVE - Cool but Chic | Alexandria, Egypt</p></div>
       </div>
     </body></html>
-  `
+  `;
 }
 function escapeHtml(text: string): string {
-  const map: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }
-  return text.replace(/[&<>"']/g, (c) => map[c] || c)
+  const map: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  };
+  return text.replace(/[&<>"']/g, c => map[c] || c);
 }
 function json(body: unknown, status = 200, headers: Record<string, string> = {}) {
-  const h = headers
-  return new Response(JSON.stringify(body), { status, headers: { ...h, 'Content-Type': 'application/json' } })
+  const h = headers;
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...h, 'Content-Type': 'application/json' },
+  });
 }

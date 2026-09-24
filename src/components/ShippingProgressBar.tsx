@@ -1,6 +1,7 @@
 import { CheckCircle } from 'lucide-react';
 
-const FREE_SHIPPING_THRESHOLD = 2000;
+import { FREE_SHIPPING_THRESHOLD } from '../lib/storeConfig';
+import { formatEGP, formatNumber } from '../lib/format';
 
 interface ShippingProgressBarProps {
   subtotal: number;
@@ -22,7 +23,7 @@ export default function ShippingProgressBar({ subtotal }: ShippingProgressBarPro
               Free Shipping Qualified
             </span>
           ) : (
-            <span>Free Shipping at EGP {FREE_SHIPPING_THRESHOLD.toLocaleString()}</span>
+            <span>Free Shipping at {formatEGP(FREE_SHIPPING_THRESHOLD)}</span>
           )}
         </h3>
       </div>
@@ -41,10 +42,10 @@ export default function ShippingProgressBar({ subtotal }: ShippingProgressBarPro
         {/* Progress text */}
         <div className="flex items-center justify-between text-xs">
           <span className="font-medium text-navy">
-            {((progress / 100) * FREE_SHIPPING_THRESHOLD).toLocaleString()}
+            {formatNumber((progress / 100) * FREE_SHIPPING_THRESHOLD)}
           </span>
           <span className="text-navy/50">{Math.round(progress)}%</span>
-          <span className="font-medium text-navy">{FREE_SHIPPING_THRESHOLD.toLocaleString()}</span>
+          <span className="font-medium text-navy">{formatNumber(FREE_SHIPPING_THRESHOLD)}</span>
         </div>
       </div>
 
@@ -53,7 +54,7 @@ export default function ShippingProgressBar({ subtotal }: ShippingProgressBarPro
         {qualifies ? (
           '✓ Your order qualifies for free shipping!'
         ) : (
-          <>Add EGP {remaining.toLocaleString()} more for FREE shipping</>
+          <>Add {formatEGP(remaining)} more for FREE shipping</>
         )}
       </p>
 

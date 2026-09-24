@@ -1,250 +1,147 @@
 import { describe, it, expect } from 'vitest';
+import {
+  validateEgyptianPhone,
+  validateEgyptianPostalCode,
+  validateGovernorate,
+  validateCity,
+  validateAddress,
+} from '../../lib/egyptianValidation';
+import { estimateShippingCost, getCheckoutSummary, EGYPT_VAT_RATE } from '../../lib/checkout';
+import { discountService } from '../../services/discountService';
+import {
+  FREE_SHIPPING_THRESHOLD,
+  STANDARD_SHIPPING_COST,
+  EXPRESS_SHIPPING_COST,
+} from '../../lib/storeConfig';
 
-// Business logic functions to test
-export function calculateSubtotal(items: Array<{ price: number; quantity: number }>): number {
-  return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-}
-
-export function calculateShipping(subtotal: number, method: 'standard' | 'express'): number {
-  if (method === 'express') return 200;
-  if (subtotal > 2000) return 0; // Free shipping over EGP 2000
-  return 100;
-}
-
-export function calculateDiscount(
-  subtotal: number,
-  discountType: 'percentage' | 'fixed',
-  discountValue: number,
-): number {
-  if (discountType === 'percentage') {
-    return Math.round((subtotal * discountValue) / 100);
-  }
-  return Math.min(discountValue, subtotal);
-}
-
-export function calculateTotal(subtotal: number, shipping: number, discount: number): number {
-  return Math.max(subtotal + shipping - discount, 0);
-}
-
-export function validateQuantity(quantity: number): { valid: boolean; error?: string } {
-  if (!Number.isInteger(quantity)) {
-    return { valid: false, error: 'Quantity must be a whole number' };
-  }
-  if (quantity < 1) {
-    return { valid: false, error: 'Quantity must be at least 1' };
-  }
-  if (quantity > 10) {
-    return { valid: false, error: 'Maximum quantity per item is 10' };
-  }
-  return { valid: true };
-}
-
-export function validateOrderStatus(
-  currentStatus: string,
-  newStatus: string,
-): { valid: boolean; error?: string } {
-  const validStatuses = ['placed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'];
-
-  if (!validStatuses.includes(newStatus)) {
-    return { valid: false, error: 'Invalid order status' };
-  }
-
-  // Define allowed transitions
-  const allowedTransitions: Record<string, string[]> = {
-    placed: ['processing', 'cancelled'],
-    processing: ['shipped', 'cancelled'],
-    shipped: ['delivered', 'cancelled'],
-    delivered: ['refunded'],
-    cancelled: [], // Final state
-    refunded: [], // Final state
-  };
-
-  const allowed = allowedTransitions[currentStatus] || [];
-  if (!allowed.includes(newStatus)) {
-    return { valid: false, error: `Cannot transition from ${currentStatus} to ${newStatus}` };
-  }
-
-  return { valid: true };
-}
-
-describe('Business Logic Calculations', () => {
-  describe('calculateSubtotal', () => {
-    it('calculates subtotal for single item', () => {
-      const items = [{ price: 500, quantity: 2 }];
-      expect(calculateSubtotal(items)).toBe(1000);
-    });
-
-    it('calculates subtotal for multiple items', () => {
-      const items = [
-        { price: 500, quantity: 2 },
-        { price: 300, quantity: 1 },
-        { price: 200, quantity: 3 },
-      ];
-      expect(calculateSubtotal(items)).toBe(1900);
-    });
-
-    it('handles empty cart', () => {
-      expect(calculateSubtotal([])).toBe(0);
-    });
-
-    it('handles zero quantity', () => {
-      const items = [{ price: 500, quantity: 0 }];
-      expect(calculateSubtotal(items)).toBe(0);
-    });
-
-    it('handles zero price', () => {
-      const items = [{ price: 0, quantity: 5 }];
-      expect(calculateSubtotal(items)).toBe(0);
-    });
+describe('Shipping (single source: lib/checkout + storeConfig)', () => {
+  it('applies express shipping cost', () => {
+    expect(estimateShippingCost(1000, 'express')).toBe(EXPRESS_SHIPPING_COST);
   });
 
-  describe('calculateShipping', () => {
-    it('applies express shipping cost', () => {
-      expect(calculateShipping(1000, 'express')).toBe(200);
-    });
-
-    it('applies standard shipping cost', () => {
-      expect(calculateShipping(1000, 'standard')).toBe(100);
-    });
-
-    it('applies free shipping for orders over 2000', () => {
-      expect(calculateShipping(2500, 'standard')).toBe(0);
-    });
-
-    it('charges shipping at exact threshold (free only over 2000)', () => {
-      expect(calculateShipping(2000, 'standard')).toBe(100);
-    });
-
-    it('charges shipping below threshold', () => {
-      expect(calculateShipping(1999, 'standard')).toBe(100);
-    });
-
-    it('charges express even with free standard shipping', () => {
-      expect(calculateShipping(2500, 'express')).toBe(200);
-    });
+  it('applies standard shipping cost below threshold', () => {
+    expect(estimateShippingCost(1000, 'standard')).toBe(STANDARD_SHIPPING_COST);
   });
 
-  describe('calculateDiscount', () => {
-    it('calculates percentage discount', () => {
-      expect(calculateDiscount(1000, 'percentage', 15)).toBe(150);
-    });
-
-    it('calculates fixed discount', () => {
-      expect(calculateDiscount(1000, 'fixed', 200)).toBe(200);
-    });
-
-    it('caps fixed discount at subtotal', () => {
-      expect(calculateDiscount(1000, 'fixed', 1500)).toBe(1000);
-    });
-
-    it('handles zero discount', () => {
-      expect(calculateDiscount(1000, 'percentage', 0)).toBe(0);
-      expect(calculateDiscount(1000, 'fixed', 0)).toBe(0);
-    });
-
-    it('handles 100% discount', () => {
-      expect(calculateDiscount(1000, 'percentage', 100)).toBe(1000);
-    });
-
-    it('rounds percentage discount', () => {
-      expect(calculateDiscount(333, 'percentage', 15)).toBe(50); // 49.95 rounded to 50
-    });
+  it('gives free standard shipping at/above the free-shipping threshold', () => {
+    expect(estimateShippingCost(FREE_SHIPPING_THRESHOLD, 'standard')).toBe(0);
+    expect(estimateShippingCost(FREE_SHIPPING_THRESHOLD + 500, 'standard')).toBe(0);
   });
 
-  describe('calculateTotal', () => {
-    it('calculates total with all components', () => {
-      expect(calculateTotal(1000, 100, 150)).toBe(950);
-    });
-
-    it('ensures minimum total of zero', () => {
-      expect(calculateTotal(100, 50, 200)).toBe(0);
-    });
-
-    it('handles zero values', () => {
-      expect(calculateTotal(0, 0, 0)).toBe(0);
-    });
-
-    it('handles no discount', () => {
-      expect(calculateTotal(1000, 100, 0)).toBe(1100);
-    });
-
-    it('handles free shipping', () => {
-      expect(calculateTotal(1000, 0, 100)).toBe(900);
-    });
+  it('charges shipping below the threshold', () => {
+    expect(estimateShippingCost(FREE_SHIPPING_THRESHOLD - 1, 'standard')).toBe(
+      STANDARD_SHIPPING_COST,
+    );
   });
 
-  describe('validateQuantity', () => {
-    it('accepts valid quantities', () => {
-      expect(validateQuantity(1)).toEqual({ valid: true });
-      expect(validateQuantity(5)).toEqual({ valid: true });
-      expect(validateQuantity(10)).toEqual({ valid: true });
-    });
-
-    it('rejects zero quantity', () => {
-      expect(validateQuantity(0)).toEqual({
-        valid: false,
-        error: 'Quantity must be at least 1',
-      });
-    });
-
-    it('rejects negative quantity', () => {
-      expect(validateQuantity(-1)).toEqual({
-        valid: false,
-        error: 'Quantity must be at least 1',
-      });
-    });
-
-    it('rejects quantity over maximum', () => {
-      expect(validateQuantity(11)).toEqual({
-        valid: false,
-        error: 'Maximum quantity per item is 10',
-      });
-    });
-
-    it('rejects non-integer quantity', () => {
-      expect(validateQuantity(1.5)).toEqual({
-        valid: false,
-        error: 'Quantity must be a whole number',
-      });
-    });
+  it('charges express even when standard would be free', () => {
+    expect(estimateShippingCost(FREE_SHIPPING_THRESHOLD + 500, 'express')).toBe(
+      EXPRESS_SHIPPING_COST,
+    );
   });
 
-  describe('validateOrderStatus', () => {
-    it('allows valid transitions', () => {
-      expect(validateOrderStatus('placed', 'processing')).toEqual({ valid: true });
-      expect(validateOrderStatus('processing', 'shipped')).toEqual({ valid: true });
-      expect(validateOrderStatus('shipped', 'delivered')).toEqual({ valid: true });
-    });
+  it('free shipping for empty cart', () => {
+    expect(estimateShippingCost(0, 'standard')).toBe(0);
+  });
+});
 
-    it('allows cancellation from non-final states', () => {
-      expect(validateOrderStatus('placed', 'cancelled')).toEqual({ valid: true });
-      expect(validateOrderStatus('processing', 'cancelled')).toEqual({ valid: true });
-      expect(validateOrderStatus('shipped', 'cancelled')).toEqual({ valid: true });
-    });
+describe('Checkout summary (single source: lib/checkout)', () => {
+  it('computes total with shipping and no discount', () => {
+    const s = getCheckoutSummary(1000, 'standard');
+    expect(s.shipping).toBe(STANDARD_SHIPPING_COST);
+    expect(s.total).toBe(1000 + STANDARD_SHIPPING_COST);
+  });
 
-    it('allows refund from delivered state', () => {
-      expect(validateOrderStatus('delivered', 'refunded')).toEqual({ valid: true });
-    });
+  it('subtracts discount from total', () => {
+    const s = getCheckoutSummary(1000, 'standard', 150);
+    expect(s.total).toBe(1000 + STANDARD_SHIPPING_COST - 150);
+  });
 
-    it('rejects invalid transitions', () => {
-      expect(validateOrderStatus('placed', 'shipped')).toEqual({
-        valid: false,
-        error: 'Cannot transition from placed to shipped',
-      });
-    });
+  it('never goes below zero', () => {
+    const s = getCheckoutSummary(100, 'standard', 5000);
+    expect(s.total).toBe(0);
+  });
 
-    it('rejects transitions from final states', () => {
-      expect(validateOrderStatus('cancelled', 'processing')).toEqual({
-        valid: false,
-        error: 'Cannot transition from cancelled to processing',
-      });
-    });
+  it('VAT is inclusive of the 14% rate', () => {
+    const s = getCheckoutSummary(1140, 'standard');
+    expect(s.vatAmount).toBe(Math.round((1140 * EGYPT_VAT_RATE) / (1 + EGYPT_VAT_RATE)));
+    expect(EGYPT_VAT_RATE).toBe(0.14);
+  });
+});
 
-    it('rejects invalid status values', () => {
-      expect(validateOrderStatus('placed', 'invalid')).toEqual({
-        valid: false,
-        error: 'Invalid order status',
-      });
-    });
+describe('Discount calculation (single source: discountService)', () => {
+  it('calculates percentage discount', () => {
+    expect(
+      discountService.calculateDiscount(
+        {
+          id: '',
+          code: 'X',
+          discount_type: 'percentage',
+          discount_value: 15,
+          minimum_purchase: null,
+          usage_limit: null,
+          usage_count: 0,
+          valid_from: null,
+          valid_until: null,
+          is_active: true,
+        },
+        1000,
+      ),
+    ).toBe(150);
+  });
+
+  it('caps fixed discount at subtotal', () => {
+    expect(
+      discountService.calculateDiscount(
+        {
+          id: '',
+          code: 'X',
+          discount_type: 'fixed',
+          discount_value: 1500,
+          minimum_purchase: null,
+          usage_limit: null,
+          usage_count: 0,
+          valid_from: null,
+          valid_until: null,
+          is_active: true,
+        },
+        1000,
+      ),
+    ).toBe(1000);
+  });
+});
+
+describe('Egyptian validators (single source: egyptianValidation)', () => {
+  it('accepts valid Egyptian mobile numbers', () => {
+    expect(validateEgyptianPhone('01012345678').valid).toBe(true);
+    expect(validateEgyptianPhone('+201012345678').valid).toBe(true);
+    expect(validateEgyptianPhone('00201012345678').valid).toBe(true);
+    expect(validateEgyptianPhone('201012345678').valid).toBe(true);
+  });
+
+  it('rejects non-Egyptian or short numbers', () => {
+    expect(validateEgyptianPhone('1234567890').valid).toBe(false);
+    expect(validateEgyptianPhone('+1-234-567-8900').valid).toBe(false);
+    expect(validateEgyptianPhone('').valid).toBe(false);
+    expect(validateEgyptianPhone('0101234567').valid).toBe(false);
+  });
+
+  it('accepts optional valid postal codes', () => {
+    expect(validateEgyptianPostalCode('').valid).toBe(true);
+    expect(validateEgyptianPostalCode('12345').valid).toBe(true);
+    expect(validateEgyptianPostalCode('abc').valid).toBe(false);
+  });
+
+  it('validates governorates against the canonical list', () => {
+    expect(validateGovernorate('Cairo').valid).toBe(true);
+    expect(validateGovernorate('Atlantis').valid).toBe(false);
+  });
+
+  it('validates city and address length rules', () => {
+    expect(validateCity('Alexandria').valid).toBe(true);
+    expect(validateCity('A').valid).toBe(false);
+    expect(validateAddress('12 Main Street, Downtown').valid).toBe(true);
+    expect(validateAddress('short').valid).toBe(false);
+    expect(validateAddress('visit https://evil.example').valid).toBe(false);
   });
 });

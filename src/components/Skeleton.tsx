@@ -4,10 +4,10 @@
  */
 
 interface SkeletonProps {
-  className?: string
-  variant?: 'rect' | 'circle' | 'text'
-  count?: number
-  height?: string
+  className?: string;
+  variant?: 'rect' | 'circle' | 'text';
+  count?: number;
+  height?: string;
 }
 
 export default function Skeleton({
@@ -17,7 +17,11 @@ export default function Skeleton({
   height = 'h-4',
 }: SkeletonProps) {
   if (variant === 'circle') {
-    return <div className={`rounded-full bg-gradient-to-r from-mist via-white to-mist animate-pulse ${className}`} />
+    return (
+      <div
+        className={`rounded-full bg-gradient-to-r from-mist via-white to-mist animate-pulse ${className}`}
+      />
+    );
   }
 
   if (variant === 'text') {
@@ -32,10 +36,10 @@ export default function Skeleton({
           />
         ))}
       </div>
-    )
+    );
   }
 
   return (
     <div className={`bg-gradient-to-r from-mist via-white to-mist animate-pulse ${className}`} />
-  )
+  );
 }

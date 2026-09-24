@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import { adminService } from '../../services/adminService';
 import { logError } from '../../lib/sentry';
+import { formatEGP } from '../../lib/format';
 
 export default function CustomerDetail() {
   const { id } = useParams();
@@ -88,7 +89,7 @@ export default function CustomerDetail() {
                 {orders.map(o => (
                   <tr key={o.id}>
                     <td className="px-4 py-3 font-medium">{o.order_number}</td>
-                    <td className="px-4 py-3">EGP {o.total.toLocaleString()}</td>
+                    <td className="px-4 py-3">{formatEGP(o.total)}</td>
                     <td className="px-4 py-3 text-navy/70">{o.status}</td>
                     <td className="px-4 py-3 text-navy/70">
                       {new Date(o.created_at).toLocaleString()}

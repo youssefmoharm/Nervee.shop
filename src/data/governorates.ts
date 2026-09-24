@@ -26,6 +26,6 @@ export const EGYPT_GOVERNORATES = [
   'Matrouh',
   'North Sinai',
   'South Sinai',
-] as const
+] as const;
 
-export type EgyptGovernorate = (typeof EGYPT_GOVERNORATES)[number]
+export type EgyptGovernorate = (typeof EGYPT_GOVERNORATES)[number];

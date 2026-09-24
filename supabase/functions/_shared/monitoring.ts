@@ -1,53 +1,53 @@
 /**
  * Monitoring and alerting utilities for Edge Functions
- * 
+ *
  * In production, these would integrate with services like:
  * - Sentry for error tracking
  * - Slack/Discord for real-time alerts
  * - Datadog/New Relic for metrics
- * 
+ *
  * For now, logs to console (visible in Supabase Edge Function logs)
  */
 
 export interface MonitoringEvent {
-  type: 'error' | 'warning' | 'info' | 'metric'
-  category: string
-  message: string
-  data?: Record<string, any>
-  timestamp?: string
-  correlationId?: string
+  type: 'error' | 'warning' | 'info' | 'metric';
+  category: string;
+  message: string;
+  data?: Record<string, any>;
+  timestamp?: string;
+  correlationId?: string;
 }
 
 // Correlation ID header name (can be customized)
-export const CORRELATION_ID_HEADER = 'x-correlation-id'
+export const CORRELATION_ID_HEADER = 'x-correlation-id';
 
 /**
  * Generate a unique correlation ID
  */
 export function generateCorrelationId(): string {
-  return `req_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+  return `req_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
 }
 
 /**
  * Extract correlation ID from request headers or generate new one
  */
 export function getCorrelationId(req: Request): string {
-  const existing = req.headers.get(CORRELATION_ID_HEADER)
+  const existing = req.headers.get(CORRELATION_ID_HEADER);
   if (existing && existing.length > 0) {
-    return existing
+    return existing;
   }
-  return generateCorrelationId()
+  return generateCorrelationId();
 }
 
 /**
  * Log a structured event with context
  */
 export function logEvent(event: MonitoringEvent) {
-  const prefix = `[${event.type.toUpperCase()}] [${event.category}]`
+  const prefix = `[${event.type.toUpperCase()}] [${event.category}]`;
   if (event.correlationId) {
-    console.log(prefix, `[${event.correlationId}]`, event.message, event.data || '')
+    console.log(prefix, `[${event.correlationId}]`, event.message, event.data || '');
   } else {
-    console.log(prefix, event.message, event.data || '')
+    console.log(prefix, event.message, event.data || '');
   }
 }
 
@@ -60,7 +60,7 @@ export function logWebhookFailure(reason: string, payload?: any) {
     category: 'PAYMENT_WEBHOOK',
     message: `Webhook failed: ${reason}`,
     data: { payload },
-  })
+  });
 }
 
 /**
@@ -72,31 +72,40 @@ export function logOrderFailure(reason: string, customerId?: string, cart?: any)
     category: 'ORDER_PLACEMENT',
     message: `Order failed: ${reason}`,
     data: { customerId, cartItemCount: cart?.length },
-  })
+  });
 }
 
 /**
  * Log successful order
  */
-export function logOrderSuccess(orderId: string, orderNumber: string, total: number, paymentMethod: string) {
+export function logOrderSuccess(
+  orderId: string,
+  orderNumber: string,
+  total: number,
+  paymentMethod: string,
+) {
   logEvent({
     type: 'info',
     category: 'ORDER_SUCCESS',
     message: `Order placed: ${orderNumber}`,
     data: { orderId, total, paymentMethod },
-  })
+  });
 }
 
 /**
  * Log payment reconciliation
  */
-export function logPaymentVerification(orderId: string, status: 'success' | 'failed', source: 'webhook' | 'manual') {
+export function logPaymentVerification(
+  orderId: string,
+  status: 'success' | 'failed',
+  source: 'webhook' | 'manual',
+) {
   logEvent({
     type: 'info',
     category: 'PAYMENT_VERIFICATION',
     message: `Payment ${status} via ${source}`,
     data: { orderId },
-  })
+  });
 }
 
 /**
@@ -108,7 +117,7 @@ export function logInventoryIssue(productId: string, size: string, reason: strin
     category: 'INVENTORY',
     message: `Inventory issue: ${reason}`,
     data: { productId, size },
-  })
+  });
 }
 
 /**
@@ -120,7 +129,7 @@ export function logEmailFailure(recipient: string, subject: string, error: strin
     category: 'EMAIL',
     message: `Email failed to ${recipient}: ${error}`,
     data: { subject },
-  })
+  });
 }
 
 /**
@@ -132,7 +141,7 @@ export function logEmailSuccess(recipient: string, subject: string) {
     category: 'EMAIL',
     message: `Email sent to ${recipient}`,
     data: { subject },
-  })
+  });
 }
 
 /**
@@ -144,7 +153,7 @@ export function logHMACFailure(ip: string, payload?: any) {
     category: 'SECURITY',
     message: `HMAC validation failed from ${ip}`,
     data: { payload },
-  })
+  });
 }
 
 /**
@@ -156,7 +165,7 @@ export function logRateLimitHit(identifier: string, endpoint: string) {
     category: 'RATE_LIMIT',
     message: `Rate limit exceeded for ${identifier}`,
     data: { endpoint },
-  })
+  });
 }
 
 /**
@@ -168,23 +177,23 @@ export function trackMetric(name: string, value: number, unit: string = 'ms') {
     category: 'PERFORMANCE',
     message: `${name}: ${value}${unit}`,
     data: { name, value, unit },
-  })
+  });
 }
 
 /**
  * Performance timer utility
  */
 export class PerformanceTimer {
-  private startTime: number
+  private startTime: number;
 
   constructor(private label: string) {
-    this.startTime = performance.now()
+    this.startTime = performance.now();
   }
 
   end() {
-    const duration = performance.now() - this.startTime
-    trackMetric(this.label, Math.round(duration))
-    return duration
+    const duration = performance.now() - this.startTime;
+    trackMetric(this.label, Math.round(duration));
+    return duration;
   }
 }
 
@@ -194,23 +203,23 @@ export class PerformanceTimer {
 export async function monitored<T>(
   label: string,
   fn: () => Promise<T>,
-  onError?: (error: Error) => void
+  onError?: (error: Error) => void,
 ): Promise<T> {
-  const timer = new PerformanceTimer(label)
+  const timer = new PerformanceTimer(label);
   try {
-    const result = await fn()
-    timer.end()
-    return result
+    const result = await fn();
+    timer.end();
+    return result;
   } catch (error) {
-    timer.end()
-    const err = error instanceof Error ? error : new Error(String(error))
+    timer.end();
+    const err = error instanceof Error ? error : new Error(String(error));
     logEvent({
       type: 'error',
       category: 'FUNCTION_ERROR',
       message: `${label} failed: ${err.message}`,
       data: { error: err.toString() },
-    })
-    if (onError) onError(err)
-    throw err
+    });
+    if (onError) onError(err);
+    throw err;
   }
 }

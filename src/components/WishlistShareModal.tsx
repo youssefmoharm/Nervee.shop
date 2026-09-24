@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { X, Copy, Mail } from 'lucide-react';
-import { createWishlistShare } from '../services/wishlistShareService';
+import { createShare } from '../services/wishlistShareService';
 import Button from './Button';
 import { useToast } from '../context/ToastContext';
 
@@ -21,17 +21,24 @@ export default function WishlistShareModal({
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
   const [copied, setCopied] = useState(false);
+  const [creating, setCreating] = useState(false);
   const { showToast } = useToast();
 
   if (!isOpen) return null;
 
-  const handleGenerateShare = () => {
+  const handleGenerateShare = async () => {
     if (wishlistSlugs.length === 0) {
       showToast('Add items to your wishlist first', 'error');
       return;
     }
-    const share = createWishlistShare(wishlistSlugs, message);
-    setShareCode(share.code);
+    setCreating(true);
+    const result = await createShare(wishlistSlugs, message);
+    setCreating(false);
+    if ('error' in result) {
+      showToast(result.error, 'error');
+      return;
+    }
+    setShareCode(result.share.code);
     showToast('Share link created!', 'success');
   };
 
@@ -107,8 +114,8 @@ export default function WishlistShareModal({
                 />
                 <p className="text-xs text-navy/50 mt-1">{message.length}/200 characters</p>
               </div>
-              <Button onClick={handleGenerateShare} className="w-full">
-                Generate Share Link
+              <Button onClick={handleGenerateShare} disabled={creating} className="w-full">
+                {creating ? 'Creating link…' : 'Generate Share Link'}
               </Button>
             </>
           ) : (

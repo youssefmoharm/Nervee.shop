@@ -7,6 +7,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { useToast } from '../context/ToastContext';
 import { Link } from 'react-router-dom';
 import type { Size } from '../types';
+import { formatEGP } from '../lib/format';
 
 export default function ProductQuickView() {
   const { isOpen, product, close } = useQuickView();
@@ -224,11 +225,11 @@ export default function ProductQuickView() {
                   </h2>
                   <div className="flex items-center gap-2">
                     <span className="text-xl font-medium text-navy">
-                      EGP {product.price.toLocaleString()}
+                      {formatEGP(product.price)}
                     </span>
                     {product.compareAtPrice && (
                       <span className="text-sm text-navy/40 line-through">
-                        EGP {product.compareAtPrice.toLocaleString()}
+                        {formatEGP(product.compareAtPrice)}
                       </span>
                     )}
                   </div>

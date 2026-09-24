@@ -3,11 +3,13 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSEO } from '../../hooks/useSEO';
+import { useI18n } from '../../lib/i18n';
 
 export default function Login() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation() as { state?: { from?: string } };
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -23,24 +25,29 @@ export default function Login() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const { error } = await signIn(email, password);
-    setLoading(false);
-    if (error) {
-      setError(error);
-      return;
+    try {
+      const { error } = await signIn(email, password);
+      if (error) {
+        setError(error);
+        return;
+      }
+      navigate(location.state?.from ?? '/account');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    navigate(location.state?.from ?? '/account');
   };
 
   return (
     <div className="bg-white text-navy min-h-screen pt-32 pb-24 px-5 md:px-8">
       <div className="mx-auto max-w-md">
-        <h1 className="nv-heading text-5xl mb-2">Sign In</h1>
+        <h1 className="nv-heading text-5xl mb-2">{t('Sign In')}</h1>
         <p className="text-navy/60 mb-8">Welcome back to NERVE.</p>
 
         <form onSubmit={onSubmit} className="space-y-5">
           <label className="block">
-            <span className="text-xs font-medium text-navy/60 mb-1.5 block">Email</span>
+            <span className="text-xs font-medium text-navy/60 mb-1.5 block">{t('Email')}</span>
             <input
               type="email"
               required
@@ -51,7 +58,7 @@ export default function Login() {
             />
           </label>
           <label className="block">
-            <span className="text-xs font-medium text-navy/60 mb-1.5 block">Password</span>
+            <span className="text-xs font-medium text-navy/60 mb-1.5 block">{t('Password')}</span>
             <input
               type="password"
               required
@@ -70,16 +77,16 @@ export default function Login() {
             disabled={loading}
             className="w-full bg-navy text-white nv-eyebrow py-4 hover:bg-navy-2 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
           >
-            {loading ? <Loader2 size={16} className="animate-spin" /> : 'Sign In'}
+            {loading ? <Loader2 size={16} className="animate-spin" /> : t('Sign In')}
           </button>
         </form>
 
         <div className="mt-6 flex items-center justify-between text-sm">
           <Link to="/forgot-password" className="text-navy/60 hover:text-navy underline">
-            Forgot password?
+            {t('Forgot password?')}
           </Link>
           <Link to="/register" className="text-navy/60 hover:text-navy underline">
-            Create an account
+            {t('Create an account')}
           </Link>
         </div>
       </div>

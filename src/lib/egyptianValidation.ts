@@ -15,6 +15,23 @@ export interface ValidationResult {
 }
 
 /**
+ * Validate an email address (shared by checkout, tests, and forms).
+ */
+export function validateEmail(email: string): ValidationResult {
+  if (!email || typeof email !== 'string') {
+    return { valid: false, error: 'Email is required' };
+  }
+  const trimmed = email.trim();
+  if (trimmed.length > 254) {
+    return { valid: false, error: 'Email is too long' };
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+    return { valid: false, error: 'Enter a valid email.' };
+  }
+  return { valid: true, normalized: trimmed.toLowerCase() };
+}
+
+/**
  * Validate Egyptian phone number
  * Accepts formats:
  * - 01012345678 (11 digits, Vodafone)
@@ -32,37 +49,26 @@ export function validateEgyptianPhone(phone: string): ValidationResult {
     return { valid: false, error: 'Phone number is required' };
   }
 
-  // Remove all whitespace
-  const cleaned = phone.trim().replace(/\s+/g, '');
+  // Remove whitespace and hyphens
+  const cleaned = phone.trim().replace(/[\s-]+/g, '');
 
   // Remove country code if present
   let normalized: string;
   if (cleaned.startsWith('+20')) {
     normalized = '0' + cleaned.slice(3); // +201012345678 → 01012345678
+  } else if (cleaned.startsWith('0020')) {
+    normalized = '0' + cleaned.slice(4); // 00201012345678 → 01012345678
   } else if (cleaned.startsWith('20')) {
     normalized = '0' + cleaned.slice(2); // 201012345678 → 01012345678
   } else {
     normalized = cleaned;
   }
 
-  // Must be exactly 11 digits
-  if (!/^\d{11}$/.test(normalized)) {
-    return { valid: false, error: 'Phone number must be 11 digits' };
-  }
-
-  // First two digits must be 01 (Egypt prefix)
-  if (!normalized.startsWith('01')) {
-    return { valid: false, error: 'Invalid phone format (must start with 01)' };
-  }
-
-  // Third digit determines carrier
-  const carrierDigit = normalized[2];
-  const validCarriers = ['0', '1', '2', '5', '6']; // 010, 011, 012, 015, 016
-
-  if (!validCarriers.includes(carrierDigit)) {
+  // Egyptian mobile: 11 digits starting with 01 (010/011/012/013/015/016/017/018/019)
+  if (!/^01\d{9}$/.test(normalized)) {
     return {
       valid: false,
-      error: 'Invalid carrier (use Vodafone, Orange, Etisalat, or Telecom Egypt)',
+      error: 'Enter a valid Egyptian mobile number (11 digits starting with 01)',
     };
   }
 
@@ -149,37 +155,10 @@ export function validateCity(city: string): ValidationResult {
 
 /**
  * Validate Egyptian governorate
- * Must be from the list of 27 valid governorates
+ * Canonical list lives in src/data/governorates.ts
  */
-export const EGYPTIAN_GOVERNORATES = [
-  'Cairo',
-  'Giza',
-  'Alexandria',
-  'Dakahlia',
-  'Damnhour',
-  'Kafr El-Sheikh',
-  'Ismailia',
-  'Port Said',
-  'Suez',
-  'Minya',
-  'Beni Suef',
-  'Fayoum',
-  'Asyut',
-  'Sohag',
-  'Luxor',
-  'Aswan',
-  'Qena',
-  'Red Sea',
-  'Matrouh',
-  'North Sinai',
-  'South Sinai',
-  'New Valley',
-  'Helwan',
-  'El-Jiza',
-  'Qalyubia',
-  'Sharqia',
-  'Gharbia',
-];
+export { EGYPT_GOVERNORATES } from '../data/governorates';
+import { EGYPT_GOVERNORATES } from '../data/governorates';
 
 export function validateGovernorate(governorate: string): ValidationResult {
   if (!governorate || typeof governorate !== 'string') {
@@ -188,11 +167,11 @@ export function validateGovernorate(governorate: string): ValidationResult {
 
   const trimmed = governorate.trim();
 
-  if (!EGYPTIAN_GOVERNORATES.includes(trimmed)) {
+  if (!(EGYPT_GOVERNORATES as readonly string[]).includes(trimmed)) {
     return {
       valid: false,
       error: 'Please select a valid Egyptian governorate',
-      normalized: EGYPTIAN_GOVERNORATES[0], // Fallback suggestion
+      normalized: EGYPT_GOVERNORATES[0], // Fallback suggestion
     };
   }
 

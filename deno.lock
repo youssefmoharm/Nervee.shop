@@ -8,6 +8,8 @@
   "workspace": {
     "packageJson": {
       "dependencies": [
+        "npm:@axe-core/playwright@^4.10.0",
+        "npm:@lhci/cli@0.14",
         "npm:@playwright/test@^1.40.0",
         "npm:@sentry/react@^10.69.0",
         "npm:@supabase/supabase-js@^2.110.8",

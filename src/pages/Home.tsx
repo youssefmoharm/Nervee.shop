@@ -11,6 +11,8 @@ import ProductCard from '../components/ProductCard';
 import Newsletter from '../components/Newsletter';
 import Skeleton from '../components/Skeleton';
 import { SectionErrorBoundary } from '../components/ErrorBoundary';
+import { FREE_SHIPPING_THRESHOLD } from '../lib/storeConfig';
+import { formatEGP } from '../lib/format';
 
 const categoryTiles = categories
   .slice(1)
@@ -76,15 +78,15 @@ export default function Home() {
         aria-labelledby="brand-heading"
       >
         <div className="mx-auto max-w-4xl text-center">
-          <p className="nv-eyebrow text-navy/50 mb-3">Alexandria, Egypt · EST 2026</p>
+          <p className="nv-eyebrow text-navy/60 mb-3">Alexandria, Egypt · EST 2026</p>
           <h2 id="brand-heading" className="nv-heading text-3xl md:text-5xl mb-6">
             NERVE — Cool but Chic
           </h2>
           <p className="text-navy/70 leading-relaxed max-w-2xl mx-auto">
             NERVE is a contemporary Egyptian concept store built around individuality, movement, and
             the pieces that become part of your everyday identity. Shop curated fashion, streetwear,
-            and lifestyle products — with free standard shipping on orders over EGP 2,000 and cash
-            on delivery across Egypt.
+            and lifestyle products — with free standard shipping on orders over{' '}
+            {formatEGP(FREE_SHIPPING_THRESHOLD)} and cash on delivery across Egypt.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4 text-sm">
             <Link to="/shop" className="nv-eyebrow underline underline-offset-4 hover:opacity-60">
@@ -146,7 +148,7 @@ export default function Home() {
         <div className="mx-auto max-w-[1600px]">
           <div className="flex items-end justify-between mb-10 md:mb-14">
             <div>
-              <p className="nv-eyebrow text-navy/50 mb-2">Just Landed</p>
+              <p className="nv-eyebrow text-navy/60 mb-2">Just Landed</p>
               <h2 className="nv-heading text-4xl md:text-6xl">The New Drop</h2>
             </div>
             <Link

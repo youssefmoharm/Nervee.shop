@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getSharedWishlist } from '../services/wishlistShareService';
+import { getShare } from '../services/wishlistShareService';
 import { productService } from '../services/productService';
 import ProductCard from '../components/ProductCard';
 import { useSEO } from '../hooks/useSEO';
@@ -25,33 +25,49 @@ export default function SharedWishlist() {
   useEffect(() => {
     if (!shareCode) return;
 
-    const shared = getSharedWishlist(shareCode);
-    if (!shared) {
-      setNotFound(true);
-      setLoading(false);
-      return;
-    }
+    let cancelled = false;
 
-    setMessage(shared.message);
+    (async () => {
+      const result = await getShare(shareCode);
+      if (cancelled) return;
 
-    // Load products by slug instead of ID
-    Promise.all(
-      shared.items.map(async slug => {
-        try {
-          return await productService.getBySlug(slug);
-        } catch {
-          return undefined;
-        }
-      }),
-    )
-      .then(products => {
-        setWishlistProducts(products.filter((p): p is Product => p !== undefined));
-        setLoading(false);
-      })
-      .catch(() => {
+      if ('error' in result) {
         setNotFound(true);
         setLoading(false);
-      });
+        return;
+      }
+      const shared = result.share;
+      if (!shared) {
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
+
+      setMessage(shared.message);
+
+      try {
+        const products = await Promise.all(
+          shared.items.map(async slug => {
+            try {
+              return await productService.getBySlug(slug);
+            } catch {
+              return undefined;
+            }
+          }),
+        );
+        if (cancelled) return;
+        setWishlistProducts(products.filter((p): p is Product => p !== undefined));
+      } catch {
+        if (cancelled) return;
+        setNotFound(true);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [shareCode]);
 
   if (loading) {

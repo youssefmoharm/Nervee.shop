@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useToast } from '../context/ToastContext';
 import { discountService } from '../services/discountService';
 import { Trash2 } from 'lucide-react';
+import { formatEGP } from '../lib/format';
 
 interface DiscountCodeInputProps {
   subtotal: number;
@@ -41,7 +42,7 @@ export function DiscountCodeInput({
     );
 
     setStatus('success');
-    showToast(`You saved ${discountAmount / 100} EGP`, 'success', 3000);
+    showToast(`You saved ${formatEGP(discountAmount)}`, 'success', 3000);
 
     onApply({
       code: result.discount.code,

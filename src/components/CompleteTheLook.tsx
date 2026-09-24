@@ -3,8 +3,14 @@ import { ShoppingBag } from 'lucide-react';
 import type { Product, CartLine, Size } from '../types';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
+import { FREE_SHIPPING_THRESHOLD } from '../lib/storeConfig';
+import { discountService } from '../services/discountService';
+import { saveCheckoutSession, loadCheckoutSession } from '../lib/checkoutSessionManager';
+import { formatEGP } from '../lib/format';
 
 const BUNDLE_DISCOUNT_PERCENT = 10;
+/** Seeded in migration 033 — server re-validates it in place_order. */
+const BUNDLE_DISCOUNT_CODE = 'BUNDLE10';
 
 interface CompleteTheLookProps {
   mainProduct: Product;
@@ -23,9 +29,16 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
 
   const bundleItems = [mainProduct, ...suggestedItems.filter(p => selectedItems.includes(p.id))];
 
+  const discountedUnitPrice = (price: number) =>
+    Math.round(price * (1 - BUNDLE_DISCOUNT_PERCENT / 100));
+
   const regularTotal = bundleItems.reduce((sum, p) => sum + p.price, 0);
-  const discountAmount = Math.floor(regularTotal * (BUNDLE_DISCOUNT_PERCENT / 100));
-  const bundlePrice = regularTotal - discountAmount;
+  const discountedTotal = bundleItems.reduce((sum, p) => sum + discountedUnitPrice(p.price), 0);
+  const discountAmount = regularTotal - discountedTotal;
+  const bundlePrice = discountedTotal;
+
+  const needsSizeSelection = (p: Product) => p.sizes.some(s => s.inStock);
+  const allSizesSelected = bundleItems.every(p => !needsSizeSelection(p) || !!selectedSizes[p.id]);
 
   const handleSelectItem = (productId: string) => {
     setSelectedItems(prev => {
@@ -35,41 +48,81 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
   };
 
   const handleAddBundle = () => {
-    // Check all selected items have sizes
-    const missingSize = suggestedItems
-      .filter(p => selectedItems.includes(p.id) && p.id !== mainProduct.id)
-      .some(p => !selectedSizes[p.id]);
-
-    if (mainProduct.sizes.some(s => s.inStock) && !selectedSizes[mainProduct.id]) {
-      showToast('Please select a size for all items', 'error', 2000);
-      return;
-    }
+    const missingSize = bundleItems.some(p => needsSizeSelection(p) && !selectedSizes[p.id]);
 
     if (missingSize) {
       showToast('Please select a size for all items', 'error', 2000);
       return;
     }
 
+    let added = 0;
     bundleItems.forEach(product => {
       const size = selectedSizes[product.id];
-      if (!size) return;
-
-      const color = product.colors[0];
-      const bundleLine: CartLine = {
-        productId: product.id,
-        name: product.name,
-        slug: product.slug,
-        image: color.image,
-        price: product.price,
-        color: color.name,
-        size,
-        quantity: 1,
-      };
-      addLine(bundleLine);
+      if (!size && needsSizeSelection(product)) return;
+      if (!size && !needsSizeSelection(product)) {
+        // Sizeless product: use first listed size when available
+        const fallback = product.sizes[0]?.size;
+        if (!fallback) return;
+        addLine(buildLine(product, fallback));
+        added += 1;
+        return;
+      }
+      addLine(buildLine(product, size));
+      added += 1;
     });
 
-    showToast(`Bundle added! You saved EGP ${discountAmount}`, 'success', 2000);
+    if (added === 0) {
+      showToast('Could not add bundle. Please try again.', 'error', 2000);
+      return;
+    }
+
+    // Apply the advertised 10% as a real discount code so the server-side
+    // place_order re-pricing honors it (cart line prices are ignored).
+    void applyBundleDiscount(bundleItems.reduce((sum, p) => sum + p.price, 0));
+
+    showToast(
+      `Bundle added! ${BUNDLE_DISCOUNT_PERCENT}% off applied with ${BUNDLE_DISCOUNT_CODE} — you saved ${formatEGP(
+        discountAmount,
+      )}`,
+      'success',
+      3000,
+    );
   };
+
+  const applyBundleDiscount = async (bundleSubtotal: number) => {
+    try {
+      const existing = loadCheckoutSession();
+      if (existing?.appliedDiscount?.code === BUNDLE_DISCOUNT_CODE) return;
+
+      const result = await discountService.validate(BUNDLE_DISCOUNT_CODE, bundleSubtotal);
+      if (!result.valid || !result.discount) {
+        console.warn('BUNDLE10 validation failed:', result.error);
+        return;
+      }
+      const amt = discountService.calculateDiscount(result.discount, bundleSubtotal);
+      saveCheckoutSession({
+        appliedDiscount: { code: result.discount.code, discount: result.discount },
+        promoCode: result.discount.code,
+        discountAmount: amt,
+      });
+    } catch (err) {
+      console.warn('Could not apply bundle discount:', err);
+    }
+  };
+
+  function buildLine(product: Product, size: Size): CartLine {
+    const color = product.colors[0];
+    return {
+      productId: product.id,
+      name: product.name,
+      slug: product.slug,
+      image: color.image,
+      price: product.price,
+      color: color.name,
+      size,
+      quantity: 1,
+    };
+  }
 
   return (
     <div className="mt-20 pt-12 border-t border-navy/10">
@@ -90,8 +143,9 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
               <p className="nv-edit text-xs font-semibold uppercase">{mainProduct.name}</p>
               <div className="flex items-baseline gap-2 mt-1">
                 <p className="nv-edit text-sm font-bold">
-                  EGP {mainProduct.price.toLocaleString()}
+                  {formatEGP(discountedUnitPrice(mainProduct.price))}
                 </p>
+                <p className="text-xs text-navy/40 line-through">{formatEGP(mainProduct.price)}</p>
               </div>
             </div>
             {mainProduct.sizes.some(s => s.inStock) && (
@@ -153,7 +207,10 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
                 <div>
                   <p className="nv-edit text-xs font-semibold uppercase">{item.name}</p>
                   <div className="flex items-baseline gap-2 mt-1">
-                    <p className="nv-edit text-sm font-bold">EGP {item.price.toLocaleString()}</p>
+                    <p className="nv-edit text-sm font-bold">
+                      {formatEGP(discountedUnitPrice(item.price))}
+                    </p>
+                    <p className="text-xs text-navy/40 line-through">{formatEGP(item.price)}</p>
                   </div>
                 </div>
                 {isSelected && item.sizes.some(s => s.inStock) && (
@@ -196,28 +253,28 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
             <div className="space-y-3 mb-6">
               <div className="flex justify-between text-sm">
                 <span className="text-navy/70">Regular price:</span>
-                <span className="font-semibold">EGP {regularTotal.toLocaleString()}</span>
+                <span className="font-semibold">{formatEGP(regularTotal)}</span>
               </div>
               <div className="flex justify-between text-sm text-green-600">
                 <span>Save {BUNDLE_DISCOUNT_PERCENT}% on bundle:</span>
-                <span className="font-semibold">- EGP {discountAmount.toLocaleString()}</span>
+                <span className="font-semibold">- {formatEGP(discountAmount)}</span>
               </div>
               <div className="border-t border-navy/10 pt-3 flex justify-between">
                 <span className="font-semibold">Bundle Price:</span>
-                <span className="nv-heading text-xl">EGP {bundlePrice.toLocaleString()}</span>
+                <span className="nv-heading text-xl">{formatEGP(bundlePrice)}</span>
               </div>
             </div>
 
             <button
               onClick={handleAddBundle}
-              disabled={!Object.values(selectedSizes).every(Boolean)}
+              disabled={!allSizesSelected}
               className="w-full bg-navy text-white nv-eyebrow py-3 rounded-lg hover:bg-navy-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               <ShoppingBag size={18} />
               Add Bundle to Bag
             </button>
             <p className="text-xs text-navy/50 mt-3 text-center">
-              Free shipping on orders over EGP 500
+              Free shipping on orders over {formatEGP(FREE_SHIPPING_THRESHOLD)}
             </p>
           </div>
         </div>

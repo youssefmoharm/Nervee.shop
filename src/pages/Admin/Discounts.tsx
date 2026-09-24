@@ -3,6 +3,7 @@ import { Loader2, Trash2 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import { logError } from '../../lib/sentry';
 import AdminLayout from './AdminLayout';
+import { formatEGP } from '../../lib/format';
 
 interface Discount {
   id: string;
@@ -213,8 +214,8 @@ export default function Discounts() {
                   <td className="px-4 py-3 text-navy/70">
                     {d.discount_type === 'percentage'
                       ? `${d.discount_value}%`
-                      : `EGP ${d.discount_value}`}
-                    {d.minimum_purchase ? ` (min EGP ${d.minimum_purchase})` : ''}
+                      : formatEGP(d.discount_value)}
+                    {d.minimum_purchase ? ` (min ${formatEGP(d.minimum_purchase)})` : ''}
                   </td>
                   <td className="px-4 py-3 text-navy/70">
                     {d.usage_count}

@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react';
 import { orderService } from '../../services/orderService';
 import { logError } from '../../lib/sentry';
 import AccountLayout from './AccountLayout';
+import { formatEGP } from '../../lib/format';
 
 interface OrderRow {
   id: string;
@@ -64,7 +65,7 @@ export default function Orders() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium">EGP {o.total.toLocaleString()}</p>
+                  <p className="text-sm font-medium">{formatEGP(o.total)}</p>
                   <p
                     className={`nv-eyebrow text-[10px] mt-0.5 ${
                       statusColor[o.status] ?? 'text-navy/60'

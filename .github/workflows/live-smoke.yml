@@ -1,0 +1,50 @@
+name: Live smoke
+
+# Nightly smoke test against the production site (https://www.nerveey.shop).
+# Runs ONLY Playwright specs tagged `@live` (live-smoke.spec.ts,
+# security-idor.spec.ts) — excluded from CI's regular E2E run.
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-smoke
+  cancel-in-progress: false
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run @live specs against production
+        env:
+          CI: true
+          PLAYWRIGHT_LIVE: '1'
+        run: npx playwright test --project=chromium --grep @live
+
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-smoke-report
+          path: playwright-report/
+          retention-days: 7
+          if-no-files-found: warn

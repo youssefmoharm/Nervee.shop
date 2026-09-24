@@ -3,11 +3,12 @@
 ## Stack
 
 - **Frontend:** React 18 + TypeScript + Vite + Tailwind CSS + React Router +
-  Framer Motion + lucide-react. Deployed to Vercel.
+  lucide-react. Deployed to Vercel.
 - **Backend:** Supabase (Postgres + Auth + Storage) accessed directly from
   the frontend via `@supabase/supabase-js`, protected by Row Level Security
-  on every table — plus two small Supabase Edge Functions for the handful
-  of operations that must not run in the browser.
+  on every table — plus a set of small Supabase Edge Functions (17
+  production functions; see `supabase/functions/`) for the handful of
+  operations that must not run in the browser.
 - **Payments:** Cash on Delivery (Egyptian market).
 
 ## Why no separate Express/Node API
@@ -28,6 +29,7 @@ extra service to deploy, monitor, and keep patched, for no security or
 functionality gain.
 
 What genuinely cannot happen in the browser:
+
 1. **Order pricing/stock validation.** The client must never be trusted for totals or "is this in stock."
 
 Both are narrow, well-defined operations — a natural fit for **Supabase Edge
@@ -36,8 +38,8 @@ Functions** (Deno, deployed alongside the same Supabase project, with
 second Node deployment on Render/Railway. If this store grows into something
 that needs more custom server-side business logic later (fraud scoring,
 multi-warehouse routing, ERP sync, etc.), that's the point where a dedicated
-Express/Fastify service earns its keep — introducing one now, for two
-functions, would just be undifferentiated infrastructure to maintain.
+Express/Fastify service earns its keep — introducing one now would just be
+undifferentiated infrastructure to maintain.
 
 ## Data flow: placing an order
 
@@ -85,24 +87,28 @@ using email + order number verification.
 ### Data Flow
 
 ```
+
 Guest Checkout → place_order() creates order + guest_orders entry
-  → confirmation email sent with verification URL
-  → guest visits /guest-order?token=X&email=Y&orderNumber=Z
-  → guestOrderService.lookup() validates and displays order
+→ confirmation email sent with verification URL
+→ guest visits /guest-order?token=X&email=Y&orderNumber=Z
+→ guestOrderService.lookup() validates and displays order
+
 ```
 
 ### URL Structure
 
 ```
+
 https://your-site.com/guest-order?token=VERIFICATION_TOKEN&email=USER_EMAIL&orderNumber=ORDER_NUM
-```
+
+````
 
 ### RLS Policy
 
 ```sql
 CREATE POLICY "Public can view guest order by email/token" ON guest_orders
   USING (verification_token = auth.jwt() ->> 'verify_token')
-```
+````
 
 ---
 
@@ -117,7 +123,8 @@ verify purchases to mark reviews as "verified."
 Customer writes review → POST /reviews
   → reviewService.create() validates and inserts
   → review visible with unverified status
-  → Admin calls verify_review_purchase() RPC
+  → Review author calls verify_review_purchase() RPC
+    (enforces customer_id = auth.uid() — own review only)
   → review marked as "verified" + badge displayed
 ```
 
@@ -137,7 +144,7 @@ CREATE TABLE product_reviews (
 );
 
 CREATE VIEW product_review_stats WITH (security_invoker = true) AS
-SELECT 
+SELECT
   p.id AS product_id,
   COUNT(r.id) AS review_count,
   COALESCE(ROUND(AVG(r.rating)::numeric, 1), 0) AS average_rating
@@ -150,16 +157,16 @@ GROUP BY p.id;
 
 ```typescript
 // Get reviews for a product
-reviewService.getByProduct(productId)
+reviewService.getByProduct(productId);
 
 // Get review statistics
-reviewService.getStats(productId)
+reviewService.getStats(productId);
 
 // Submit a review
-reviewService.create({ productId, rating, title, comment })
+reviewService.create({ productId, rating, title, comment });
 
 // Verify purchase (admin only)
-reviewService.verifyPurchase(reviewId)
+reviewService.verifyPurchase(reviewId);
 ```
 
 ---
@@ -175,19 +182,19 @@ Add `VITE_GA_ID` to your environment variables.
 ### Usage
 
 ```typescript
-import { ecommerce } from './lib/ga4'
+import { ecommerce } from '../lib/analytics';
 
 // Product view
-ecommerce.viewItem('p-001', 'White T-Shirt', 'T-Shirts', 499)
+ecommerce.viewItem('p-001', 'White T-Shirt', 'T-Shirts', 499);
 
 // Add to cart
-ecommerce.addToCart('p-001', 'White T-Shirt', 'T-Shirts', 499, 2)
+ecommerce.addToCart('p-001', 'White T-Shirt', 'T-Shirts', 499, 2);
 
 // Begin checkout
-ecommerce.beginCheckout(1497)
+ecommerce.beginCheckout(1497);
 
 // Purchase
-ecommerce.purchase('NRV-123456', 1497, 'NERVE10', 0, 0)
+ecommerce.purchase('NRV-123456', 1497);
 ```
 
 ### Automatic Tracking
@@ -202,19 +209,19 @@ ecommerce.purchase('NRV-123456', 1497, 'NERVE10', 0, 0)
 
 ### New Frontend Libraries
 
-| Feature | Library | Purpose |
-|---------|---------|---------|
-| GA4 Analytics | Custom (`lib/ga4.ts`) | Google Analytics 4 event tracking |
-| Guest Orders | Custom (`services/guestOrderService.ts`) | Order lookup without account |
-| Product Reviews | Custom (`services/reviewService.ts`) | Review submission and display |
+| Feature         | Library                                  | Purpose                           |
+| --------------- | ---------------------------------------- | --------------------------------- |
+| GA4 Analytics   | Custom (`lib/analytics.ts`)              | Google Analytics 4 event tracking |
+| Guest Orders    | Custom (`services/guestOrderService.ts`) | Order lookup without account      |
+| Product Reviews | Custom (`services/reviewService.ts`)     | Review submission and display     |
 
 ### New Database Tables
 
-| Table | Purpose | RLS |
-|-------|---------|-----|
-| `guest_orders` | Guest checkout tracking | Email + token lookup |
-| `product_reviews` | Customer product reviews | Authenticated CRUD |
-| `product_review_stats` | Review aggregates (view) | Public read |
+| Table                  | Purpose                  | RLS                  |
+| ---------------------- | ------------------------ | -------------------- |
+| `guest_orders`         | Guest checkout tracking  | Email + token lookup |
+| `product_reviews`      | Customer product reviews | Authenticated CRUD   |
+| `product_review_stats` | Review aggregates (view) | Public read          |
 
 ---
 
@@ -233,17 +240,18 @@ ecommerce.purchase('NRV-123456', 1497, 'NERVE10', 0, 0)
 
 ## Data Migration
 
-Run migration `006_guest_tracking_and_reviews.sql` to add new tables:
+Run migration `005_guest_tracking_and_reviews.sql` to add new tables:
 
 ***REMOVED***
 # Via Supabase CLI
 supabase db push
 
 # Or run in Supabase SQL Editor
-# Paste contents of supabase/migrations/006_guest_tracking_and_reviews.sql
+# Paste contents of supabase/migrations/005_guest_tracking_and_reviews.sql
 ```
 
 Migration includes:
+
 - `guest_orders` table with verification tokens
 - `product_reviews` table with verified status
 - `product_review_stats` view for review aggregates
@@ -255,19 +263,20 @@ Migration includes:
 ## Security Considerations
 
 ### Guest Order Access
+
 - Verification token expires after order completion
 - Token embedded in confirmation email URL
 - Email + order number + token required for lookup
 
 ### Product Reviews
+
 - Authenticated users only (via Supabase Auth)
 - One review per product per user
 - Admin verification required for "verified purchase" badge
 - SQL injection prevented by Supabase RLS and parameterized queries
 
 ### GA4 Integration
+
 - No PII sent to GA4 by default
 - User ID only set after authentication
 - Analytics ID exposed in browser (intentional for GA4)
-
-

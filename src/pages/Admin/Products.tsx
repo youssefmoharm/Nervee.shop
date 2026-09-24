@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import { Loader2, Pencil, Trash2 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import { logError } from '../../lib/sentry';
+import { LOW_STOCK_DEFAULT_THRESHOLD } from '../../lib/storeConfig';
 import AdminLayout from './AdminLayout';
+import { formatEGP } from '../../lib/format';
 
 interface ProductRow {
   id: string;
@@ -41,6 +43,7 @@ export default function Products() {
         <h1 className="nv-heading text-4xl">Products</h1>
         <Link
           to="/admin/products/new"
+          data-testid="new-product-link"
           className="bg-navy text-white nv-eyebrow px-6 py-3 hover:bg-navy-2 transition-colors"
         >
           + New Product
@@ -51,7 +54,7 @@ export default function Products() {
         <Loader2 className="animate-spin text-navy/40" size={20} />
       ) : (
         <div className="overflow-x-auto border border-navy/10">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" data-testid="products-table">
             <thead className="bg-mist/50 text-left">
               <tr>
                 <th className="px-4 py-3 nv-eyebrow text-[10px]">Name</th>
@@ -71,9 +74,13 @@ export default function Products() {
                   <tr key={p.id}>
                     <td className="px-4 py-3 font-medium">{p.name}</td>
                     <td className="px-4 py-3 text-navy/70">{p.category}</td>
-                    <td className="px-4 py-3">EGP {p.price.toLocaleString()}</td>
+                    <td className="px-4 py-3">{formatEGP(p.price)}</td>
                     <td
-                      className={`px-4 py-3 ${totalStock <= 10 ? 'text-red-600' : 'text-navy/70'}`}
+                      className={`px-4 py-3 ${
+                        totalStock <= LOW_STOCK_DEFAULT_THRESHOLD * 2
+                          ? 'text-red-600'
+                          : 'text-navy/70'
+                      }`}
                     >
                       {totalStock}
                     </td>

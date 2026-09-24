@@ -1,5 +1,5 @@
 ﻿import { Suspense, lazy, useState, useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Link } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Loader from './components/Loader';
@@ -29,25 +29,31 @@ import { useAbandonedCartRecovery } from './hooks/useAbandonedCartRecovery';
 import Home from './pages/Home';
 const Shop = lazy(() => import('./pages/Shop'));
 const ProductDetail = lazy(() => import('./pages/ProductDetail'));
-import Collections from './pages/Collections';
-import CollectionDetail from './pages/CollectionDetail';
-import { About } from './pages/About';
-import Cart from './pages/Cart';
-import Checkout from './pages/Checkout';
-import Comparison from './pages/Comparison';
-import SizeGuide from './pages/SizeGuide';
-import GuestOrder from './pages/GuestOrder';
-import SharedWishlist from './pages/SharedWishlist';
-import NotFound from './pages/NotFound';
-import { Contact, Shipping, Returns, Privacy, Terms, Faq } from './pages/InfoPages';
-import Unsubscribe from './pages/Unsubscribe';
-import { Newsletter } from './pages/Newsletter';
-import { TrackOrder } from './pages/TrackOrder';
+const Collections = lazy(() => import('./pages/Collections'));
+const CollectionDetail = lazy(() => import('./pages/CollectionDetail'));
+const About = lazy(() => import('./pages/About').then(m => ({ default: m.About })));
+const Cart = lazy(() => import('./pages/Cart'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const Comparison = lazy(() => import('./pages/Comparison'));
+const SizeGuide = lazy(() => import('./pages/SizeGuide'));
+const GuestOrder = lazy(() => import('./pages/GuestOrder'));
+const SharedWishlist = lazy(() => import('./pages/SharedWishlist'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+const Unsubscribe = lazy(() => import('./pages/Unsubscribe'));
+const Newsletter = lazy(() => import('./pages/Newsletter').then(m => ({ default: m.Newsletter })));
+const TrackOrder = lazy(() => import('./pages/TrackOrder'));
 
-import Login from './pages/Auth/Login';
-import Register from './pages/Auth/Register';
-import ForgotPassword from './pages/Auth/ForgotPassword';
-import ResetPassword from './pages/Auth/ResetPassword';
+const Contact = lazy(() => import('./pages/InfoPages').then(m => ({ default: m.Contact })));
+const Shipping = lazy(() => import('./pages/InfoPages').then(m => ({ default: m.Shipping })));
+const Returns = lazy(() => import('./pages/InfoPages').then(m => ({ default: m.Returns })));
+const Privacy = lazy(() => import('./pages/InfoPages').then(m => ({ default: m.Privacy })));
+const Terms = lazy(() => import('./pages/InfoPages').then(m => ({ default: m.Terms })));
+const Faq = lazy(() => import('./pages/InfoPages').then(m => ({ default: m.Faq })));
+
+const Login = lazy(() => import('./pages/Auth/Login'));
+const Register = lazy(() => import('./pages/Auth/Register'));
+const ForgotPassword = lazy(() => import('./pages/Auth/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/Auth/ResetPassword'));
 
 const Account = lazy(() => import('./pages/Account/Account'));
 const AccountOrders = lazy(() => import('./pages/Account/Orders'));
@@ -182,192 +188,199 @@ function AppContent() {
   };
 
   const routes = (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route
-        path="/shop"
-        element={
-          <Suspense fallback={<SimpleSkeleton />}>
-            <Shop />
-          </Suspense>
-        }
-      />
-      <Route
-        path="/product/:slug"
-        element={
-          <Suspense fallback={<SimpleSkeleton />}>
-            <ProductDetail />
-          </Suspense>
-        }
-      />
-      <Route path="/collections" element={<Collections />} />
-      <Route path="/collections/:id" element={<CollectionDetail />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/cart" element={<Cart />} />
-      <Route path="/checkout" element={<Checkout />} />
-      <Route path="/compare" element={<Comparison />} />
-      <Route path="/size-guide" element={<SizeGuide />} />
-      <Route path="/newsletter" element={<Newsletter />} />
-      <Route path="/track-order" element={<TrackOrder />} />
+    <Suspense fallback={<SimpleSkeleton />}>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/shop" element={<Shop />} />
+        <Route path="/product/:slug" element={<ProductDetail />} />
+        <Route path="/collections" element={<Collections />} />
+        <Route path="/collections/:id" element={<CollectionDetail />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/compare" element={<Comparison />} />
+        <Route path="/size-guide" element={<SizeGuide />} />
+        <Route path="/newsletter" element={<Newsletter />} />
+        <Route path="/track-order" element={<TrackOrder />} />
 
-      <Route path="/guest-order" element={<GuestOrder />} />
-      <Route path="/wishlist/:shareCode" element={<SharedWishlist />} />
-      <Route path="/contact" element={<Contact />} />
-      <Route path="/faq" element={<Faq />} />
-      <Route path="/shipping" element={<Shipping />} />
-      <Route path="/returns" element={<Returns />} />
-      <Route path="/privacy" element={<Privacy />} />
-      <Route path="/terms" element={<Terms />} />
-      <Route path="/unsubscribe" element={<Unsubscribe />} />
+        <Route path="/guest-order" element={<GuestOrder />} />
+        <Route path="/wishlist/:shareCode" element={<SharedWishlist />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/faq" element={<Faq />} />
+        <Route path="/shipping" element={<Shipping />} />
+        <Route path="/returns" element={<Returns />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/unsubscribe" element={<Unsubscribe />} />
 
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
-      <Route
-        path="/account"
-        element={
-          <ProtectedRoute>
-            <Suspense fallback={<SimpleSkeleton />}>
-              <Account />
-            </Suspense>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/account/orders"
-        element={
-          <ProtectedRoute>
-            <Suspense fallback={<SimpleSkeleton />}>
-              <AccountOrders />
-            </Suspense>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/account/orders/:id"
-        element={
-          <ProtectedRoute>
-            <Suspense fallback={<SimpleSkeleton />}>
-              <AccountOrderDetail />
-            </Suspense>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/account/addresses"
-        element={
-          <ProtectedRoute>
-            <Suspense fallback={<SimpleSkeleton />}>
-              <AccountAddresses />
-            </Suspense>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/account/wishlist"
-        element={
-          <ProtectedRoute>
-            <Suspense fallback={<SimpleSkeleton />}>
-              <AccountWishlist />
-            </Suspense>
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/account"
+          element={
+            <ProtectedRoute>
+              <Suspense fallback={<SimpleSkeleton />}>
+                <Account />
+              </Suspense>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/account/orders"
+          element={
+            <ProtectedRoute>
+              <Suspense fallback={<SimpleSkeleton />}>
+                <AccountOrders />
+              </Suspense>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/account/orders/:id"
+          element={
+            <ProtectedRoute>
+              <Suspense fallback={<SimpleSkeleton />}>
+                <AccountOrderDetail />
+              </Suspense>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/account/addresses"
+          element={
+            <ProtectedRoute>
+              <Suspense fallback={<SimpleSkeleton />}>
+                <AccountAddresses />
+              </Suspense>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/account/wishlist"
+          element={
+            <ProtectedRoute>
+              <Suspense fallback={<SimpleSkeleton />}>
+                <AccountWishlist />
+              </Suspense>
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/admin/*"
-        element={
-          <Suspense fallback={<AdminFallback />}>
-            <Routes>
-              <Route
-                index
-                element={
-                  <AdminRoute>
-                    <AdminDashboard />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="products"
-                element={
-                  <AdminRoute>
-                    <AdminProducts />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="products/:id"
-                element={
-                  <AdminRoute>
-                    <AdminProductForm />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="orders"
-                element={
-                  <AdminRoute>
-                    <AdminOrders />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="customers"
-                element={
-                  <AdminRoute>
-                    <AdminCustomers />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="customers/:id"
-                element={
-                  <AdminRoute>
-                    <AdminCustomerDetail />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="contacts"
-                element={
-                  <AdminRoute>
-                    <AdminContacts />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="newsletter"
-                element={
-                  <AdminRoute>
-                    <AdminNewsletter />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="discounts"
-                element={
-                  <AdminRoute>
-                    <AdminDiscounts />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="returns"
-                element={
-                  <AdminRoute>
-                    <AdminReturns />
-                  </AdminRoute>
-                }
-              />
-            </Routes>
-          </Suspense>
-        }
-      />
+        <Route
+          path="/admin/*"
+          element={
+            <Suspense fallback={<AdminFallback />}>
+              <Routes>
+                <Route
+                  index
+                  element={
+                    <AdminRoute>
+                      <AdminDashboard />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="products"
+                  element={
+                    <AdminRoute>
+                      <AdminProducts />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="products/:id"
+                  element={
+                    <AdminRoute>
+                      <AdminProductForm />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="orders"
+                  element={
+                    <AdminRoute>
+                      <AdminOrders />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="customers"
+                  element={
+                    <AdminRoute>
+                      <AdminCustomers />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="customers/:id"
+                  element={
+                    <AdminRoute>
+                      <AdminCustomerDetail />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="contacts"
+                  element={
+                    <AdminRoute>
+                      <AdminContacts />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="newsletter"
+                  element={
+                    <AdminRoute>
+                      <AdminNewsletter />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="discounts"
+                  element={
+                    <AdminRoute>
+                      <AdminDiscounts />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="returns"
+                  element={
+                    <AdminRoute>
+                      <AdminReturns />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="*"
+                  element={
+                    <AdminRoute>
+                      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-5">
+                        <h1 className="nv-heading text-4xl mb-3">Admin page not found</h1>
+                        <p className="text-navy/60 mb-6">
+                          The admin page you&apos;re looking for doesn&apos;t exist.
+                        </p>
+                        <Link
+                          to="/admin"
+                          className="inline-block bg-navy text-white nv-eyebrow px-6 py-3 hover:bg-navy-2 transition-colors"
+                        >
+                          Back to Admin Dashboard
+                        </Link>
+                      </div>
+                    </AdminRoute>
+                  }
+                />
+              </Routes>
+            </Suspense>
+          }
+        />
 
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
   );
 
   return (
