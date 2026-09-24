@@ -57,14 +57,14 @@ export default function Cart() {
 
   const applyPromo = async () => {
     if (!promo.trim()) {
-      showToast('Please enter a discount code', 'error', 3000);
+      showToast(t('Please enter a discount code'), 'error', 3000);
       return;
     }
 
     const result = await discountService.validate(promo.trim(), subtotal);
 
     if (!result.valid || !result.discount) {
-      showToast(result.error || 'Please check your code and try again', 'error', 3000);
+      showToast(result.error || t('Please check your code and try again'), 'error', 3000);
       setPromoStatus('invalid');
       return;
     }
@@ -80,7 +80,7 @@ export default function Cart() {
       discountAmount: amt,
     });
     setPromoStatus('applied');
-    showToast(`You saved ${formatEGP(amt)}`, 'success', 3000);
+    showToast(`${t('You saved')} ${formatEGP(amt)}`, 'success', 3000);
   };
 
   // Single source of truth: lib/checkout estimateShippingCost
@@ -89,13 +89,15 @@ export default function Cart() {
   return (
     <div className="bg-white text-navy min-h-screen pt-24 md:pt-28 px-5 md:px-8 pb-24">
       <div className="mx-auto max-w-[1600px]">
-        <h1 className="nv-heading text-5xl md:text-7xl mb-10">Your Bag</h1>
+        <h1 className="nv-heading text-5xl md:text-7xl mb-10">{t('Your Bag')}</h1>
 
         {lines.length === 0 ? (
           <EmptyState
-            title="Your bag is empty"
-            body="Browse the drop and add pieces you love — checkout is cash on delivery across Egypt."
-            actionLabel="Shop the Drop"
+            title={t('Your bag is empty')}
+            body={t(
+              'Browse the drop and add pieces you love — checkout is cash on delivery across Egypt.',
+            )}
+            actionLabel={t('Shop the Drop')}
             onAction={() => navigate('/shop')}
           />
         ) : (
@@ -194,11 +196,11 @@ export default function Cart() {
                 </div>
                 {promoStatus === 'applied' && (
                   <p className="text-xs text-green-700">
-                    Code {promo.trim().toUpperCase()} applied — you saved.
+                    {t('Code')} {promo.trim().toUpperCase()} {t('applied — you saved.')}
                   </p>
                 )}
                 {promoStatus === 'invalid' && (
-                  <p className="text-xs text-red-600">Invalid discount code.</p>
+                  <p className="text-xs text-red-600">{t('Invalid discount code.')}</p>
                 )}
 
                 <div className="space-y-2 pt-2 border-t border-navy/10 text-sm">
@@ -232,10 +234,10 @@ export default function Cart() {
                   {t('Proceed to Checkout')}
                 </Link>
                 <p className="flex items-center justify-center gap-2 text-xs text-navy/50">
-                  <Lock size={12} /> Secure checkout — SSL encrypted
+                  <Lock size={12} /> {t('Secure checkout — SSL encrypted')}
                 </p>
                 <p className="flex items-center justify-center gap-2 text-xs text-navy/50">
-                  <ShieldCheck size={12} /> Free returns within 14 days
+                  <ShieldCheck size={12} /> {t('Free returns within 14 days')}
                 </p>
               </div>
             </div>

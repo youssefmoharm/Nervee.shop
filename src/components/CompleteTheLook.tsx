@@ -201,7 +201,7 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
                   <button
                     onClick={() => handleSelectItem(item.id)}
                     className="absolute top-2 right-2 w-6 h-6 rounded-full bg-navy text-white flex items-center justify-center hover:scale-110 transition-transform"
-                    aria-label={isSelected ? 'Remove from bundle' : 'Add to bundle'}
+                    aria-label={isSelected ? t('Remove from bundle') : t('Add to bundle')}
                   >
                     {isSelected ? '✓' : '+'}
                   </button>
@@ -218,7 +218,7 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
                 {isSelected && item.sizes.some(s => s.inStock) && (
                   <div className="mt-3">
                     <label htmlFor={`size-${item.id}`} className="text-xs text-navy/60 mb-2 block">
-                      Size
+                      {t('Size')}
                     </label>
                     <select
                       id={`size-${item.id}`}
@@ -231,7 +231,7 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
                       }
                       className="w-full px-3 py-2 text-sm border border-navy/20 rounded focus:outline-none focus:border-navy"
                     >
-                      <option value="">Select size</option>
+                      <option value="">{t('Select size')}</option>
                       {item.sizes
                         .filter(s => s.inStock)
                         .map(s => (
@@ -250,19 +250,21 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
         {/* Bundle Summary */}
         <div className="bg-navy/5 rounded-lg p-6 md:p-8 mb-8">
           <div className="max-w-md">
-            <h3 className="nv-heading text-xl mb-4">Bundle Summary</h3>
+            <h3 className="nv-heading text-xl mb-4">{t('Bundle Summary')}</h3>
 
             <div className="space-y-3 mb-6">
               <div className="flex justify-between text-sm">
-                <span className="text-navy/70">Regular price:</span>
+                <span className="text-navy/70">{t('Regular price')}:</span>
                 <span className="font-semibold">{formatEGP(regularTotal)}</span>
               </div>
               <div className="flex justify-between text-sm text-green-600">
-                <span>Save {BUNDLE_DISCOUNT_PERCENT}% on bundle:</span>
+                <span>
+                  {t('Save')} {BUNDLE_DISCOUNT_PERCENT}% {t('on bundle')}:
+                </span>
                 <span className="font-semibold">- {formatEGP(discountAmount)}</span>
               </div>
               <div className="border-t border-navy/10 pt-3 flex justify-between">
-                <span className="font-semibold">Bundle Price:</span>
+                <span className="font-semibold">{t('Bundle Price')}:</span>
                 <span className="nv-heading text-xl">{formatEGP(bundlePrice)}</span>
               </div>
             </div>
@@ -273,10 +275,10 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
               className="w-full bg-navy text-white nv-eyebrow py-3 rounded-lg hover:bg-navy-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               <ShoppingBag size={18} />
-              Add Bundle to Bag
+              {t('Add Bundle to Bag')}
             </button>
             <p className="text-xs text-navy/50 mt-3 text-center">
-              Free shipping on orders over {formatEGP(FREE_SHIPPING_THRESHOLD)}
+              {t('Free shipping on orders over')} {formatEGP(FREE_SHIPPING_THRESHOLD)}
             </p>
           </div>
         </div>

@@ -2,12 +2,14 @@ import { CheckCircle } from 'lucide-react';
 
 import { FREE_SHIPPING_THRESHOLD } from '../lib/storeConfig';
 import { formatEGP, formatNumber } from '../lib/format';
+import { useI18n } from '../lib/i18n';
 
 interface ShippingProgressBarProps {
   subtotal: number;
 }
 
 export default function ShippingProgressBar({ subtotal }: ShippingProgressBarProps) {
+  const { t } = useI18n();
   const progress = Math.min((subtotal / FREE_SHIPPING_THRESHOLD) * 100, 100);
   const remaining = Math.max(FREE_SHIPPING_THRESHOLD - subtotal, 0);
   const qualifies = subtotal >= FREE_SHIPPING_THRESHOLD;
@@ -20,10 +22,12 @@ export default function ShippingProgressBar({ subtotal }: ShippingProgressBarPro
           {qualifies ? (
             <span className="flex items-center gap-2 text-green-700">
               <CheckCircle size={16} />
-              Free Shipping Qualified
+              {t('Free Shipping Qualified')}
             </span>
           ) : (
-            <span>Free Shipping at {formatEGP(FREE_SHIPPING_THRESHOLD)}</span>
+            <span>
+              {t('Free Shipping at')} {formatEGP(FREE_SHIPPING_THRESHOLD)}
+            </span>
           )}
         </h3>
       </div>
@@ -52,15 +56,17 @@ export default function ShippingProgressBar({ subtotal }: ShippingProgressBarPro
       {/* Message */}
       <p className="text-xs text-navy/70 font-medium">
         {qualifies ? (
-          '✓ Your order qualifies for free shipping!'
+          t('✓ Your order qualifies for free shipping!')
         ) : (
-          <>Add {formatEGP(remaining)} more for FREE shipping</>
+          <>
+            {t('Add')} {formatEGP(remaining)} {t('more for FREE shipping')}
+          </>
         )}
       </p>
 
       {/* Info note */}
       <p className="text-xs text-navy/50 border-t border-navy/10 pt-3">
-        Applied to all orders within Egypt
+        {t('Applied to all orders within Egypt')}
       </p>
     </div>
   );

@@ -109,7 +109,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
                 <User size={20} strokeWidth={1.75} />
               </Link>
               <button
-                aria-label={`Bag, ${count} items`}
+                aria-label={`${t('Bag')}, ${count} ${t('items')}`}
                 data-testid="bag-button"
                 onClick={openCart}
                 className="relative w-10 h-10 flex items-center justify-center hover:bg-mist rounded transition-colors"

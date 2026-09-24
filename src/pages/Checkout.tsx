@@ -151,7 +151,7 @@ export default function Checkout() {
     e.preventDefault();
 
     if (!form.discountCode.trim()) {
-      showToast('Please enter a discount code', 'error', 3000);
+      showToast(t('Please enter a discount code'), 'error', 3000);
       return;
     }
 
@@ -160,7 +160,7 @@ export default function Checkout() {
       const result = await discountService.validate(form.discountCode.trim(), subtotal);
 
       if (!result.valid || !result.discount) {
-        showToast(result.error || 'Please check your code and try again', 'error', 3000);
+        showToast(result.error || t('Please check your code and try again'), 'error', 3000);
         setAppliedDiscount(null);
         return;
       }
@@ -178,7 +178,7 @@ export default function Checkout() {
         promoCode: result.discount.code,
         discountAmount: discountAmt,
       });
-      showToast(`You saved ${formatEGP(discountAmt)}`, 'success', 3000);
+      showToast(`${t('You saved')} ${formatEGP(discountAmt)}`, 'success', 3000);
     } finally {
       setApplyingDiscount(false);
     }
@@ -188,7 +188,7 @@ export default function Checkout() {
     setAppliedDiscount(null);
     setForm(f => ({ ...f, discountCode: '' }));
     saveCheckoutSession({ appliedDiscount: null, promoCode: null, discountAmount: null });
-    showToast('Order total has been updated', 'success', 3000);
+    showToast(t('Order total has been updated'), 'success', 3000);
   };
 
   const validateStep2 = () => {
@@ -232,7 +232,7 @@ export default function Checkout() {
     if (error || !order) {
       setPlacing(false);
       setPlaceError(
-        error ?? 'We could not place your order. Please check your connection and try again.',
+        error ?? t('We could not place your order. Please check your connection and try again.'),
       );
       return;
     }
@@ -276,9 +276,9 @@ export default function Checkout() {
       <div className="bg-white text-navy min-h-screen pt-32 px-5" data-testid="empty-cart">
         <div className="mx-auto max-w-xl">
           <EmptyState
-            title="Your bag is empty"
-            body="Add a piece before checking out — payment is cash on delivery across Egypt."
-            actionLabel="Continue Shopping"
+            title={t('Your bag is empty')}
+            body={t('Add a piece before checking out — payment is cash on delivery across Egypt.')}
+            actionLabel={t('Continue Shopping')}
             onAction={() => navigate('/shop')}
           />
         </div>
@@ -296,9 +296,10 @@ export default function Checkout() {
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800 flex items-start gap-3">
               <span className="text-lg">ℹ️</span>
               <div>
-                <p className="font-semibold">Your checkout was saved</p>
+                <p className="font-semibold">{t('Your checkout was saved')}</p>
                 <p className="text-xs text-blue-700 mt-1">
-                  We recovered your cart and form data. You&apos;re on step {step} of 4.
+                  {t('We recovered your cart and form data.')} {t("You're on step")} {step}{' '}
+                  {t('of 4.')}
                 </p>
               </div>
             </div>
@@ -310,7 +311,7 @@ export default function Checkout() {
               to="/cart"
               className="inline-flex items-center gap-1 text-sm text-navy/50 hover:text-navy mb-6"
             >
-              <ChevronLeft size={16} /> Back to bag
+              <ChevronLeft size={16} /> {t('Back to bag')}
             </Link>
             <div className="flex items-center gap-2 mb-10 overflow-x-auto">
               {steps.slice(0, 4).map((label, i) => (
@@ -346,8 +347,9 @@ export default function Checkout() {
               <div className="space-y-5">
                 <h2 className="nv-heading text-3xl mb-4">{t('Customer Information')}</h2>
                 <div className="rounded-2xl border border-navy/10 bg-mist/20 p-4 text-sm text-navy/70">
-                  We keep your information secure and only use it to fulfill your order and send
-                  delivery updates.
+                  {t(
+                    'We keep your information secure and only use it to fulfill your order and send delivery updates.',
+                  )}
                 </div>
                 <Field label="Email" error={errors.email} errorId="email-error">
                   <input
@@ -410,8 +412,9 @@ export default function Checkout() {
               <div className="space-y-5">
                 <h2 className="nv-heading text-3xl mb-4">{t('Shipping Address')}</h2>
                 <div className="rounded-2xl border border-navy/10 bg-mist/20 p-4 text-sm text-navy/70">
-                  We currently deliver across Egypt with the fastest available option for your
-                  governorate.
+                  {t(
+                    'We currently deliver across Egypt with the fastest available option for your governorate.',
+                  )}
                 </div>
                 <Field label="Address" error={errors.address} errorId="address-error">
                   <input
@@ -420,7 +423,7 @@ export default function Checkout() {
                     value={form.address}
                     onChange={e => set('address', e.target.value)}
                     className={inputCls(!!errors.address)}
-                    placeholder="Street, building, apartment"
+                    placeholder={t('Street, building, apartment')}
                     data-testid="address-input"
                     aria-required="true"
                     aria-describedby={errors.address ? 'address-error' : undefined}
@@ -449,7 +452,7 @@ export default function Checkout() {
                       aria-required="true"
                       aria-describedby={errors.governorate ? 'governorate-error' : undefined}
                     >
-                      <option value="">Select governorate</option>
+                      <option value="">{t('Select governorate')}</option>
                       {EGYPT_GOVERNORATES.map(g => (
                         <option key={g} value={g}>
                           {g}
@@ -478,14 +481,15 @@ export default function Checkout() {
 
             {step === 3 && (
               <div className="space-y-5">
-                <h2 className="nv-heading text-3xl mb-4">Delivery & Payment</h2>
+                <h2 className="nv-heading text-3xl mb-4">{t('Delivery & Payment')}</h2>
                 <div className="rounded-2xl border border-navy/10 bg-mist/20 p-4 text-sm text-navy/70">
-                  Choose your delivery speed and preferred payment method. We deliver across Egypt
-                  with the fastest available option for your governorate.
+                  {t(
+                    'Choose your delivery speed and preferred payment method. We deliver across Egypt with the fastest available option for your governorate.',
+                  )}
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-navy mb-3">Delivery Method</h3>
+                  <h3 className="text-sm font-medium text-navy mb-3">{t('Delivery Method')}</h3>
                   <div className="space-y-2">
                     <label className="flex items-center gap-3 p-4 border border-navy/20 rounded-lg hover:border-navy/50 cursor-pointer transition-colors">
                       <input
@@ -497,8 +501,8 @@ export default function Checkout() {
                         className="w-4 h-4 text-navy"
                       />
                       <div className="flex-1">
-                        <p className="font-medium text-navy">Standard Delivery</p>
-                        <p className="text-xs text-navy/60">3-5 business days</p>
+                        <p className="font-medium text-navy">{t('Standard Delivery')}</p>
+                        <p className="text-xs text-navy/60">{t('3-5 business days')}</p>
                       </div>
                       <span className="text-sm font-semibold text-navy">
                         {formatEGP(estimateShippingCost(subtotal, 'standard'))}
@@ -514,8 +518,8 @@ export default function Checkout() {
                         className="w-4 h-4 text-navy"
                       />
                       <div className="flex-1">
-                        <p className="font-medium text-navy">Express Delivery</p>
-                        <p className="text-xs text-navy/60">1-2 business days</p>
+                        <p className="font-medium text-navy">{t('Express Delivery')}</p>
+                        <p className="text-xs text-navy/60">{t('1-2 business days')}</p>
                       </div>
                       <span className="text-sm font-semibold text-navy">
                         {formatEGP(estimateShippingCost(subtotal, 'express'))}
@@ -541,21 +545,21 @@ export default function Checkout() {
                         <div>
                           <p className="font-medium text-navy">{t('Cash on Delivery')}</p>
                           <p className="text-xs text-navy/60">
-                            Pay to the courier when your order arrives
+                            {t('Pay to the courier when your order arrives')}
                           </p>
                         </div>
                       </div>
                     </label>
                   </div>
                   <p className="text-xs text-navy/50 mt-2">
-                    Online card payment is not available — every order is cash on delivery.
+                    {t('Online card payment is not available — every order is cash on delivery.')}
                   </p>
                 </div>
 
                 <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-sm text-green-800">
-                    <span className="font-semibold">✓ Order Protected</span> — Your order is secured
-                    with our buyer protection guarantee.
+                    <span className="font-semibold">{t('✓ Order Protected')}</span> —{' '}
+                    {t('Your order is secured with our buyer protection guarantee.')}
                   </p>
                 </div>
               </div>
@@ -565,13 +569,16 @@ export default function Checkout() {
               <div className="space-y-5">
                 <h2 className="nv-heading text-3xl mb-4">{t('Review Your Order')}</h2>
                 <div className="rounded-2xl border border-navy/10 bg-mist/20 p-4 text-sm text-navy/70">
-                  Please review all details before placing your order. You can go back to make any
-                  changes.
+                  {t(
+                    'Please review all details before placing your order. You can go back to make any changes.',
+                  )}
                 </div>
 
                 <div className="space-y-4">
                   <div className="p-4 border border-navy/10 rounded-lg">
-                    <h3 className="text-sm font-medium text-navy/60 mb-2">Contact Information</h3>
+                    <h3 className="text-sm font-medium text-navy/60 mb-2">
+                      {t('Contact Information')}
+                    </h3>
                     <p className="text-sm text-navy">
                       {form.firstName} {form.lastName}
                     </p>
@@ -588,7 +595,9 @@ export default function Checkout() {
                       {form.city}, {form.governorate}
                     </p>
                     {form.postal && (
-                      <p className="text-sm text-navy/60">Postal Code: {form.postal}</p>
+                      <p className="text-sm text-navy/60">
+                        {t('Postal Code')}: {form.postal}
+                      </p>
                     )}
                   </div>
 
@@ -600,7 +609,9 @@ export default function Checkout() {
                       <div className="flex items-center gap-2">
                         <Package size={16} className="text-navy" />
                         <span className="text-navy">
-                          {form.delivery === 'standard' ? 'Standard' : 'Express'} Delivery
+                          {t(
+                            form.delivery === 'standard' ? 'Standard Delivery' : 'Express Delivery',
+                          )}
                         </span>
                         <span className="ms-auto text-navy/60">
                           {formatEGP(estimateShippingCost(subtotal, form.delivery))}
@@ -621,16 +632,18 @@ export default function Checkout() {
                 <div className="w-16 h-16 rounded-full bg-navy text-white flex items-center justify-center mx-auto mb-6">
                   <Check size={28} />
                 </div>
-                <h2 className="nv-heading text-4xl mb-3">Order Confirmed</h2>
-                <p className="text-navy/60 mb-1">Thank you — your NERVE order is being prepared.</p>
+                <h2 className="nv-heading text-4xl mb-3">{t('Order Confirmed')}</h2>
+                <p className="text-navy/60 mb-1">
+                  {t('Thank you — your NERVE order is being prepared.')}
+                </p>
                 <p data-testid="order-number" className="nv-eyebrow mt-4">
-                  Order #{orderNumber}
+                  {t('Order')} #{orderNumber}
                 </p>
                 <Link
                   to="/shop"
                   className="inline-block mt-8 bg-navy text-white nv-eyebrow px-8 py-4 hover:bg-navy-2 transition-colors"
                 >
-                  Continue Shopping
+                  {t('Continue Shopping')}
                 </Link>
               </div>
             )}
@@ -679,7 +692,7 @@ export default function Checkout() {
               <div className="bg-gradient-to-r from-navy to-navy-2 px-4 md:px-6 py-3 md:py-4">
                 <h3 className="text-white nv-eyebrow flex items-center gap-2 text-sm md:text-base">
                   <Package size={16} />
-                  Order Summary
+                  {t('Order Summary')}
                 </h3>
               </div>
 
@@ -722,22 +735,24 @@ export default function Checkout() {
               {/* Pricing */}
               <div className="px-3 md:px-6 py-3 md:py-4 space-y-2 md:space-y-3 text-xs md:text-sm">
                 <div className="flex justify-between items-center text-navy/60">
-                  <span>Subtotal</span>
+                  <span>{t('Subtotal')}</span>
                   <span className="font-medium text-navy">{formatEGP(subtotal)}</span>
                 </div>
 
                 {appliedDiscount && (
                   <div className="flex justify-between items-center text-green-600">
-                    <span>Discount ({appliedDiscount.code})</span>
+                    <span>
+                      {t('Discount')} ({appliedDiscount.code})
+                    </span>
                     <span className="font-medium">- {formatEGP(discountAmount)}</span>
                   </div>
                 )}
 
                 <div className="flex justify-between items-center text-navy/60">
-                  <span>Shipping</span>
+                  <span>{t('Shipping')}</span>
                   <span className="font-medium text-navy">
                     {shippingCost === 0 ? (
-                      <span className="text-green-600">Free</span>
+                      <span className="text-green-600">{t('Free')}</span>
                     ) : (
                       formatEGP(shippingCost)
                     )}
@@ -745,13 +760,13 @@ export default function Checkout() {
                 </div>
 
                 <div className="flex justify-between items-center text-navy/40 text-[11px]">
-                  <span>VAT (14% incl.)</span>
+                  <span>{t('VAT (14% incl.)')}</span>
                   <span>{formatEGP(vatAmount)}</span>
                 </div>
 
                 {/* Total */}
                 <div className="pt-2 md:pt-3 border-t border-navy/10 flex justify-between items-center">
-                  <span className="font-semibold text-navy">Total</span>
+                  <span className="font-semibold text-navy">{t('Total')}</span>
                   <span className="text-base md:text-lg font-bold text-navy">
                     {formatEGP(finalTotal)}
                   </span>
@@ -762,7 +777,7 @@ export default function Checkout() {
               <div className="mx-3 md:mx-6 mb-3 md:mb-6">
                 <div className="rounded-lg border border-navy/10 bg-mist/30 p-3 md:p-4">
                   <p className="text-[10px] md:text-[11px] font-semibold text-navy/70 mb-2 md:mb-3 uppercase tracking-wide">
-                    Discount Code
+                    {t('Discount Code')}
                   </p>
                   {appliedDiscount ? (
                     <div className="flex items-center gap-2">
@@ -773,7 +788,7 @@ export default function Checkout() {
                         onClick={handleRemoveDiscount}
                         className="px-2 md:px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded transition-colors"
                       >
-                        Remove
+                        {t('Remove')}
                       </button>
                     </div>
                   ) : (
@@ -782,7 +797,7 @@ export default function Checkout() {
                         type="text"
                         value={form.discountCode}
                         onChange={e => setForm(f => ({ ...f, discountCode: e.target.value }))}
-                        placeholder="Enter code"
+                        placeholder={t('Enter code')}
                         className="flex-1 border border-navy/20 px-3 py-2 text-xs rounded focus:outline-none focus:border-navy focus:ring-1 focus:ring-navy/20 transition-colors"
                         disabled={applyingDiscount}
                       />
@@ -794,10 +809,10 @@ export default function Checkout() {
                         {applyingDiscount ? (
                           <>
                             <Loader2 size={14} className="animate-spin" />
-                            Applying...
+                            {t('Applying...')}
                           </>
                         ) : (
-                          'Apply'
+                          t('Apply')
                         )}
                       </button>
                     </form>
@@ -809,8 +824,8 @@ export default function Checkout() {
               <div className="bg-mist/30 border-t border-navy/10 px-3 md:px-6 py-2 md:py-3 text-[10px] md:text-[11px] text-navy/60 flex items-start gap-2">
                 <Truck size={14} className="flex-shrink-0 mt-0.5 text-navy/50" />
                 <span>
-                  <span className="font-semibold text-navy/80">Fast delivery updates</span> and
-                  secure payment protection.
+                  <span className="font-semibold text-navy/80">{t('Fast delivery updates')}</span>{' '}
+                  {t('and secure payment protection.')}
                 </span>
               </div>
             </div>
@@ -840,10 +855,11 @@ function Field({
   errorId?: string;
   children: React.ReactNode;
 }) {
+  const { t } = useI18n();
   return (
     <label className="block">
       <span className="text-xs font-medium text-navy/60 mb-1.5 block">
-        {label}
+        {t(label)}
         {required && (
           <span className="text-red-500 ms-0.5" aria-hidden="true">
             *

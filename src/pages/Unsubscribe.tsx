@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { getEndpoint } from '../lib/apiEndpoints';
 import { logError } from '../lib/sentry';
 import { useSEO } from '../hooks/useSEO';
+import { useI18n } from '../lib/i18n';
 
 type Status = 'loading' | 'success' | 'error' | 'resubscribe';
 
@@ -16,6 +17,7 @@ interface UnsubscribeResult {
 }
 
 export default function Unsubscribe() {
+  const { t } = useI18n();
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<Status>('loading');
   const [result, setResult] = useState<UnsubscribeResult | null>(null);
@@ -123,7 +125,7 @@ export default function Unsubscribe() {
             <div className="inline-block animate-spin">
               <div className="w-8 h-8 border-4 border-navy border-t-transparent rounded-full" />
             </div>
-            <p className="mt-4 text-gray-600">Processing your request...</p>
+            <p className="mt-4 text-gray-600">{t('Processing your request...')}</p>
           </div>
         )}
 
@@ -131,21 +133,21 @@ export default function Unsubscribe() {
         {status === 'success' && (
           <div className="text-center space-y-4">
             <div className="text-4xl">✅</div>
-            <h1 className="text-2xl font-bold text-navy">You&apos;ve been unsubscribed</h1>
+            <h1 className="text-2xl font-bold text-navy">{t("You've been unsubscribed")}</h1>
             <p className="text-gray-600">
-              We&apos;ve removed <span className="font-semibold">{result?.email}</span> from our
-              email list.
+              {t("We've removed")} <span className="font-semibold">{result?.email}</span>{' '}
+              {t('from our email list.')}
             </p>
 
             {/* Feedback Section */}
             <div className="mt-8 space-y-3 border-t pt-6">
               <p className="text-sm text-gray-600 font-medium">
-                We&apos;d love to know why you&apos;re leaving:
+                {t("We'd love to know why you're leaving:")}
               </p>
               <textarea
                 value={feedback}
                 onChange={e => setFeedback(e.target.value)}
-                placeholder="Optional: Tell us what we could improve..."
+                placeholder={t('Optional: Tell us what we could improve...')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-navy resize-none"
                 rows={3}
               />
@@ -154,7 +156,7 @@ export default function Unsubscribe() {
                   onClick={handleFeedback}
                   className="w-full bg-navy text-white py-2 rounded-lg hover:bg-navy-2 transition text-sm font-medium"
                 >
-                  Send Feedback
+                  {t('Send Feedback')}
                 </button>
               )}
             </div>
@@ -162,20 +164,20 @@ export default function Unsubscribe() {
             {/* Resubscribe Option */}
             <div className="border-t pt-6 space-y-3">
               <p className="text-sm text-gray-600">
-                Changed your mind? You can resubscribe anytime:
+                {t('Changed your mind? You can resubscribe anytime:')}
               </p>
               <button
                 onClick={handleResubscribe}
                 className="w-full bg-white border-2 border-navy text-navy py-2 rounded-lg hover:bg-navy hover:text-white transition font-medium"
               >
-                Resubscribe to Newsletter
+                {t('Resubscribe to Newsletter')}
               </button>
             </div>
 
             {/* Contact Info */}
             <div className="mt-6 p-4 bg-gray-50 rounded-lg">
               <p className="text-xs text-gray-600">
-                Questions? Contact us at{' '}
+                {t('Questions? Contact us at')}{' '}
                 <a
                   href={`mailto:${import.meta.env.VITE_SUPPORT_EMAIL || 'nerveey.shop@gmail.com'}`}
                   className="text-navy font-semibold"
@@ -191,21 +193,21 @@ export default function Unsubscribe() {
         {status === 'error' && (
           <div className="text-center space-y-4">
             <div className="text-4xl">⚠️</div>
-            <h1 className="text-2xl font-bold text-red-600">Invalid Link</h1>
+            <h1 className="text-2xl font-bold text-red-600">{t('Invalid Link')}</h1>
             <p className="text-gray-600">
-              {result?.error || 'This unsubscribe link is invalid or has expired.'}
+              {result?.error || t('This unsubscribe link is invalid or has expired.')}
             </p>
 
             <div className="border-t pt-6 space-y-3">
-              <p className="text-sm text-gray-600">Need help?</p>
+              <p className="text-sm text-gray-600">{t('Need help?')}</p>
               <a
                 href={`mailto:${import.meta.env.VITE_SUPPORT_EMAIL || 'nerveey.shop@gmail.com'}`}
                 className="block w-full bg-navy text-white py-2 rounded-lg hover:bg-navy-2 transition text-center font-medium"
               >
-                Contact Support
+                {t('Contact Support')}
               </a>
               <a href="/" className="block text-navy hover:underline text-center text-sm">
-                Back to Home
+                {t('Back to Home')}
               </a>
             </div>
           </div>
@@ -215,9 +217,9 @@ export default function Unsubscribe() {
         {status === 'resubscribe' && (
           <div className="text-center space-y-4">
             <div className="text-4xl">🎉</div>
-            <h1 className="text-2xl font-bold text-navy">Welcome back!</h1>
+            <h1 className="text-2xl font-bold text-navy">{t('Welcome back!')}</h1>
             <p className="text-gray-600">
-              You&apos;ve been resubscribed to our newsletter. Expect to hear from us soon!
+              {t("You've been resubscribed to our newsletter. Expect to hear from us soon!")}
             </p>
 
             <div className="border-t pt-6">
@@ -225,7 +227,7 @@ export default function Unsubscribe() {
                 href="/"
                 className="block w-full bg-navy text-white py-2 rounded-lg hover:bg-navy-2 transition text-center font-medium"
               >
-                Return to Store
+                {t('Return to Store')}
               </a>
             </div>
           </div>

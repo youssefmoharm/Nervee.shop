@@ -56,7 +56,7 @@ export function TrackOrder() {
     );
     if (result.error || !result.order) {
       setStatus('error');
-      setError(result.error || 'Order not found. Please check your email and order number.');
+      setError(result.error || t('Order not found. Please check your email and order number.'));
       return;
     }
     setOrder(result.order);
@@ -79,7 +79,7 @@ export function TrackOrder() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !orderNumber) {
-      showToast('Please enter both email and order number.', 'error', 3000);
+      showToast(t('Please enter both email and order number.'), 'error', 3000);
       return;
     }
     await handleLookup(email, orderNumber);
@@ -87,7 +87,7 @@ export function TrackOrder() {
 
   const handleResendVerification = async () => {
     if (!email || !orderNumber) {
-      showToast('Please enter email and order number first.', 'error', 3000);
+      showToast(t('Please enter email and order number first.'), 'error', 3000);
       return;
     }
     setResending(true);
@@ -99,12 +99,12 @@ export function TrackOrder() {
         },
       });
       if (invokeError) {
-        showToast('Please try again later.', 'error', 3000);
+        showToast(t('Please try again later.'), 'error', 3000);
         return;
       }
-      showToast('If that email exists, a link is on its way.', 'success', 4000);
+      showToast(t('If that email exists, a link is on its way.'), 'success', 4000);
     } catch {
-      showToast('Please try again later.', 'error', 3000);
+      showToast(t('Please try again later.'), 'error', 3000);
     } finally {
       setResending(false);
     }
@@ -117,38 +117,38 @@ export function TrackOrder() {
         <div className="mx-auto max-w-3xl">
           <div className="text-center mb-10">
             <h1 className="nv-heading text-4xl md:text-5xl mb-2">{t('Order Tracking')}</h1>
-            <p className="text-navy/60">Track your NERVE order below</p>
+            <p className="text-navy/60">{t('Track your NERVE order below')}</p>
           </div>
 
           <div className="border border-navy/20 rounded-lg p-6 mb-8">
             <div className="flex items-center justify-between mb-6 pb-6 border-b border-navy/10">
               <div>
-                <p className="text-xs font-medium text-navy/60 mb-1">Order Number</p>
+                <p className="text-xs font-medium text-navy/60 mb-1">{t('Order Number')}</p>
                 <p className="text-2xl font-semibold font-mono" data-testid="order-number-display">
                   {order.order_number}
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-xs font-medium text-navy/60 mb-1">Status</p>
+                <p className="text-xs font-medium text-navy/60 mb-1">{t('Status')}</p>
                 <span
                   className={
                     'inline-block px-3 py-1 rounded-full text-xs font-medium ' +
                     (STATUS_COLORS[statusKey] || 'bg-gray-100 text-gray-800')
                   }
                 >
-                  {STATUS_LABELS[statusKey] || statusKey}
+                  {t(STATUS_LABELS[statusKey] || statusKey)}
                 </span>
               </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <p className="text-xs font-medium text-navy/60 mb-3">Customer</p>
+                <p className="text-xs font-medium text-navy/60 mb-3">{t('Customer')}</p>
                 <p className="text-lg">{order.email}</p>
               </div>
 
               <div>
-                <p className="text-xs font-medium text-navy/60 mb-3">Order Date</p>
+                <p className="text-xs font-medium text-navy/60 mb-3">{t('Order Date')}</p>
                 <p className="text-lg">
                   {order.created_at
                     ? new Date(order.created_at).toLocaleDateString('en-GB')
@@ -159,12 +159,16 @@ export function TrackOrder() {
           </div>
 
           <div className="border border-navy/20 rounded-lg p-6">
-            <h2 className="nv-heading text-xl mb-4">Delivery Information</h2>
+            <h2 className="nv-heading text-xl mb-4">{t('Delivery Information')}</h2>
             <div className="space-y-3 text-sm text-navy/80">
-              <p>• Order confirmed and being processed</p>
-              <p>• You will receive a tracking number via email</p>
-              <p>• Delivery time: 2-5 business days</p>
-              <p>• Express delivery available: 1-2 business days</p>
+              <p>• {t('Order confirmed and being processed')}</p>
+              <p>• {t('You will receive a tracking number via email')}</p>
+              <p>
+                • {t('Delivery time')}: {t('2-5 business days')}
+              </p>
+              <p>
+                • {t('Express delivery available')}: {t('1-2 business days')}
+              </p>
             </div>
           </div>
 
@@ -179,7 +183,7 @@ export function TrackOrder() {
               }}
               className="text-navy underline"
             >
-              Track Another Order
+              {t('Track Another Order')}
             </button>
           </div>
         </div>
@@ -192,7 +196,7 @@ export function TrackOrder() {
       <div className="mx-auto max-w-md">
         <h1 className="nv-heading text-5xl mb-8">{t('Track Your Order')}</h1>
         <p className="text-navy/70 mb-8">
-          Enter the email address and order number from your confirmation email.
+          {t('Enter the email address and order number from your confirmation email.')}
         </p>
 
         {status === 'error' && error && (
@@ -233,7 +237,7 @@ export function TrackOrder() {
                 placeholder="NRV-123456"
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy rounded-lg font-mono"
               />
-              <p className="text-[10px] text-navy/40 mt-1">Example: NRV-123456</p>
+              <p className="text-[10px] text-navy/40 mt-1">{t('Example: NRV-123456')}</p>
             </label>
           </div>
 
@@ -258,7 +262,7 @@ export function TrackOrder() {
         </div>
 
         <div className="mt-12 pt-12 border-t border-navy/10 text-center">
-          <p className="text-sm text-navy/60 mb-2">Don&apos;t have an order number?</p>
+          <p className="text-sm text-navy/60 mb-2">{t("Don't have an order number?")}</p>
           <a href="/account" className="text-navy underline text-sm">
             {t('Sign in')}
           </a>

@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase';
 import { getEndpoint } from '../../lib/apiEndpoints';
 import AccountLayout from './AccountLayout';
 import { formatEGP } from '../../lib/format';
+import { useI18n } from '../../lib/i18n';
 
 interface OrderItem {
   id: string;
@@ -37,6 +38,7 @@ interface OrderDetailData {
 }
 
 export default function OrderDetail() {
+  const { t } = useI18n();
   const { id } = useParams();
   const [order, setOrder] = useState<OrderDetailData | null | undefined>(undefined);
   const [showReturn, setShowReturn] = useState(false);
@@ -70,7 +72,7 @@ export default function OrderDetail() {
   const submitReturn = async (type: 'return' | 'cancellation') => {
     if (!order || !id) return;
     if (returnReason.trim().length < 10) {
-      setReturnError('Reason must be at least 10 characters');
+      setReturnError(t('Reason must be at least 10 characters'));
       return;
     }
     setReturnStatus('loading');
@@ -113,7 +115,7 @@ export default function OrderDetail() {
   if (!order) {
     return (
       <AccountLayout>
-        <p className="text-navy/60">Order not found.</p>
+        <p className="text-navy/60">{t('Order not found.')}</p>
       </AccountLayout>
     );
   }
@@ -124,9 +126,11 @@ export default function OrderDetail() {
         to="/account/orders"
         className="inline-flex items-center gap-1 text-sm text-navy/50 hover:text-navy mb-6"
       >
-        <ChevronLeft size={16} /> Back to orders
+        <ChevronLeft size={16} /> {t('Back to orders')}
       </Link>
-      <h2 className="nv-heading text-3xl mb-1">Order #{order.order_number}</h2>
+      <h2 className="nv-heading text-3xl mb-1">
+        {t('Order')} #{order.order_number}
+      </h2>
       <p className="text-navy/50 text-sm mb-8">
         Placed{' '}
         {new Date(order.created_at).toLocaleDateString('en-GB', {
@@ -166,26 +170,26 @@ export default function OrderDetail() {
       <div className="grid sm:grid-cols-2 gap-8">
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-navy/60">Subtotal</span>
+            <span className="text-navy/60">{t('Subtotal')}</span>
             <span>{formatEGP(order.subtotal)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-navy/60">Shipping</span>
-            <span>{order.shipping_cost === 0 ? 'Free' : formatEGP(order.shipping_cost)}</span>
+            <span className="text-navy/60">{t('Shipping')}</span>
+            <span>{order.shipping_cost === 0 ? t('Free') : formatEGP(order.shipping_cost)}</span>
           </div>
           {order.discount_amount > 0 && (
             <div className="flex justify-between">
-              <span className="text-navy/60">Discount</span>
+              <span className="text-navy/60">{t('Discount')}</span>
               <span>- {formatEGP(order.discount_amount)}</span>
             </div>
           )}
           <div className="flex justify-between font-semibold text-base pt-2 border-t border-navy/10">
-            <span>Total</span>
+            <span>{t('Total')}</span>
             <span>{formatEGP(order.total)}</span>
           </div>
         </div>
         <div className="text-sm">
-          <p className="nv-eyebrow text-xs text-navy/50 mb-2">Shipping Address</p>
+          <p className="nv-eyebrow text-xs text-navy/50 mb-2">{t('Shipping Address')}</p>
           <p>{order.address}</p>
           <p>
             {order.city}, {order.governorate} {order.postal_code}
@@ -203,10 +207,11 @@ export default function OrderDetail() {
               </div>
             </div>
             <div className="flex-1">
-              <h3 className="nv-eyebrow text-sm mb-2">Cancel Order</h3>
+              <h3 className="nv-eyebrow text-sm mb-2">{t('Cancel Order')}</h3>
               <p className="text-sm text-navy/70 mb-4">
-                Order can be cancelled within <strong>2 hours</strong> of placement.
-                {cancelTimeLeft > 0 && ` Time remaining: ${cancelTimeLeft} seconds.`}
+                {t('Order can be cancelled within')} <strong>{t('2 hours')}</strong>{' '}
+                {t('of placement.')}
+                {cancelTimeLeft > 0 && ` ${t('Time remaining')}: ${cancelTimeLeft}s.`}
               </p>
               <button
                 onClick={() => {
@@ -217,7 +222,7 @@ export default function OrderDetail() {
                 className="bg-red-600 text-white px-6 py-2.5 text-sm hover:bg-red-700 transition-colors disabled:opacity-60 flex items-center gap-2"
               >
                 {isCancelling && <Loader2 size={14} className="animate-spin" />}
-                Cancel Order Now
+                {t('Cancel Order Now')}
               </button>
             </div>
           </div>
@@ -226,27 +231,29 @@ export default function OrderDetail() {
 
       {(canReturn || canCancel) && (
         <div className="mt-8 border-t border-navy/10 pt-6">
-          <h3 className="nv-eyebrow text-sm mb-3">Need to {canReturn ? 'return' : 'cancel'}?</h3>
+          <h3 className="nv-eyebrow text-sm mb-3">
+            {t('Need to')} {canReturn ? t('return') : t('cancel')}?
+          </h3>
           {!showReturn ? (
             <button
               onClick={() => setShowReturn(true)}
               className="border border-navy px-6 py-2.5 text-sm hover:bg-navy hover:text-white transition-colors"
             >
-              Request {canReturn ? 'Return' : 'Cancellation'}
+              {t('Request')} {canReturn ? t('Return') : t('Cancellation')}
             </button>
           ) : (
             <div className="space-y-3 max-w-md">
               <textarea
                 value={returnReason}
                 onChange={e => setReturnReason(e.target.value)}
-                placeholder="Reason (10-1000 chars, e.g. wrong size)"
+                placeholder={t('Reason (10-1000 chars, e.g. wrong size)')}
                 rows={3}
                 className="w-full border border-navy/20 px-3 py-2 text-sm focus:outline-none focus:border-navy"
               />
               {returnError && <p className="text-xs text-red-600">{returnError}</p>}
               {returnStatus === 'success' && (
                 <p className="text-xs text-green-600">
-                  Request submitted — admin will review within 24h.
+                  {t('Request submitted — admin will review within 24h.')}
                 </p>
               )}
               <div className="flex gap-2">
@@ -256,18 +263,19 @@ export default function OrderDetail() {
                   className="bg-navy text-white px-6 py-2 text-sm disabled:opacity-60 flex items-center gap-2"
                 >
                   {returnStatus === 'loading' && <Loader2 size={14} className="animate-spin" />}{' '}
-                  Submit
+                  {t('Submit')}
                 </button>
                 <button
                   onClick={() => setShowReturn(false)}
                   className="px-4 py-2 text-sm text-navy/60"
                 >
-                  Close
+                  {t('Close')}
                 </button>
               </div>
               <p className="text-[11px] text-navy/40">
-                Returns: delivered only, 14 days. Cancellations: placed/processing, 2 hours. One
-                request per order.
+                {t(
+                  'Returns: delivered only, 14 days. Cancellations: placed/processing, 2 hours. One request per order.',
+                )}
               </p>
             </div>
           )}

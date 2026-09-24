@@ -84,25 +84,27 @@ no payment-provider secrets and no online-payment edge functions.
 
 ### Edge Functions
 
-| Function                        | Auth                                             | Purpose                                    |
-| ------------------------------- | ------------------------------------------------ | ------------------------------------------ |
-| `create-order`                  | JWT (customer) + anon (guest), rate-limited      | Order creation (re-prices server-side)     |
-| `send-email`                    | **service_role or admin JWT only**               | Transactional email (Resend) — blocks anon |
-| `chat-ai`                       | JWT (auth user) or anon (guest, limited context) | Gemini chatbot with ownership checks       |
-| `create-support-ticket`         | JWT + conversation ownership                     | Support tickets from chat                  |
-| `verify-guest-order`            | anon, rate-limited                               | Secure guest order lookup (hashed token)   |
-| `send-back-in-stock`            | service_role / admin / CRON_SECRET               | Back-in-stock notifications                |
-| `process-abandoned-carts`       | service_role / admin / CRON_SECRET               | Cart abandonment emails                    |
-| `process-restock`               | admin only                                       | Admin restock trigger                      |
-| `update-order-status`           | admin only                                       | Order status transitions                   |
-| `contact`                       | anon, rate-limited                               | Contact form                               |
-| `back-in-stock`                 | anon, rate-limited                               | Back-in-stock requests                     |
-| `handle-unsubscribe`            | token capability                                 | Unsubscribe via token                      |
-| `auth-sign-in` / `auth-sign-up` | pre-auth                                         | Supabase Auth wrappers for the frontend    |
-| `request-return`                | JWT (order owner) or guest token                 | Return/cancellation requests               |
+| Function                        | Auth                                             | Purpose                                         |
+| ------------------------------- | ------------------------------------------------ | ----------------------------------------------- |
+| `create-order`                  | JWT (customer) + anon (guest), rate-limited      | Order creation (re-prices server-side)          |
+| `send-email`                    | **service_role or admin JWT only**               | Transactional email (Resend) — blocks anon      |
+| `chat-ai`                       | JWT (auth user) or anon (guest, limited context) | Gemini chatbot with ownership checks            |
+| `create-support-ticket`         | JWT + conversation ownership                     | Support tickets from chat                       |
+| `verify-guest-order`            | anon, rate-limited                               | Secure guest order lookup (hashed token)        |
+| `send-back-in-stock`            | service_role / admin / CRON_SECRET               | Back-in-stock notifications                     |
+| `process-abandoned-carts`       | service_role / admin / CRON_SECRET               | Cart abandonment emails                         |
+| `process-restock`               | admin only                                       | Admin restock trigger                           |
+| `update-order-status`           | admin only                                       | Order status transitions                        |
+| `contact`                       | anon, rate-limited                               | Contact form                                    |
+| `back-in-stock`                 | anon, rate-limited                               | Back-in-stock requests                          |
+| `handle-unsubscribe`            | token capability                                 | Unsubscribe via token                           |
+| `auth-sign-in` / `auth-sign-up` | pre-auth                                         | Supabase Auth wrappers for the frontend         |
+| `request-return`                | JWT (order owner) or guest token                 | Return/cancellation requests                    |
+| `record-abandoned-cart`         | anon, rate-limited                               | Record/refresh abandoned-cart tracking          |
+| `resend-guest-verification`     | anon, rate-limited                               | Re-issue guest tracking link (anti-enumeration) |
 
-Full list: `supabase/functions/` (15 functions after the payment functions
-are removed; each `index.ts` documents its own auth mode).
+Full list: `supabase/functions/` (17 functions; each `index.ts` documents
+its own auth mode).
 
 ---
 
@@ -134,7 +136,7 @@ are removed; each `index.ts` documents its own auth mode).
 
 - Frontend: `src/lib/sentry.ts` — `initSentry()` reads `VITE_SENTRY_DSN`, tags `environment` from `VITE_ENV`, `tracesSampleRate` 0.1 in prod, 1.0 in dev, PII minimized.
 - Edge: `supabase/functions/_shared/monitoring.ts` — `PerformanceTimer`, `logEvent`, `logOrderSuccess/Failure`, `logRateLimitHit`, `logEmailSuccess`.
-- Every edge function logs with correlation: order creation, payment, ticket, rate limit, guest verification.
+- Every edge function logs with correlation: order creation, order status, ticket, rate limit, guest verification.
 - **Verify:** trigger a test error in staging and confirm ingestion in Sentry dashboard.
 
 ---

@@ -258,7 +258,7 @@ export default function ProductDetail() {
   if (!product) {
     return (
       <div className="bg-white text-navy min-h-screen pt-32 px-5 text-center">
-        <h1 className="nv-heading text-4xl mb-4">Product Not Found</h1>
+        <h1 className="nv-heading text-4xl mb-4">{t('Product Not Found')}</h1>
         <button onClick={() => navigate('/shop')} className="nv-eyebrow underline">
           Back to Shop
         </button>
@@ -553,7 +553,7 @@ export default function ProductDetail() {
                     >
                       <p className="text-sm">
                         Size <strong>{notifySize}</strong>{' '}
-                        {t('is out of stock. Get an email when it&apos;s back:')}
+                        {t("is out of stock. Get an email when it's back:")}
                       </p>
                       <div className="flex gap-2">
                         <input

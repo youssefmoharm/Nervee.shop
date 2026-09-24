@@ -4,6 +4,7 @@ import { addressService, type Address } from '../../services/addressService';
 import { logError } from '../../lib/sentry';
 import { EGYPT_GOVERNORATES } from '../../data/governorates';
 import AccountLayout from './AccountLayout';
+import { useI18n } from '../../lib/i18n';
 
 const emptyForm = {
   label: '',
@@ -15,6 +16,7 @@ const emptyForm = {
 };
 
 export default function Addresses() {
+  const { t } = useI18n();
   const [addresses, setAddresses] = useState<Address[] | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -59,9 +61,9 @@ export default function Addresses() {
   return (
     <AccountLayout>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="nv-heading text-3xl">Addresses</h2>
+        <h2 className="nv-heading text-3xl">{t('Addresses')}</h2>
         <button onClick={() => setShowForm(s => !s)} className="nv-eyebrow underline text-sm">
-          {showForm ? 'Cancel' : '+ Add Address'}
+          {showForm ? t('Cancel') : `+ ${t('Add Address')}`}
         </button>
       </div>
 
@@ -69,7 +71,7 @@ export default function Addresses() {
         <form onSubmit={onSubmit} className="space-y-4 max-w-md mb-10 border border-navy/10 p-5">
           <label className="block">
             <span className="text-xs font-medium text-navy/60 mb-1.5 block">
-              Label (e.g. Home, Work)
+              {t('Label (e.g. Home, Work)')}
             </span>
             <input
               value={form.label}
@@ -78,7 +80,7 @@ export default function Addresses() {
             />
           </label>
           <label className="block">
-            <span className="text-xs font-medium text-navy/60 mb-1.5 block">Address</span>
+            <span className="text-xs font-medium text-navy/60 mb-1.5 block">{t('Address')}</span>
             <input
               required
               value={form.address}
@@ -88,7 +90,7 @@ export default function Addresses() {
           </label>
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
-              <span className="text-xs font-medium text-navy/60 mb-1.5 block">City</span>
+              <span className="text-xs font-medium text-navy/60 mb-1.5 block">{t('City')}</span>
               <input
                 required
                 value={form.city}
@@ -97,14 +99,16 @@ export default function Addresses() {
               />
             </label>
             <label className="block">
-              <span className="text-xs font-medium text-navy/60 mb-1.5 block">Governorate</span>
+              <span className="text-xs font-medium text-navy/60 mb-1.5 block">
+                {t('Governorate')}
+              </span>
               <select
                 required
                 value={form.governorate}
                 onChange={e => setForm({ ...form, governorate: e.target.value })}
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
               >
-                <option value="">Select governorate</option>
+                <option value="">{t('Select governorate')}</option>
                 {EGYPT_GOVERNORATES.map(g => (
                   <option key={g} value={g}>
                     {g}
@@ -115,7 +119,7 @@ export default function Addresses() {
           </div>
           <label className="block">
             <span className="text-xs font-medium text-navy/60 mb-1.5 block">
-              Postal Code (optional)
+              {t('Postal Code (optional)')}
             </span>
             <input
               value={form.postal_code}
@@ -129,7 +133,7 @@ export default function Addresses() {
             disabled={saving}
             className="bg-navy text-white nv-eyebrow px-8 py-3.5 hover:bg-navy-2 transition-colors disabled:opacity-60"
           >
-            {saving ? 'Saving…' : 'Save Address'}
+            {saving ? t('Saving…') : t('Save Address')}
           </button>
         </form>
       )}
@@ -137,16 +141,16 @@ export default function Addresses() {
       {!addresses ? (
         <Loader2 className="animate-spin text-navy/40" size={20} />
       ) : addresses.length === 0 && !showForm ? (
-        <p className="text-navy/60">No saved addresses yet.</p>
+        <p className="text-navy/60">{t('No saved addresses yet.')}</p>
       ) : (
         <ul className="space-y-3">
           {addresses.map(a => (
             <li key={a.id} className="flex items-start justify-between border border-navy/10 p-4">
               <div>
                 <p className="nv-edit font-semibold text-sm flex items-center gap-2">
-                  {a.label || 'Address'}
+                  {a.label || t('Address')}
                   {a.is_default && (
-                    <span className="nv-eyebrow text-[10px] text-navy/50">Default</span>
+                    <span className="nv-eyebrow text-[10px] text-navy/50">{t('Default')}</span>
                   )}
                 </p>
                 <p className="text-sm text-navy/70 mt-1">{a.address}</p>
@@ -157,7 +161,7 @@ export default function Addresses() {
               <div className="flex items-center gap-3 flex-shrink-0">
                 {!a.is_default && (
                   <button
-                    aria-label="Set as default"
+                    aria-label={t('Set as default')}
                     onClick={() => setDefault(a.id)}
                     className="text-navy/40 hover:text-navy"
                   >
@@ -165,7 +169,7 @@ export default function Addresses() {
                   </button>
                 )}
                 <button
-                  aria-label="Delete address"
+                  aria-label={t('Delete address')}
                   onClick={() => remove(a.id)}
                   className="text-navy/40 hover:text-red-600"
                 >

@@ -83,8 +83,8 @@ export default function Register() {
       <div className="bg-white text-navy min-h-screen pt-32 pb-24 px-5 md:px-8 text-center">
         <h1 className="nv-heading text-4xl mb-4">{t('Check Your Email')}</h1>
         <p className="text-navy/60 max-w-md mx-auto">
-          We sent a confirmation link to <strong>{email}</strong>. Verify your email, then sign in
-          to your account.
+          {t('We sent a confirmation link to')} <strong>{email}</strong>.{' '}
+          {t('Verify your email, then sign in to your account.')}
         </p>
         <Link to="/login" className="inline-block mt-8 nv-eyebrow underline">
           {t('Back to Sign In')}
@@ -97,7 +97,9 @@ export default function Register() {
     <div className="bg-white text-navy min-h-screen pt-32 pb-24 px-5 md:px-8">
       <div className="mx-auto max-w-md">
         <h1 className="nv-heading text-5xl mb-2">{t('Create Account')}</h1>
-        <p className="text-navy/60 mb-8">Join NERVE for faster checkout and order tracking.</p>
+        <p className="text-navy/60 mb-8">
+          {t('Join NERVE for faster checkout and order tracking.')}
+        </p>
 
         <form onSubmit={onSubmit} className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
@@ -150,7 +152,7 @@ export default function Register() {
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors"
             />
             <span className="text-xs text-navy/40 mt-1 block">
-              Must be 8+ characters with uppercase, lowercase, number, and special character.
+              {t('Must be 8+ characters with uppercase, lowercase, number, and special character.')}
             </span>
 
             {/* Password strength guidance */}
@@ -199,18 +201,18 @@ export default function Register() {
                 onChange={e => setGender(e.target.value)}
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors bg-white"
               >
-                <option value="">Select</option>
-                <option value="female">Female</option>
-                <option value="male">Male</option>
-                <option value="nonbinary">Non-binary</option>
-                <option value="prefer_not_to_say">Prefer not to say</option>
+                <option value="">{t('Select')}</option>
+                <option value="female">{t('Female')}</option>
+                <option value="male">{t('Male')}</option>
+                <option value="nonbinary">{t('Non-binary')}</option>
+                <option value="prefer_not_to_say">{t('Prefer not to say')}</option>
               </select>
             </label>
           </div>
 
           <label className="block">
             <span className="text-xs font-medium text-navy/60 mb-1.5 block">
-              Profile Photo (optional)
+              {t('Profile Photo (optional)')}
             </span>
             <input
               id="register-photo"
@@ -232,7 +234,7 @@ export default function Register() {
             )}
           </label>
 
-          {error && <p className="text-xs text-red-600">{error}</p>}
+          {error && <p className="text-xs text-red-600">{t(error)}</p>}
 
           <button
             type="submit"
@@ -245,7 +247,7 @@ export default function Register() {
         </form>
 
         <p className="mt-6 text-sm text-navy/60">
-          Already have an account?{' '}
+          {t('Already have an account?')}{' '}
           <Link to="/login" className="underline hover:text-navy">
             {t('Sign in')}
           </Link>

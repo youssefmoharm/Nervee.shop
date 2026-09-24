@@ -4,6 +4,7 @@ import {
   validatePasswordRequirements,
 } from '../lib/passwordValidation';
 import { Check, X } from 'lucide-react';
+import { useI18n } from '../lib/i18n';
 
 interface PasswordStrengthIndicatorProps {
   password: string;
@@ -14,6 +15,7 @@ export default function PasswordStrengthIndicator({
   password,
   showRequirements = true,
 }: PasswordStrengthIndicatorProps) {
+  const { t } = useI18n();
   const strength = calculatePasswordStrength(password);
   const display = getPasswordStrengthDisplay(strength.score);
   const requirements = validatePasswordRequirements(password);
@@ -26,7 +28,7 @@ export default function PasswordStrengthIndicator({
       {/* Strength Bar */}
       <div className="space-y-1">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-navy/60">Password Strength</span>
+          <span className="text-xs text-navy/60">{t('Password Strength')}</span>
           <span className={`text-xs font-medium ${display.color}`}>{display.label}</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
@@ -50,15 +52,15 @@ export default function PasswordStrengthIndicator({
       {/* Requirements Checklist */}
       {showRequirements && password && (
         <div className="space-y-2">
-          <p className="text-xs font-medium text-navy/60">Password Requirements</p>
+          <p className="text-xs font-medium text-navy/60">{t('Password Requirements')}</p>
           <div className="grid grid-cols-1 gap-1 text-xs">
-            <RequirementItem met={requirements.minLength} text="At least 8 characters" />
-            <RequirementItem met={requirements.hasLowercase} text="Lowercase letter (a-z)" />
-            <RequirementItem met={requirements.hasUppercase} text="Uppercase letter (A-Z)" />
-            <RequirementItem met={requirements.hasNumber} text="Number (0-9)" />
+            <RequirementItem met={requirements.minLength} text={t('At least 8 characters')} />
+            <RequirementItem met={requirements.hasLowercase} text={t('Lowercase letter (a-z)')} />
+            <RequirementItem met={requirements.hasUppercase} text={t('Uppercase letter (A-Z)')} />
+            <RequirementItem met={requirements.hasNumber} text={t('Number (0-9)')} />
             <RequirementItem
               met={requirements.hasSpecialChar}
-              text="Special character (!@#$%^&*)"
+              text={t('Special character (!@#$%^&*)')}
             />
           </div>
         </div>
@@ -67,7 +69,7 @@ export default function PasswordStrengthIndicator({
       {/* Feedback Messages */}
       {strength.feedback.length > 0 && password && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
-          <p className="text-xs font-medium text-yellow-800 mb-1">Suggestions:</p>
+          <p className="text-xs font-medium text-yellow-800 mb-1">{t('Suggestions:')}</p>
           <ul className="text-xs text-yellow-700 space-y-0.5">
             {strength.feedback.map((item, index) => (
               <li key={index} className="flex items-center gap-1">

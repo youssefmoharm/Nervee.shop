@@ -6,8 +6,10 @@ import WishlistShareModal from '../../components/WishlistShareModal';
 import EmptyState from '../../components/EmptyState';
 import AccountLayout from './AccountLayout';
 import { formatEGP } from '../../lib/format';
+import { useI18n } from '../../lib/i18n';
 
 export default function Wishlist() {
+  const { t } = useI18n();
   const { items, toggle } = useWishlist();
   const navigate = useNavigate();
   const [shareModalOpen, setShareModalOpen] = useState(false);
@@ -15,23 +17,23 @@ export default function Wishlist() {
   return (
     <AccountLayout>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="nv-heading text-3xl">Wishlist</h2>
+        <h2 className="nv-heading text-3xl">{t('Wishlist')}</h2>
         {items.length > 0 && (
           <button
             onClick={() => setShareModalOpen(true)}
             className="flex items-center gap-2 px-4 py-2 bg-navy text-white rounded font-semibold hover:bg-navy-2 transition-colors nv-eyebrow"
           >
             <Share2 size={18} />
-            Share
+            {t('Share')}
           </button>
         )}
       </div>
 
       {items.length === 0 ? (
         <EmptyState
-          title="Your wishlist is empty"
-          body="Save pieces you love so you can find them here later."
-          actionLabel="Browse Products"
+          title={t('Your wishlist is empty')}
+          body={t('Save pieces you love so you can find them here later.')}
+          actionLabel={t('Browse Products')}
           onAction={() => navigate('/shop')}
         />
       ) : (
@@ -40,7 +42,7 @@ export default function Wishlist() {
             {items.map(item => (
               <li key={item.productId} className="relative group">
                 <button
-                  aria-label="Remove from wishlist"
+                  aria-label={t('Remove from wishlist')}
                   onClick={() => toggle(item)}
                   className="absolute top-2 right-2 z-10 bg-white/90 p-1.5 hover:bg-white transition-colors"
                 >

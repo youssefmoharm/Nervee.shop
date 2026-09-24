@@ -43,7 +43,7 @@ export default function Login() {
     <div className="bg-white text-navy min-h-screen pt-32 pb-24 px-5 md:px-8">
       <div className="mx-auto max-w-md">
         <h1 className="nv-heading text-5xl mb-2">{t('Sign In')}</h1>
-        <p className="text-navy/60 mb-8">Welcome back to NERVE.</p>
+        <p className="text-navy/60 mb-8">{t('Welcome back to NERVE.')}</p>
 
         <form onSubmit={onSubmit} className="space-y-5">
           <label className="block">
@@ -69,7 +69,7 @@ export default function Login() {
             />
           </label>
 
-          {error && <p className="text-xs text-red-600">{error}</p>}
+          {error && <p className="text-xs text-red-600">{t(error)}</p>}
 
           <button
             type="submit"

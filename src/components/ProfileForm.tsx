@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { Eye, EyeOff, Calendar, MapPin, Phone, User, Mail, Lock } from 'lucide-react';
 import PasswordStrengthIndicator from './PasswordStrengthIndicator';
 import { calculatePasswordStrength } from '../lib/passwordValidation';
+import { useI18n } from '../lib/i18n';
 
 interface ProfileData {
   firstName: string;
@@ -23,6 +24,7 @@ interface PasswordChangeData {
 }
 
 export default function ProfileForm() {
+  const { t } = useI18n();
   const { user, updatePassword } = useAuth();
   const { showToast } = useToast();
 
@@ -106,9 +108,9 @@ export default function ProfileForm() {
     setSaving(false);
 
     if (error) {
-      showToast('Failed to update profile', 'error');
+      showToast(t('Failed to update profile'), 'error');
     } else {
-      showToast('Profile updated successfully', 'success');
+      showToast(t('Profile updated successfully'), 'success');
     }
   };
 
@@ -118,13 +120,13 @@ export default function ProfileForm() {
 
     // Validation
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      showToast('Passwords do not match', 'error');
+      showToast(t('Passwords do not match'), 'error');
       return;
     }
 
     const strength = calculatePasswordStrength(passwordData.newPassword);
     if (!strength.isValid) {
-      showToast('Password does not meet requirements', 'error');
+      showToast(t('Password does not meet requirements'), 'error');
       return;
     }
 
@@ -138,7 +140,7 @@ export default function ProfileForm() {
 
     if (signInError) {
       setChangingPassword(false);
-      showToast('Current password is incorrect', 'error');
+      showToast(t('Current password is incorrect'), 'error');
       return;
     }
 
@@ -149,7 +151,7 @@ export default function ProfileForm() {
     if (error) {
       showToast(error, 'error');
     } else {
-      showToast('Password updated successfully', 'success');
+      showToast(t('Password updated successfully'), 'success');
       setPasswordData({
         currentPassword: '',
         newPassword: '',
@@ -185,7 +187,7 @@ export default function ProfileForm() {
         >
           <div className="flex items-center gap-2">
             <User size={16} />
-            Profile Information
+            {t('Profile Information')}
           </div>
         </button>
         <button
@@ -198,7 +200,7 @@ export default function ProfileForm() {
         >
           <div className="flex items-center gap-2">
             <Lock size={16} />
-            Change Password
+            {t('Change Password')}
           </div>
         </button>
       </div>
@@ -206,7 +208,7 @@ export default function ProfileForm() {
       {/* Profile Tab */}
       {activeTab === 'profile' && (
         <form onSubmit={saveProfile} className="space-y-6">
-          <h3 className="nv-heading text-xl mb-4">Personal Information</h3>
+          <h3 className="nv-heading text-xl mb-4">{t('Personal Information')}</h3>
 
           {/* Email (readonly) */}
           <div>
@@ -215,7 +217,7 @@ export default function ProfileForm() {
               className="flex items-center gap-2 text-sm font-medium text-navy/60 mb-2"
             >
               <Mail size={14} />
-              Email Address
+              {t('Email Address')}
             </label>
             <input
               id="profile-email"
@@ -224,7 +226,7 @@ export default function ProfileForm() {
               disabled
               className="w-full border border-navy/10 bg-mist/60 px-4 py-3 text-sm text-navy/50"
             />
-            <p className="text-xs text-navy/40 mt-1">Email cannot be changed</p>
+            <p className="text-xs text-navy/40 mt-1">{t('Email cannot be changed')}</p>
           </div>
 
           {/* Name fields */}
@@ -235,7 +237,7 @@ export default function ProfileForm() {
                 className="flex items-center gap-2 text-sm font-medium text-navy/60 mb-2"
               >
                 <User size={14} />
-                First Name
+                {t('First Name')}
               </label>
               <input
                 id="profile-firstName"
@@ -243,7 +245,7 @@ export default function ProfileForm() {
                 value={profile.firstName}
                 onChange={e => setProfile(prev => ({ ...prev, firstName: e.target.value }))}
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors"
-                placeholder="Enter your first name"
+                placeholder={t('Enter your first name')}
               />
             </div>
             <div>
@@ -252,7 +254,7 @@ export default function ProfileForm() {
                 className="flex items-center gap-2 text-sm font-medium text-navy/60 mb-2"
               >
                 <User size={14} />
-                Last Name
+                {t('Last Name')}
               </label>
               <input
                 id="profile-lastName"
@@ -260,7 +262,7 @@ export default function ProfileForm() {
                 value={profile.lastName}
                 onChange={e => setProfile(prev => ({ ...prev, lastName: e.target.value }))}
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors"
-                placeholder="Enter your last name"
+                placeholder={t('Enter your last name')}
               />
             </div>
           </div>
@@ -272,7 +274,7 @@ export default function ProfileForm() {
               className="flex items-center gap-2 text-sm font-medium text-navy/60 mb-2"
             >
               <Phone size={14} />
-              Phone Number
+              {t('Phone Number')}
             </label>
             <input
               id="profile-phone"
@@ -292,7 +294,7 @@ export default function ProfileForm() {
                 className="flex items-center gap-2 text-sm font-medium text-navy/60 mb-2"
               >
                 <Calendar size={14} />
-                Date of Birth
+                {t('Date of Birth')}
               </label>
               <input
                 id="profile-dob"
@@ -307,7 +309,7 @@ export default function ProfileForm() {
                 htmlFor="profile-gender"
                 className="text-sm font-medium text-navy/60 mb-2 block"
               >
-                Gender
+                {t('Gender')}
               </label>
               <select
                 id="profile-gender"
@@ -315,11 +317,11 @@ export default function ProfileForm() {
                 onChange={e => setProfile(prev => ({ ...prev, gender: e.target.value }))}
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors bg-white"
               >
-                <option value="">Select gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-                <option value="prefer-not-to-say">Prefer not to say</option>
+                <option value="">{t('Select gender')}</option>
+                <option value="male">{t('Male')}</option>
+                <option value="female">{t('Female')}</option>
+                <option value="other">{t('Other')}</option>
+                <option value="prefer-not-to-say">{t('Prefer not to say')}</option>
               </select>
             </div>
           </div>
@@ -331,7 +333,7 @@ export default function ProfileForm() {
               className="flex items-center gap-2 text-sm font-medium text-navy/60 mb-2"
             >
               <MapPin size={14} />
-              City
+              {t('City')}
             </label>
             <input
               id="profile-city"
@@ -346,7 +348,7 @@ export default function ProfileForm() {
           {/* Bio */}
           <div>
             <label htmlFor="profile-bio" className="text-sm font-medium text-navy/60 mb-2 block">
-              About Me
+              {t('About Me')}
             </label>
             <textarea
               id="profile-bio"
@@ -354,10 +356,12 @@ export default function ProfileForm() {
               onChange={e => setProfile(prev => ({ ...prev, bio: e.target.value }))}
               rows={4}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors resize-none"
-              placeholder="Tell us a bit about yourself..."
+              placeholder={t('Tell us a bit about yourself...')}
               maxLength={500}
             />
-            <p className="text-xs text-navy/40 mt-1">{profile.bio.length}/500 characters</p>
+            <p className="text-xs text-navy/40 mt-1">
+              {profile.bio.length}/500 {t('characters')}
+            </p>
           </div>
 
           <button
@@ -365,7 +369,7 @@ export default function ProfileForm() {
             disabled={saving}
             className="bg-navy text-white nv-eyebrow px-8 py-3.5 hover:bg-navy-2 transition-colors disabled:opacity-60"
           >
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? t('Saving...') : t('Save Changes')}
           </button>
         </form>
       )}
@@ -373,7 +377,7 @@ export default function ProfileForm() {
       {/* Password Tab */}
       {activeTab === 'password' && (
         <form onSubmit={changePassword} className="space-y-6">
-          <h3 className="nv-heading text-xl mb-4">Change Password</h3>
+          <h3 className="nv-heading text-xl mb-4">{t('Change Password')}</h3>
 
           {/* Current Password */}
           <div>
@@ -381,7 +385,7 @@ export default function ProfileForm() {
               htmlFor="current-password"
               className="text-sm font-medium text-navy/60 mb-2 block"
             >
-              Current Password
+              {t('Current Password')}
             </label>
             <div className="relative">
               <input
@@ -392,7 +396,7 @@ export default function ProfileForm() {
                   setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))
                 }
                 className="w-full border border-navy/20 px-4 py-3 pr-12 text-sm focus:outline-none focus:border-navy transition-colors"
-                placeholder="Enter your current password"
+                placeholder={t('Enter your current password')}
                 required
               />
               <button
@@ -408,7 +412,7 @@ export default function ProfileForm() {
           {/* New Password */}
           <div>
             <label htmlFor="new-password" className="text-sm font-medium text-navy/60 mb-2 block">
-              New Password
+              {t('New Password')}
             </label>
             <div className="relative">
               <input
@@ -417,7 +421,7 @@ export default function ProfileForm() {
                 value={passwordData.newPassword}
                 onChange={e => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
                 className="w-full border border-navy/20 px-4 py-3 pr-12 text-sm focus:outline-none focus:border-navy transition-colors"
-                placeholder="Enter a strong password"
+                placeholder={t('Enter a strong password')}
                 required
               />
               <button
@@ -443,7 +447,7 @@ export default function ProfileForm() {
               htmlFor="confirm-password"
               className="text-sm font-medium text-navy/60 mb-2 block"
             >
-              Confirm New Password
+              {t('Confirm New Password')}
             </label>
             <div className="relative">
               <input
@@ -459,7 +463,7 @@ export default function ProfileForm() {
                     ? 'border-red-500 focus:border-red-500'
                     : 'border-navy/20 focus:border-navy'
                 }`}
-                placeholder="Confirm your new password"
+                placeholder={t('Confirm your new password')}
                 required
               />
               <button
@@ -472,7 +476,7 @@ export default function ProfileForm() {
             </div>
             {passwordData.confirmPassword &&
               passwordData.newPassword !== passwordData.confirmPassword && (
-                <p className="text-xs text-red-600 mt-1">Passwords do not match</p>
+                <p className="text-xs text-red-600 mt-1">{t('Passwords do not match')}</p>
               )}
           </div>
 
@@ -487,7 +491,7 @@ export default function ProfileForm() {
             }
             className="bg-navy text-white nv-eyebrow px-8 py-3.5 hover:bg-navy-2 transition-colors disabled:opacity-60"
           >
-            {changingPassword ? 'Changing Password...' : 'Change Password'}
+            {changingPassword ? t('Changing Password...') : t('Change Password')}
           </button>
         </form>
       )}

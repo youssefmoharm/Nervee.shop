@@ -5,6 +5,7 @@ import { orderService } from '../../services/orderService';
 import { logError } from '../../lib/sentry';
 import AccountLayout from './AccountLayout';
 import { formatEGP } from '../../lib/format';
+import { useI18n } from '../../lib/i18n';
 
 interface OrderRow {
   id: string;
@@ -24,6 +25,7 @@ const statusColor: Record<string, string> = {
 };
 
 export default function Orders() {
+  const { t } = useI18n();
   const [orders, setOrders] = useState<OrderRow[] | null>(null);
 
   useEffect(() => {
@@ -35,15 +37,15 @@ export default function Orders() {
 
   return (
     <AccountLayout>
-      <h2 className="nv-heading text-3xl mb-6">Orders</h2>
+      <h2 className="nv-heading text-3xl mb-6">{t('Orders')}</h2>
 
       {!orders ? (
         <Loader2 className="animate-spin text-navy/40" size={20} />
       ) : orders.length === 0 ? (
         <div className="text-center py-16 border border-navy/10">
-          <p className="text-navy/60 mb-4">You haven&apos;t placed any orders yet.</p>
+          <p className="text-navy/60 mb-4">{t("You haven't placed any orders yet.")}</p>
           <Link to="/shop" className="nv-eyebrow underline">
-            Start Shopping
+            {t('Start Shopping')}
           </Link>
         </div>
       ) : (
