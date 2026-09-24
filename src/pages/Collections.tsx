@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
 import { collections } from '../data/products';
 import { useSEO } from '../lib/seo';
+import { useI18n } from '../lib/i18n';
 
 export default function Collections() {
+  const { t } = useI18n();
   useSEO({
     title: 'Collections | NERVE Streetwear',
     description:
@@ -11,8 +13,8 @@ export default function Collections() {
   return (
     <div className="bg-navy min-h-screen pt-24 md:pt-28">
       <div className="px-5 md:px-8 py-10 md:py-16">
-        <p className="nv-eyebrow text-silver mb-2">Curated Edits</p>
-        <h1 className="nv-heading text-5xl md:text-8xl">Collections</h1>
+        <p className="nv-eyebrow text-silver mb-2">{t('Curated Edits')}</p>
+        <h1 className="nv-heading text-5xl md:text-8xl">{t('Collections')}</h1>
       </div>
       <div className="grid md:grid-cols-3 gap-1 px-1 pb-1">
         {collections.map(c => (
@@ -31,7 +33,7 @@ export default function Collections() {
               <p className="nv-eyebrow text-silver mb-1">{c.tagline}</p>
               <h2 className="nv-heading text-3xl mb-3">{c.name}</h2>
               <span className="text-xs font-semibold uppercase tracking-widest2 underline underline-offset-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                Shop Now
+                {t('Shop Now')}
               </span>
             </div>
           </Link>

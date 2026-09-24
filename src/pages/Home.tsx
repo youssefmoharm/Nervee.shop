@@ -13,6 +13,7 @@ import Skeleton from '../components/Skeleton';
 import { SectionErrorBoundary } from '../components/ErrorBoundary';
 import { FREE_SHIPPING_THRESHOLD } from '../lib/storeConfig';
 import { formatEGP } from '../lib/format';
+import { useI18n } from '../lib/i18n';
 
 const categoryTiles = categories
   .slice(1)
@@ -28,6 +29,7 @@ const gallery = ['nw-1', 'nw-2', 'nw-3', 'nw-4', 'nw-5', 'nw-6'];
 const img = (_seed?: string, _w?: number, _h?: number) => `/placeholder-product.jpg`;
 
 export default function Home() {
+  const { t } = useI18n();
   useSEO({
     title: 'NERVE — Cool but Chic | Contemporary Egyptian Concept Store',
     description:
@@ -78,34 +80,34 @@ export default function Home() {
         aria-labelledby="brand-heading"
       >
         <div className="mx-auto max-w-4xl text-center">
-          <p className="nv-eyebrow text-navy/60 mb-3">Alexandria, Egypt · EST 2026</p>
+          <p className="nv-eyebrow text-navy/60 mb-3">{t('Alexandria, Egypt · EST 2026')}</p>
           <h2 id="brand-heading" className="nv-heading text-3xl md:text-5xl mb-6">
             NERVE — Cool but Chic
           </h2>
           <p className="text-navy/70 leading-relaxed max-w-2xl mx-auto">
-            NERVE is a contemporary Egyptian concept store built around individuality, movement, and
-            the pieces that become part of your everyday identity. Shop curated fashion, streetwear,
-            and lifestyle products — with free standard shipping on orders over{' '}
-            {formatEGP(FREE_SHIPPING_THRESHOLD)} and cash on delivery across Egypt.
+            {t(
+              'NERVE is a contemporary Egyptian concept store built around individuality, movement, and the pieces that become part of your everyday identity. Shop curated fashion, streetwear, and lifestyle products — with free standard shipping on orders over',
+            )}{' '}
+            {formatEGP(FREE_SHIPPING_THRESHOLD)} {t('and cash on delivery across Egypt.')}
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4 text-sm">
             <Link to="/shop" className="nv-eyebrow underline underline-offset-4 hover:opacity-60">
-              Shop all
+              {t('Shop all')}
             </Link>
             <Link to="/faq" className="nv-eyebrow underline underline-offset-4 hover:opacity-60">
-              FAQ
+              {t('FAQ')}
             </Link>
             <Link
               to="/shipping"
               className="nv-eyebrow underline underline-offset-4 hover:opacity-60"
             >
-              Shipping
+              {t('Shipping')}
             </Link>
             <Link
               to="/returns"
               className="nv-eyebrow underline underline-offset-4 hover:opacity-60"
             >
-              Returns
+              {t('Returns')}
             </Link>
           </div>
         </div>
@@ -113,8 +115,8 @@ export default function Home() {
 
       <section className="bg-navy py-16 md:py-24 px-5 md:px-8">
         <div className="mx-auto max-w-[1600px]">
-          <p className="nv-eyebrow text-silver mb-2">Curated Edits</p>
-          <h2 className="nv-heading text-4xl md:text-6xl mb-10 md:mb-14">Collections</h2>
+          <p className="nv-eyebrow text-silver mb-2">{t('Curated Edits')}</p>
+          <h2 className="nv-heading text-4xl md:text-6xl mb-10 md:mb-14">{t('Collections')}</h2>
 
           <div className="grid md:grid-cols-3 gap-1">
             {collections.map(c => (
@@ -135,7 +137,7 @@ export default function Home() {
                   <p className="nv-eyebrow text-silver mb-1">{c.tagline}</p>
                   <h3 className="nv-heading text-3xl mb-3">{c.name}</h3>
                   <span className="text-xs font-semibold uppercase tracking-widest2 underline underline-offset-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                    Discover
+                    {t('Discover')}
                   </span>
                 </div>
               </Link>
@@ -148,14 +150,14 @@ export default function Home() {
         <div className="mx-auto max-w-[1600px]">
           <div className="flex items-end justify-between mb-10 md:mb-14">
             <div>
-              <p className="nv-eyebrow text-navy/60 mb-2">Just Landed</p>
-              <h2 className="nv-heading text-4xl md:text-6xl">The New Drop</h2>
+              <p className="nv-eyebrow text-navy/60 mb-2">{t('Just Landed')}</p>
+              <h2 className="nv-heading text-4xl md:text-6xl">{t('The New Drop')}</h2>
             </div>
             <Link
               to="/shop"
               className="hidden sm:inline-flex nv-eyebrow items-center gap-2 hover:opacity-60"
             >
-              View All <ArrowRight size={14} />
+              {t('View All')} <ArrowRight size={14} />
             </Link>
           </div>
 
@@ -164,7 +166,7 @@ export default function Home() {
               <div className="text-center py-12">
                 <AlertTriangle className="w-8 h-8 text-navy/30 mx-auto mb-3" />
                 <p className="text-navy/50 text-sm">
-                  Unable to load products. Please try refreshing.
+                  {t('Unable to load products. Please try refreshing.')}
                 </p>
               </div>
             }
@@ -186,7 +188,9 @@ export default function Home() {
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-navy/50 text-sm">No products available yet. Check back soon.</p>
+                <p className="text-navy/50 text-sm">
+                  {t('No products available yet. Check back soon.')}
+                </p>
               </div>
             )}
           </SectionErrorBoundary>
@@ -195,7 +199,9 @@ export default function Home() {
 
       <section className="bg-white text-navy py-16 md:py-24 px-5 md:px-8">
         <div className="mx-auto max-w-[1600px]">
-          <h2 className="nv-heading text-4xl md:text-6xl mb-10 md:mb-14">Shop by Category</h2>
+          <h2 className="nv-heading text-4xl md:text-6xl mb-10 md:mb-14">
+            {t('Shop by Category')}
+          </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {categoryTiles.map(c => (
               <Link
@@ -223,7 +229,7 @@ export default function Home() {
       <section className="bg-navy py-16 md:py-24 px-5 md:px-8">
         <div className="mx-auto max-w-[1600px]">
           <div className="flex items-end justify-between mb-10">
-            <h2 className="nv-heading text-4xl md:text-6xl">Nerve in the Wild</h2>
+            <h2 className="nv-heading text-4xl md:text-6xl">{t('Nerve in the Wild')}</h2>
             <a
               href="https://www.instagram.com/gotthenerve58/"
               target="_blank"

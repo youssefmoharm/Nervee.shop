@@ -10,8 +10,10 @@ import { useComparison } from '../hooks/useComparison';
 import OptimizedImage from './OptimizedImage';
 import { LOW_STOCK_DEFAULT_THRESHOLD } from '../lib/storeConfig';
 import { formatEGP } from '../lib/format';
+import { useI18n } from '../lib/i18n';
 
 const ProductCard = memo(function ProductCard({ product }: { product: Product }) {
+  const { t } = useI18n();
   const [colorIdx, setColorIdx] = useState(0);
   const [hovered, setHovered] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
@@ -67,14 +69,14 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
   const handleToggleComparison = () => {
     if (inComparison(product.id)) {
       removeFromComparison(product.id);
-      showToast(`Removed from comparison`, 'info', 3000);
+      showToast(t('Removed from comparison'), 'info', 3000);
     } else {
       if (isFull) {
-        showToast('You can only compare up to 3 products', 'error', 3000);
+        showToast(t('You can only compare up to 3 products'), 'error', 3000);
         return;
       }
       addToComparison(product);
-      showToast(`Added to comparison`, 'success', 3000);
+      showToast(t('Added to comparison'), 'success', 3000);
     }
   };
 
@@ -107,25 +109,25 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
 
           {hasLowStock && (
             <span className="block bg-red-600 text-white text-[10px] font-semibold tracking-widest2 uppercase px-2.5 py-1">
-              Low Stock
+              {t('Low Stock')}
             </span>
           )}
 
           {isTrending && !product.badge && (
             <span className="block bg-orange-500 text-white text-[10px] font-semibold tracking-widest2 uppercase px-2.5 py-1">
-              🔥 Trending
+              {t('🔥 Trending')}
             </span>
           )}
 
           {isNew && !product.badge && (
             <span className="block bg-green-600 text-white text-[10px] font-semibold tracking-widest2 uppercase px-2.5 py-1">
-              ✨ New
+              {t('✨ New')}
             </span>
           )}
         </div>
 
         <button
-          aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
+          aria-label={wished ? t('Remove from wishlist') : t('Add to wishlist')}
           onClick={() =>
             toggle({
               productId: product.id,
@@ -156,13 +158,13 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
                 onClick={() => setQuickAddOpen(true)}
                 className="w-full bg-navy text-white text-xs font-semibold tracking-widest2 uppercase py-2.5 flex items-center justify-center gap-2 hover:bg-navy-2 transition-colors"
               >
-                <Plus size={14} /> Quick Add
+                <Plus size={14} /> {t('Quick Add')}
               </button>
               <button
                 onClick={() => openQuickView(product)}
                 className="w-full bg-navy/80 text-white text-xs font-semibold tracking-widest2 uppercase py-2.5 flex items-center justify-center gap-2 hover:bg-navy transition-colors"
               >
-                <Eye size={14} /> Quick View
+                <Eye size={14} /> {t('Quick View')}
               </button>
             </>
           ) : (
@@ -232,7 +234,7 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
           }`}
         >
           <BarChart3 size={14} />
-          {inComparison(product.id) ? 'In Comparison' : 'Compare'}
+          {inComparison(product.id) ? t('In Comparison') : t('Compare')}
         </button>
 
         {/* Find My Size button */}
@@ -241,7 +243,7 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
           className="w-full mt-2 text-xs font-semibold tracking-widest2 uppercase py-2 px-3 rounded flex items-center justify-center gap-2 transition-colors bg-mist text-navy hover:bg-mist/75"
         >
           <Ruler size={14} />
-          Find My Size
+          {t('Find My Size')}
         </Link>
       </div>
     </div>

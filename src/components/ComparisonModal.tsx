@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import Button from './Button';
 import { formatEGP } from '../lib/format';
+import { useI18n } from '../lib/i18n';
 
 interface ComparisonModalProps {
   products: Product[];
@@ -20,6 +21,7 @@ export default function ComparisonModal({
   onRemove,
   onClear,
 }: ComparisonModalProps) {
+  const { t } = useI18n();
   const { addLine, isOpen: isCartOpen } = useCart();
   const { showToast } = useToast();
 
@@ -41,7 +43,7 @@ export default function ComparisonModal({
     const defaultColor = product.colors[0];
 
     if (!defaultSize) {
-      showToast('Product out of stock', 'error', 3000);
+      showToast(t('Product out of stock'), 'error', 3000);
       return;
     }
 
@@ -64,7 +66,7 @@ export default function ComparisonModal({
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <button
           type="button"
-          aria-label="Close comparison modal backdrop"
+          aria-label={t('Close comparison modal backdrop')}
           className="absolute inset-0 bg-black/50 border-0 p-0 cursor-default"
           onClick={onClose}
         />
@@ -77,12 +79,12 @@ export default function ComparisonModal({
           {/* Header */}
           <div className="flex items-center justify-between p-4 md:p-6 border-b border-navy/10">
             <h2 id="compare-modal-title" className="text-xl md:text-2xl font-bold text-navy">
-              Compare Products ({products.length}/3)
+              {t('Compare Products')} ({products.length}/3)
             </h2>
             <button
               onClick={onClose}
               className="w-9 h-9 flex items-center justify-center rounded-full bg-navy/10 text-navy hover:bg-navy/20 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-navy"
-              aria-label="Close modal"
+              aria-label={t('Close modal')}
             >
               <X size={18} />
             </button>
@@ -95,7 +97,7 @@ export default function ComparisonModal({
                 {/* Product images row */}
                 <tr className="border-b border-navy/10">
                   <th className="bg-mist text-left p-3 md:p-4 font-semibold text-navy min-w-[120px] w-[140px] sticky left-0 z-10">
-                    Product
+                    {t('Product')}
                   </th>
                   {products.map(product => (
                     <td key={product.id} className="p-3 md:p-4 text-center w-1/3">
@@ -110,7 +112,7 @@ export default function ComparisonModal({
                           onClick={() => onRemove(product.id)}
                           className="text-xs text-red-600 hover:text-red-700 font-medium"
                         >
-                          Remove
+                          {t('Remove')}
                         </button>
                       </div>
                     </td>
@@ -120,7 +122,7 @@ export default function ComparisonModal({
                 {/* Price row */}
                 <tr className="border-b border-navy/10 hover:bg-mist/50">
                   <th className="bg-mist text-left p-3 md:p-4 font-semibold text-navy sticky left-0 z-10">
-                    Price
+                    {t('Price')}
                   </th>
                   {products.map(product => (
                     <td key={`${product.id}-price`} className="p-3 md:p-4 text-center w-1/3">
@@ -137,7 +139,7 @@ export default function ComparisonModal({
                 {/* Colors row */}
                 <tr className="border-b border-navy/10 hover:bg-mist/50">
                   <th className="bg-mist text-left p-3 md:p-4 font-semibold text-navy sticky left-0 z-10">
-                    Colors
+                    {t('Colors')}
                   </th>
                   {products.map(product => (
                     <td key={`${product.id}-colors`} className="p-3 md:p-4 text-center w-1/3">
@@ -166,7 +168,7 @@ export default function ComparisonModal({
                 {/* Sizes row */}
                 <tr className="border-b border-navy/10 hover:bg-mist/50">
                   <th className="bg-mist text-left p-3 md:p-4 font-semibold text-navy sticky left-0 z-10">
-                    Sizes
+                    {t('Sizes')}
                   </th>
                   {products.map(product => (
                     <td key={`${product.id}-sizes`} className="p-3 md:p-4 text-center w-1/3">
@@ -191,7 +193,7 @@ export default function ComparisonModal({
                 {/* Material row */}
                 <tr className="border-b border-navy/10 hover:bg-mist/50">
                   <th className="bg-mist text-left p-3 md:p-4 font-semibold text-navy sticky left-0 z-10">
-                    Material
+                    {t('Material')}
                   </th>
                   {products.map(product => (
                     <td key={`${product.id}-material`} className="p-3 md:p-4 text-center w-1/3">
@@ -203,7 +205,7 @@ export default function ComparisonModal({
                 {/* Care Instructions row */}
                 <tr className="border-b border-navy/10 hover:bg-mist/50">
                   <th className="bg-mist text-left p-3 md:p-4 font-semibold text-navy sticky left-0 z-10">
-                    Care
+                    {t('Care')}
                   </th>
                   {products.map(product => (
                     <td key={`${product.id}-care`} className="p-3 md:p-4 text-center w-1/3">
@@ -219,7 +221,7 @@ export default function ComparisonModal({
                 {/* Badge row */}
                 <tr className="border-b border-navy/10 hover:bg-mist/50">
                   <th className="bg-mist text-left p-3 md:p-4 font-semibold text-navy sticky left-0 z-10">
-                    Badge
+                    {t('Badge')}
                   </th>
                   {products.map(product => (
                     <td key={`${product.id}-badge`} className="p-3 md:p-4 text-center w-1/3">
@@ -237,7 +239,7 @@ export default function ComparisonModal({
                 {/* Add to Cart row */}
                 <tr className="bg-mist">
                   <th className="bg-mist text-left p-3 md:p-4 font-semibold text-navy sticky left-0 z-10">
-                    Action
+                    {t('Action')}
                   </th>
                   {products.map(product => (
                     <td key={`${product.id}-action`} className="p-3 md:p-4 text-center w-1/3">
@@ -245,7 +247,7 @@ export default function ComparisonModal({
                         onClick={() => handleAddToCart(product)}
                         className="w-full bg-navy text-white text-xs md:text-sm font-semibold py-2 rounded hover:bg-navy-2 transition-colors"
                       >
-                        Add to Bag
+                        {t('Add to Bag')}
                       </button>
                     </td>
                   ))}
@@ -257,10 +259,10 @@ export default function ComparisonModal({
           {/* Footer */}
           <div className="flex gap-2 p-4 md:p-6 border-t border-navy/10">
             <Button onClick={onClear} variant="outline" className="flex-1">
-              Clear All
+              {t('Clear All')}
             </Button>
             <Button onClick={onClose} className="flex-1">
-              Continue Shopping
+              {t('Continue Shopping')}
             </Button>
           </div>
         </div>

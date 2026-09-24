@@ -7,6 +7,7 @@ import { FREE_SHIPPING_THRESHOLD } from '../lib/storeConfig';
 import { discountService } from '../services/discountService';
 import { saveCheckoutSession, loadCheckoutSession } from '../lib/checkoutSessionManager';
 import { formatEGP } from '../lib/format';
+import { useI18n } from '../lib/i18n';
 
 const BUNDLE_DISCOUNT_PERCENT = 10;
 /** Seeded in migration 033 — server re-validates it in place_order. */
@@ -18,6 +19,7 @@ interface CompleteTheLookProps {
 }
 
 export default function CompleteTheLook({ mainProduct, suggestedItems }: CompleteTheLookProps) {
+  const { t } = useI18n();
   const { addLine } = useCart();
   const { showToast } = useToast();
   const [selectedItems, setSelectedItems] = useState<string[]>([mainProduct.id]);
@@ -51,7 +53,7 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
     const missingSize = bundleItems.some(p => needsSizeSelection(p) && !selectedSizes[p.id]);
 
     if (missingSize) {
-      showToast('Please select a size for all items', 'error', 2000);
+      showToast(t('Please select a size for all items'), 'error', 2000);
       return;
     }
 
@@ -72,7 +74,7 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
     });
 
     if (added === 0) {
-      showToast('Could not add bundle. Please try again.', 'error', 2000);
+      showToast(t('Could not add bundle. Please try again.'), 'error', 2000);
       return;
     }
 
@@ -127,7 +129,7 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
   return (
     <div className="mt-20 pt-12 border-t border-navy/10">
       <div className="max-w-7xl mx-auto px-5 md:px-8">
-        <h2 className="nv-heading text-2xl md:text-3xl mb-8">Complete the Look</h2>
+        <h2 className="nv-heading text-2xl md:text-3xl mb-8">{t('Complete the Look')}</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {/* Main Product */}
@@ -154,7 +156,7 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
                   htmlFor={`size-${mainProduct.id}`}
                   className="text-xs text-navy/60 mb-2 block"
                 >
-                  Size
+                  {t('Size')}
                 </label>
                 <select
                   id={`size-${mainProduct.id}`}
@@ -167,7 +169,7 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
                   }
                   className="w-full px-3 py-2 text-sm border border-navy/20 rounded focus:outline-none focus:border-navy"
                 >
-                  <option value="">Select size</option>
+                  <option value="">{t('Select size')}</option>
                   {mainProduct.sizes
                     .filter(s => s.inStock)
                     .map(s => (

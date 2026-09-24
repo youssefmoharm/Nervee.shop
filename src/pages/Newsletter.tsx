@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 import { useSEO } from '../lib/seo';
 import { newsletterService } from '../services/newsletterService';
+import { useI18n } from '../lib/i18n';
 
 export function Newsletter() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [email, setEmail] = useState('');
@@ -20,7 +22,7 @@ export function Newsletter() {
     e.preventDefault();
 
     if (!email || !email.includes('@')) {
-      showToast('Please enter a valid email address.', 'error', 3000);
+      showToast(t('Please enter a valid email address.'), 'error', 3000);
       return;
     }
 
@@ -29,13 +31,13 @@ export function Newsletter() {
 
     if (error) {
       setStatus('error');
-      showToast('Something went wrong. Please try again.', 'error', 3000);
+      showToast(t('Something went wrong. Please try again.'), 'error', 3000);
       return;
     }
 
     setStatus('success');
     showToast(
-      'Welcome to the NERVE family. Watch your inbox for exclusive offers.',
+      t('Welcome to the NERVE family. Watch your inbox for exclusive offers.'),
       'success',
       3000,
     );
@@ -46,16 +48,17 @@ export function Newsletter() {
     return (
       <div className="bg-white text-navy min-h-screen pt-32 pb-24 px-5 md:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <h1 className="nv-heading text-5xl mb-8">Welcome to NERVE!</h1>
+          <h1 className="nv-heading text-5xl mb-8">{t('Welcome to NERVE!')}</h1>
           <p className="text-xl mb-8">
-            Thank you for subscribing to our newsletter. You&apos;ll receive exclusive offers and
-            the latest drops directly to your inbox.
+            {t(
+              "Thank you for subscribing to our newsletter. You'll receive exclusive offers and the latest drops directly to your inbox.",
+            )}
           </p>
           <button
             onClick={() => navigate('/')}
             className="bg-navy text-white nv-eyebrow px-8 py-3.5 hover:bg-navy-2 transition-colors"
           >
-            Back to Home
+            {t('Back to Home')}
           </button>
         </div>
       </div>
@@ -65,15 +68,18 @@ export function Newsletter() {
   return (
     <div className="bg-white text-navy min-h-screen pt-32 pb-24 px-5 md:px-8">
       <div className="mx-auto max-w-2xl">
-        <h1 className="nv-heading text-5xl mb-8">Join Our Newsletter</h1>
+        <h1 className="nv-heading text-5xl mb-8">{t('Join Our Newsletter')}</h1>
         <p className="text-navy/70 leading-relaxed mb-8">
-          Subscribe to receive exclusive offers, early access to new drops, and fashion inspiration
-          from NERVE.
+          {t(
+            'Subscribe to receive exclusive offers, early access to new drops, and fashion inspiration from NERVE.',
+          )}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
           <label className="block">
-            <span className="text-xs font-medium text-navy/60 mb-1.5 block">Email Address</span>
+            <span className="text-xs font-medium text-navy/60 mb-1.5 block">
+              {t('Email Address')}
+            </span>
             <input
               type="email"
               required
@@ -85,7 +91,7 @@ export function Newsletter() {
           </label>
 
           {status === 'error' && (
-            <p className="text-xs text-red-600">Something went wrong. Please try again.</p>
+            <p className="text-xs text-red-600">{t('Something went wrong. Please try again.')}</p>
           )}
 
           <button
@@ -115,17 +121,17 @@ export function Newsletter() {
                 ></path>
               </svg>
             )}
-            Subscribe Now
+            {t('Subscribe Now')}
           </button>
         </form>
 
         <div className="mt-12 pt-8 border-t border-navy/10">
-          <p className="text-sm text-navy/60 mb-4">Why subscribe?</p>
+          <p className="text-sm text-navy/60 mb-4">{t('Why subscribe?')}</p>
           <ul className="space-y-2 text-sm text-navy/80">
-            <li>• Exclusive offers and discounts</li>
-            <li>• Early access to new collections</li>
-            <li>• Fashion inspiration and styling tips</li>
-            <li>• No spam, unsubscribe anytime</li>
+            <li>• {t('Exclusive offers and discounts')}</li>
+            <li>• {t('Early access to new collections')}</li>
+            <li>• {t('Fashion inspiration and styling tips')}</li>
+            <li>• {t('No spam, unsubscribe anytime')}</li>
           </ul>
         </div>
       </div>

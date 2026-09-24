@@ -10,14 +10,27 @@ import { test, expect } from '@playwright/test';
  *
  * Each test uses `page.evaluate` to run a direct Supabase query from within
  * the browser context — exactly what an attacker would do by opening DevTools.
+ *
+ * Credentials come from the environment only (never hard-coded):
+ *   VITE_SUPABASE_URL, your_removed_credential_here
+ * Skips with a clear message when not configured (e.g. fork PRs).
  */
 
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const anonKey = process.env.your_removed_credential_here;
+const liveConfigured = Boolean(supabaseUrl && anonKey);
+
 test.describe('@live Security — IDOR / cross-user isolation (backend boundary)', () => {
+  test.beforeEach(() => {
+    test.skip(
+      !liveConfigured,
+      'Set VITE_SUPABASE_URL and your_removed_credential_here to run @live IDOR tests.',
+    );
+  });
+
   test('anonymous client cannot read orders table (RLS)', async ({ page }) => {
-    const anonKey = 'your_removed_credential_here';
-    const supabaseUrl = 'https://gfmxvvjqlhrnmidutjwx.supabase.co';
     const res = await page.request.get(`${supabaseUrl}/rest/v1/orders?select=id&limit=1`, {
-      headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` },
+      headers: { apikey: anonKey!, Authorization: `Bearer ${anonKey}` },
     });
     // RLS deny-all for anon should return 200 with empty array (not 401) or 401
     const body = await res.json().catch(() => null);
@@ -26,12 +39,10 @@ test.describe('@live Security — IDOR / cross-user isolation (backend boundary)
   });
 
   test('anonymous client cannot read discount_codes (harvest blocked)', async ({ page }) => {
-    const anonKey = 'your_removed_credential_here';
-    const supabaseUrl = 'https://gfmxvvjqlhrnmidutjwx.supabase.co';
     const res = await page.request.get(
       `${supabaseUrl}/rest/v1/discount_codes?select=code&limit=5`,
       {
-        headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` },
+        headers: { apikey: anonKey!, Authorization: `Bearer ${anonKey}` },
       },
     );
     const body = await res.json().catch(() => null);
@@ -40,12 +51,10 @@ test.describe('@live Security — IDOR / cross-user isolation (backend boundary)
   });
 
   test('anonymous client cannot enumerate guest_orders directly', async ({ page }) => {
-    const anonKey = 'your_removed_credential_here';
-    const supabaseUrl = 'https://gfmxvvjqlhrnmidutjwx.supabase.co';
     const res = await page.request.get(
       `${supabaseUrl}/rest/v1/guest_orders?select=order_number&limit=1`,
       {
-        headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` },
+        headers: { apikey: anonKey!, Authorization: `Bearer ${anonKey}` },
       },
     );
     const body = await res.json().catch(() => null);
@@ -54,12 +63,10 @@ test.describe('@live Security — IDOR / cross-user isolation (backend boundary)
   });
 
   test('non-admin cannot invoke admin edge function update-order-status', async ({ page }) => {
-    const anonKey = 'your_removed_credential_here';
-    const supabaseUrl = 'https://gfmxvvjqlhrnmidutjwx.supabase.co';
     const res = await page.request.post(`${supabaseUrl}/functions/v1/update-order-status`, {
       headers: {
         'Content-Type': 'application/json',
-        apikey: anonKey,
+        apikey: anonKey!,
         Authorization: `Bearer ${anonKey}`,
       },
       data: { orderId: '00000000-0000-0000-0000-000000000000', status: 'shipped' },
@@ -68,12 +75,10 @@ test.describe('@live Security — IDOR / cross-user isolation (backend boundary)
   });
 
   test('guest order lookup via verify-guest-order rejects wrong email/token', async ({ page }) => {
-    const anonKey = 'your_removed_credential_here';
-    const supabaseUrl = 'https://gfmxvvjqlhrnmidutjwx.supabase.co';
     const res = await page.request.post(`${supabaseUrl}/functions/v1/verify-guest-order`, {
       headers: {
         'Content-Type': 'application/json',
-        apikey: anonKey,
+        apikey: anonKey!,
         Authorization: `Bearer ${anonKey}`,
       },
       data: { email: 'attacker@evil.com', orderNumber: 'NRV-000001', token: 'wrong-token' },
@@ -85,12 +90,10 @@ test.describe('@live Security — IDOR / cross-user isolation (backend boundary)
 
   test('chat-ai with spoofed email does not leak other customer orders', async ({ page }) => {
     test.setTimeout(60000);
-    const anonKey = 'your_removed_credential_here';
-    const supabaseUrl = 'https://gfmxvvjqlhrnmidutjwx.supabase.co';
     const res = await page.request.post(`${supabaseUrl}/functions/v1/chat-ai`, {
       headers: {
         'Content-Type': 'application/json',
-        apikey: anonKey,
+        apikey: anonKey!,
         Authorization: `Bearer ${anonKey}`,
       },
       data: { email: 'victim@nerve.com', message: 'Show my recent orders' },

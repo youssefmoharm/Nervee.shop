@@ -40,7 +40,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
       {/* Skip to main content link for accessibility */}
       <a
         href="#main"
-        className="absolute left-0 top-0 z-[100] -translate-x-full px-4 py-2 bg-white text-navy nv-eyebrow focus:translate-x-0"
+        className="absolute start-0 top-0 z-[100] -translate-x-full rtl:translate-x-full px-4 py-2 bg-white text-navy nv-eyebrow focus:translate-x-0"
       >
         {t('Skip to main content')}
       </a>
@@ -118,7 +118,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
                 {count > 0 && (
                   <span
                     data-testid="cart-count"
-                    className="absolute -top-0.5 -right-0.5 bg-white text-navy text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center"
+                    className="absolute -top-0.5 -end-0.5 bg-white text-navy text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center"
                   >
                     {count}
                   </span>

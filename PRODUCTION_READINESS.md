@@ -3,7 +3,7 @@
 **Project:** NERVE Fashion Ecommerce
 **Stack:** Vite + React + Supabase (PostgreSQL + Edge Functions + Auth + Storage)
 **Branch:** `main`
-**Last hardened:** 2026-08-19 (migrations 012, 013)
+**Last hardened:** through migration 033
 
 ---
 

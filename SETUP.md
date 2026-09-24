@@ -295,7 +295,7 @@ Edit `.env` with your actual credentials:
 ```env
 # Supabase Configuration
 VITE_SUPABASE_URL=https://xxxxx.supabase.co
-your_removed_credential_here=your_removed_credential_here
+your_removed_credential_here=your_supabase_anon_key_here
 
 # Environment
 VITE_ENV=development

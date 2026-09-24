@@ -4,8 +4,10 @@ import type { Collection, Product } from '../types';
 import { productService } from '../services/productService';
 import { useSEO } from '../lib/seo';
 import ProductCard from '../components/ProductCard';
+import { useI18n } from '../lib/i18n';
 
 export default function CollectionDetail() {
+  const { t } = useI18n();
   const { id } = useParams();
   const [collection, setCollection] = useState<Collection | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -40,15 +42,15 @@ export default function CollectionDetail() {
   }, [id]);
 
   if (loading) {
-    return <div className="bg-white min-h-screen pt-28 px-5 text-navy">Loading…</div>;
+    return <div className="bg-white min-h-screen pt-28 px-5 text-navy">{t('Loading…')}</div>;
   }
 
   if (!collection) {
     return (
       <div className="bg-white text-navy min-h-screen pt-32 px-5 text-center">
-        <h1 className="nv-heading text-4xl mb-4">Collection Not Found</h1>
+        <h1 className="nv-heading text-4xl mb-4">{t('Collection Not Found')}</h1>
         <Link to="/collections" className="nv-eyebrow underline">
-          Back to Collections
+          {t('Back to Collections')}
         </Link>
       </div>
     );
@@ -72,7 +74,7 @@ export default function CollectionDetail() {
       <div className="px-5 md:px-8 py-10">
         <p className="max-w-2xl text-navy/70 mb-12">{collection.description}</p>
         {products.length === 0 ? (
-          <p className="text-navy/50">No products in this collection yet.</p>
+          <p className="text-navy/50">{t('No products in this collection yet.')}</p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-10 pb-16">
             {products.map(p => (

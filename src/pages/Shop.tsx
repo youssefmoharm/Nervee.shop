@@ -14,6 +14,7 @@ import EmptyState from '../components/EmptyState';
 import { filterProducts, getSearchSuggestions } from '../lib/productDiscovery';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { formatEGP } from '../lib/format';
+import { useI18n } from '../lib/i18n';
 
 const ALL_COLORS = ['Navy', 'White', 'Black', 'Gray', 'Silver', 'Raw Indigo', 'Washed Black'];
 const ALL_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
@@ -44,6 +45,7 @@ function parseList(value: string | null): string[] {
 }
 
 export default function Shop() {
+  const { t } = useI18n();
   useSEO({
     title: 'Shop | NERVE — Cool but Chic',
     description: 'Browse our curated collection of contemporary clothing and lifestyle products.',
@@ -224,7 +226,7 @@ export default function Shop() {
   const FilterPanel = (
     <div className="space-y-8">
       <div>
-        <h4 className="nv-eyebrow mb-3">Category</h4>
+        <h4 className="nv-eyebrow mb-3">{t('Category')}</h4>
         <ul className="space-y-2">
           <li>
             <button
@@ -233,7 +235,7 @@ export default function Shop() {
                 !category ? 'font-semibold' : 'text-navy/60'
               } hover:text-navy transition-colors`}
             >
-              All
+              {t('All')}
             </button>
           </li>
           {categories.map(c => (
@@ -252,7 +254,7 @@ export default function Shop() {
       </div>
 
       <div>
-        <h4 className="nv-eyebrow mb-3">Color</h4>
+        <h4 className="nv-eyebrow mb-3">{t('Color')}</h4>
         <div className="flex flex-wrap gap-2">
           {ALL_COLORS.map(c => (
             <button
@@ -272,7 +274,7 @@ export default function Shop() {
       </div>
 
       <div>
-        <h4 className="nv-eyebrow mb-3">Size</h4>
+        <h4 className="nv-eyebrow mb-3">{t('Size')}</h4>
         <div className="flex flex-wrap gap-2">
           {ALL_SIZES.map(s => (
             <button
@@ -290,10 +292,12 @@ export default function Shop() {
       </div>
 
       <div>
-        <h4 className="nv-eyebrow mb-3">Max Price — {formatEGP(sliderValue)}</h4>
+        <h4 className="nv-eyebrow mb-3">
+          {t('Max Price')} — {formatEGP(sliderValue)}
+        </h4>
         <input
           type="range"
-          aria-label="Maximum price"
+          aria-label={t('Maximum price')}
           min={500}
           max={PRICE_SLIDER_MAX}
           step={50}
@@ -308,7 +312,7 @@ export default function Shop() {
           onClick={clearAllFilters}
           className="text-xs underline text-navy/60 hover:text-navy"
         >
-          Clear all filters
+          {t('Clear all filters')}
         </button>
       )}
     </div>
@@ -317,34 +321,34 @@ export default function Shop() {
   return (
     <div className="bg-white text-navy min-h-screen pt-24 md:pt-28">
       <div className="mx-auto max-w-[1600px] px-5 md:px-8 pb-24">
-        <Breadcrumb items={[{ label: 'Shop' }]} />
+        <Breadcrumb items={[{ label: t('Shop') }]} />
         <div className="mb-8 md:mb-12">
-          <p className="nv-eyebrow text-navy/60 mb-2">{category || 'Shop All'}</p>
-          <h1 className="nv-heading text-5xl md:text-7xl">{category || 'Shop'}</h1>
+          <p className="nv-eyebrow text-navy/60 mb-2">{category || t('Shop All')}</p>
+          <h1 className="nv-heading text-5xl md:text-7xl">{category || t('Shop')}</h1>
         </div>
 
         <div className="mb-6 max-w-2xl">
           <label htmlFor="product-search" className="sr-only">
-            Search products
+            {t('Search products')}
           </label>
           <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy/40" />
+            <Search size={16} className="absolute start-3 top-1/2 -translate-y-1/2 text-navy/40" />
             <input
               id="product-search"
               data-testid="search-input"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search tees, hoodies, bags…"
+              placeholder={t('Search tees, hoodies, bags…')}
               className="w-full rounded-full border border-navy/20 bg-white px-10 py-3 text-sm outline-none focus:border-navy"
             />
             {searchQuery && (
               <button
                 type="button"
-                aria-label="Clear search"
+                aria-label={t('Clear search')}
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-navy/50"
+                className="absolute end-3 top-1/2 -translate-y-1/2 text-sm text-navy/50"
               >
-                Clear
+                {t('Clear')}
               </button>
             )}
           </div>
@@ -355,11 +359,11 @@ export default function Shop() {
                   <button
                     type="button"
                     onClick={() => setSearchQuery(suggestion)}
-                    className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-navy/70 hover:bg-mist"
+                    className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-start text-sm text-navy/70 hover:bg-mist"
                   >
                     <span>{suggestion}</span>
                     <span className="text-[11px] uppercase tracking-wider text-navy/40">
-                      Quick search
+                      {t('Quick search')}
                     </span>
                   </button>
                 </li>
@@ -372,7 +376,7 @@ export default function Shop() {
           <div className="mb-6 flex flex-wrap gap-2">
             {searchQuery && (
               <span className="rounded-full bg-mist px-3 py-1 text-xs text-navy/70">
-                Search: {searchQuery}
+                {t('Search')}: {searchQuery}
               </span>
             )}
             {colors.map(color => (
@@ -382,12 +386,12 @@ export default function Shop() {
             ))}
             {sizes.map(size => (
               <span key={size} className="rounded-full bg-mist px-3 py-1 text-xs text-navy/70">
-                Size: {size}
+                {t('Size')}: {size}
               </span>
             ))}
             {priceMax < PRICE_SLIDER_MAX && (
               <span className="rounded-full bg-mist px-3 py-1 text-xs text-navy/70">
-                Up to {formatEGP(priceMax)}
+                {t('Up to')} {formatEGP(priceMax)}
               </span>
             )}
           </div>
@@ -396,7 +400,7 @@ export default function Shop() {
         <div className="flex items-center justify-between border-y border-navy/10 py-3 mb-8 sticky top-16 md:top-20 bg-white z-20">
           <span className="text-sm text-navy/60">
             {loading
-              ? 'Loading…'
+              ? t('Loading…')
               : `Showing ${products.length} of ${allProducts.length} product${
                   allProducts.length !== 1 ? 's' : ''
                 }`}
@@ -407,25 +411,25 @@ export default function Shop() {
               value={sort}
               onChange={e => setParam('sort', e.target.value)}
               className="text-sm border border-navy/20 px-3 py-2 bg-white focus:outline-none"
-              aria-label="Sort products"
+              aria-label={t('Sort products')}
               data-testid="sort-select"
             >
               {(Object.keys(sortLabels) as SortOption[]).map(s => (
                 <option key={s} value={s}>
-                  {sortLabels[s]}
+                  {t(sortLabels[s])}
                 </option>
               ))}
             </select>
             <div className="hidden sm:flex items-center gap-1 border border-navy/20">
               <button
-                aria-label="Grid view"
+                aria-label={t('Grid view')}
                 onClick={() => setView('grid')}
                 className={`p-2 ${view === 'grid' ? 'bg-navy text-white' : ''}`}
               >
                 <LayoutGrid size={15} />
               </button>
               <button
-                aria-label="List view"
+                aria-label={t('List view')}
                 onClick={() => setView('list')}
                 className={`p-2 ${view === 'list' ? 'bg-navy text-white' : ''}`}
               >
@@ -454,24 +458,24 @@ export default function Shop() {
               </div>
             ) : products.length === 0 ? (
               <EmptyState
-                title="No products match that search"
-                body="Try a broader keyword, clear a filter, or browse our full collection."
-                actionLabel="Reset filters"
+                title={t('No products match that search')}
+                body={t('Try a broader keyword, clear a filter, or browse our full collection.')}
+                actionLabel={t('Reset filters')}
                 onAction={clearAllFilters}
               />
             ) : (
               <SectionErrorBoundary
                 fallback={
                   <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
-                    <p className="text-red-800 font-medium mb-2">Failed to load products</p>
+                    <p className="text-red-800 font-medium mb-2">{t('Failed to load products')}</p>
                     <p className="text-red-600 text-sm mb-4">
-                      Please refresh the page to try again.
+                      {t('Please refresh the page to try again.')}
                     </p>
                     <button
                       onClick={() => window.location.reload()}
                       className="inline-block px-6 py-2 bg-navy text-white rounded hover:opacity-90 transition-opacity"
                     >
-                      Refresh
+                      {t('Refresh')}
                     </button>
                   </div>
                 }
@@ -497,7 +501,7 @@ export default function Shop() {
                         }}
                         className="border border-navy px-8 py-4 nv-eyebrow hover:bg-navy hover:text-white transition-colors"
                       >
-                        Load More{' '}
+                        {t('Load More')}{' '}
                         {allProducts.length - displayCount > 0 &&
                           `(${allProducts.length - displayCount} remaining)`}
                       </button>

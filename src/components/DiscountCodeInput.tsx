@@ -3,6 +3,7 @@ import { useToast } from '../context/ToastContext';
 import { discountService } from '../services/discountService';
 import { Trash2 } from 'lucide-react';
 import { formatEGP } from '../lib/format';
+import { useI18n } from '../lib/i18n';
 
 interface DiscountCodeInputProps {
   subtotal: number;
@@ -17,13 +18,14 @@ export function DiscountCodeInput({
   onRemove,
   appliedCode,
 }: DiscountCodeInputProps) {
+  const { t } = useI18n();
   const { showToast } = useToast();
   const [code, setCode] = useState(appliedCode || '');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   const handleApply = async () => {
     if (!code.trim()) {
-      showToast('Please enter a discount code', 'error', 3000);
+      showToast(t('Please enter a discount code'), 'error', 3000);
       return;
     }
 
@@ -32,7 +34,7 @@ export function DiscountCodeInput({
 
     if (!result.valid || !result.discount) {
       setStatus('error');
-      showToast(result.error || 'Please check your code and try again', 'error', 3000);
+      showToast(result.error || t('Please check your code and try again'), 'error', 3000);
       return;
     }
 
@@ -42,7 +44,7 @@ export function DiscountCodeInput({
     );
 
     setStatus('success');
-    showToast(`You saved ${formatEGP(discountAmount)}`, 'success', 3000);
+    showToast(`${t('You saved')} ${formatEGP(discountAmount)}`, 'success', 3000);
 
     onApply({
       code: result.discount.code,
@@ -55,20 +57,22 @@ export function DiscountCodeInput({
     setCode('');
     setStatus('idle');
     onRemove();
-    showToast('Order total has been updated', 'success', 3000);
+    showToast(t('Order total has been updated'), 'success', 3000);
   };
 
   if (appliedCode) {
     return (
       <div className="bg-navy/5 rounded-lg p-4 mb-4 flex items-center justify-between">
         <div>
-          <p className="text-sm font-semibold text-navy">Discount Applied</p>
-          <p className="text-sm text-navy/70">Code: {appliedCode}</p>
+          <p className="text-sm font-semibold text-navy">{t('Discount Applied')}</p>
+          <p className="text-sm text-navy/70">
+            {t('Code')}: {appliedCode}
+          </p>
         </div>
         <button
           onClick={handleRemove}
           className="text-navy/60 hover:text-red-600 transition-colors"
-          aria-label="Remove discount"
+          aria-label={t('Remove discount')}
         >
           <Trash2 size={20} />
         </button>
@@ -78,13 +82,13 @@ export function DiscountCodeInput({
 
   return (
     <div className="mb-6">
-      <p className="text-sm font-medium text-navy mb-3">Have a discount code?</p>
+      <p className="text-sm font-medium text-navy mb-3">{t('Have a discount code?')}</p>
       <div className="flex gap-2">
         <input
           type="text"
           value={code}
           onChange={e => setCode(e.target.value)}
-          placeholder="ENTER CODE"
+          placeholder={t('ENTER CODE')}
           className="flex-1 border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
         />
         <button
@@ -92,11 +96,13 @@ export function DiscountCodeInput({
           disabled={status === 'loading'}
           className="bg-navy text-white nv-eyebrow px-6 py-3 hover:bg-navy-2 transition-colors disabled:opacity-60 whitespace-nowrap"
         >
-          {status === 'loading' ? 'Checking...' : 'Apply'}
+          {status === 'loading' ? t('Checking...') : t('Apply')}
         </button>
       </div>
       {status === 'error' && (
-        <p className="text-xs text-red-600 mt-2">Invalid code. Please check and try again.</p>
+        <p className="text-xs text-red-600 mt-2">
+          {t('Invalid code. Please check and try again.')}
+        </p>
       )}
     </div>
   );

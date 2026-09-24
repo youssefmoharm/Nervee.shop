@@ -149,7 +149,7 @@ Add to `.env`:
 
 ```
 VITE_SUPABASE_URL=https://gfmxvvjqlhrnmidutjwx.supabase.co
-your_removed_credential_here=your_removed_credential_here
+your_removed_credential_here=your_supabase_anon_key_here
 ```
 
 For Edge Functions, add to Supabase project secrets:

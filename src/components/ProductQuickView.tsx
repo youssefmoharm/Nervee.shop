@@ -8,8 +8,10 @@ import { useToast } from '../context/ToastContext';
 import { Link } from 'react-router-dom';
 import type { Size } from '../types';
 import { formatEGP } from '../lib/format';
+import { useI18n } from '../lib/i18n';
 
 export default function ProductQuickView() {
+  const { t } = useI18n();
   const { isOpen, product, close } = useQuickView();
   const { addLine } = useCart();
   const { toggle, has } = useWishlist();
@@ -74,7 +76,7 @@ export default function ProductQuickView() {
 
   const handleAddToBag = () => {
     if (!selectedSize) {
-      showToast('Please select a size', 'error', 3000);
+      showToast(t('Please select a size'), 'error', 3000);
       return;
     }
 
@@ -123,7 +125,7 @@ export default function ProductQuickView() {
         }}
         role="button"
         tabIndex={0}
-        aria-label="Close modal"
+        aria-label={t('Close modal')}
         className={`fixed inset-0 bg-black z-40 transition-opacity duration-300 ${
           isOpen ? 'opacity-30' : 'opacity-0 pointer-events-none'
         }`}
@@ -157,7 +159,7 @@ export default function ProductQuickView() {
                   <button
                     onClick={close}
                     className="absolute top-3 right-3 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-navy"
-                    aria-label="Close modal"
+                    aria-label={t('Close modal')}
                   >
                     <X size={16} className="text-navy" />
                   </button>
@@ -168,14 +170,14 @@ export default function ProductQuickView() {
                       <button
                         onClick={handlePrevImage}
                         className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
-                        aria-label="Previous image"
+                        aria-label={t('Previous image')}
                       >
                         <ChevronLeft size={16} className="text-navy" />
                       </button>
                       <button
                         onClick={handleNextImage}
                         className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
-                        aria-label="Next image"
+                        aria-label={t('Next image')}
                       >
                         <ChevronRight size={16} className="text-navy" />
                       </button>
@@ -238,7 +240,9 @@ export default function ProductQuickView() {
                 {/* Colors */}
                 {product.colors.length > 1 && (
                   <div>
-                    <p className="text-sm font-semibold text-navy mb-2">Color: {color.name}</p>
+                    <p className="text-sm font-semibold text-navy mb-2">
+                      {t('Color')}: {color.name}
+                    </p>
                     <div className="flex items-center gap-2">
                       {product.colors.map((c, i) => (
                         <button
@@ -267,7 +271,7 @@ export default function ProductQuickView() {
                 {/* Sizes */}
                 <div>
                   <p className="text-sm font-semibold text-navy mb-2">
-                    Size: {selectedSize || 'Select a size'}
+                    {t('Size')}: {selectedSize || t('Select a size')}
                   </p>
                   <div className="grid grid-cols-4 gap-2">
                     {product.sizes.map(s => (
@@ -291,7 +295,7 @@ export default function ProductQuickView() {
 
                 {/* Quantity */}
                 <div>
-                  <p className="text-sm font-semibold text-navy mb-2">Quantity</p>
+                  <p className="text-sm font-semibold text-navy mb-2">{t('Quantity')}</p>
                   <div className="flex items-center border border-navy/20 w-fit">
                     <button
                       onClick={() => setQuantity(q => Math.max(1, q - 1))}
@@ -316,7 +320,7 @@ export default function ProductQuickView() {
                       inStockForSize ? 'text-green-600' : 'text-red-600'
                     }`}
                   >
-                    {inStockForSize ? '✓ In Stock' : '✗ Out of Stock'}
+                    {inStockForSize ? t('✓ In Stock') : t('✗ Out of Stock')}
                   </div>
                 )}
 
@@ -327,12 +331,12 @@ export default function ProductQuickView() {
                     disabled={!selectedSize || !inStockForSize}
                     className="flex-1 bg-navy text-white nv-eyebrow py-3 hover:bg-navy-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Add to Bag
+                    {t('Add to Bag')}
                   </button>
                   <button
                     onClick={handleWishlist}
                     className="w-12 h-12 border border-navy text-navy flex items-center justify-center hover:bg-mist transition-colors"
-                    aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
+                    aria-label={wished ? t('Remove from wishlist') : t('Add to wishlist')}
                   >
                     <Heart
                       size={18}
@@ -348,13 +352,13 @@ export default function ProductQuickView() {
                   onClick={close}
                   className="text-sm text-navy hover:text-navy/60 transition-colors font-medium text-center py-2 border-t border-navy/10"
                 >
-                  View Full Details
+                  {t('View Full Details')}
                 </Link>
 
                 {/* Info */}
                 <div className="text-xs text-navy/50 space-y-1 pt-2 border-t border-navy/10">
-                  <p>Free returns within 14 days</p>
-                  <p>Cash on delivery available</p>
+                  <p>{t('Free returns within 14 days')}</p>
+                  <p>{t('Cash on delivery available')}</p>
                 </div>
               </div>
             </div>

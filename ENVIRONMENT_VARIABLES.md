@@ -10,10 +10,10 @@ Anything prefixed with `VITE_` is bundled into the browser JavaScript bundle and
 
 ```js
 // ❌ WRONG — This will be visible in the browser
-VITE_SECRET_API_KEY = your_removed_credential_here;
+VITE_SECRET_API_KEY = your_secret_key_here;
 
 // ✅ RIGHT — Server secrets use no prefix
-RESEND_API_KEY = re_abc123; // Set in Supabase secrets, not in .env
+RESEND_API_KEY = your_resend_api_key_here; // Set in Supabase secrets, not in .env
 ```
 
 ## Environment Variables Reference
@@ -43,8 +43,8 @@ These are **never** prefixed with `VITE_`. Set in Supabase only, never in `.env`
 
 ***REMOVED***
 # Set in Supabase (not in git)
-supabase secrets set RESEND_API_KEY=re_abc123
-supabase secrets set GOOGLE_GEMINI_API_KEY=sk_xyz789
+supabase secrets set RESEND_API_KEY=your_resend_api_key_here
+supabase secrets set GOOGLE_GEMINI_API_KEY=your_gemini_api_key_here
 
 # List all secrets
 supabase secrets list
@@ -81,8 +81,8 @@ These are **automatically available** inside Edge Functions. Never set them your
 2. **Update `.env` with local Supabase credentials:**
 
    ```env
-   VITE_SUPABASE_URL=https://gfmxvvjqlhrnmidutjwx.supabase.co
-   your_removed_credential_here=your_removed_credential_here
+   VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+   your_removed_credential_here=your_supabase_anon_key_here
    ```
 
 3. **Use `.env.local` for personal overrides** (gitignored):
@@ -110,10 +110,10 @@ These are **automatically available** inside Edge Functions. Never set them your
 2. **Set server secrets in Supabase:**
 
    ***REMOVED***
-   supabase secrets set RESEND_API_KEY=re_abc123
+   supabase secrets set RESEND_API_KEY=your_resend_api_key_here
    supabase secrets set RESEND_FROM_EMAIL="NERVE <orders@nerveey.shop>"
    supabase secrets set STORE_URL="https://www.nerveey.shop"
-   supabase secrets set GOOGLE_GEMINI_API_KEY=sk_xyz789
+   supabase secrets set GOOGLE_GEMINI_API_KEY=your_gemini_api_key_here
    ```
 
 3. **Verify:**
@@ -149,7 +149,7 @@ These are **automatically available** inside Edge Functions. Never set them your
 **Solution**:
 
 ***REMOVED***
-supabase secrets set RESEND_API_KEY=re_abc123
+supabase secrets set RESEND_API_KEY=your_resend_api_key_here
 supabase secrets set STORE_URL=https://www.nerveey.shop
 ```
 

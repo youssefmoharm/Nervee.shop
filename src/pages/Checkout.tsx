@@ -602,7 +602,7 @@ export default function Checkout() {
                         <span className="text-navy">
                           {form.delivery === 'standard' ? 'Standard' : 'Express'} Delivery
                         </span>
-                        <span className="ml-auto text-navy/60">
+                        <span className="ms-auto text-navy/60">
                           {formatEGP(estimateShippingCost(subtotal, form.delivery))}
                         </span>
                       </div>
@@ -845,7 +845,7 @@ function Field({
       <span className="text-xs font-medium text-navy/60 mb-1.5 block">
         {label}
         {required && (
-          <span className="text-red-500 ml-0.5" aria-hidden="true">
+          <span className="text-red-500 ms-0.5" aria-hidden="true">
             *
           </span>
         )}

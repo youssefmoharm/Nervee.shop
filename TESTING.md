@@ -23,10 +23,13 @@ FROM information_schema.tables
 WHERE table_schema = 'public'
 ORDER BY table_name;
 
--- Expected tables:
--- addresses, admin_users, back_in_stock_requests, cart_items, carts,
--- collections, contact_messages, customers, discount_codes, newsletter_subscribers,
--- order_items, orders, payment_events, product_colors, product_inventory, products,
+-- Expected tables (core; full list in supabase/schema.sql):
+-- admin_users, back_in_stock_requests, cart_items, carts,
+-- collections, contact_messages, customer_addresses, customers, discount_codes,
+-- guest_orders, newsletter_subscribers, order_items, orders,
+-- order_status_history, order_return_requests,
+-- payment_attempts, refunds,
+-- product_colors, product_inventory, product_reviews, products,
 -- wishlist_items, wishlists
 ```
 
@@ -930,6 +933,13 @@ not limitations.
 
 ### Automated test layers
 
+- **Deno** (`npm run test:deno`): Deno unit tests in `tests/deno/` and
+  `supabase/functions/_shared/*.test.ts` (shared edge-function helpers:
+  validation, rate limiting, etc.).
+- **SQL** (`npm run test:sql`): pgTAP / DO-block tests in
+  `supabase/tests/database/*.sql` run via `psql`. **Skips (exit 0) unless
+  `SUPABASE_DB_URL` (or `DATABASE_URL`) is set**, and skips with a warning
+  if `psql` is not on PATH — safe to call from CI without secrets.
 - **Vitest** (`npm run test -- --run`): unit/component tests, including
   `tests/security.test.ts` (client-side validation + HTTP 429 handling).
 - **Playwright** (`npm run test:e2e`): local dev-server journeys, axe-core

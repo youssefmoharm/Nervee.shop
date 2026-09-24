@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSEO } from '../../hooks/useSEO';
+import { useI18n } from '../../lib/i18n';
 
 export default function ForgotPassword() {
+  const { t } = useI18n();
   const { requestPasswordReset } = useAuth();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -33,19 +35,20 @@ export default function ForgotPassword() {
   return (
     <div className="bg-white text-navy min-h-screen pt-32 pb-24 px-5 md:px-8">
       <div className="mx-auto max-w-md">
-        <h1 className="nv-heading text-5xl mb-2">Reset Password</h1>
+        <h1 className="nv-heading text-5xl mb-2">{t('Reset Password')}</h1>
         <p className="text-navy/60 mb-8">
-          Enter your email and we&apos;ll send you a link to reset your password.
+          {t("Enter your email and we'll send you a link to reset your password.")}
         </p>
 
         {sent ? (
           <p className="text-sm">
-            If an account exists for <strong>{email}</strong>, a reset link is on its way.
+            {t('If an account exists for')} <strong>{email}</strong>
+            {t(', a reset link is on its way.')}
           </p>
         ) : (
           <form onSubmit={onSubmit} className="space-y-5">
             <label className="block">
-              <span className="text-xs font-medium text-navy/60 mb-1.5 block">Email</span>
+              <span className="text-xs font-medium text-navy/60 mb-1.5 block">{t('Email')}</span>
               <input
                 type="email"
                 required
@@ -60,7 +63,7 @@ export default function ForgotPassword() {
               disabled={loading}
               className="w-full bg-navy text-white nv-eyebrow py-4 hover:bg-navy-2 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
             >
-              {loading ? <Loader2 size={16} className="animate-spin" /> : 'Send Reset Link'}
+              {loading ? <Loader2 size={16} className="animate-spin" /> : t('Send Reset Link')}
             </button>
           </form>
         )}
@@ -69,7 +72,7 @@ export default function ForgotPassword() {
           to="/login"
           className="inline-block mt-6 text-sm text-navy/60 hover:text-navy underline"
         >
-          Back to Sign In
+          {t('Back to Sign In')}
         </Link>
       </div>
     </div>

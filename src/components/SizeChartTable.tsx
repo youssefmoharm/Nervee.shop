@@ -1,4 +1,5 @@
 import { sizeCharts, type SizeChart } from '../data/sizingData';
+import { useI18n } from '../lib/i18n';
 
 /**
  * Single rendering of the size chart table. Data always comes from
@@ -12,17 +13,18 @@ export default function SizeChartTable({
   variant?: 'default' | 'page' | 'tool';
   chart?: SizeChart[];
 }) {
+  const { t } = useI18n();
   if (variant === 'tool') {
     return (
       <div className="overflow-x-auto">
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="bg-mist">
-              <th className="border border-navy/10 px-3 py-2 text-left">Size</th>
-              <th className="border border-navy/10 px-3 py-2 text-left">Chest</th>
-              <th className="border border-navy/10 px-3 py-2 text-left">Waist</th>
-              <th className="border border-navy/10 px-3 py-2 text-left">Length</th>
-              <th className="border border-navy/10 px-3 py-2 text-left">Fit</th>
+              <th className="border border-navy/10 px-3 py-2 text-left">{t('Size')}</th>
+              <th className="border border-navy/10 px-3 py-2 text-left">{t('Chest')}</th>
+              <th className="border border-navy/10 px-3 py-2 text-left">{t('Waist')}</th>
+              <th className="border border-navy/10 px-3 py-2 text-left">{t('Length')}</th>
+              <th className="border border-navy/10 px-3 py-2 text-left">{t('Fit')}</th>
             </tr>
           </thead>
           <tbody>
@@ -47,11 +49,21 @@ export default function SizeChartTable({
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-navy text-white">
-              <th className="border border-navy/20 px-4 py-3 text-left font-semibold">Size</th>
-              <th className="border border-navy/20 px-4 py-3 text-left font-semibold">Chest</th>
-              <th className="border border-navy/20 px-4 py-3 text-left font-semibold">Waist</th>
-              <th className="border border-navy/20 px-4 py-3 text-left font-semibold">Length</th>
-              <th className="border border-navy/20 px-4 py-3 text-left font-semibold">Fit</th>
+              <th className="border border-navy/20 px-4 py-3 text-left font-semibold">
+                {t('Size')}
+              </th>
+              <th className="border border-navy/20 px-4 py-3 text-left font-semibold">
+                {t('Chest')}
+              </th>
+              <th className="border border-navy/20 px-4 py-3 text-left font-semibold">
+                {t('Waist')}
+              </th>
+              <th className="border border-navy/20 px-4 py-3 text-left font-semibold">
+                {t('Length')}
+              </th>
+              <th className="border border-navy/20 px-4 py-3 text-left font-semibold">
+                {t('Fit')}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -77,11 +89,11 @@ export default function SizeChartTable({
       <table className="w-full text-sm border-collapse">
         <thead>
           <tr className="border-b border-navy/20">
-            <th className="text-left py-2.5 nv-eyebrow text-[10px]">Size</th>
-            <th className="text-left py-2.5 nv-eyebrow text-[10px]">Chest</th>
-            <th className="text-left py-2.5 nv-eyebrow text-[10px]">Waist</th>
-            <th className="text-left py-2.5 nv-eyebrow text-[10px]">Length</th>
-            <th className="text-left py-2.5 nv-eyebrow text-[10px]">Fit</th>
+            <th className="text-left py-2.5 nv-eyebrow text-[10px]">{t('Size')}</th>
+            <th className="text-left py-2.5 nv-eyebrow text-[10px]">{t('Chest')}</th>
+            <th className="text-left py-2.5 nv-eyebrow text-[10px]">{t('Waist')}</th>
+            <th className="text-left py-2.5 nv-eyebrow text-[10px]">{t('Length')}</th>
+            <th className="text-left py-2.5 nv-eyebrow text-[10px]">{t('Fit')}</th>
           </tr>
         </thead>
         <tbody>

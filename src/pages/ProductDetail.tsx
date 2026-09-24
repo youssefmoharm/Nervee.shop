@@ -21,6 +21,7 @@ import Skeleton from '../components/Skeleton';
 import OptimizedImage from '../components/OptimizedImage';
 import { FREE_SHIPPING_THRESHOLD } from '../lib/storeConfig';
 import { formatEGP } from '../lib/format';
+import { useI18n } from '../lib/i18n';
 
 const STORE_URL = import.meta.env.VITE_APP_URL || 'https://www.nerveey.shop';
 
@@ -29,6 +30,7 @@ type PendingPhoto = { file: File; preview: string };
 type Tab = 'description' | 'size' | 'shipping';
 
 export default function ProductDetail() {
+  const { t } = useI18n();
   const { slug } = useParams();
   const navigate = useNavigate();
   const { addLine, openCart } = useCart();
@@ -323,12 +325,12 @@ export default function ProductDetail() {
       setReviewPhotos([]);
       setShowReviewForm(false);
       if (uploadFailed > 0) {
-        showToast('Review submitted, but some photos failed to upload.', 'info', 4000);
+        showToast(t('Review submitted, but some photos failed to upload.'), 'info', 4000);
       } else {
-        showToast('Review submitted successfully', 'success', 2000);
+        showToast(t('Review submitted successfully'), 'success', 2000);
       }
     } else {
-      showToast(result.error || 'Failed to submit review', 'error', 3000);
+      showToast(result.error || t('Failed to submit review'), 'error', 3000);
     }
     setSubmittingReview(false);
   };
@@ -448,15 +450,17 @@ export default function ProductDetail() {
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2 text-xs text-navy/70">
-              <span className="rounded-full bg-mist px-3 py-1">Secure checkout</span>
+              <span className="rounded-full bg-mist px-3 py-1">{t('Secure checkout')}</span>
               <span className="rounded-full bg-mist px-3 py-1">
-                Free delivery over {formatEGP(FREE_SHIPPING_THRESHOLD)}
+                {t('Free delivery over')} {formatEGP(FREE_SHIPPING_THRESHOLD)}
               </span>
-              <span className="rounded-full bg-mist px-3 py-1">30-day easy returns</span>
+              <span className="rounded-full bg-mist px-3 py-1">{t('30-day easy returns')}</span>
             </div>
 
             <div className="mt-8">
-              <p className="nv-eyebrow text-navy/60 mb-3">Color: {color.name}</p>
+              <p className="nv-eyebrow text-navy/60 mb-3">
+                {t('Color')}: {color.name}
+              </p>
               <div className="flex gap-2">
                 {product.colors.map((c, i) => (
                   <button
@@ -487,12 +491,15 @@ export default function ProductDetail() {
 
             <div className="mt-8">
               <div className="flex items-center justify-between mb-3">
-                <p className="nv-eyebrow text-navy/60">Size{size ? `: ${size}` : ''}</p>
+                <p className="nv-eyebrow text-navy/60">
+                  {t('Size')}
+                  {size ? `: ${size}` : ''}
+                </p>
                 <button
                   onClick={() => setSizeGuideOpen(true)}
                   className="text-xs underline text-navy/50"
                 >
-                  Size Guide
+                  {t('Size Guide')}
                 </button>
               </div>
               <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
@@ -518,14 +525,17 @@ export default function ProductDetail() {
                   </button>
                 ))}
               </div>
-              {sizeError && <p className="text-xs text-red-600 mt-2">Please select a size.</p>}
+              {sizeError && (
+                <p className="text-xs text-red-600 mt-2">{t('Please select a size.')}</p>
+              )}
               {product.fitNotes && <p className="text-xs text-navy/50 mt-2">{product.fitNotes}</p>}
 
               {notifySize && (
                 <div className="mt-4 border border-navy/15 p-4">
                   {notifyStatus === 'done' ? (
                     <p className="text-sm">
-                      We&apos;ll email you the moment <strong>{notifySize}</strong> is back.
+                      {t("We'll email you the moment")} <strong>{notifySize}</strong>{' '}
+                      {t('is back.')}
                     </p>
                   ) : (
                     <form
@@ -542,8 +552,8 @@ export default function ProductDetail() {
                       className="space-y-2"
                     >
                       <p className="text-sm">
-                        Size <strong>{notifySize}</strong> is out of stock. Get an email when
-                        it&apos;s back:
+                        Size <strong>{notifySize}</strong>{' '}
+                        {t('is out of stock. Get an email when it&apos;s back:')}
                       </p>
                       <div className="flex gap-2">
                         <input
@@ -562,12 +572,12 @@ export default function ProductDetail() {
                           {notifyStatus === 'loading' && (
                             <Loader2 size={13} className="animate-spin" />
                           )}
-                          Notify Me
+                          {t('Notify Me')}
                         </button>
                       </div>
                       {notifyStatus === 'error' && (
                         <p className="text-xs text-red-600">
-                          Something went wrong. Please try again.
+                          {t('Something went wrong. Please try again.')}
                         </p>
                       )}
                     </form>
@@ -579,7 +589,7 @@ export default function ProductDetail() {
             <div className="mt-8 flex gap-3">
               <div className="flex items-center border border-navy/25">
                 <button
-                  aria-label="Decrease quantity"
+                  aria-label={t('Decrease quantity')}
                   onClick={() => setQty(q => Math.max(1, q - 1))}
                   className="w-11 h-14 flex items-center justify-center hover:bg-mist"
                 >
@@ -587,7 +597,7 @@ export default function ProductDetail() {
                 </button>
                 <span className="w-10 text-center">{qty}</span>
                 <button
-                  aria-label="Increase quantity"
+                  aria-label={t('Increase quantity')}
                   onClick={() => setQty(q => Math.min(99, q + 1))}
                   className="w-11 h-14 flex items-center justify-center hover:bg-mist"
                 >
@@ -599,10 +609,10 @@ export default function ProductDetail() {
                 data-testid="add-to-bag-button"
                 className="flex-1 bg-navy text-white nv-eyebrow py-4 hover:bg-navy-2 transition-colors"
               >
-                Add to Bag
+                {t('Add to Bag')}
               </button>
               <button
-                aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
+                aria-label={wished ? t('Remove from wishlist') : t('Add to wishlist')}
                 onClick={() => {
                   toggle({
                     productId: product.id,
@@ -612,7 +622,7 @@ export default function ProductDetail() {
                     price: product.price,
                   });
                   showToast(
-                    wished ? 'Removed from wishlist' : 'Added to wishlist',
+                    wished ? t('Removed from wishlist') : t('Added to wishlist'),
                     'success',
                     2000,
                   );
@@ -624,7 +634,7 @@ export default function ProductDetail() {
               <div className="relative flex-shrink-0">
                 <button
                   type="button"
-                  aria-label="Share this product"
+                  aria-label={t('Share this product')}
                   aria-expanded={shareOpen}
                   onClick={() => void handleShare()}
                   className="w-14 h-14 border border-navy/25 flex items-center justify-center hover:border-navy transition-colors"
@@ -659,13 +669,13 @@ export default function ProductDetail() {
                         void navigator.clipboard
                           ?.writeText(`${STORE_URL}/product/${product.slug}`)
                           .then(() => {
-                            showToast('Link copied', 'success', 2000);
+                            showToast(t('Link copied'), 'success', 2000);
                             setShareOpen(false);
                           });
                       }}
                       className="block w-full rounded-lg px-3 py-2 text-left text-sm text-navy/80 hover:bg-mist"
                     >
-                      Copy link
+                      {t('Copy link')}
                     </button>
                   </div>
                 )}
@@ -676,7 +686,7 @@ export default function ProductDetail() {
               data-testid="buy-now-button"
               className="mt-3 w-full border border-navy nv-eyebrow py-4 hover:bg-navy hover:text-white transition-colors"
             >
-              Buy Now
+              {t('Buy Now')}
             </button>
 
             {/* Tabs */}
@@ -694,7 +704,7 @@ export default function ProductDetail() {
                     aria-expanded={tab === key}
                     className="w-full flex items-center justify-between py-4 text-left"
                   >
-                    <span className="nv-edit font-semibold text-sm uppercase">{label}</span>
+                    <span className="nv-edit font-semibold text-sm uppercase">{t(label)}</span>
                     <span className="text-lg">{tab === key ? '-' : '+'}</span>
                   </button>
                   {tab === key && (
@@ -703,11 +713,11 @@ export default function ProductDetail() {
                         <>
                           <p>{product.description}</p>
                           <p>
-                            <span className="font-medium text-navy">Material:</span>{' '}
+                            <span className="font-medium text-navy">{t('Material:')}</span>{' '}
                             {product.material}
                           </p>
                           <div>
-                            <p className="font-medium text-navy mb-1">Care Instructions:</p>
+                            <p className="font-medium text-navy mb-1">{t('Care Instructions:')}</p>
                             <ul className="list-disc list-inside space-y-0.5">
                               {product.care.map(c => (
                                 <li key={c}>{c}</li>
@@ -729,11 +739,11 @@ export default function ProductDetail() {
                         <div className="space-y-3">
                           <div className="flex items-start gap-2">
                             <Truck size={16} className="mt-0.5 flex-shrink-0" />
-                            <p>Standard delivery in 2-5 business days across Egypt.</p>
+                            <p>{t('Standard delivery in 2-5 business days across Egypt.')}</p>
                           </div>
                           <div className="flex items-start gap-2">
                             <RotateCcw size={16} className="mt-0.5 flex-shrink-0" />
-                            <p>Free returns within 14 days of delivery on unworn items.</p>
+                            <p>{t('Free returns within 14 days of delivery on unworn items.')}</p>
                           </div>
                         </div>
                       )}
@@ -746,7 +756,7 @@ export default function ProductDetail() {
             {/* Reviews Section */}
             <div className="mt-10 border-t border-navy/10">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="nv-heading text-xl">Customer Reviews</h2>
+                <h2 className="nv-heading text-xl">{t('Customer Reviews')}</h2>
                 <div className="flex items-center gap-2">
                   <span className="text-lg font-semibold">{getAverageRating(reviews)}</span>
                   <div className="flex">{renderStars(reviewStats.averageRating)}</div>
@@ -762,7 +772,7 @@ export default function ProductDetail() {
                       onClick={() => setShowReviewForm(true)}
                       className="bg-navy text-white nv-eyebrow px-4 py-2 rounded-lg hover:bg-navy-2 transition-colors"
                     >
-                      Write a Review
+                      {t('Write a Review')}
                     </button>
                   ) : (
                     <div className="bg-mist/50 p-4 rounded-lg">
@@ -772,7 +782,7 @@ export default function ProductDetail() {
                             htmlFor="review-rating"
                             className="text-xs font-medium text-navy/60 mb-1 block"
                           >
-                            Rating
+                            {t('Rating')}
                           </label>
                           <div className="flex gap-1" id="review-rating">
                             {Array.from({ length: 5 }).map((_, i) => (
@@ -797,7 +807,7 @@ export default function ProductDetail() {
                             htmlFor="review-title"
                             className="text-xs font-medium text-navy/60 mb-1 block"
                           >
-                            Title
+                            {t('Title')}
                           </label>
                           <input
                             id="review-title"
@@ -806,7 +816,7 @@ export default function ProductDetail() {
                             value={reviewForm.title}
                             onChange={e => setReviewForm({ ...reviewForm, title: e.target.value })}
                             className="w-full border border-navy/20 px-3 py-2 text-sm focus:outline-none focus:border-navy"
-                            placeholder="Short summary"
+                            placeholder={t('Short summary')}
                           />
                         </div>
                         <div>
@@ -814,7 +824,7 @@ export default function ProductDetail() {
                             htmlFor="review-comment"
                             className="text-xs font-medium text-navy/60 mb-1 block"
                           >
-                            Comment
+                            {t('Comment')}
                           </label>
                           <textarea
                             id="review-comment"
@@ -823,7 +833,7 @@ export default function ProductDetail() {
                               setReviewForm({ ...reviewForm, comment: e.target.value })
                             }
                             className="w-full border border-navy/20 px-3 py-2 text-sm focus:outline-none focus:border-navy"
-                            placeholder="Share your thoughts"
+                            placeholder={t('Share your thoughts')}
                             rows={3}
                           />
                         </div>
@@ -834,7 +844,7 @@ export default function ProductDetail() {
                             htmlFor="review-photos"
                             className="text-xs font-medium text-navy/60 mb-1 block"
                           >
-                            Add Photos (optional, max 3)
+                            {t('Add Photos (optional, max 3)')}
                           </label>
                           <input
                             id="review-photos"
@@ -887,14 +897,14 @@ export default function ProductDetail() {
                             disabled={submittingReview}
                             className="flex-1 bg-navy text-white nv-eyebrow py-2 rounded-lg disabled:opacity-60"
                           >
-                            {submittingReview ? 'Submitting...' : 'Submit Review'}
+                            {submittingReview ? t('Submitting...') : t('Submit Review')}
                           </button>
                           <button
                             type="button"
                             onClick={() => setShowReviewForm(false)}
                             className="px-4 py-2 text-sm text-navy hover:text-navy-2"
                           >
-                            Cancel
+                            {t('Cancel')}
                           </button>
                         </div>
                       </form>
@@ -903,11 +913,11 @@ export default function ProductDetail() {
                 </div>
               ) : (
                 <p className="text-sm text-navy/50 mb-4">
-                  Please{' '}
+                  {t('Please')}{' '}
                   <a href="/login" className="text-navy underline">
-                    sign in
+                    {t('sign in')}
                   </a>{' '}
-                  to write a review.
+                  {t('to write a review.')}
                 </p>
               )}
 
@@ -923,7 +933,7 @@ export default function ProductDetail() {
                           : 'bg-mist text-navy hover:bg-mist/75'
                       }`}
                     >
-                      All Reviews
+                      {t('All Reviews')}
                     </button>
                     <button
                       onClick={() => setReviewFilter('verified')}
@@ -933,7 +943,7 @@ export default function ProductDetail() {
                           : 'bg-mist text-navy hover:bg-mist/75'
                       }`}
                     >
-                      ✓ Verified
+                      {t('✓ Verified')}
                     </button>
                     <button
                       onClick={() => setReviewFilter('photos')}
@@ -943,7 +953,7 @@ export default function ProductDetail() {
                           : 'bg-mist text-navy hover:bg-mist/75'
                       }`}
                     >
-                      📸 With Photos
+                      {t('📸 With Photos')}
                     </button>
                   </div>
                   <select
@@ -951,9 +961,9 @@ export default function ProductDetail() {
                     onChange={e => setReviewSort(e.target.value as 'newest' | 'helpful' | 'rating')}
                     className="text-xs px-3 py-1 border border-navy/20 rounded focus:outline-none focus:border-navy"
                   >
-                    <option value="newest">Newest First</option>
-                    <option value="helpful">Most Helpful</option>
-                    <option value="rating">Highest Rating</option>
+                    <option value="newest">{t('Newest First')}</option>
+                    <option value="helpful">{t('Most Helpful')}</option>
+                    <option value="rating">{t('Highest Rating')}</option>
                   </select>
                 </div>
               )}
@@ -981,7 +991,7 @@ export default function ProductDetail() {
                         <div className="flex">{renderStars(review.rating)}</div>
                         {review.verified && (
                           <span className="inline-block bg-green-100 text-green-600 text-[10px] px-2 py-0.5 rounded-full">
-                            ✓ Verified Purchase
+                            {t('✓ Verified Purchase')}
                           </span>
                         )}
                       </div>
@@ -1005,14 +1015,16 @@ export default function ProductDetail() {
                               : 'bg-mist text-navy hover:bg-mist/75'
                           }`}
                         >
-                          👍 {review.helpfulCount || 0} Helpful
+                          👍 {review.helpfulCount || 0} {t('Helpful')}
                         </button>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-navy/50">No reviews yet. Be the first to review!</p>
+                <p className="text-sm text-navy/50">
+                  {t('No reviews yet. Be the first to review!')}
+                </p>
               )}
             </div>
           </div>
@@ -1026,7 +1038,7 @@ export default function ProductDetail() {
         {/* Recommended */}
         {related.length > 0 && (
           <div className="mt-24">
-            <h2 className="nv-heading text-3xl md:text-4xl mb-8">You May Also Like</h2>
+            <h2 className="nv-heading text-3xl md:text-4xl mb-8">{t('You May Also Like')}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-10">
               {related.map(p => (
                 <ProductCard key={p.id} product={p} />
@@ -1040,7 +1052,7 @@ export default function ProductDetail() {
           <PersonalizedRecommendations
             currentProduct={product}
             position="below-description"
-            title="Complete Your Style"
+            title={t('Complete Your Style')}
           />
         )}
       </div>
@@ -1050,13 +1062,13 @@ export default function ProductDetail() {
             onClick={handleAddToBag}
             className="flex-1 rounded-full bg-navy px-4 py-3 text-sm font-semibold text-white"
           >
-            Add to Bag
+            {t('Add to Bag')}
           </button>
           <button
             onClick={handleBuyNow}
             className="flex-1 rounded-full border border-navy px-4 py-3 text-sm font-semibold text-navy"
           >
-            Buy Now
+            {t('Buy Now')}
           </button>
         </div>
       </div>

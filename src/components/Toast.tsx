@@ -50,7 +50,7 @@ export default function Toast({ message, type = 'info', duration = 3000, onClose
             setIsVisible(false);
             onClose();
           }}
-          className="ml-2 p-1 hover:opacity-70"
+          className="ms-2 p-1 hover:opacity-70"
         >
           <X size={16} />
         </button>

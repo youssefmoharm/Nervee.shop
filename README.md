@@ -123,13 +123,14 @@ deploy with:
 supabase functions deploy
 ```
 
-For the COD-only launch the relevant functions are: `auth-sign-in`,
+For the COD-only launch there are 17 functions: `auth-sign-in`,
 `auth-sign-up`, `create-order`, `update-order-status`, `send-email`,
 `contact`, `back-in-stock`, `send-back-in-stock`, `process-restock`,
-`process-abandoned-carts`, `handle-unsubscribe`, `chat-ai`,
-`create-support-ticket`, `verify-guest-order`, `request-return`
-(`_shared/` holds common utilities). Payment functions are out of scope —
-the store is Cash on Delivery only.
+`process-abandoned-carts`, `record-abandoned-cart`, `handle-unsubscribe`,
+`chat-ai`, `create-support-ticket`, `verify-guest-order`,
+`resend-guest-verification`, `request-return` (`_shared/` holds common
+utilities). Payment functions are out of scope — the store is Cash on
+Delivery only.
 
 ## Environment Variables
 

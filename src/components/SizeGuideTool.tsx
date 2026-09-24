@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Check } from 'lucide-react';
 import { getRecommendedSize, materialFitGuides, faqItems } from '../data/sizingData';
 import SizeChartTable from './SizeChartTable';
+import { useI18n } from '../lib/i18n';
 
 interface SizeGuideToolProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface SizeGuideToolProps {
 type MeasurementUnit = 'cm' | 'inches';
 
 export default function SizeGuideTool({ isOpen, onClose, productMaterial }: SizeGuideToolProps) {
+  const { t } = useI18n();
   const [step, setStep] = useState<'form' | 'result' | 'chart'>('form');
   const [unit, setUnit] = useState<MeasurementUnit>('cm');
   const [chest, setChest] = useState('');
@@ -48,11 +50,11 @@ export default function SizeGuideTool({ isOpen, onClose, productMaterial }: Size
       <div className="bg-white text-navy rounded-lg w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 md:p-6 border-b border-navy/10">
-          <h2 className="text-xl md:text-2xl font-bold text-navy">Find Your Size</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-navy">{t('Find Your Size')}</h2>
           <button
             onClick={onClose}
             className="p-1 hover:bg-navy/10 rounded-full transition-colors"
-            aria-label="Close modal"
+            aria-label={t('Close modal')}
           >
             <X size={24} />
           </button>
@@ -63,7 +65,9 @@ export default function SizeGuideTool({ isOpen, onClose, productMaterial }: Size
           {step === 'form' && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-navy mb-4">Enter Your Measurements</h3>
+                <h3 className="text-lg font-semibold text-navy mb-4">
+                  {t('Enter Your Measurements')}
+                </h3>
 
                 {/* Unit toggle */}
                 <div className="flex gap-2 mb-6">
@@ -73,7 +77,7 @@ export default function SizeGuideTool({ isOpen, onClose, productMaterial }: Size
                       unit === 'cm' ? 'bg-navy text-white' : 'bg-mist text-navy hover:bg-mist/75'
                     }`}
                   >
-                    Centimeters
+                    {t('Centimeters')}
                   </button>
                   <button
                     onClick={() => setUnit('inches')}
@@ -83,7 +87,7 @@ export default function SizeGuideTool({ isOpen, onClose, productMaterial }: Size
                         : 'bg-mist text-navy hover:bg-mist/75'
                     }`}
                   >
-                    Inches
+                    {t('Inches')}
                   </button>
                 </div>
 
@@ -94,7 +98,7 @@ export default function SizeGuideTool({ isOpen, onClose, productMaterial }: Size
                       htmlFor="chest-input"
                       className="block text-sm font-medium text-navy mb-1"
                     >
-                      Chest Measurement
+                      {t('Chest Measurement')}
                     </label>
                     <div className="flex gap-2">
                       <input
@@ -121,7 +125,7 @@ export default function SizeGuideTool({ isOpen, onClose, productMaterial }: Size
                       htmlFor="waist-input"
                       className="block text-sm font-medium text-navy mb-1"
                     >
-                      Waist Measurement
+                      {t('Waist Measurement')}
                     </label>
                     <div className="flex gap-2">
                       <input
@@ -148,7 +152,7 @@ export default function SizeGuideTool({ isOpen, onClose, productMaterial }: Size
                       htmlFor="length-input"
                       className="block text-sm font-medium text-navy mb-1"
                     >
-                      Desired Length
+                      {t('Desired Length')}
                     </label>
                     <div className="flex gap-2">
                       <input
@@ -173,21 +177,21 @@ export default function SizeGuideTool({ isOpen, onClose, productMaterial }: Size
                     type="submit"
                     className="w-full bg-navy text-white py-3 rounded font-semibold hover:bg-navy-2 transition-colors"
                   >
-                    Get Size Recommendation
+                    {t('Get Size Recommendation')}
                   </button>
                 </form>
               </div>
 
               {/* Size Chart Preview */}
               <div>
-                <h3 className="text-lg font-semibold text-navy mb-4">Size Chart</h3>
+                <h3 className="text-lg font-semibold text-navy mb-4">{t('Size Chart')}</h3>
                 <SizeChartTable variant="tool" />
               </div>
 
               {/* Material fit guide */}
               {productMaterial && materialFitGuides[productMaterial.toLowerCase()] && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-navy mb-2">Material Information</h4>
+                  <h4 className="font-semibold text-navy mb-2">{t('Material Information')}</h4>
                   <p className="text-sm text-navy/80">
                     {materialFitGuides[productMaterial.toLowerCase()]?.description}
                   </p>
@@ -199,7 +203,9 @@ export default function SizeGuideTool({ isOpen, onClose, productMaterial }: Size
 
               {/* FAQ */}
               <div>
-                <h3 className="text-lg font-semibold text-navy mb-4">Frequently Asked Questions</h3>
+                <h3 className="text-lg font-semibold text-navy mb-4">
+                  {t('Frequently Asked Questions')}
+                </h3>
                 <div className="space-y-3">
                   {faqItems.slice(0, 2).map((item, i) => (
                     <details
@@ -225,13 +231,15 @@ export default function SizeGuideTool({ isOpen, onClose, productMaterial }: Size
                     <Check className="text-white" size={28} />
                   </div>
                 </div>
-                <h3 className="text-2xl font-bold text-navy mb-2">Size {recommendation.size}</h3>
+                <h3 className="text-2xl font-bold text-navy mb-2">
+                  {t('Size')} {recommendation.size}
+                </h3>
                 <p className="text-lg text-navy/80 mb-4">{recommendation.reason}</p>
                 <p className="text-sm text-navy/70 italic">{recommendation.fit}</p>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-navy">What This Means</h3>
+                <h3 className="text-lg font-semibold text-navy">{t('What This Means')}</h3>
                 <div className="space-y-2 text-sm text-navy/80">
                   <p>
                     ✓ Your recommended size is <strong>{recommendation.size}</strong> based on your
@@ -246,7 +254,7 @@ export default function SizeGuideTool({ isOpen, onClose, productMaterial }: Size
 
               {productMaterial && materialFitGuides[productMaterial.toLowerCase()] && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-navy mb-2">Material Care Tips</h4>
+                  <h4 className="font-semibold text-navy mb-2">{t('Material Care Tips')}</h4>
                   <p className="text-sm text-navy/80">
                     {materialFitGuides[productMaterial.toLowerCase()]?.careNotes}
                   </p>
@@ -263,13 +271,13 @@ export default function SizeGuideTool({ isOpen, onClose, productMaterial }: Size
                   }}
                   className="flex-1 px-4 py-3 border border-navy rounded font-semibold text-navy hover:bg-navy/10 transition-colors"
                 >
-                  Try Again
+                  {t('Try Again')}
                 </button>
                 <button
                   onClick={onClose}
                   className="flex-1 px-4 py-3 bg-navy rounded font-semibold text-white hover:bg-navy-2 transition-colors"
                 >
-                  Shop Now
+                  {t('Shop Now')}
                 </button>
               </div>
             </div>

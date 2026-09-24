@@ -181,6 +181,7 @@ CREATE TABLE IF NOT EXISTS orders (
 
   payment_status TEXT DEFAULT 'pending'
     CHECK (payment_status IN ('pending', 'paid', 'failed', 'refunded', 'partially_refunded')),
+  -- 'paymob' reserved for future; active method is 'cod' only
   payment_provider TEXT CHECK (payment_provider IN ('cod', 'paymob')),
   payment_id TEXT,
   paid_at TIMESTAMPTZ,
@@ -618,6 +619,7 @@ CREATE TABLE IF NOT EXISTS rate_limit_requests (
 CREATE TABLE IF NOT EXISTS payment_attempts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  -- 'paymob' reserved for future; active method is 'cod' only
   provider TEXT NOT NULL CHECK (provider IN ('cod', 'paymob')),
   amount INTEGER NOT NULL CHECK (amount >= 0),
   currency TEXT NOT NULL DEFAULT 'EGP',

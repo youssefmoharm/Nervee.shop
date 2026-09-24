@@ -7,14 +7,16 @@ import { useStructuredData } from '../hooks/useStructuredData';
 import { faqItems } from '../data/sizingData';
 import { EXPRESS_SHIPPING_COST, FREE_SHIPPING_THRESHOLD } from '../lib/storeConfig';
 import { formatEGP } from '../lib/format';
+import { useI18n } from '../lib/i18n';
 
 const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || 'nerveey.shop@gmail.com';
 
 function Shell({ title, children }: { title: string; children: ReactNode }) {
+  const { t } = useI18n();
   return (
     <div className="bg-white text-navy min-h-screen pt-32 pb-24 px-5 md:px-8">
       <div className="mx-auto max-w-2xl">
-        <h1 className="nv-heading text-5xl mb-8">{title}</h1>
+        <h1 className="nv-heading text-5xl mb-8">{t(title)}</h1>
         <div className="text-navy/70 leading-relaxed space-y-4">{children}</div>
       </div>
     </div>
@@ -22,6 +24,7 @@ function Shell({ title, children }: { title: string; children: ReactNode }) {
 }
 
 export function Contact() {
+  const { t } = useI18n();
   useSEO({
     title: 'Contact Us | NERVE',
     description:
@@ -54,7 +57,7 @@ export function Contact() {
         will get back to you as fast as possible.
       </p>
 
-      <h2 className="text-navy font-semibold text-lg pt-4">Get in Touch Directly</h2>
+      <h2 className="text-navy font-semibold text-lg pt-4">{t('Get in Touch Directly')}</h2>
 
       <p>
         <strong>Email Us:</strong>{' '}
@@ -62,7 +65,7 @@ export function Contact() {
           {SUPPORT_EMAIL}
         </a>
       </p>
-      <p className="pl-4 text-navy/60 text-sm">
+      <p className="ps-4 text-navy/60 text-sm">
         For order inquiries, general questions, or love letters. We usually reply within 24 hours!
       </p>
 
@@ -77,23 +80,23 @@ export function Contact() {
           @gotthenerve58
         </a>
       </p>
-      <p className="pl-4 text-navy/60 text-sm">
+      <p className="ps-4 text-navy/60 text-sm">
         Fastest way to reach us! Slide into our DMs for quick chats or sizing advice.
       </p>
 
       <p className="pt-4 text-navy/60 text-sm">Available Saturday to Thursday, 10 AM – 10 PM</p>
 
-      <h2 className="text-navy font-semibold text-lg pt-6">Send Us a Message</h2>
+      <h2 className="text-navy font-semibold text-lg pt-6">{t('Send Us a Message')}</h2>
 
       {status === 'success' ? (
         <p className="nv-eyebrow text-navy pt-4">
-          Message sent — we&apos;ll get back to you shortly.
+          {t("Message sent — we'll get back to you shortly.")}
         </p>
       ) : (
         <form onSubmit={submit} className="space-y-4 pt-6 not-prose">
           <div className="grid sm:grid-cols-2 gap-4">
             <label className="block">
-              <span className="text-xs font-medium text-navy/60 mb-1.5 block">Name</span>
+              <span className="text-xs font-medium text-navy/60 mb-1.5 block">{t('Name')}</span>
               <input
                 required
                 value={form.name}
@@ -102,7 +105,7 @@ export function Contact() {
               />
             </label>
             <label className="block">
-              <span className="text-xs font-medium text-navy/60 mb-1.5 block">Email</span>
+              <span className="text-xs font-medium text-navy/60 mb-1.5 block">{t('Email')}</span>
               <input
                 type="email"
                 required
@@ -113,7 +116,7 @@ export function Contact() {
             </label>
           </div>
           <label className="block">
-            <span className="text-xs font-medium text-navy/60 mb-1.5 block">Subject</span>
+            <span className="text-xs font-medium text-navy/60 mb-1.5 block">{t('Subject')}</span>
             <input
               required
               value={form.subject}
@@ -122,7 +125,7 @@ export function Contact() {
             />
           </label>
           <label className="block">
-            <span className="text-xs font-medium text-navy/60 mb-1.5 block">Message</span>
+            <span className="text-xs font-medium text-navy/60 mb-1.5 block">{t('Message')}</span>
             <textarea
               required
               rows={4}
@@ -133,7 +136,7 @@ export function Contact() {
           </label>
           {status === 'error' && (
             <p className="text-xs text-red-600">
-              Something went wrong. Please try again or email us directly.
+              {t('Something went wrong. Please try again or email us directly.')}
             </p>
           )}
           <button
@@ -142,7 +145,7 @@ export function Contact() {
             className="bg-navy text-white nv-eyebrow px-8 py-3.5 hover:bg-navy-2 transition-colors disabled:opacity-60 flex items-center gap-2"
           >
             {status === 'loading' && <Loader2 size={14} className="animate-spin" />}
-            Send Message
+            {t('Send Message')}
           </button>
         </form>
       )}
@@ -232,6 +235,7 @@ const shopFaqs = [
 ];
 
 export function Faq() {
+  const { t } = useI18n();
   useSEO({
     title: 'FAQ | NERVE — Shipping, Returns & Sizing',
     description: `Answers about NERVE shipping, cash on delivery, returns, exchanges, sizing, and how to reach us. Free standard shipping over ${formatEGP(
@@ -251,14 +255,14 @@ export function Faq() {
         </a>
         .
       </p>
-      <h2 className="text-navy font-semibold text-lg pt-4">Orders &amp; Delivery</h2>
+      <h2 className="text-navy font-semibold text-lg pt-4">{t('Orders & Delivery')}</h2>
       {shopFaqs.slice(0, 3).map(faq => (
         <div key={faq.question} className="pt-3">
           <h3 className="font-semibold text-navy">{faq.question}</h3>
           <p>{faq.answer}</p>
         </div>
       ))}
-      <h2 className="text-navy font-semibold text-lg pt-4">Returns &amp; Sizing</h2>
+      <h2 className="text-navy font-semibold text-lg pt-4">{t('Returns & Sizing')}</h2>
       {shopFaqs
         .slice(3, 5)
         .concat(faqItems.slice(0, 3))
@@ -268,7 +272,7 @@ export function Faq() {
             <p>{faq.answer}</p>
           </div>
         ))}
-      <h2 className="text-navy font-semibold text-lg pt-4">More Questions</h2>
+      <h2 className="text-navy font-semibold text-lg pt-4">{t('More Questions')}</h2>
       {shopFaqs.slice(5).map(faq => (
         <div key={faq.question} className="pt-3">
           <h3 className="font-semibold text-navy">{faq.question}</h3>
@@ -294,6 +298,7 @@ export function Faq() {
 }
 
 export function Privacy() {
+  const { t } = useI18n();
   useSEO({
     title: 'Privacy Policy | NERVE',
     description:
@@ -306,45 +311,46 @@ export function Privacy() {
         what we collect and why.
       </p>
 
-      <h2 className="text-navy font-semibold text-lg pt-2">What we collect</h2>
+      <h2 className="text-navy font-semibold text-lg pt-2">{t('What we collect')}</h2>
       <p>
         Account details (name, email, phone) when you register or check out; order and shipping
         information; and, if you contact us, whatever you share in that message. We accept Cash on
         Delivery, so we never collect or store payment card details.
       </p>
 
-      <h2 className="text-navy font-semibold text-lg pt-2">How we use it</h2>
+      <h2 className="text-navy font-semibold text-lg pt-2">{t('How we use it')}</h2>
       <p>
         To process and ship orders, provide customer support, send transactional emails (order
         confirmations, shipping updates), and, only if you opt in, send our newsletter. We
         don&apos;t sell your personal data.
       </p>
 
-      <h2 className="text-navy font-semibold text-lg pt-2">Who we share it with</h2>
+      <h2 className="text-navy font-semibold text-lg pt-2">{t('Who we share it with')}</h2>
       <p>
         Service providers who help us run the store: Supabase (hosting/database), Resend
         (transactional email), and delivery couriers, each only with what they need to do their job.
       </p>
 
-      <h2 className="text-navy font-semibold text-lg pt-2">Your rights</h2>
+      <h2 className="text-navy font-semibold text-lg pt-2">{t('Your rights')}</h2>
       <p>
         You can view and edit your profile and addresses any time from your account, or email
         {SUPPORT_EMAIL} to request a copy or deletion of your data.
       </p>
 
-      <h2 className="text-navy font-semibold text-lg pt-2">Cookies</h2>
+      <h2 className="text-navy font-semibold text-lg pt-2">{t('Cookies')}</h2>
       <p>
         We use essential cookies/local storage to keep you signed in and remember your cart. We
         don&apos;t use third-party advertising trackers.
       </p>
 
-      <h2 className="text-navy font-semibold text-lg pt-2">Contact</h2>
+      <h2 className="text-navy font-semibold text-lg pt-2">{t('Contact')}</h2>
       <p>Questions about this policy: {SUPPORT_EMAIL}</p>
     </Shell>
   );
 }
 
 export function Terms() {
+  const { t } = useI18n();
   useSEO({
     title: 'Terms of Service | NERVE',
     description: 'The terms governing use of nerveey.shop and purchases from NERVE.',
@@ -356,20 +362,20 @@ export function Terms() {
         the terms below. Don&apos;t worry, we kept the boring legalese to a minimum.
       </p>
 
-      <h2 className="text-navy font-semibold text-lg pt-2">1. The Basics</h2>
+      <h2 className="text-navy font-semibold text-lg pt-2">{t('1. The Basics')}</h2>
       <p>
         By placing an order, you confirm that you&apos;re at least 18 years old (or using the site
         with a parent&apos;s card and approval—we see you!).
       </p>
 
-      <h2 className="text-navy font-semibold text-lg pt-2">2. Prices &amp; Currency</h2>
+      <h2 className="text-navy font-semibold text-lg pt-2">{t('2. Prices & Currency')}</h2>
       <p>
         All prices are listed in EGP (Egyptian Pounds). We reserve the right to change prices or
         drop surprise discounts whenever we want, but the price you checkout with is always locked
         in for your order.
       </p>
 
-      <h2 className="text-navy font-semibold text-lg pt-2">3. Stock &amp; Orders</h2>
+      <h2 className="text-navy font-semibold text-lg pt-2">{t('3. Stock & Orders')}</h2>
       <p>
         Placing an item in your shopping cart does not reserve it. An order is only confirmed once
         you complete the checkout process and receive an order confirmation email/SMS.
@@ -380,7 +386,7 @@ export function Terms() {
       </p>
 
       <h2 className="text-navy font-semibold text-lg pt-2">
-        4. Don&apos;t Steal Our Vibe (Intellectual Property)
+        {t("4. Don't Steal Our Vibe (Intellectual Property)")}
       </h2>
       <p>
         All designs, photos, logos, and copy on this website belong strictly to NERVE. Please
@@ -388,20 +394,20 @@ export function Terms() {
         sleepless nights to create them!
       </p>
 
-      <h2 className="text-navy font-semibold text-lg pt-2">5. Colors &amp; Reality</h2>
+      <h2 className="text-navy font-semibold text-lg pt-2">{t('5. Colors & Reality')}</h2>
       <p>
         We do our absolute best to show colors accurately. However, every phone and monitor screen
         displays colors slightly differently, so the real-life item might look 5% different under
         natural light.
       </p>
 
-      <h2 className="text-navy font-semibold text-lg pt-2">6. Policy Updates</h2>
+      <h2 className="text-navy font-semibold text-lg pt-2">{t('6. Policy Updates')}</h2>
       <p>
         We reserve the right to update or modify these Terms &amp; Conditions at any time. Any
         changes will be published directly on this page.
       </p>
 
-      <h2 className="text-navy font-semibold text-lg pt-2">Contact</h2>
+      <h2 className="text-navy font-semibold text-lg pt-2">{t('Contact')}</h2>
       <p>{SUPPORT_EMAIL}</p>
     </Shell>
   );

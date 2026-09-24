@@ -8,10 +8,12 @@ import { searchProducts } from '../services/searchService';
 import { categories } from '../data/products';
 import { useToast } from '../context/ToastContext';
 import { formatEGP } from '../lib/format';
+import { useI18n } from '../lib/i18n';
 
 const RECENT_KEY = 'nerve.recentSearches';
 
 export default function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useI18n();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Product[]>([]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -93,11 +95,11 @@ export default function SearchOverlay({ open, onClose }: { open: boolean; onClos
         }
       } catch (err) {
         setState('error');
-        showToast('Connection error - try again', 'error', 3000);
+        showToast(t('Connection error - try again'), 'error', 3000);
       }
     }, 220);
     return () => clearTimeout(handle);
-  }, [query, allProducts, showToast]);
+  }, [query, allProducts, showToast, t]);
 
   const commitSearch = (term: string) => {
     if (!term.trim()) return;
@@ -124,12 +126,12 @@ export default function SearchOverlay({ open, onClose }: { open: boolean; onClos
         className="fixed inset-0 z-[80] bg-navy"
         role="dialog"
         aria-modal="true"
-        aria-label="Search products"
+        aria-label={t('Search products')}
       >
         <div className="mx-auto max-w-3xl px-5 pt-24 md:pt-32 h-screen overflow-y-auto">
           <div className="flex items-center justify-between mb-2">
-            <span className="nv-eyebrow text-silver">Search</span>
-            <button aria-label="Close search" onClick={onClose} className="p-2">
+            <span className="nv-eyebrow text-silver">{t('Search')}</span>
+            <button aria-label={t('Close search')} onClick={onClose} className="p-2">
               <X size={22} />
             </button>
           </div>
@@ -140,9 +142,9 @@ export default function SearchOverlay({ open, onClose }: { open: boolean; onClos
               value={query}
               onChange={e => setQuery(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && commitSearch(query)}
-              placeholder="Search tees, hoodies, denim..."
+              placeholder={t('Search tees, hoodies, denim...')}
               className="flex-1 bg-transparent nv-heading text-2xl md:text-4xl focus:outline-none placeholder:text-white/25"
-              aria-label="Search query"
+              aria-label={t('Search query')}
             />
           </div>
 
@@ -151,7 +153,7 @@ export default function SearchOverlay({ open, onClose }: { open: boolean; onClos
               <div className="space-y-8">
                 {/* Shop by Category */}
                 <div>
-                  <h4 className="nv-eyebrow text-silver mb-3">Shop by Category</h4>
+                  <h4 className="nv-eyebrow text-silver mb-3">{t('Shop by Category')}</h4>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                     {categories.map(cat => (
                       <Link
@@ -171,7 +173,7 @@ export default function SearchOverlay({ open, onClose }: { open: boolean; onClos
 
                 {recent.length > 0 && (
                   <div>
-                    <h4 className="nv-eyebrow text-silver mb-3">⏱️ Recent Searches</h4>
+                    <h4 className="nv-eyebrow text-silver mb-3">{t('⏱️ Recent Searches')}</h4>
                     <div className="flex flex-wrap gap-2">
                       {recent.map(r => (
                         <button
@@ -188,7 +190,7 @@ export default function SearchOverlay({ open, onClose }: { open: boolean; onClos
 
                 {trendingSearches.length > 0 && (
                   <div>
-                    <h4 className="nv-eyebrow text-silver mb-3">🔥 What&apos;s Hot</h4>
+                    <h4 className="nv-eyebrow text-silver mb-3">{t("🔥 What's Hot")}</h4>
                     <div className="flex flex-wrap gap-2">
                       {trendingSearches.slice(0, 5).map(trend => (
                         <button
@@ -205,26 +207,28 @@ export default function SearchOverlay({ open, onClose }: { open: boolean; onClos
               </div>
             )}
 
-            {state === 'loading' && <p className="nv-edit text-silver">Searching…</p>}
+            {state === 'loading' && <p className="nv-edit text-silver">{t('Searching…')}</p>}
 
             {state === 'error' && (
               <div className="text-center py-12">
-                <p className="nv-edit text-lg text-red-400">Connection Error</p>
+                <p className="nv-edit text-lg text-red-400">{t('Connection Error')}</p>
                 <p className="text-sm text-silver/60 mt-2">
-                  Unable to search at the moment. Please try again.
+                  {t('Unable to search at the moment. Please try again.')}
                 </p>
               </div>
             )}
 
             {state === 'empty' && (
               <div className="text-center py-12">
-                <p className="nv-edit text-lg text-silver">No results for &ldquo;{query}&rdquo;</p>
-                <p className="text-sm text-silver/60 mt-2">Try a different search term.</p>
+                <p className="nv-edit text-lg text-silver">
+                  {t('No results for')} &ldquo;{query}&rdquo;
+                </p>
+                <p className="text-sm text-silver/60 mt-2">{t('Try a different search term.')}</p>
 
                 {/* Show suggestions when no results */}
                 {suggestions.length > 1 && (
                   <div className="mt-6">
-                    <p className="text-xs text-silver/60 mb-3">Did you mean:</p>
+                    <p className="text-xs text-silver/60 mb-3">{t('Did you mean:')}</p>
                     <div className="flex flex-wrap gap-2 justify-center">
                       {suggestions.slice(0, 3).map(sug => (
                         <button
@@ -246,7 +250,7 @@ export default function SearchOverlay({ open, onClose }: { open: boolean; onClos
                 {/* Show suggestions */}
                 {suggestions.length > 1 && (
                   <div className="mb-6 pb-6 border-b border-white/10">
-                    <p className="nv-eyebrow text-silver mb-3">🔍 Suggestions</p>
+                    <p className="nv-eyebrow text-silver mb-3">{t('🔍 Suggestions')}</p>
                     <div className="flex flex-wrap gap-2">
                       {suggestions.slice(1, 4).map(sug => (
                         <button

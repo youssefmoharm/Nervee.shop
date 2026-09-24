@@ -36,3 +36,8 @@ Canonical documentation for NERVE. One-shot status reports and completed-session
 1. New contributors: README → SETUP → ARCHITECTURE → TESTING
 2. Deploying: SETUP → VERCEL_DEPLOYMENT_GUIDE → PRODUCTION_READINESS → ENVIRONMENT_VARIABLES
 3. Security review: SECURITY_IMPLEMENTATION → SUPABASE_SETUP (RLS)
+
+## Conventions
+
+- Admin UI (`src/pages/Admin/*`) is intentionally English-only (operator
+  console). Storefront uses i18n via `src/lib/i18n.tsx`.

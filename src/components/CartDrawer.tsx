@@ -5,8 +5,10 @@ import { useCart } from '../context/CartContext';
 import { useRef, useEffect } from 'react';
 import EmptyState from './EmptyState';
 import { formatEGP } from '../lib/format';
+import { useI18n } from '../lib/i18n';
 
 export default function CartDrawer() {
+  const { t } = useI18n();
   const { lines, isOpen, closeCart, removeLine, updateQuantity, subtotal } = useCart();
   const firstItemRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -34,19 +36,21 @@ export default function CartDrawer() {
         <div className="contents">
           <button
             type="button"
-            aria-label="Close overlay"
+            aria-label={t('Close overlay')}
             className="fixed inset-0 z-[60] bg-navy/60 backdrop-blur-sm border-0 p-0"
             onClick={closeCart}
           />
           <aside
             data-testid="cart-drawer"
-            className="fixed top-0 right-0 z-[70] h-full w-full sm:w-[420px] bg-white text-navy flex flex-col"
+            className="fixed top-0 end-0 z-[70] h-full w-full sm:w-[420px] bg-white text-navy flex flex-col"
             aria-hidden={false}
           >
             <div className="flex items-center justify-between px-6 h-16 border-b border-navy/10">
-              <h2 className="nv-eyebrow">Your Bag ({lines.reduce((n, l) => n + l.quantity, 0)})</h2>
+              <h2 className="nv-eyebrow">
+                {t('Your Bag')} ({lines.reduce((n, l) => n + l.quantity, 0)})
+              </h2>
               <button
-                aria-label="Close bag"
+                aria-label={t('Close bag')}
                 data-testid="close-bag"
                 onClick={closeCart}
                 className="p-1"
@@ -59,15 +63,15 @@ export default function CartDrawer() {
               {lines.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center">
                   <EmptyState
-                    title="Your bag is empty"
-                    body="Find something you love and it will show up here."
+                    title={t('Your bag is empty')}
+                    body={t('Find something you love and it will show up here.')}
                   />
                   <Link
                     to="/shop"
                     onClick={closeCart}
                     className="mt-4 nv-eyebrow border border-navy px-6 py-3 hover:bg-navy hover:text-white transition-colors"
                   >
-                    Shop the Drop
+                    {t('Shop the Drop')}
                   </Link>
                 </div>
               ) : (
@@ -102,7 +106,7 @@ export default function CartDrawer() {
                           </Link>
                           <button
                             type="button"
-                            aria-label="Remove item"
+                            aria-label={t('Remove item')}
                             data-testid="remove-item"
                             onClick={() => removeLine(line.productId, line.color, line.size)}
                             className="text-navy/40 hover:text-navy transition-colors flex-shrink-0"
@@ -117,7 +121,7 @@ export default function CartDrawer() {
                           <div className="flex items-center border border-navy/20">
                             <button
                               type="button"
-                              aria-label="Decrease quantity"
+                              aria-label={t('Decrease quantity')}
                               onClick={() =>
                                 updateQuantity(
                                   line.productId,
@@ -133,7 +137,7 @@ export default function CartDrawer() {
                             <span className="w-8 text-center text-sm">{line.quantity}</span>
                             <button
                               type="button"
-                              aria-label="Increase quantity"
+                              aria-label={t('Increase quantity')}
                               onClick={() =>
                                 updateQuantity(
                                   line.productId,
@@ -161,12 +165,14 @@ export default function CartDrawer() {
             {lines.length > 0 && (
               <div className="border-t border-navy/10 px-6 py-6 space-y-4">
                 <div className="flex justify-between text-sm">
-                  <span className="text-navy/60">Subtotal</span>
+                  <span className="text-navy/60">{t('Subtotal')}</span>
                   <span data-testid="cart-subtotal" className="font-semibold">
                     {formatEGP(subtotal)}
                   </span>
                 </div>
-                <p className="text-xs text-navy/50">Shipping and taxes calculated at checkout.</p>
+                <p className="text-xs text-navy/50">
+                  {t('Shipping and taxes calculated at checkout.')}
+                </p>
                 <button
                   type="button"
                   onClick={e => {
@@ -178,7 +184,7 @@ export default function CartDrawer() {
                   data-testid="cart-checkout"
                   className="block text-center bg-navy text-white nv-eyebrow py-4 hover:bg-navy-2 transition-colors active:bg-navy/90 w-full"
                 >
-                  Checkout
+                  {t('Checkout')}
                 </button>
                 <button
                   type="button"
@@ -191,7 +197,7 @@ export default function CartDrawer() {
                   data-testid="view-bag"
                   className="block text-center nv-eyebrow py-3 text-navy/60 hover:text-navy transition-colors"
                 >
-                  View Bag
+                  {t('View Bag')}
                 </button>
               </div>
             )}

@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSEO } from '../../hooks/useSEO';
+import { useI18n } from '../../lib/i18n';
 
 export default function ResetPassword() {
+  const { t } = useI18n();
   const { updatePassword } = useAuth();
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
@@ -22,11 +24,11 @@ export default function ResetPassword() {
     e.preventDefault();
     setError(null);
     if (password.length < 8) {
-      setError('Password must be at least 8 characters.');
+      setError(t('Password must be at least 8 characters.'));
       return;
     }
     if (password !== confirm) {
-      setError('Passwords do not match.');
+      setError(t('Passwords do not match.'));
       return;
     }
     setLoading(true);
@@ -42,14 +44,16 @@ export default function ResetPassword() {
   return (
     <div className="bg-white text-navy min-h-screen pt-32 pb-24 px-5 md:px-8">
       <div className="mx-auto max-w-md">
-        <h1 className="nv-heading text-5xl mb-2">Set New Password</h1>
+        <h1 className="nv-heading text-5xl mb-2">{t('Set New Password')}</h1>
         <p className="text-navy/60 mb-8">
-          You&apos;ve followed the reset link from your email — choose a new password below.
+          {t("You've followed the reset link from your email — choose a new password below.")}
         </p>
 
         <form onSubmit={onSubmit} className="space-y-5">
           <label className="block">
-            <span className="text-xs font-medium text-navy/60 mb-1.5 block">New Password</span>
+            <span className="text-xs font-medium text-navy/60 mb-1.5 block">
+              {t('New Password')}
+            </span>
             <input
               type="password"
               required
@@ -60,7 +64,9 @@ export default function ResetPassword() {
             />
           </label>
           <label className="block">
-            <span className="text-xs font-medium text-navy/60 mb-1.5 block">Confirm Password</span>
+            <span className="text-xs font-medium text-navy/60 mb-1.5 block">
+              {t('Confirm Password')}
+            </span>
             <input
               type="password"
               required
@@ -76,7 +82,7 @@ export default function ResetPassword() {
             disabled={loading}
             className="w-full bg-navy text-white nv-eyebrow py-4 hover:bg-navy-2 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
           >
-            {loading ? <Loader2 size={16} className="animate-spin" /> : 'Update Password'}
+            {loading ? <Loader2 size={16} className="animate-spin" /> : t('Update Password')}
           </button>
         </form>
       </div>

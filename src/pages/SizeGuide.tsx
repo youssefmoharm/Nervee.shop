@@ -6,8 +6,10 @@ import SizeChartTable from '../components/SizeChartTable';
 import { materialFitGuides, faqItems, fitDescriptions } from '../data/sizingData';
 import { useSEO } from '../lib/seo';
 import Button from '../components/Button';
+import { useI18n } from '../lib/i18n';
 
 export default function SizeGuide() {
+  const { t } = useI18n();
   const [toolOpen, setToolOpen] = useState(false);
 
   useSEO({
@@ -24,29 +26,29 @@ export default function SizeGuide() {
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm mb-8">
           <Link to="/" className="text-navy/60 hover:text-navy transition-colors">
-            Home
+            {t('Home')}
           </Link>
           <ChevronRight size={16} className="text-navy/40" />
-          <span className="text-navy font-semibold">Size Guide</span>
+          <span className="text-navy font-semibold">{t('Size Guide')}</span>
         </nav>
 
         <div className="mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold text-navy mb-2">Size Guide</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-navy mb-2">{t('Size Guide')}</h1>
           <p className="text-navy/70">
-            Find your perfect fit with our comprehensive size charts and measurement guide
+            {t('Find your perfect fit with our comprehensive size charts and measurement guide')}
           </p>
         </div>
 
         {/* CTA Button */}
         <div className="mb-12">
           <Button onClick={() => setToolOpen(true)} className="w-full md:w-auto">
-            Use Size Calculator
+            {t('Use Size Calculator')}
           </Button>
         </div>
 
         {/* Fit Types */}
         <section className="mb-12 bg-mist rounded-lg p-6 md:p-8">
-          <h2 className="text-2xl font-bold text-navy mb-6">Fit Guide</h2>
+          <h2 className="text-2xl font-bold text-navy mb-6">{t('Fit Guide')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {Object.entries(fitDescriptions).map(([fit, description]) => (
               <div key={fit} className="bg-white rounded-lg p-4">
@@ -59,18 +61,18 @@ export default function SizeGuide() {
 
         {/* Size Chart */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold text-navy mb-6">Size Chart</h2>
+          <h2 className="text-2xl font-bold text-navy mb-6">{t('Size Chart')}</h2>
           <SizeChartTable variant="page" />
         </section>
 
         {/* How to Measure */}
         <section className="mb-12 bg-blue-50 border border-blue-200 rounded-lg p-6 md:p-8">
-          <h2 className="text-2xl font-bold text-navy mb-6">How to Measure</h2>
+          <h2 className="text-2xl font-bold text-navy mb-6">{t('How to Measure')}</h2>
           <div className="space-y-6">
             <div className="flex gap-4">
               <div className="text-4xl font-bold text-blue-600 flex-shrink-0 w-12">1</div>
               <div>
-                <h3 className="text-lg font-semibold text-navy mb-2">Chest</h3>
+                <h3 className="text-lg font-semibold text-navy mb-2">{t('Chest')}</h3>
                 <p className="text-navy/80">
                   Measure around the fullest part of your chest while wearing a well-fitting shirt.
                   Keep the tape measure snug but not tight.
@@ -81,7 +83,7 @@ export default function SizeGuide() {
             <div className="flex gap-4">
               <div className="text-4xl font-bold text-blue-600 flex-shrink-0 w-12">2</div>
               <div>
-                <h3 className="text-lg font-semibold text-navy mb-2">Waist</h3>
+                <h3 className="text-lg font-semibold text-navy mb-2">{t('Waist')}</h3>
                 <p className="text-navy/80">
                   Measure at the narrowest part of your waist, just above your natural waist line.
                   Don&apos;t pull the tape too tight.
@@ -92,7 +94,7 @@ export default function SizeGuide() {
             <div className="flex gap-4">
               <div className="text-4xl font-bold text-blue-600 flex-shrink-0 w-12">3</div>
               <div>
-                <h3 className="text-lg font-semibold text-navy mb-2">Length</h3>
+                <h3 className="text-lg font-semibold text-navy mb-2">{t('Length')}</h3>
                 <p className="text-navy/80">
                   Measure from your shoulder (top of your shoulder seam) down to your desired shirt
                   length. This helps ensure the perfect proportions for your body.
@@ -104,7 +106,7 @@ export default function SizeGuide() {
 
         {/* Material Information */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold text-navy mb-6">Material Information</h2>
+          <h2 className="text-2xl font-bold text-navy mb-6">{t('Material Information')}</h2>
           <div className="grid grid-cols-1 gap-4">
             {Object.entries(materialFitGuides).map(([key, guide]) => (
               <div
@@ -121,7 +123,7 @@ export default function SizeGuide() {
 
         {/* FAQ */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold text-navy mb-6">Frequently Asked Questions</h2>
+          <h2 className="text-2xl font-bold text-navy mb-6">{t('Frequently Asked Questions')}</h2>
           <div className="space-y-3">
             {faqItems.map((item, i) => (
               <details
@@ -132,7 +134,7 @@ export default function SizeGuide() {
                   <HelpCircle size={18} />
                   {item.question}
                 </summary>
-                <p className="text-navy/80 mt-3 ml-7 text-sm leading-relaxed">{item.answer}</p>
+                <p className="text-navy/80 mt-3 ms-7 text-sm leading-relaxed">{item.answer}</p>
               </details>
             ))}
           </div>
@@ -140,16 +142,16 @@ export default function SizeGuide() {
 
         {/* Additional CTA */}
         <section className="bg-navy text-white rounded-lg p-8 text-center">
-          <h2 className="text-2xl font-bold mb-2">Ready to find your perfect fit?</h2>
+          <h2 className="text-2xl font-bold mb-2">{t('Ready to find your perfect fit?')}</h2>
           <p className="text-white/80 mb-6">
-            Use our interactive size calculator to get personalized recommendations
+            {t('Use our interactive size calculator to get personalized recommendations')}
           </p>
           <Button
             onClick={() => setToolOpen(true)}
             variant="outline"
             className="text-white border-white hover:bg-white hover:text-navy"
           >
-            Calculate My Size
+            {t('Calculate My Size')}
           </Button>
         </section>
       </div>

@@ -146,15 +146,15 @@ VITE_SUPPORT_EMAIL=
 3. Navigate: Settings → Environment Variables
 4. Add for **Production** environment:
 
-| Variable                 | Value                                            | Source               |
-| ------------------------ | ------------------------------------------------ | -------------------- |
-| `VITE_SUPABASE_URL`      | `https://gfmxvvjqlhrnmidutjwx.supabase.co`       | From .env            |
-| `your_removed_credential_here` | `your_removed_credential_here` | From .env            |
-| `VITE_ENV`               | `production`                                     | For prod             |
-| `VITE_APP_URL`           | `https://www.nerveey.shop`                       | Your domain          |
-| `VITE_SUPPORT_EMAIL`     | `nerveey.shop@gmail.com`                         | Support email        |
-| `VITE_SENTRY_DSN`        | (Real DSN from Sentry)                           | Only if using Sentry |
-| `VITE_GA_ID`             | (Your GA4 ID)                                    | Only if using GA4    |
+| Variable                 | Value                                  | Source               |
+| ------------------------ | -------------------------------------- | -------------------- |
+| `VITE_SUPABASE_URL`      | `https://YOUR_PROJECT_REF.supabase.co` | From .env            |
+| `your_removed_credential_here` | `your_supabase_anon_key_here`          | From .env            |
+| `VITE_ENV`               | `production`                           | For prod             |
+| `VITE_APP_URL`           | `https://www.nerveey.shop`             | Your domain          |
+| `VITE_SUPPORT_EMAIL`     | `nerveey.shop@gmail.com`               | Support email        |
+| `VITE_SENTRY_DSN`        | (Real DSN from Sentry)                 | Only if using Sentry |
+| `VITE_GA_ID`             | (Your GA4 ID)                          | Only if using GA4    |
 
 **See:** ENVIRONMENT_VARIABLES.md for complete list
 

@@ -61,11 +61,16 @@ jobs:
 
       - name: Build
         env:
-          # Public VITE_* values (bundled into browser JS) — required by prebuild sitemap.
-          # Prefer GitHub secrets; fall back to the known public project values.
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://gfmxvvjqlhrnmidutjwx.supabase.co' }}
-          your_removed_credential_here: ${{ secrets.your_removed_credential_here || 'your_removed_credential_here' }}
-        run: npm run build
+          # Public VITE_* values required by prebuild sitemap. Configure as
+          # GitHub Actions secrets — never commit credential values here.
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          your_removed_credential_here: ${{ secrets.your_removed_credential_here }}
+        run: |
+          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$your_removed_credential_here" ]; then
+            echo "::error::Missing GitHub secrets VITE_SUPABASE_URL and/or your_removed_credential_here. Set them under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          npm run build
 
       # prebuild generates public/sitemap.xml; this gate fails the build if the
       # sitemap or robots.txt is missing/empty or missing required directives.
@@ -90,6 +95,14 @@ jobs:
 
       - name: Deno check edge functions
         run: deno check supabase/functions/**/*.ts
+
+      - name: Run Deno tests
+        run: npm run test:deno
+
+      - name: Run SQL tests (optional)
+        run: npm run test:sql
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
 
       # Local dev-server E2E only — @live specs are excluded by default
       # (grepInvert in playwright.config.ts) and run via live-smoke.yml.
@@ -130,9 +143,14 @@ jobs:
 
       - name: Build
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://gfmxvvjqlhrnmidutjwx.supabase.co' }}
-          your_removed_credential_here: ${{ secrets.your_removed_credential_here || 'your_removed_credential_here' }}
-        run: npm run build
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          your_removed_credential_here: ${{ secrets.your_removed_credential_here }}
+        run: |
+          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$your_removed_credential_here" ]; then
+            echo "::error::Missing GitHub secrets VITE_SUPABASE_URL and/or your_removed_credential_here."
+            exit 1
+          fi
+          npm run build
 
       - name: Verify SEO artifacts (sitemap + robots)
         run: node scripts/verify-seo.mjs

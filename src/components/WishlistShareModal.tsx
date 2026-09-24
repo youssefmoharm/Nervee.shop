@@ -3,6 +3,7 @@ import { X, Copy, Mail } from 'lucide-react';
 import { createShare } from '../services/wishlistShareService';
 import Button from './Button';
 import { useToast } from '../context/ToastContext';
+import { useI18n } from '../lib/i18n';
 
 interface WishlistShareModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export default function WishlistShareModal({
   wishlistSlugs,
   wishlistCount,
 }: WishlistShareModalProps) {
+  const { t } = useI18n();
   const [shareCode, setShareCode] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
@@ -28,7 +30,7 @@ export default function WishlistShareModal({
 
   const handleGenerateShare = async () => {
     if (wishlistSlugs.length === 0) {
-      showToast('Add items to your wishlist first', 'error');
+      showToast(t('Add items to your wishlist first'), 'error');
       return;
     }
     setCreating(true);
@@ -39,7 +41,7 @@ export default function WishlistShareModal({
       return;
     }
     setShareCode(result.share.code);
-    showToast('Share link created!', 'success');
+    showToast(t('Share link created!'), 'success');
   };
 
   const shareUrl = shareCode ? `${window.location.origin}/wishlist/${shareCode}` : '';
@@ -48,7 +50,7 @@ export default function WishlistShareModal({
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
-      showToast('Link copied to clipboard!', 'success');
+      showToast(t('Link copied to clipboard!'), 'success');
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Fallback for older browsers
@@ -59,18 +61,18 @@ export default function WishlistShareModal({
       document.execCommand('copy');
       document.body.removeChild(input);
       setCopied(true);
-      showToast('Link copied to clipboard!', 'success');
+      showToast(t('Link copied to clipboard!'), 'success');
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
   const handleEmailShare = () => {
     if (!email) {
-      showToast('Please enter an email address', 'error');
+      showToast(t('Please enter an email address'), 'error');
       return;
     }
     // Email share would be sent via backend in production
-    showToast(`Share link would be sent to ${email}`, 'success');
+    showToast(`${t('Share link would be sent to')} ${email}`, 'success');
     handleClose();
   };
 
@@ -86,11 +88,11 @@ export default function WishlistShareModal({
       <div className="bg-white rounded-lg w-full max-w-md">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-navy/10">
-          <h2 className="text-xl font-bold text-navy">Share Your Wishlist</h2>
+          <h2 className="text-xl font-bold text-navy">{t('Share Your Wishlist')}</h2>
           <button
             onClick={handleClose}
             className="p-1 hover:bg-navy/10 rounded-full transition-colors"
-            aria-label="Close"
+            aria-label={t('Close')}
           >
             <X size={24} className="text-navy" />
           </button>
@@ -102,26 +104,29 @@ export default function WishlistShareModal({
             <>
               <div>
                 <p className="text-sm text-navy/70 mb-3">
-                  Share your wishlist ({wishlistCount} items) with friends and family
+                  {t('Share your wishlist')} ({wishlistCount} {t('items')}){' '}
+                  {t('with friends and family')}
                 </p>
                 <textarea
                   value={message}
                   onChange={e => setMessage(e.target.value)}
-                  placeholder="Add a personal message (optional)"
+                  placeholder={t('Add a personal message (optional)')}
                   className="w-full border border-navy/20 rounded px-3 py-2 text-sm focus:outline-none focus:border-navy transition-colors resize-none"
                   rows={3}
                   maxLength={200}
                 />
-                <p className="text-xs text-navy/50 mt-1">{message.length}/200 characters</p>
+                <p className="text-xs text-navy/50 mt-1">
+                  {message.length}/200 {t('characters')}
+                </p>
               </div>
               <Button onClick={handleGenerateShare} disabled={creating} className="w-full">
-                {creating ? 'Creating link…' : 'Generate Share Link'}
+                {creating ? t('Creating link…') : t('Generate Share Link')}
               </Button>
             </>
           ) : (
             <>
               <div className="bg-mist rounded-lg p-4">
-                <p className="text-xs text-navy/60 mb-2">Share Link</p>
+                <p className="text-xs text-navy/60 mb-2">{t('Share Link')}</p>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -132,7 +137,7 @@ export default function WishlistShareModal({
                   <button
                     onClick={handleCopy}
                     className="p-2 hover:bg-navy/10 rounded transition-colors"
-                    title={copied ? 'Copied!' : 'Copy to clipboard'}
+                    title={copied ? t('Copied!') : t('Copy to clipboard')}
                   >
                     <Copy size={16} className={copied ? 'text-green-600' : 'text-navy'} />
                   </button>
@@ -140,7 +145,7 @@ export default function WishlistShareModal({
               </div>
 
               <div>
-                <p className="text-xs text-navy/60 mb-2">Or share via email</p>
+                <p className="text-xs text-navy/60 mb-2">{t('Or share via email')}</p>
                 <div className="flex gap-2">
                   <input
                     type="email"
@@ -160,7 +165,7 @@ export default function WishlistShareModal({
               </div>
 
               <Button onClick={handleClose} variant="outline" className="w-full">
-                Done
+                {t('Done')}
               </Button>
             </>
           )}
