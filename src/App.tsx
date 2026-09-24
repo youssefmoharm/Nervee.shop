@@ -25,6 +25,7 @@ import { initSentry, trackError } from './lib/sentry';
 import { initAnalytics, usePageTracking } from './lib/analytics';
 import { initPerformanceMonitoring } from './lib/performance';
 import { useAbandonedCartRecovery } from './hooks/useAbandonedCartRecovery';
+import { useI18n } from './lib/i18n';
 
 import Home from './pages/Home';
 const Shop = lazy(() => import('./pages/Shop'));
@@ -97,6 +98,7 @@ function StorefrontChrome({
 }) {
   const [chatbotOpen, setChatbotOpen] = useState(false);
   const [showChatTrigger, setShowChatTrigger] = useState(false);
+  const { t } = useI18n();
 
   useEffect(() => {
     setShowChatTrigger(getCookieConsent() !== null);
@@ -116,7 +118,7 @@ function StorefrontChrome({
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:start-3 focus:z-[100] focus:bg-paper focus:text-navy focus:px-4 focus:py-2 focus:font-semibold"
       >
-        Skip to content
+        {t('Skip to content')}
       </a>
       <ScrollToTop />
       <Header onSearch={() => setSearchOpen(true)} />

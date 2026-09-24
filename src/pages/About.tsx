@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useSEO } from '../lib/seo';
 import { useI18n } from '../lib/i18n';
 
@@ -14,7 +15,7 @@ export function About() {
       <div className="mx-auto max-w-4xl">
         <h1 className="nv-heading text-5xl mb-12 text-center">{t('About NERVE')}</h1>
 
-        <div className="prose prose-navy max-w-none">
+        <div className="max-w-none">
           <section className="mb-12">
             <h2 className="text-navy font-semibold text-2xl mb-6">{t('Who We Are')}</h2>
             <p className="text-xl leading-relaxed mb-6">
@@ -82,9 +83,9 @@ export function About() {
               premium streetwear that reflects their identity.
             </p>
             <p className="text-lg leading-relaxed">
-              Today, we&apos;re proud to serve thousands of satisfied customers across Egypt and the
-              Middle East, with a growing community of fashion enthusiasts who share our passion for
-              quality and style.
+              NERVE is still a young brand. We&apos;re building a community of people across Egypt
+              who care about quality, design, and dressing with intention — and we&apos;d love for
+              you to be part of it.
             </p>
           </section>
 
@@ -93,12 +94,12 @@ export function About() {
             <p className="text-lg leading-relaxed mb-8">
               Have questions, suggestions, or want to collaborate? We&apos;d love to hear from you.
             </p>
-            <a
-              href="/contact"
+            <Link
+              to="/contact"
               className="inline-block bg-navy text-white nv-eyebrow px-8 py-3.5 hover:bg-navy-2 transition-colors"
             >
               {t('Contact Us')}
-            </a>
+            </Link>
           </section>
         </div>
       </div>

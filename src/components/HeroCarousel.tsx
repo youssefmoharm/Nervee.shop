@@ -1,73 +1,113 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-
-// Using /placeholder-product.jpg (local fallback, no external dependency)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const img = (_seed?: string, _w?: number, _h?: number) => `/placeholder-product.jpg`;
+import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
+import { useI18n } from '../lib/i18n';
 
 interface CarouselSlide {
   id: string;
-  headline: string;
-  description?: string;
+  eyebrow: string;
+  description: string;
   ctaLabel: string;
   ctaLink: string;
-  backgroundImage: string;
 }
 
+/** Editorial slides — no discount claims unless a live promo backs them. */
 const slides: CarouselSlide[] = [
   {
     id: 'slide-1',
-    headline: 'UP TO 60%\nOFF',
-    description: 'New Season Collection',
-    ctaLabel: 'SHOP',
+    eyebrow: 'New Season',
+    description: 'Pieces that become part of your everyday identity.',
+    ctaLabel: 'Shop New Drop',
     ctaLink: '/shop?category=New%20Arrivals',
-    backgroundImage: img(),
   },
   {
     id: 'slide-2',
-    headline: 'EVERYDAY\nESSENTIALS',
-    description: 'Core Collection',
-    ctaLabel: 'SHOP',
+    eyebrow: 'Core Essentials',
+    description: 'Heavyweight staples built to be lived in.',
+    ctaLabel: 'Shop Core',
     ctaLink: '/collections/core-essentials',
-    backgroundImage: img(),
   },
   {
     id: 'slide-3',
-    headline: 'LIMITED\nEDITION',
-    description: 'Archive Pieces',
-    ctaLabel: 'SHOP',
+    eyebrow: 'Nerve Archive',
+    description: 'Small-batch releases that do not come back.',
+    ctaLabel: 'Shop Archive',
     ctaLink: '/collections/nerve-archive',
-    backgroundImage: img(),
   },
   {
     id: 'slide-4',
-    headline: 'TECHNICAL\nWEAR',
-    description: 'Street Form',
-    ctaLabel: 'SHOP',
+    eyebrow: 'Street Form',
+    description: 'Technical cuts for the pace of the city.',
+    ctaLabel: 'Shop Street Form',
     ctaLink: '/collections/street-form',
-    backgroundImage: img(),
   },
 ];
 
+const AUTOPLAY_MS = 6000;
+
 export default function HeroCarousel() {
+  const { t } = useI18n();
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const [direction, setDirection] = useState<'next' | 'prev'>('next');
+  const [isPaused, setIsPaused] = useState(false);
+  const [userPaused, setUserPaused] = useState(false);
+  const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  const prefersReducedMotion =
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const clearResumeTimer = () => {
+    if (resumeTimerRef.current) {
+      clearTimeout(resumeTimerRef.current);
+      resumeTimerRef.current = null;
+    }
+  };
+
+  useEffect(() => () => clearResumeTimer(), []);
+
+  const goToSlide = useCallback((index: number) => {
+    setCurrentSlide(index);
+    clearResumeTimer();
+    resumeTimerRef.current = setTimeout(() => {
+      resumeTimerRef.current = null;
+    }, AUTOPLAY_MS);
+  }, []);
+
+  const nextSlide = useCallback(() => {
+    setCurrentSlide(prev => (prev + 1) % slides.length);
+    clearResumeTimer();
+    resumeTimerRef.current = setTimeout(() => {
+      resumeTimerRef.current = null;
+    }, AUTOPLAY_MS);
+  }, []);
+
+  const prevSlide = useCallback(() => {
+    setCurrentSlide(prev => (prev - 1 + slides.length) % slides.length);
+    clearResumeTimer();
+    resumeTimerRef.current = setTimeout(() => {
+      resumeTimerRef.current = null;
+    }, AUTOPLAY_MS);
+  }, []);
+
+  const autoplayActive = !prefersReducedMotion && !isPaused && !userPaused;
 
   useEffect(() => {
-    if (!isAutoPlaying) return;
-
+    if (!autoplayActive) return;
     const interval = setInterval(() => {
-      setDirection('next');
       setCurrentSlide(prev => (prev + 1) % slides.length);
-    }, 5000);
-
+    }, AUTOPLAY_MS);
     return () => clearInterval(interval);
-  }, [isAutoPlaying]);
+  }, [autoplayActive]);
 
+  // Attach interaction handlers via the ref (section is non-interactive in JSX —
+  // arrow keys / hover pause only apply while the hero itself is engaged).
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
         prevSlide();
@@ -76,176 +116,144 @@ export default function HeroCarousel() {
         nextSlide();
       }
     };
+    const onPointerEnter = () => setIsPaused(true);
+    const onPointerLeave = () => setIsPaused(false);
+    const onFocusIn = () => setIsPaused(true);
+    const onFocusOut = (e: FocusEvent) => {
+      if (!el.contains(e.relatedTarget as Node | null)) setIsPaused(false);
+    };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  const goToSlide = (index: number) => {
-    setDirection(index > currentSlide ? 'next' : 'prev');
-    setCurrentSlide(index);
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 8000);
-  };
-
-  const nextSlide = () => {
-    setDirection('next');
-    setCurrentSlide(prev => (prev + 1) % slides.length);
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 8000);
-  };
-
-  const prevSlide = () => {
-    setDirection('prev');
-    setCurrentSlide(prev => (prev - 1 + slides.length) % slides.length);
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 8000);
-  };
+    el.addEventListener('keydown', onKeyDown);
+    el.addEventListener('pointerenter', onPointerEnter);
+    el.addEventListener('pointerleave', onPointerLeave);
+    el.addEventListener('focusin', onFocusIn);
+    el.addEventListener('focusout', onFocusOut);
+    return () => {
+      el.removeEventListener('keydown', onKeyDown);
+      el.removeEventListener('pointerenter', onPointerEnter);
+      el.removeEventListener('pointerleave', onPointerLeave);
+      el.removeEventListener('focusin', onFocusIn);
+      el.removeEventListener('focusout', onFocusOut);
+    };
+  }, [nextSlide, prevSlide]);
 
   const slide = slides[currentSlide];
 
   return (
     <section
-      className="relative w-full h-screen min-h-[600px] overflow-hidden focus:outline-navy focus:ring-2"
-      style={{ backgroundColor: '#FFFFFF' }}
-      aria-label="Featured products carousel"
+      ref={sectionRef}
+      className="relative w-full min-h-[100svh] overflow-hidden bg-navy text-paper"
+      aria-roledescription="carousel"
+      aria-label={t('Featured collections')}
     >
-      {/* Background Images */}
-      <div className="absolute inset-0">
-        {slides.map((s, index) => {
-          const isVisible = index === currentSlide;
-          return (
-            <div
-              key={s.id}
-              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                isVisible ? 'opacity-100' : 'opacity-0'
-              }`}
-              style={{ backgroundColor: '#031230' }}
-            >
-              <img
-                src={img(s.backgroundImage)}
-                alt={s.headline}
-                fetchPriority={index === 0 ? 'high' : 'low'}
-                loading={index === 0 ? 'eager' : 'lazy'}
-                decoding="async"
-                className="w-full h-full object-cover object-center"
-                onError={e => {
-                  e.currentTarget.style.display = 'none';
-                  if (e.currentTarget.parentElement) {
-                    e.currentTarget.parentElement.style.backgroundColor = '#031230';
-                  }
-                }}
-              />
-            </div>
-          );
-        })}
+      {/* Brand surface — navy field + signature checker accents (no stock filler art) */}
+      <div className="absolute inset-0 bg-navy" aria-hidden="true">
+        <div className="absolute inset-0 opacity-[0.07] nv-checker-inv" />
+        <div className="absolute -end-24 -top-24 w-[420px] h-[420px] md:w-[560px] md:h-[560px] bg-navy-2 rotate-12" />
+        <div className="absolute -start-32 -bottom-40 w-[380px] h-[380px] md:w-[520px] md:h-[520px] nv-checker opacity-20" />
+        <div
+          className="absolute inset-y-0 start-0 w-full md:w-1/2 bg-gradient-to-r from-navy via-navy/85 to-transparent"
+          style={{
+            background:
+              'linear-gradient(90deg, #061735 0%, rgba(6,23,53,0.92) 42%, rgba(6,23,53,0) 100%)',
+          }}
+        />
       </div>
 
-      {/* Subtle Overlay - minimal, lets image show */}
+      {/* Slide indicator bar */}
       <div
-        className="absolute inset-0 bg-gradient-to-r from-opacity-60 via-opacity-40 to-transparent"
+        className="absolute top-0 start-0 h-1 bg-white/15"
+        aria-hidden="true"
         style={{
-          background:
-            'linear-gradient(to right, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.4), transparent)',
+          width: `${((currentSlide + 1) / slides.length) * 100}%`,
+          transition: 'width 0.5s ease',
         }}
       />
 
-      {/* Content - Left Side */}
-      <div className="absolute inset-0 flex flex-col justify-end p-8 md:p-12 pb-1/3">
-        {/* Headline (Left side) - positioned much lower */}
-        <div className="z-10 max-w-lg mb-auto pt-96">
-          <h1
-            key={`headline-${currentSlide}`}
-            className={`nv-heading font-black text-6xl md:text-7xl lg:text-8xl leading-none mb-6 transition-all duration-700 ease-out whitespace-pre-line ${
-              direction === 'next' ? 'animate-slide-in-from-left' : 'animate-slide-in-from-right'
-            }`}
-            style={{ color: '#031230' }}
-          >
-            {slide.headline}
+      <div className="relative z-10 mx-auto max-w-[1600px] min-h-[100svh] px-5 md:px-8 pt-24 md:pt-28 pb-10 flex flex-col justify-end">
+        <div className="max-w-xl md:max-w-2xl" aria-live="polite" aria-atomic="true">
+          <p className="nv-eyebrow text-silver mb-4">{t(slide.eyebrow)}</p>
+          {/* Single stable H1 — does not swap with slide content (SEO + a11y) */}
+          <h1 className="nv-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-[0.92] mb-5">
+            Cool but Chic
           </h1>
-          {slide.description && (
-            <p
-              className="nv-eyebrow text-xs mb-8 uppercase tracking-wider"
-              style={{ color: '#000000' }}
-            >
-              {slide.description}
-            </p>
-          )}
-          <Link
-            to={slide.ctaLink}
-            className="inline-block px-6 py-3 nv-eyebrow font-bold text-xs uppercase tracking-widest hover:opacity-90 transition-opacity"
-            style={{ backgroundColor: '#031230', color: '#FFFFFF' }}
+          <p
+            key={slide.id}
+            className="text-base md:text-lg text-white/85 max-w-md mb-8 animate-fadeUp"
           >
-            {slide.ctaLabel}
-          </Link>
+            {t(slide.description)}
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              to={slide.ctaLink}
+              className="inline-flex items-center justify-center bg-white text-navy nv-eyebrow px-7 py-3.5 hover:bg-mist transition-colors"
+            >
+              {t(slide.ctaLabel)}
+            </Link>
+            <Link
+              to="/shop"
+              className="inline-flex items-center justify-center border border-white/40 text-white nv-eyebrow px-7 py-3.5 hover:bg-white/10 transition-colors"
+            >
+              {t('Shop all')}
+            </Link>
+          </div>
         </div>
 
-        {/* Bottom - Navigation */}
-        <div className="z-10 flex items-center justify-between mt-12">
-          <div className="flex gap-2">
-            {slides.map((_, index) => (
+        {/* Bottom controls */}
+        <div className="mt-12 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2" role="tablist" aria-label={t('Slide controls')}>
+            {slides.map((s, index) => (
               <button
-                key={index}
+                key={s.id}
+                type="button"
+                role="tab"
+                aria-selected={index === currentSlide}
+                aria-label={`${t('Go to slide')} ${index + 1}`}
                 onClick={() => goToSlide(index)}
-                aria-label={`Go to slide ${index + 1}`}
-                className="transition-all duration-300 h-1"
+                className="h-1.5 transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-4"
                 style={{
-                  width: index === currentSlide ? '32px' : '8px',
-                  backgroundColor: index === currentSlide ? '#031230' : '#AAAAAA',
+                  width: index === currentSlide ? '36px' : '12px',
+                  backgroundColor: index === currentSlide ? '#FFFFFF' : 'rgba(255,255,255,0.35)',
                 }}
               />
             ))}
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex items-center gap-1">
+            {!prefersReducedMotion && (
+              <button
+                type="button"
+                onClick={() => setUserPaused(p => !p)}
+                aria-label={userPaused ? t('Play slideshow') : t('Pause slideshow')}
+                aria-pressed={userPaused}
+                className="p-2 text-white/70 hover:text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+              >
+                {userPaused ? (
+                  <Play size={18} strokeWidth={1.5} />
+                ) : (
+                  <Pause size={18} strokeWidth={1.5} />
+                )}
+              </button>
+            )}
             <button
+              type="button"
               onClick={prevSlide}
-              aria-label="Previous slide"
-              className="p-2 transition-colors hover:opacity-70 focus:outline-navy focus:ring-2 focus:ring-offset-2"
-              style={{ color: '#AAAAAA' }}
+              aria-label={t('Previous slide')}
+              className="p-2 text-white/70 hover:text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
             >
-              <ChevronLeft size={24} strokeWidth={1.5} />
+              <ChevronLeft size={22} strokeWidth={1.5} />
             </button>
             <button
+              type="button"
               onClick={nextSlide}
-              aria-label="Next slide"
-              className="p-2 transition-colors hover:opacity-70 focus:outline-navy focus:ring-2 focus:ring-offset-2"
-              style={{ color: '#AAAAAA' }}
+              aria-label={t('Next slide')}
+              className="p-2 text-white/70 hover:text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
             >
-              <ChevronRight size={24} strokeWidth={1.5} />
+              <ChevronRight size={22} strokeWidth={1.5} />
             </button>
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes slide-in-from-left {
-          from {
-            opacity: 0;
-            transform: translateX(-30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-        @keyframes slide-in-from-right {
-          from {
-            opacity: 0;
-            transform: translateX(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-        .animate-slide-in-from-left {
-          animation: slide-in-from-left 0.7s ease-out;
-        }
-        .animate-slide-in-from-right {
-          animation: slide-in-from-right 0.7s ease-out;
-        }
-      `}</style>
     </section>
   );
 }

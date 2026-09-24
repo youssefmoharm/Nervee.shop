@@ -48,7 +48,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'sha256-suiCQapoG3fbrWXwIVvV7Napu07Digy0rkIA0KmJBxs=' https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://client.crisp.chat; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://client.crisp.chat; font-src 'self' https://fonts.gstatic.com https://client.crisp.chat; img-src 'self' data: blob: https://*.supabase.co https://www.nerveey.shop; connect-src 'self' https://*.supabase.co https://*.ingest.sentry.io https://www.google-analytics.com https://client.crisp.chat https://*.crisp.chat wss://*.crisp.chat https://www.facebook.com; object-src 'none'; base-uri 'self'; frame-src https://client.crisp.chat; frame-ancestors 'none'; report-uri /api/csp-report"
+          "value": "default-src 'self'; script-src 'self' 'sha256-suiCQapoG3fbrWXwIVvV7Napu07Digy0rkIA0KmJBxs=' https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://client.crisp.chat; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://client.crisp.chat; font-src 'self' https://fonts.gstatic.com https://client.crisp.chat; img-src 'self' data: blob: https://*.supabase.co https://www.nerveey.shop https://picsum.photos https://fastly.picsum.photos; connect-src 'self' https://*.supabase.co https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://www.google-analytics.com https://client.crisp.chat https://*.crisp.chat wss://*.crisp.chat https://www.facebook.com; object-src 'none'; base-uri 'self'; frame-src https://client.crisp.chat; frame-ancestors 'none'; report-uri /api/csp-report"
         }
       ]
     }

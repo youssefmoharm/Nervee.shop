@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { Loader2 } from 'lucide-react';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -44,7 +45,14 @@ export default function Button({
       } ${className}`}
       {...props}
     >
-      {isLoading ? '...' : children}
+      {isLoading ? (
+        <span className="inline-flex items-center gap-2" aria-busy="true">
+          <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+          <span className="sr-only">Loading…</span>
+        </span>
+      ) : (
+        children
+      )}
     </button>
   );
 }

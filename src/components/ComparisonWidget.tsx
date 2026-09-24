@@ -16,7 +16,7 @@ export default function ComparisonWidget() {
       {/* Floating widget */}
       <button
         onClick={() => setModalOpen(true)}
-        className="fixed bottom-6 end-6 z-40 w-14 h-14 rounded-full bg-navy text-white shadow-lg flex items-center justify-center gap-2 hover:bg-navy-2 transition-all duration-200 hover:scale-110 animate-bounce"
+        className="fixed bottom-6 end-6 z-40 w-14 h-14 rounded-full bg-navy text-white shadow-lg flex items-center justify-center gap-2 hover:bg-navy-2 transition-all duration-200 hover:scale-110"
         aria-label={`Compare ${items.length} products`}
       >
         <BarChart3 size={20} />

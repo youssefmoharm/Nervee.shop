@@ -123,3 +123,8 @@ header :focus-visible,
     scroll-behavior: auto !important;
   }
 }
+
+/* iOS home-bar clearance for sticky bottom CTAs */
+.safe-pb {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}

@@ -115,7 +115,7 @@ export const faqItems = [
   {
     question: 'How long does it take to deliver?',
     answer:
-      'Standard delivery takes 3-5 business days. Express delivery is available for an additional fee. See our Shipping page for details.',
+      'Standard delivery takes 2-5 business days. Express delivery is available for an additional fee. See our Shipping page for details.',
   },
 ];
 

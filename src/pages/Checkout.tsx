@@ -29,7 +29,7 @@ import EmptyState from '../components/EmptyState';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
-const steps = ['Information', 'Shipping', 'Delivery', 'Payment', 'Confirmation'] as const;
+const steps = ['Information', 'Shipping', 'Delivery & Payment', 'Review', 'Confirmation'] as const;
 
 interface FormState {
   email: string | undefined;
@@ -532,7 +532,7 @@ export default function Checkout() {
                       />
                       <div className="flex-1">
                         <p className="font-medium text-navy">{t('Standard Delivery')}</p>
-                        <p className="text-xs text-navy/60">{t('3-5 business days')}</p>
+                        <p className="text-xs text-navy/60">{t('2-5 business days')}</p>
                       </div>
                       <span className="text-sm font-semibold text-navy">
                         {formatEGP(estimateShippingCost(subtotal, 'standard'))}

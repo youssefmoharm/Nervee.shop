@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { LayoutGrid, List, Search } from 'lucide-react';
+import { LayoutGrid, List, Search, SlidersHorizontal, X } from 'lucide-react';
 import type { Product, SortOption } from '../types';
 import { productService, type ShopFilters } from '../services/productService';
 import { categories } from '../data/products';
@@ -77,8 +77,18 @@ export default function Shop() {
   const [searchQuery, setSearchQuery] = useState(qParam);
   const [debouncedQuery, setDebouncedQuery] = useState(qParam);
   const [view, setView] = useState<'grid' | 'list'>('grid');
+  const [filtersOpen, setFiltersOpen] = useState(false);
   // Local slider value so dragging doesn't rewrite the URL (and refetch) on every pixel.
   const [sliderValue, setSliderValue] = useState(priceMax);
+
+  useEffect(() => {
+    if (!filtersOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setFiltersOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [filtersOpen]);
 
   useEffect(() => {
     setSliderValue(priceMax);
@@ -407,6 +417,20 @@ export default function Shop() {
           </span>
 
           <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(true)}
+              className="lg:hidden flex items-center gap-2 text-sm border border-navy/20 px-3 py-2"
+              aria-label={t('Open filters')}
+            >
+              <SlidersHorizontal size={15} />
+              {t('Filters')}
+              {activeFilterCount > 0 && (
+                <span className="bg-navy text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
             <select
               value={sort}
               onChange={e => setParam('sort', e.target.value)}
@@ -434,6 +458,58 @@ export default function Shop() {
                 className={`p-2 ${view === 'list' ? 'bg-navy text-white' : ''}`}
               >
                 <List size={15} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile filter drawer */}
+        <div
+          data-testid="mobile-filters"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t('Filters')}
+          aria-hidden={!filtersOpen}
+          tabIndex={-1}
+          ref={node => {
+            if (node) {
+              if (!filtersOpen) node.setAttribute('inert', '');
+              else node.removeAttribute('inert');
+            }
+          }}
+          className={`fixed inset-0 z-50 lg:hidden ${filtersOpen ? '' : 'pointer-events-none'}`}
+        >
+          <div
+            className={`absolute inset-0 bg-navy/50 transition-opacity ${
+              filtersOpen ? 'opacity-100' : 'opacity-0'
+            }`}
+            onClick={() => setFiltersOpen(false)}
+            aria-hidden="true"
+          />
+          <div
+            className={`absolute inset-y-0 start-0 w-[min(20rem,85vw)] bg-white overflow-y-auto transition-transform duration-300 ${
+              filtersOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'
+            }`}
+          >
+            <div className="flex items-center justify-between px-5 h-14 border-b border-navy/10 sticky top-0 bg-white z-10">
+              <span className="nv-eyebrow">{t('Filters')}</span>
+              <button
+                type="button"
+                aria-label={t('Close filters')}
+                onClick={() => setFiltersOpen(false)}
+                className="p-2 hover:bg-mist rounded transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-5">{FilterPanel}</div>
+            <div className="px-5 pb-8 sticky bottom-0 bg-white border-t border-navy/10 pt-3">
+              <button
+                type="button"
+                onClick={() => setFiltersOpen(false)}
+                className="w-full bg-navy text-white nv-eyebrow py-3.5 hover:bg-navy-2 transition-colors"
+              >
+                {t('Show results')}
               </button>
             </div>
           </div>

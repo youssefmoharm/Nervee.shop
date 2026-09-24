@@ -153,11 +153,13 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
           />
         </button>
 
-        {/* Quick add + Quick view */}
+        {/* Quick add + Quick view — always available on touch; hover-reveal on desktop */}
         <div
-          className={`absolute inset-x-0 bottom-0 transition-all duration-300 ${
-            hovered ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0 pointer-events-none'
-          } hidden md:flex flex-col gap-1`}
+          className={`absolute inset-x-0 bottom-0 flex flex-col gap-1 transition-all duration-300 ${
+            hovered
+              ? 'translate-y-0 opacity-100'
+              : 'md:translate-y-2 md:opacity-0 md:pointer-events-none'
+          }`}
         >
           {!quickAddOpen ? (
             <>
