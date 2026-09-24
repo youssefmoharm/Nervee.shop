@@ -116,6 +116,7 @@ export default function Cart() {
               {lines.map(line => (
                 <div
                   key={`${line.productId}-${line.color}-${line.size}`}
+                  data-testid="cart-item"
                   className="flex gap-5 py-6"
                 >
                   <Link

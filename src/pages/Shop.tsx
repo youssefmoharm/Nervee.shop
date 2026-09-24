@@ -135,14 +135,12 @@ export default function Shop() {
   useEffect(() => {
     const id = setTimeout(() => {
       const q = searchQuery.trim();
-      setDebouncedQuery(prev => {
-        if (prev !== q) setParam('q', q || null);
-        return q;
-      });
+      setDebouncedQuery(prev => (prev === q ? prev : q));
+      if (q !== qParam) setParam('q', q || null);
     }, 300);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery]);
+  }, [searchQuery, qParam]);
 
   // Commit slider → URL after the user stops dragging (avoids refetch thrash + layout collapse).
   useEffect(() => {

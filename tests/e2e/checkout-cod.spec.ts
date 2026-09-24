@@ -10,7 +10,7 @@ import { test, expect, type Page } from '@playwright/test';
  */
 
 async function addFirstProductToCart(page: Page) {
-  await page.goto('/shop', { waitUntil: 'networkidle' });
+  await page.goto('/shop', { waitUntil: 'load' });
   const cards = page.getByTestId('product-card');
   // No products (backend down / empty) → skip structural run
   test.skip(
@@ -29,7 +29,7 @@ test.describe('Checkout — COD end-to-end', () => {
     await addFirstProductToCart(page);
 
     // Open cart and proceed to checkout
-    await page.goto('/cart', { waitUntil: 'networkidle' });
+    await page.goto('/cart', { waitUntil: 'load' });
     await expect(page.getByTestId('proceed-to-checkout')).toBeVisible();
     await page.getByTestId('proceed-to-checkout').click();
     await page.waitForURL(/\/checkout/, { timeout: 10000 });
@@ -49,7 +49,7 @@ test.describe('Checkout — COD end-to-end', () => {
     await page.getByTestId('city-input').fill('Cairo');
     await page.getByTestId('governorate-select').selectOption('Cairo');
     await page.getByTestId('place-order-button').click();
-    await expect(page.getByText('Delivery & Payment')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Delivery & Payment' })).toBeVisible();
 
     // Step 3 — Delivery (standard) + COD is preselected
     await page.locator('input[name="delivery"][value="standard"]').check();
@@ -88,13 +88,13 @@ test.describe('Checkout — COD end-to-end', () => {
   });
 
   test('checkout with empty bag shows empty state', async ({ page }) => {
-    await page.goto('/checkout', { waitUntil: 'networkidle' });
+    await page.goto('/checkout', { waitUntil: 'load' });
     await expect(page.getByTestId('empty-cart')).toBeVisible();
   });
 
   test('step 1 validates Egyptian phone before advancing', async ({ page }) => {
     await addFirstProductToCart(page);
-    await page.goto('/checkout', { waitUntil: 'networkidle' });
+    await page.goto('/checkout', { waitUntil: 'load' });
     // May resume mid-session from checkout session recovery; force step 1 fields if present
     const phone = page.getByTestId('phone-input');
     if (!(await phone.isVisible().catch(() => false))) {

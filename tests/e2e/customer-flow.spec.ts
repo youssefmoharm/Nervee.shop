@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Customer Journey', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'load' });
   });
 
   test('homepage renders hero and shop CTA', async ({ page }) => {
@@ -17,7 +17,7 @@ test.describe('Customer Journey', () => {
   });
 
   test('browse shop, open a product, add to bag', async ({ page }) => {
-    await page.goto('/shop', { waitUntil: 'networkidle' });
+    await page.goto('/shop', { waitUntil: 'load' });
     await expect(page.getByTestId('products-grid')).toBeVisible();
 
     // Sort by price ascending
@@ -44,7 +44,7 @@ test.describe('Customer Journey', () => {
   });
 
   test('shop search filters products', async ({ page }) => {
-    await page.goto('/shop', { waitUntil: 'networkidle' });
+    await page.goto('/shop', { waitUntil: 'load' });
     await page.getByTestId('search-input').fill('tee');
     await page.waitForTimeout(500); // Wait for search results
     await expect(page.getByTestId('products-grid')).toBeVisible();
@@ -53,14 +53,14 @@ test.describe('Customer Journey', () => {
   });
 
   test('category filter via URL param', async ({ page }) => {
-    await page.goto('/shop?category=T-Shirts', { waitUntil: 'networkidle' });
+    await page.goto('/shop?category=T-Shirts', { waitUntil: 'load' });
     // Category might be in title or as visible text on the page
     await expect(page.getByTestId('product-card').first()).toBeVisible();
   });
 
   test('cart page promo code applies discount', async ({ page }) => {
     // Seed cart via product page so cart page has items
-    await page.goto('/shop', { waitUntil: 'networkidle' });
+    await page.goto('/shop', { waitUntil: 'load' });
     await page.getByTestId('product-card').first().locator('a').first().click();
     await page.waitForURL(/\/product\//, { timeout: 5000 });
 
@@ -69,7 +69,7 @@ test.describe('Customer Journey', () => {
     await page.waitForTimeout(500);
 
     // Navigate to cart page
-    await page.goto('/cart', { waitUntil: 'networkidle' });
+    await page.goto('/cart', { waitUntil: 'load' });
     await expect(page.getByTestId('cart-item')).toHaveCount(1);
 
     // Promo code UI must exist and give explicit feedback (applied OR invalid —
@@ -82,7 +82,7 @@ test.describe('Customer Journey', () => {
   });
 
   test('wishlist toggle from product page', async ({ page }) => {
-    await page.goto('/shop', { waitUntil: 'networkidle' });
+    await page.goto('/shop', { waitUntil: 'load' });
     await page.getByTestId('product-card').first().locator('a').first().click();
     await page.waitForURL(/\/product\//, { timeout: 5000 });
 
@@ -95,7 +95,7 @@ test.describe('Customer Journey', () => {
 
   test('mobile menu opens and navigates', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
-    await page.goto('/', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'load' });
 
     const menuBtn = page.getByTestId('menu-button');
     await expect(menuBtn).toBeVisible();
@@ -104,26 +104,26 @@ test.describe('Customer Journey', () => {
   });
 
   test('guest order tracking form validates input', async ({ page }) => {
-    await page.goto('/guest-order', { waitUntil: 'networkidle' });
+    await page.goto('/guest-order', { waitUntil: 'load' });
     await expect(page.getByRole('heading', { name: /track your order/i })).toBeVisible();
     await page.getByTestId('guest-order-number-input').fill('NRV-123456');
     await expect(page.getByTestId('guest-order-number-input')).toHaveValue('NRV-123456');
   });
 
   test('checkout flow shows empty bag state when no items', async ({ page }) => {
-    await page.goto('/checkout', { waitUntil: 'networkidle' });
+    await page.goto('/checkout', { waitUntil: 'load' });
     await expect(page.getByTestId('empty-cart')).toBeVisible();
   });
 
   test('404 route renders not found', async ({ page }) => {
-    await page.goto('/product/does-not-exist', { waitUntil: 'networkidle' });
+    await page.goto('/product/does-not-exist', { waitUntil: 'load' });
     await expect(page.getByRole('heading', { name: /product not found/i })).toBeVisible();
     await page.getByRole('button', { name: /back to shop/i }).click();
     await expect(page).toHaveURL(/\/shop/);
   });
 
   test('newsletter subscribe shows validation error for bad email', async ({ page }) => {
-    await page.goto('/', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'load' });
     // "a@b" passes native type=email validation but fails the app's stricter regex
     const emailInput = page.getByTestId('newsletter-email');
     await expect(emailInput).toBeVisible();

@@ -172,15 +172,12 @@ export default function HeroCarousel() {
 
       <div className="relative z-10 mx-auto max-w-[1600px] min-h-[100svh] px-5 md:px-8 pt-24 md:pt-28 pb-10 flex flex-col justify-end">
         <div className="max-w-xl md:max-w-2xl" aria-live="polite" aria-atomic="true">
-          <p className="nv-eyebrow text-silver mb-4">{t(slide.eyebrow)}</p>
+          <p className="nv-eyebrow text-white mb-4">{t(slide.eyebrow)}</p>
           {/* Single stable H1 — does not swap with slide content (SEO + a11y) */}
           <h1 className="nv-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-[0.92] mb-5">
             Cool but Chic
           </h1>
-          <p
-            key={slide.id}
-            className="text-base md:text-lg text-white/85 max-w-md mb-8 animate-fadeUp"
-          >
+          <p key={slide.id} className="text-base md:text-lg text-white max-w-md mb-8">
             {t(slide.description)}
           </p>
           <div className="flex flex-wrap items-center gap-3">

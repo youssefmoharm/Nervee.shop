@@ -320,7 +320,7 @@ export default function Home() {
       {/* 4 — Curated collections (brand shopping paths) */}
       <section className="bg-navy py-16 md:py-24 px-5 md:px-8">
         <div className="mx-auto max-w-[1600px]">
-          <p className="nv-eyebrow text-silver mb-2">{t('Curated Edits')}</p>
+          <p className="nv-eyebrow text-white mb-2">{t('Curated Edits')}</p>
           <h2 className="nv-heading text-4xl md:text-6xl mb-10 md:mb-14">{t('Collections')}</h2>
 
           <div className="grid md:grid-cols-3 gap-1">
@@ -348,7 +348,7 @@ export default function Home() {
                   aria-hidden="true"
                 />
                 <div className="absolute bottom-0 start-0 p-6">
-                  <p className="nv-eyebrow text-silver mb-1">{c.tagline}</p>
+                  <p className="nv-eyebrow text-white mb-1">{c.tagline}</p>
                   <h3 className="nv-heading text-3xl mb-3">{c.name}</h3>
                   <span className="text-xs font-semibold uppercase tracking-widest2 underline underline-offset-4 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity">
                     {t('Discover')}
@@ -494,7 +494,7 @@ export default function Home() {
         <div className="mx-auto max-w-[1600px]">
           <div className="flex flex-wrap items-end justify-between gap-4 mb-10">
             <div>
-              <p className="nv-eyebrow text-silver mb-2">{t('On Instagram')}</p>
+              <p className="nv-eyebrow text-white mb-2">{t('On Instagram')}</p>
               <h2 className="nv-heading text-4xl md:text-6xl">{t('Nerve in the Wild')}</h2>
             </div>
             <a
@@ -526,7 +526,7 @@ export default function Home() {
                   <div className="absolute inset-0 flex items-center justify-center text-white/80 group-hover:text-white transition-colors">
                     <Instagram size={22} strokeWidth={1.5} aria-hidden="true" />
                   </div>
-                  <span className="absolute bottom-2 start-2 text-[10px] nv-eyebrow text-white/70">
+                  <span className="absolute bottom-2 start-2 text-[11px] nv-eyebrow text-white">
                     {tile.label}
                   </span>
                 </a>
