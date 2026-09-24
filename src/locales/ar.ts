@@ -607,6 +607,9 @@ export const ar: Record<string, string> = {
   'Verify your email, then sign in to your account.':
     'تحقق من بريدك الإلكتروني ثم سجّل الدخول إلى حسابك.',
   'We sent a confirmation link to': 'أرسلنا رابط تأكيد إلى',
+  'Already have an account?': 'لديك حساب بالفعل؟',
+  'Must be 8+ characters with uppercase, lowercase, number, and special character.':
+    'يجب أن يتكون من 8 أحرف على الأقل مع حرف كبير وصغير ورقم ورمز خاص.',
   Street: 'الشارع',
   building: 'المبنى',
   apartment: 'الشقة',
