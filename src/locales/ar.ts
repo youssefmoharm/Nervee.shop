@@ -643,4 +643,16 @@ export const ar: Record<string, string> = {
     'شكرًا لاشتراكك في نشرتنا البريدية. ستصلك العروض الحصرية وأحدث الإصدارات مباشرة إلى بريدك.',
   'We use essential cookies to keep your cart and sign-in working. With your permission we also use analytics cookies (Google Analytics / Meta) to improve the store. See our':
     'نستخدم ملفات تعريف ارتباط أساسية لإبقاء سلتك وتسجيل دخولك يعملان. بإذنك نستخدم أيضًا ملفات تحليلية (Google Analytics / Meta) لتحسين المتجر. راجع',
+  'Failed to send message': 'فشل إرسال الرسالة',
+  'Please enter a subject for your support ticket': 'الرجاء إدخال موضوع لتذكرة الدعم',
+  'Support ticket': 'تذكرة الدعم',
+  "created! We'll be in touch soon.": 'تم إنشاؤها! سنتواصل معك قريبًا.',
+  'Failed to create support ticket. Please try again.': 'فشل إنشاء تذكرة الدعم. حاول مرة أخرى.',
+  'Failed to remove item. Please try again.': 'فشل إزالة العنصر. حاول مرة أخرى.',
+  'Failed to update quantity. Please try again.': 'فشل تحديث الكمية. حاول مرة أخرى.',
+  Added: 'تمت إضافة',
+  'to bag': 'إلى الحقيبة',
+  'Bundle added!': 'تمت إضافة الباقة!',
+  'off applied with': 'خصم مطبّق بكود',
+  'you saved': 'وفّرت',
 };
