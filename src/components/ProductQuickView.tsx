@@ -91,7 +91,7 @@ export default function ProductQuickView() {
       quantity,
     });
 
-    showToast(`Added ${product.name} to bag`, 'success', 3000);
+    showToast(`${t('Added')} ${product.name} ${t('to bag')}`, 'success', 3000);
     close();
   };
 
@@ -104,8 +104,11 @@ export default function ProductQuickView() {
       price: product.price,
     });
 
-    const action = wished ? 'removed from' : 'added to';
-    showToast(`${product.name} ${action} wishlist`, 'success', 2000);
+    showToast(
+      `${product.name}: ${wished ? t('Removed from wishlist') : t('Added to wishlist')}`,
+      'success',
+      2000,
+    );
   };
 
   const inStockForSize = selectedSize
@@ -158,7 +161,7 @@ export default function ProductQuickView() {
                   {/* Close button */}
                   <button
                     onClick={close}
-                    className="absolute top-3 right-3 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-navy"
+                    className="absolute top-3 end-3 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-navy"
                     aria-label={t('Close modal')}
                   >
                     <X size={16} className="text-navy" />
@@ -169,7 +172,7 @@ export default function ProductQuickView() {
                     <>
                       <button
                         onClick={handlePrevImage}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
+                        className="absolute start-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
                         aria-label={t('Previous image')}
                       >
                         <ChevronLeft size={16} className="text-navy" />

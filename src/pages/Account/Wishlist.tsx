@@ -44,7 +44,7 @@ export default function Wishlist() {
                 <button
                   aria-label={t('Remove from wishlist')}
                   onClick={() => toggle(item)}
-                  className="absolute top-2 right-2 z-10 bg-white/90 p-1.5 hover:bg-white transition-colors"
+                  className="absolute top-2 end-2 z-10 bg-white/90 p-1.5 hover:bg-white transition-colors"
                 >
                   <X size={14} />
                 </button>

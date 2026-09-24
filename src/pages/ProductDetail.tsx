@@ -642,7 +642,7 @@ export default function ProductDetail() {
                   <Share2 size={18} />
                 </button>
                 {shareOpen && (
-                  <div className="absolute right-0 top-full mt-2 z-30 w-48 rounded-xl border border-navy/10 bg-white p-2 shadow-lg">
+                  <div className="absolute end-0 top-full mt-2 z-30 w-48 rounded-xl border border-navy/10 bg-white p-2 shadow-lg">
                     <a
                       href={`https://wa.me/?text=${encodeURIComponent(
                         `${product.name} — ${STORE_URL}/product/${product.slug}`,
@@ -673,7 +673,7 @@ export default function ProductDetail() {
                             setShareOpen(false);
                           });
                       }}
-                      className="block w-full rounded-lg px-3 py-2 text-left text-sm text-navy/80 hover:bg-mist"
+                      className="block w-full rounded-lg px-3 py-2 text-start text-sm text-navy/80 hover:bg-mist"
                     >
                       {t('Copy link')}
                     </button>
@@ -702,7 +702,7 @@ export default function ProductDetail() {
                   <button
                     onClick={() => setTab(tab === key ? ('' as Tab) : key)}
                     aria-expanded={tab === key}
-                    className="w-full flex items-center justify-between py-4 text-left"
+                    className="w-full flex items-center justify-between py-4 text-start"
                   >
                     <span className="nv-edit font-semibold text-sm uppercase">{t(label)}</span>
                     <span className="text-lg">{tab === key ? '-' : '+'}</span>
@@ -882,7 +882,7 @@ export default function ProductDetail() {
                                       URL.revokeObjectURL(photo.preview);
                                       setReviewPhotos(prev => prev.filter((_, idx) => idx !== i));
                                     }}
-                                    className="absolute top-0 right-0 p-1 bg-red-600 text-white rounded-bl text-xs"
+                                    className="absolute top-0 end-0 p-1 bg-red-600 text-white rounded-bl text-xs"
                                   >
                                     ×
                                   </button>

@@ -43,7 +43,7 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
             ))}
             <button
               onClick={() => signOut()}
-              className="nv-eyebrow px-3 py-2.5 text-left text-navy/60 hover:bg-mist transition-colors whitespace-nowrap"
+              className="nv-eyebrow px-3 py-2.5 text-start text-navy/60 hover:bg-mist transition-colors whitespace-nowrap"
             >
               {t('Sign Out')}
             </button>

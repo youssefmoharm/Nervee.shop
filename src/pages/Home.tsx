@@ -133,7 +133,7 @@ export default function Home() {
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-navy/90 via-navy/10 to-transparent" />
-                <div className="absolute bottom-0 left-0 p-6">
+                <div className="absolute bottom-0 start-0 p-6">
                   <p className="nv-eyebrow text-silver mb-1">{c.tagline}</p>
                   <h3 className="nv-heading text-3xl mb-3">{c.name}</h3>
                   <span className="text-xs font-semibold uppercase tracking-widest2 underline underline-offset-4 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -217,7 +217,7 @@ export default function Home() {
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-navy/0 group-hover:bg-navy/30 transition-colors" />
-                <span className="absolute bottom-3 left-3 text-white nv-edit text-sm font-semibold uppercase tracking-wide drop-shadow">
+                <span className="absolute bottom-3 start-3 text-white nv-edit text-sm font-semibold uppercase tracking-wide drop-shadow">
                   {c.name}
                 </span>
               </Link>

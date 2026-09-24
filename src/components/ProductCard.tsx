@@ -62,7 +62,7 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
       size,
       quantity: 1,
     });
-    showToast(`Added ${product.name} to bag`, 'success', 3000);
+    showToast(`${t('Added')} ${product.name} ${t('to bag')}`, 'success', 3000);
     setQuickAddOpen(false);
   };
 
@@ -100,7 +100,7 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
         </Link>
 
         {/* Scarcity badges */}
-        <div className="absolute top-3 left-3 space-y-2 flex flex-col">
+        <div className="absolute top-3 start-3 space-y-2 flex flex-col">
           {product.badge && (
             <span className="block bg-navy text-white text-[10px] font-semibold tracking-widest2 uppercase px-2.5 py-1">
               {product.badge}
@@ -137,7 +137,7 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
               price: product.price,
             })
           }
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center transition-transform hover:scale-110"
+          className="absolute top-3 end-3 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center transition-transform hover:scale-110"
         >
           <Heart
             size={15}
@@ -148,7 +148,7 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
 
         {/* Quick add + Quick view */}
         <div
-          className={`absolute left-0 right-0 bottom-0 transition-all duration-300 ${
+          className={`absolute inset-x-0 bottom-0 transition-all duration-300 ${
             hovered ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0 pointer-events-none'
           } hidden md:flex flex-col gap-1`}
         >

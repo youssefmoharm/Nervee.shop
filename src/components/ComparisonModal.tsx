@@ -58,7 +58,7 @@ export default function ComparisonModal({
       quantity: 1,
     });
 
-    showToast(`Added ${product.name} to bag`, 'success', 3000);
+    showToast(`${t('Added')} ${product.name} ${t('to bag')}`, 'success', 3000);
   };
 
   return (
@@ -96,7 +96,7 @@ export default function ComparisonModal({
               <tbody>
                 {/* Product images row */}
                 <tr className="border-b border-navy/10">
-                  <th className="bg-mist text-left p-3 md:p-4 font-semibold text-navy min-w-[120px] w-[140px] sticky left-0 z-10">
+                  <th className="bg-mist text-start p-3 md:p-4 font-semibold text-navy min-w-[120px] w-[140px] sticky start-0 z-10">
                     {t('Product')}
                   </th>
                   {products.map(product => (
@@ -121,7 +121,7 @@ export default function ComparisonModal({
 
                 {/* Price row */}
                 <tr className="border-b border-navy/10 hover:bg-mist/50">
-                  <th className="bg-mist text-left p-3 md:p-4 font-semibold text-navy sticky left-0 z-10">
+                  <th className="bg-mist text-start p-3 md:p-4 font-semibold text-navy sticky start-0 z-10">
                     {t('Price')}
                   </th>
                   {products.map(product => (
@@ -138,7 +138,7 @@ export default function ComparisonModal({
 
                 {/* Colors row */}
                 <tr className="border-b border-navy/10 hover:bg-mist/50">
-                  <th className="bg-mist text-left p-3 md:p-4 font-semibold text-navy sticky left-0 z-10">
+                  <th className="bg-mist text-start p-3 md:p-4 font-semibold text-navy sticky start-0 z-10">
                     {t('Colors')}
                   </th>
                   {products.map(product => (
@@ -167,7 +167,7 @@ export default function ComparisonModal({
 
                 {/* Sizes row */}
                 <tr className="border-b border-navy/10 hover:bg-mist/50">
-                  <th className="bg-mist text-left p-3 md:p-4 font-semibold text-navy sticky left-0 z-10">
+                  <th className="bg-mist text-start p-3 md:p-4 font-semibold text-navy sticky start-0 z-10">
                     {t('Sizes')}
                   </th>
                   {products.map(product => (
@@ -192,7 +192,7 @@ export default function ComparisonModal({
 
                 {/* Material row */}
                 <tr className="border-b border-navy/10 hover:bg-mist/50">
-                  <th className="bg-mist text-left p-3 md:p-4 font-semibold text-navy sticky left-0 z-10">
+                  <th className="bg-mist text-start p-3 md:p-4 font-semibold text-navy sticky start-0 z-10">
                     {t('Material')}
                   </th>
                   {products.map(product => (
@@ -204,7 +204,7 @@ export default function ComparisonModal({
 
                 {/* Care Instructions row */}
                 <tr className="border-b border-navy/10 hover:bg-mist/50">
-                  <th className="bg-mist text-left p-3 md:p-4 font-semibold text-navy sticky left-0 z-10">
+                  <th className="bg-mist text-start p-3 md:p-4 font-semibold text-navy sticky start-0 z-10">
                     {t('Care')}
                   </th>
                   {products.map(product => (
@@ -220,7 +220,7 @@ export default function ComparisonModal({
 
                 {/* Badge row */}
                 <tr className="border-b border-navy/10 hover:bg-mist/50">
-                  <th className="bg-mist text-left p-3 md:p-4 font-semibold text-navy sticky left-0 z-10">
+                  <th className="bg-mist text-start p-3 md:p-4 font-semibold text-navy sticky start-0 z-10">
                     {t('Badge')}
                   </th>
                   {products.map(product => (
@@ -238,7 +238,7 @@ export default function ComparisonModal({
 
                 {/* Add to Cart row */}
                 <tr className="bg-mist">
-                  <th className="bg-mist text-left p-3 md:p-4 font-semibold text-navy sticky left-0 z-10">
+                  <th className="bg-mist text-start p-3 md:p-4 font-semibold text-navy sticky start-0 z-10">
                     {t('Action')}
                   </th>
                   {products.map(product => (

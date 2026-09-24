@@ -45,6 +45,8 @@ export const ar: Record<string, string> = {
   'Remove item': 'إزالة المنتج',
   'You May Also Like': 'قد يعجبك أيضًا',
   'Free shipping on orders over': 'شحن مجاني للطلبات فوق',
+  'Browse the drop and add pieces you love — checkout is cash on delivery across Egypt.':
+    'تصفّح الإطلاق وأضف القطع التي تحبها — إتمام الشراء بالدفع عند الاستلام في جميع أنحاء مصر.',
 
   // Checkout
   Checkout: 'إتمام الشراء',
@@ -55,6 +57,7 @@ export const ar: Record<string, string> = {
   Email: 'البريد الإلكتروني',
   'First Name': 'الاسم الأول',
   'Last Name': 'اسم العائلة',
+  Phone: 'الهاتف',
   'Phone Number': 'رقم الهاتف',
   Address: 'العنوان',
   City: 'المدينة',
@@ -80,6 +83,12 @@ export const ar: Record<string, string> = {
   'Please review all details before placing your order. You can go back to make any changes.':
     'راجع جميع التفاصيل قبل تقديم الطلب. يمكنك الرجوع للتعديل.',
   'Order Protected': 'طلبك محمي',
+  'We keep your information secure and only use it to fulfill your order and send delivery updates.':
+    'نحافظ على أمان معلوماتك ونستخدمها فقط لتنفيذ طلبك وإرسال تحديثات التوصيل.',
+  'We currently deliver across Egypt with the fastest available option for your governorate.':
+    'نوصّل حاليًا إلى جميع أنحاء مصر مع أسرع خيار متاح لمحافظتك.',
+  'Choose your delivery speed and preferred payment method. We deliver across Egypt with the fastest available option for your governorate.':
+    'اختر سرعة التوصيل وطريقة الدفع المفضلة. نوصّل إلى جميع أنحاء مصر مع أسرع خيار متاح لمحافظتك.',
 
   // Auth
   Login: 'تسجيل الدخول',
@@ -103,6 +112,22 @@ export const ar: Record<string, string> = {
   Gender: 'الجنس',
   'Track Order': 'تتبع الطلب',
   'Sending…': 'جارٍ الإرسال…',
+  'Must be 8+ characters with uppercase, lowercase, number, and special character.':
+    'يجب أن تكون 8 أحرف على الأقل مع حرف كبير وحرف صغير ورقم ورمز خاص.',
+  'Password must contain at least one uppercase letter.':
+    'يجب أن تحتوي كلمة المرور على حرف كبير واحد على الأقل.',
+  'Password must contain at least one lowercase letter.':
+    'يجب أن تحتوي كلمة المرور على حرف صغير واحد على الأقل.',
+  'Password must contain at least one number.': 'يجب أن تحتوي كلمة المرور على رقم واحد على الأقل.',
+  'Password must contain at least one special character.':
+    'يجب أن تحتوي كلمة المرور على رمز خاص واحد على الأقل.',
+  'Please enter your date of birth.': 'يرجى إدخال تاريخ ميلادك.',
+  'Please select your gender.': 'يرجى اختيار جنسك.',
+  'Already have an account?': 'لديك حساب بالفعل؟',
+  'Profile Photo (optional)': 'صورة الملف الشخصي (اختياري)',
+  'We sent a confirmation link to': 'أرسلنا رابط تأكيد إلى',
+  'Verify your email, then sign in to your account.':
+    'تحقّق من بريدك الإلكتروني ثم سجّل الدخول إلى حسابك.',
 
   // Tracking
   'Track Your Order': 'تتبع طلبك',
@@ -601,16 +626,21 @@ export const ar: Record<string, string> = {
     'اتبعت رابط إعادة التعيين من بريدك — اختر كلمة مرور جديدة أدناه.',
   Bag: 'الحقيبة',
   'Example: NRV-123456': 'مثال: NRV-123456',
-  'Profile Photo (optional)': 'صورة الملف الشخصي (اختياري)',
   'sign in': 'تسجيل الدخول',
   'Up to': 'حتى',
-  'Verify your email, then sign in to your account.':
-    'تحقق من بريدك الإلكتروني ثم سجّل الدخول إلى حسابك.',
-  'We sent a confirmation link to': 'أرسلنا رابط تأكيد إلى',
-  'Already have an account?': 'لديك حساب بالفعل؟',
-  'Must be 8+ characters with uppercase, lowercase, number, and special character.':
-    'يجب أن يتكون من 8 أحرف على الأقل مع حرف كبير وصغير ورقم ورمز خاص.',
   Street: 'الشارع',
   building: 'المبنى',
   apartment: 'الشقة',
+  "All measurements in centimeters, taken flat. NERVE runs true to size — if you're between sizes, size up for an oversized fit or down for something more fitted.":
+    'جميع القياسات بالسنتيمترات وبوضع مستوٍ. NERVE يطابق المقاس المعتاد — إذا كنت بين مقاسين، اختر الأكبر لقصة واسعة أو الأصغر لقصة ضيقة.',
+  'NERVE is a contemporary Egyptian concept store built around individuality, movement, and the pieces that become part of your everyday identity. Shop curated fashion, streetwear, and lifestyle products — with free standard shipping on orders over':
+    'NERVE متجر مصري معاصر يحتفي بالخصوصية والحركة والقطع التي تصبح جزءًا من هويتك اليومية. تسوق أزياء وملابس شارع ومنتجات أسلوب حياة منتقاة — مع شحن عادي مجاني للطلبات فوق',
+  'Returns: delivered only, 14 days. Cancellations: placed/processing, 2 hours. One request per order.':
+    'الإرجاع: بعد التسليم فقط، خلال 14 يومًا. الإلغاء: عند الطلب/قيد المعالجة، خلال ساعتين. طلب واحد لكل طلبية.',
+  'Subscribe to receive exclusive offers, early access to new drops, and fashion inspiration from NERVE.':
+    'اشترك لتصلك العروض الحصرية والوصول المبكر للإصدارات الجديدة وإلهام أزياء من NERVE.',
+  "Thank you for subscribing to our newsletter. You'll receive exclusive offers and the latest drops directly to your inbox.":
+    'شكرًا لاشتراكك في نشرتنا البريدية. ستصلك العروض الحصرية وأحدث الإصدارات مباشرة إلى بريدك.',
+  'We use essential cookies to keep your cart and sign-in working. With your permission we also use analytics cookies (Google Analytics / Meta) to improve the store. See our':
+    'نستخدم ملفات تعريف ارتباط أساسية لإبقاء سلتك وتسجيل دخولك يعملان. بإذنك نستخدم أيضًا ملفات تحليلية (Google Analytics / Meta) لتحسين المتجر. راجع',
 };

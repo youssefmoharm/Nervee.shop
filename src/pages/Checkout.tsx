@@ -706,7 +706,7 @@ export default function Checkout() {
                     >
                       <div className="w-12 md:w-14 h-14 md:h-16 bg-mist flex-shrink-0 overflow-hidden rounded-lg relative">
                         <img src={l.image} alt={l.name} className="w-full h-full object-cover" />
-                        <span className="absolute -top-2 -right-2 bg-navy text-white text-[10px] font-semibold w-4 h-4 rounded-full flex items-center justify-center">
+                        <span className="absolute -top-2 -end-2 bg-navy text-white text-[10px] font-semibold w-4 h-4 rounded-full flex items-center justify-center">
                           {l.quantity}
                         </span>
                       </div>

@@ -83,9 +83,9 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
     void applyBundleDiscount(bundleItems.reduce((sum, p) => sum + p.price, 0));
 
     showToast(
-      `Bundle added! ${BUNDLE_DISCOUNT_PERCENT}% off applied with ${BUNDLE_DISCOUNT_CODE} — you saved ${formatEGP(
-        discountAmount,
-      )}`,
+      `${t('Bundle added!')} ${BUNDLE_DISCOUNT_PERCENT}% ${t(
+        'off applied with',
+      )} ${BUNDLE_DISCOUNT_CODE} — ${t('you saved')} ${formatEGP(discountAmount)}`,
       'success',
       3000,
     );
@@ -200,7 +200,7 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
                   </div>
                   <button
                     onClick={() => handleSelectItem(item.id)}
-                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-navy text-white flex items-center justify-center hover:scale-110 transition-transform"
+                    className="absolute top-2 end-2 w-6 h-6 rounded-full bg-navy text-white flex items-center justify-center hover:scale-110 transition-transform"
                     aria-label={isSelected ? t('Remove from bundle') : t('Add to bundle')}
                   >
                     {isSelected ? '✓' : '+'}

@@ -5,6 +5,7 @@ import { logError } from '../lib/sentry';
 import { useToast } from '../context/ToastContext';
 import { SUPABASE_ANON_KEY } from '../lib/supabase';
 import { getEndpoint } from '../lib/apiEndpoints';
+import { useI18n } from '../lib/i18n';
 
 const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || 'nerveey.shop@gmail.com';
 
@@ -24,6 +25,7 @@ interface ChatbotProps {
 export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { t } = useI18n();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -127,7 +129,7 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
       console.error('Chatbot error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logError('Chat error:', error);
-      showToast(`Failed to send message: ${errorMessage}`, 'error');
+      showToast(`${t('Failed to send message')}: ${errorMessage}`, 'error');
 
       const errorMsg: Message = {
         id: (Date.now() + 1).toString(),
@@ -143,7 +145,7 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
 
   const handleCreateTicket = async () => {
     if (!conversationId || !ticketSubject) {
-      showToast('Please enter a subject for your support ticket', 'error');
+      showToast(t('Please enter a subject for your support ticket'), 'error');
       return;
     }
 
@@ -171,7 +173,10 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
         throw new Error(data.error || 'Failed to create ticket');
       }
 
-      showToast(`Support ticket ${data.ticketNumber} created! We'll be in touch soon.`, 'success');
+      showToast(
+        `${t('Support ticket')} ${data.ticketNumber} ${t("created! We'll be in touch soon.")}`,
+        'success',
+      );
       setShowEscalation(false);
       setTicketSubject('');
 
@@ -184,7 +189,7 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
       setMessages(prev => [...prev, ticketMsg]);
     } catch (error) {
       logError('Ticket creation error:', error);
-      showToast('Failed to create support ticket. Please try again.', 'error');
+      showToast(t('Failed to create support ticket. Please try again.'), 'error');
     } finally {
       setIsLoading(false);
     }
@@ -198,7 +203,7 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-[90] w-80 h-[500px] bg-white border border-navy/10 rounded-lg shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed bottom-4 end-4 z-[90] w-80 h-[500px] bg-white border border-navy/10 rounded-lg shadow-2xl flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-navy/10 bg-navy text-white rounded-t-lg">
         <div className="flex items-center gap-3">
@@ -339,7 +344,7 @@ export function ChatbotAITrigger({ onClick }: ChatbotTriggerProps) {
   return (
     <button
       onClick={onClick}
-      className="fixed bottom-4 right-4 z-[85] w-14 h-14 md:w-12 md:h-12 bg-navy text-white rounded-full shadow-lg hover:bg-navy-2 transition-all hover:scale-110 flex items-center justify-center"
+      className="fixed bottom-4 end-4 z-[85] w-14 h-14 md:w-12 md:h-12 bg-navy text-white rounded-full shadow-lg hover:bg-navy-2 transition-all hover:scale-110 flex items-center justify-center"
       aria-label="Open AI chat support"
     >
       <MessageCircle size={20} />

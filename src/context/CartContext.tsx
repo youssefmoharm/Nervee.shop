@@ -13,6 +13,7 @@ import { cartService } from '../services/cartService';
 import { saveCheckoutSession, clearCheckoutSession } from '../lib/checkoutSessionManager';
 import { ecommerce } from '../lib/analytics';
 import { useToast } from './ToastContext';
+import { useI18n } from '../lib/i18n';
 
 interface CartContextValue {
   lines: CartLine[];
@@ -52,6 +53,7 @@ function readGuestCart(): CartLine[] {
 export function CartProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { t } = useI18n();
   const [lines, setLines] = useState<CartLine[]>(() => readGuestCart());
   const [isOpen, setIsOpen] = useState(false);
   const [lastAdded, setLastAdded] = useState<CartLine | null>(null);
@@ -168,7 +170,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         if (removedLine) {
           setLines(prev => [...prev, removedLine]);
         }
-        showToast('Failed to remove item. Please try again.', 'error');
+        showToast(t('Failed to remove item. Please try again.'), 'error');
         console.error('Cart DB sync failed after removeLine:', err);
       });
     }
@@ -190,7 +192,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       void cartService.updateQuantity(productId, color, size, safeQuantity).catch(err => {
         // Revert the optimistic update on error
         setLines(prevLines);
-        showToast('Failed to update quantity. Please try again.', 'error');
+        showToast(t('Failed to update quantity. Please try again.'), 'error');
         console.error('Cart DB sync failed after updateQuantity:', err);
       });
     }
