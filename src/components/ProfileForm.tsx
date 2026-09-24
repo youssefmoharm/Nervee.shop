@@ -179,7 +179,7 @@ export default function ProfileForm() {
       <div className="flex mb-8 border-b border-navy/10">
         <button
           onClick={() => setActiveTab('profile')}
-          className={`pb-3 px-1 mr-8 transition-colors ${
+          className={`pb-3 px-1 me-8 transition-colors ${
             activeTab === 'profile'
               ? 'border-b-2 border-navy text-navy font-medium'
               : 'text-navy/60 hover:text-navy'
@@ -395,14 +395,14 @@ export default function ProfileForm() {
                 onChange={e =>
                   setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))
                 }
-                className="w-full border border-navy/20 px-4 py-3 pr-12 text-sm focus:outline-none focus:border-navy transition-colors"
+                className="w-full border border-navy/20 px-4 py-3 pe-12 text-sm focus:outline-none focus:border-navy transition-colors"
                 placeholder={t('Enter your current password')}
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-navy/40 hover:text-navy"
+                className="absolute end-3 top-1/2 -translate-y-1/2 text-navy/40 hover:text-navy"
               >
                 {showPasswords.current ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -420,14 +420,14 @@ export default function ProfileForm() {
                 type={showPasswords.new ? 'text' : 'password'}
                 value={passwordData.newPassword}
                 onChange={e => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                className="w-full border border-navy/20 px-4 py-3 pr-12 text-sm focus:outline-none focus:border-navy transition-colors"
+                className="w-full border border-navy/20 px-4 py-3 pe-12 text-sm focus:outline-none focus:border-navy transition-colors"
                 placeholder={t('Enter a strong password')}
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-navy/40 hover:text-navy"
+                className="absolute end-3 top-1/2 -translate-y-1/2 text-navy/40 hover:text-navy"
               >
                 {showPasswords.new ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -457,7 +457,7 @@ export default function ProfileForm() {
                 onChange={e =>
                   setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))
                 }
-                className={`w-full border px-4 py-3 pr-12 text-sm focus:outline-none transition-colors ${
+                className={`w-full border px-4 py-3 pe-12 text-sm focus:outline-none transition-colors ${
                   passwordData.confirmPassword &&
                   passwordData.newPassword !== passwordData.confirmPassword
                     ? 'border-red-500 focus:border-red-500'
@@ -469,7 +469,7 @@ export default function ProfileForm() {
               <button
                 type="button"
                 onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-navy/40 hover:text-navy"
+                className="absolute end-3 top-1/2 -translate-y-1/2 text-navy/40 hover:text-navy"
               >
                 {showPasswords.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>

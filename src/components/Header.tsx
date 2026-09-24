@@ -141,7 +141,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
       <div
         data-testid="mobile-menu"
         className={`fixed inset-0 z-50 bg-navy transition-transform duration-300 lg:hidden ${
-          mobileOpen ? 'translate-x-0' : 'translate-x-full'
+          mobileOpen ? 'translate-x-0' : 'translate-x-full rtl:-translate-x-full'
         }`}
         style={{
           transitionDuration: matchMedia('(prefers-reduced-motion: reduce)').matches

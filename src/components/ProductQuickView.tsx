@@ -179,7 +179,7 @@ export default function ProductQuickView() {
                       </button>
                       <button
                         onClick={handleNextImage}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
+                        className="absolute end-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
                         aria-label={t('Next image')}
                       >
                         <ChevronRight size={16} className="text-navy" />
@@ -190,7 +190,7 @@ export default function ProductQuickView() {
                   {/* Gallery counter */}
                   {gallery.length > 1 && (
                     <div
-                      className="absolute bottom-3 left-3 bg-navy/80 text-white text-xs px-2.5 py-1 rounded"
+                      className="absolute bottom-3 start-3 bg-navy/80 text-white text-xs px-2.5 py-1 rounded"
                       role="status"
                       aria-live="polite"
                     >

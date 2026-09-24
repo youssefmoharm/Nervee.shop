@@ -70,7 +70,7 @@ export default function ReviewPhotoGallery({ photos, productName }: ReviewPhotoG
             {/* Close button */}
             <button
               onClick={() => setLightboxOpen(false)}
-              className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/75 rounded-full text-white transition-colors"
+              className="absolute top-4 end-4 p-2 bg-black/50 hover:bg-black/75 rounded-full text-white transition-colors"
               aria-label="Close lightbox"
             >
               <X size={24} />
@@ -80,7 +80,7 @@ export default function ReviewPhotoGallery({ photos, productName }: ReviewPhotoG
             {photos.length > 1 && (
               <button
                 onClick={handlePrev}
-                className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/75 rounded-full text-white transition-colors"
+                className="absolute start-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/75 rounded-full text-white transition-colors"
                 aria-label="Previous photo"
               >
                 <ChevronLeft size={24} />
@@ -91,7 +91,7 @@ export default function ReviewPhotoGallery({ photos, productName }: ReviewPhotoG
             {photos.length > 1 && (
               <button
                 onClick={handleNext}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/75 rounded-full text-white transition-colors"
+                className="absolute end-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/75 rounded-full text-white transition-colors"
                 aria-label="Next photo"
               >
                 <ChevronRight size={24} />
@@ -100,7 +100,7 @@ export default function ReviewPhotoGallery({ photos, productName }: ReviewPhotoG
 
             {/* Photo counter */}
             {photos.length > 1 && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+              <div className="absolute bottom-4 start-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
                 {currentPhotoIdx + 1} / {photos.length}
               </div>
             )}
