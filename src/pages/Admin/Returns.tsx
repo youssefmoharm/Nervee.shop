@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import AdminLayout from './AdminLayout';
+import { useToast } from '../../context/ToastContext';
 
 interface ReturnRow {
   id: string;
@@ -18,6 +19,7 @@ export default function AdminReturns() {
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected' | 'completed' | ''>(
     'pending',
   );
+  const { showToast } = useToast();
 
   const load = async () => {
     let q = supabase
@@ -31,6 +33,7 @@ export default function AdminReturns() {
     const { data, error } = await q;
     if (error) {
       console.error(error);
+      showToast('Failed to load returns', 'error', 3000);
       setRows([]);
       return;
     }
@@ -46,8 +49,11 @@ export default function AdminReturns() {
       .from('order_return_requests')
       .update({ status, resolved_at: new Date().toISOString() })
       .eq('id', id);
-    if (error) alert(error.message);
-    else load();
+    if (error) showToast(error.message, 'error', 4000);
+    else {
+      showToast(`Return ${status}`, 'success', 2500);
+      load();
+    }
   };
 
   return (
@@ -135,7 +141,7 @@ export default function AdminReturns() {
           </table>
         </div>
       )}
-      <p className="text-xs text-navy/40 mt-4">
+      <p className="text-xs text-navy/55 mt-4">
         Approve → then go to Orders and set status to <span className="font-medium">refunded</span>{' '}
         or <span className="font-medium">cancelled</span> to restock inventory (once via
         update_order_status). One request per order/type enforced via UNIQUE.

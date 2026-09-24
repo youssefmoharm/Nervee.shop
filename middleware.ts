@@ -12,7 +12,7 @@ export const config = {
 };
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.your_removed_credential_here || '';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
 
 const SITE = 'https://www.nerveey.shop';
 const FALLBACK_IMAGE = `${SITE}/nervee-logo-favicon.png`;
@@ -73,10 +73,11 @@ function upsertCanonical(html: string, href: string): string {
 
 async function fetchProduct(slug: string) {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
-  const url = `${SUPABASE_URL}/rest/v1/products?slug=eq.${encodeURIComponent(
+  // products has no image/images columns — primary art lives on product_colors.
+  const productUrl = `${SUPABASE_URL}/rest/v1/products?slug=eq.${encodeURIComponent(
     slug,
-  )}&is_active=eq.true&select=id,slug,name,description,price,image,images`;
-  const res = await fetch(url, {
+  )}&is_active=eq.true&select=id,slug,name,description,price`;
+  const res = await fetch(productUrl, {
     headers: {
       apikey: SUPABASE_ANON_KEY,
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
@@ -85,7 +86,7 @@ async function fetchProduct(slug: string) {
   if (!res.ok) return null;
   const rows = await res.json();
   if (!Array.isArray(rows) || rows.length === 0) return null;
-  return rows[0] as {
+  const product = rows[0] as {
     id: string;
     slug: string | null;
     name: string;
@@ -94,6 +95,28 @@ async function fetchProduct(slug: string) {
     image?: string | null;
     images?: unknown;
   };
+
+  try {
+    const colorUrl = `${SUPABASE_URL}/rest/v1/product_colors?product_id=eq.${encodeURIComponent(
+      product.id,
+    )}&select=image,hover_image&order=sort_order.asc&limit=1`;
+    const colorRes = await fetch(colorUrl, {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+    });
+    if (colorRes.ok) {
+      const colors = await colorRes.json();
+      if (Array.isArray(colors) && colors.length > 0 && colors[0]?.image) {
+        product.image = String(colors[0].image);
+      }
+    }
+  } catch {
+    // image is optional — fall through to logo fallback
+  }
+
+  return product;
 }
 
 function injectProductMeta(
@@ -130,44 +153,9 @@ function injectProductMeta(
   out = upsertMeta(out, 'name', 'twitter:description', description);
   out = upsertMeta(out, 'name', 'twitter:image', image);
 
-  const price = product.price != null ? Number(product.price) : null;
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    '@id': pageUrl,
-    name: product.name,
-    description,
-    image,
-    url: pageUrl,
-    ...(price != null && Number.isFinite(price)
-      ? {
-          offers: {
-            '@type': 'Offer',
-            price: String(price),
-            priceCurrency: 'EGP',
-            availability: 'https://schema.org/InStock',
-            url: pageUrl,
-          },
-        }
-      : {}),
-  };
-  const scriptTag = `<script type="application/ld+json">${JSON.stringify(jsonLd).replace(
-    /</g,
-    '\\u003c',
-  )}</script>`;
-  // Replace the static OnlineStore JSON-LD if present, else append before </head>.
-  if (
-    /<script type="application\/ld\+json">[\s\S]*?"@type"\s*:\s*"OnlineStore"[\s\S]*?<\/script>/i.test(
-      out,
-    )
-  ) {
-    out = out.replace(
-      /<script type="application\/ld\+json">[\s\S]*?"@type"\s*:\s*"OnlineStore"[\s\S]*?<\/script>/i,
-      scriptTag,
-    );
-  } else {
-    out = out.replace('</head>', `  ${scriptTag}\n  </head>`);
-  }
+  // Product JSON-LD is injected client-side after hydration (live stock/reviews).
+  // Edge only rewrites meta tags so social scrapers see correct OG without
+  // duplicating a hardcoded InStock Product schema.
   return out;
 }
 

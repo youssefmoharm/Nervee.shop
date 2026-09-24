@@ -272,7 +272,7 @@ export default function OrderDetail() {
                   {t('Close')}
                 </button>
               </div>
-              <p className="text-[11px] text-navy/40">
+              <p className="text-[11px] text-navy/55">
                 {t(
                   'Returns: delivered only, 14 days. Cancellations: placed/processing, 2 hours. One request per order.',
                 )}

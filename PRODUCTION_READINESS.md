@@ -48,7 +48,7 @@ Push to main
 | Variable                 | Required    | Example                                    | Notes                                   |
 | ------------------------ | ----------- | ------------------------------------------ | --------------------------------------- |
 | `VITE_SUPABASE_URL`      | **Yes**     | `https://gfmxvvjqlhrnmidutjwx.supabase.co` | Build FAILS in prod if missing          |
-| `your_removed_credential_here` | **Yes**     | `sb_publishable_...`                       | Publishable anon key, public by design  |
+| `VITE_SUPABASE_ANON_KEY` | **Yes**     | `sb_publishable_...`                       | Publishable anon key, public by design  |
 | `VITE_ENV`               | No          | `production`                               | Runtime environment tag for logs/Sentry |
 | `VITE_SENTRY_DSN`        | Recommended | `https://...@ingest.sentry.io/...`         | Error tracking                          |
 | `VITE_GA_ID`             | No          | `G-XXXXXXXXXX`                             | GA4                                     |
@@ -145,7 +145,7 @@ its own auth mode).
 
 1. Import repo `youssefmoharm/Nervee.shop` to Vercel.
 2. Set env vars in Vercel → Settings → Environment Variables (Production + Preview):
-   - `VITE_SUPABASE_URL`, `your_removed_credential_here` (required — build fails without them)
+   - `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (required — build fails without them)
    - Optionally `VITE_SENTRY_DSN`, `VITE_GA_ID`, `VITE_META_PIXEL_ID`
 3. Deploy is gated on CI: `deploy.yml` triggers only on `workflow_run` success of `CI`.
 4. Custom domain: add `www.nerveey.shop` in Vercel → Settings → Domains, set DNS.
@@ -216,7 +216,7 @@ its own auth mode).
 - [x] All migrations present in repo (`supabase/migrations`, `001`–`033`) — push via `supabase db push`
 - [x] All edge functions present and type-checked (`deno check` clean)
 - [ ] Secrets set: `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `STORE_URL`, `GOOGLE_GEMINI_API_KEY`, `CRON_SECRET` (dashboard — not verifiable from code)
-- [x] Vercel env vars set: `VITE_SUPABASE_URL`, `your_removed_credential_here` (site builds and serves product data)
+- [x] Vercel env vars set: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (site builds and serves product data)
 - [x] Custom domain `www.nerveey.shop` configured and HTTPS verified
 - [x] `ci.yml` passes on `main` (typecheck, lint, format, vitest, build, E2E without `continue-on-error`)
 - [ ] `npm audit` passes (0 vulnerabilities) — re-run before launch

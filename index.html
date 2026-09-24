@@ -60,8 +60,9 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge" />
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/nervee-logo-favicon.png" />
-    <link rel="apple-touch-icon" href="/nervee-logo-favicon.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/nervee-logo-favicon-64.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
 
     <!-- Fonts are self-hosted (see src/index.css @font-face) — no render-blocking Google Fonts request -->
@@ -113,14 +114,19 @@
       }
     </script>
 
-    <!-- JSON-LD E-commerce Schema -->
+    <!-- JSON-LD Store Schema (valid WebPage subtype; OnlineStore is non-standard for home) -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "OnlineStore",
+        "@type": "Store",
         "name": "NERVE",
         "url": "https://www.nerveey.shop",
-        "priceRange": "EGP 100-10000"
+        "priceRange": "EGP 100-10000",
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "EG",
+          "addressLocality": "Alexandria"
+        }
       }
     </script>
   </head>

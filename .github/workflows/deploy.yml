@@ -49,6 +49,6 @@ jobs:
 # NOTE: Vercel's REMOTE BUILD reads env vars from the Vercel project
 # dashboard (Settings → Environment Variables → Production). Required vars:
 #   VITE_SUPABASE_URL       = https://YOUR_PROJECT_REF.supabase.co
-#   your_removed_credential_here  = your_supabase_anon_key_here
+#   VITE_SUPABASE_ANON_KEY  = your_supabase_anon_key_here
 # These must be configured manually in Vercel before deploying — Vercel does
 # not read them from this repository or from .env files.

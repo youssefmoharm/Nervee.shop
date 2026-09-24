@@ -147,9 +147,15 @@ function AppContent() {
   // so a crash in any of them doesn't kill the entire module graph.
   // initSentry is async (dynamic import) — fire-and-forget.
   useEffect(() => {
-    initSentry().catch(() => {
-      /* Sentry init failed, continue without it */
-    });
+    // Sentry only after explicit cookie consent (same gate as analytics).
+    const maybeInitSentry = () => {
+      if (getCookieConsent() === 'granted') {
+        initSentry().catch(() => {
+          /* Sentry init failed, continue without it */
+        });
+      }
+    };
+    maybeInitSentry();
     // Analytics only after explicit cookie consent (GDPR / privacy policy)
     const maybeInitAnalytics = () => {
       if (getCookieConsent() === 'granted') {
@@ -161,7 +167,10 @@ function AppContent() {
       }
     };
     maybeInitAnalytics();
-    const onConsent = () => maybeInitAnalytics();
+    const onConsent = () => {
+      maybeInitSentry();
+      maybeInitAnalytics();
+    };
     window.addEventListener('nerve:cookie-consent', onConsent);
     try {
       initPerformanceMonitoring();

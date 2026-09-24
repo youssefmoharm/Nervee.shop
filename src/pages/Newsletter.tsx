@@ -10,6 +10,7 @@ export function Newsletter() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [email, setEmail] = useState('');
+  const [honeypot, setHoneypot] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   useSEO({
@@ -27,7 +28,7 @@ export function Newsletter() {
     }
 
     setStatus('loading');
-    const { error } = await newsletterService.subscribe(email);
+    const { error } = await newsletterService.subscribe(email, honeypot);
 
     if (error) {
       setStatus('error');
@@ -89,6 +90,20 @@ export function Newsletter() {
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
             />
           </label>
+
+          {/* Honeypot — invisible to humans, bots fill it and get silently dropped */}
+          <div className="absolute -left-[9999px] w-px h-px overflow-hidden" aria-hidden="true">
+            <label>
+              Website
+              <input
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                value={honeypot}
+                onChange={e => setHoneypot(e.target.value)}
+              />
+            </label>
+          </div>
 
           {status === 'error' && (
             <p className="text-xs text-red-600">{t('Something went wrong. Please try again.')}</p>

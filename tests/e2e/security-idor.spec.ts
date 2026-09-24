@@ -12,19 +12,19 @@ import { test, expect } from '@playwright/test';
  * the browser context — exactly what an attacker would do by opening DevTools.
  *
  * Credentials come from the environment only (never hard-coded):
- *   VITE_SUPABASE_URL, your_removed_credential_here
+ *   VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
  * Skips with a clear message when not configured (e.g. fork PRs).
  */
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const anonKey = process.env.your_removed_credential_here;
+const anonKey = process.env.VITE_SUPABASE_ANON_KEY;
 const liveConfigured = Boolean(supabaseUrl && anonKey);
 
 test.describe('@live Security — IDOR / cross-user isolation (backend boundary)', () => {
   test.beforeEach(() => {
     test.skip(
       !liveConfigured,
-      'Set VITE_SUPABASE_URL and your_removed_credential_here to run @live IDOR tests.',
+      'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to run @live IDOR tests.',
     );
   });
 

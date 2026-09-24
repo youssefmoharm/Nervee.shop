@@ -226,7 +226,7 @@ export default function ProfileForm() {
               disabled
               className="w-full border border-navy/10 bg-mist/60 px-4 py-3 text-sm text-navy/50"
             />
-            <p className="text-xs text-navy/40 mt-1">{t('Email cannot be changed')}</p>
+            <p className="text-xs text-navy/55 mt-1">{t('Email cannot be changed')}</p>
           </div>
 
           {/* Name fields */}
@@ -359,7 +359,7 @@ export default function ProfileForm() {
               placeholder={t('Tell us a bit about yourself...')}
               maxLength={500}
             />
-            <p className="text-xs text-navy/40 mt-1">
+            <p className="text-xs text-navy/55 mt-1">
               {profile.bio.length}/500 {t('characters')}
             </p>
           </div>

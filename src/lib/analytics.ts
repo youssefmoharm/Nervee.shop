@@ -115,23 +115,32 @@ export function initMetaPixel() {
 // Track page view
 export function trackPageView(pageName: string, path?: string) {
   const actualPath = path || window.location.pathname;
+  const location = window.location.origin + actualPath;
 
-  // Google Analytics
+  // Google Analytics — include page_location so SPA route changes count
   if (window.gtag) {
     window.gtag('event', 'page_view', {
       page_title: pageName,
       page_path: actualPath,
+      page_location: location,
     });
   }
 
-  // Meta Pixel
-  if (window.fbq) {
+  // Meta Pixel — only once per full page load (SPA navigations reuse FB PageView)
+  if (window.fbq && !fbPageViewSent) {
+    fbPageViewSent = true;
     window.fbq('track', 'PageView');
   }
 
-  // Performance tracking
-  trackPerformanceMetrics();
+  // Performance tracking (once)
+  if (!perfTracked) {
+    perfTracked = true;
+    trackPerformanceMetrics();
+  }
 }
+
+let fbPageViewSent = false;
+let perfTracked = false;
 
 // Track custom events
 export function trackEvent(eventName: string, parameters: Record<string, any> = {}) {
@@ -147,21 +156,54 @@ export function trackEvent(eventName: string, parameters: Record<string, any> = 
 // E-commerce specific tracking
 export function trackEcommerce(event: EcommerceEvent) {
   const { event_name, ...parameters } = event;
+  const currency = parameters.currency || 'EGP';
+
+  // Build GA4 items[] for every ecommerce event that references a product.
+  const items =
+    parameters.product_id || parameters.product_name
+      ? [
+          {
+            item_id: parameters.product_id,
+            item_name: parameters.product_name,
+            item_category: parameters.category,
+            price: parameters.price,
+            quantity: parameters.quantity ?? 1,
+          },
+        ]
+      : undefined;
 
   // Google Analytics Enhanced Ecommerce
   if (window.gtag) {
     window.gtag('event', event_name, {
-      currency: 'EGP',
+      currency,
       ...parameters,
+      ...(items ? { items } : {}),
     });
   }
 
   // Meta Pixel
-  if (window.fbq && event_name === 'purchase') {
-    window.fbq('track', 'Purchase', {
-      value: parameters.value,
-      currency: 'EGP',
-    });
+  if (window.fbq) {
+    if (event_name === 'purchase') {
+      window.fbq('track', 'Purchase', {
+        value: parameters.value,
+        currency,
+        content_ids: parameters.product_id ? [parameters.product_id] : undefined,
+        content_type: 'product',
+      });
+    } else if (event_name === 'begin_checkout') {
+      window.fbq('track', 'InitiateCheckout', {
+        value: parameters.value,
+        currency,
+        content_type: 'product',
+      });
+    } else if (event_name === 'add_to_cart') {
+      window.fbq('track', 'AddToCart', {
+        value: parameters.value,
+        currency,
+        content_ids: parameters.product_id ? [parameters.product_id] : undefined,
+        content_type: 'product',
+      });
+    }
   }
 
   // Debug log
@@ -371,20 +413,24 @@ export const ecommerce = {
     });
   },
 
-  beginCheckout: (value: number) => {
+  beginCheckout: (value: number, items?: Array<Record<string, unknown>>) => {
     trackEcommerce({
       event_name: 'begin_checkout',
       value,
       currency: 'EGP',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...(items && items.length > 0 ? ({ items } as any) : {}),
     });
   },
 
-  purchase: (transactionId: string, value: number) => {
+  purchase: (transactionId: string, value: number, items?: Array<Record<string, unknown>>) => {
     trackEcommerce({
       event_name: 'purchase',
       transaction_id: transactionId,
       value,
       currency: 'EGP',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...(items && items.length > 0 ? ({ items } as any) : {}),
     });
   },
 };

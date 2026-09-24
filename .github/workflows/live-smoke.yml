@@ -39,7 +39,7 @@ jobs:
           CI: true
           PLAYWRIGHT_LIVE: '1'
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          your_removed_credential_here: ${{ secrets.your_removed_credential_here }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: npx playwright test --project=chromium --grep @live
 
       - name: Upload Playwright Report

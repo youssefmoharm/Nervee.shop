@@ -4,8 +4,11 @@
 
 1. **Supabase CLI installed**
 
-   ***REMOVED***
+   **_REMOVED_**
    npm install -g supabase
+
+   ```
+
    ```
 
 2. **Supabase Account** - Create at https://supabase.com
@@ -14,9 +17,11 @@
 
 ## Step 1: Authenticate with Supabase CLI
 
-***REMOVED***
+**_REMOVED_**
 supabase login
+
 # Follow the prompts to authenticate
+
 ```
 
 ## Step 2: Link Project to Local Development
@@ -33,12 +38,16 @@ You should see the Nerve project listed.
 
 ## Step 3: Push Migrations to Supabase
 
-***REMOVED***
+**_REMOVED_**
+
 # Push all migrations to the linked project
+
 supabase db push --linked
 
 # Or with all options
+
 supabase db push --linked --include-all
+
 ```
 
 This will:
@@ -92,15 +101,20 @@ Functions included (see `supabase/functions/` for the authoritative list):
 
 ✅ **Local Development:**
 
-***REMOVED***
+**_REMOVED_**
+
 # Start local Supabase instance
+
 supabase start
 
 # Stop local instance
+
 supabase stop
 
 # View logs
+
 supabase logs
+
 ```
 
 ## Migrations Overview
@@ -148,16 +162,20 @@ All migrations in `supabase/migrations/`, applied in lexical order:
 Add to `.env`:
 
 ```
+
 VITE_SUPABASE_URL=https://gfmxvvjqlhrnmidutjwx.supabase.co
-your_removed_credential_here=your_supabase_anon_key_here
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+
 ```
 
 For Edge Functions, add to Supabase project secrets:
 
 ```
+
 RESEND_API_KEY=your-resend-api-key
 RESEND_FROM_EMAIL="NERVE <orders@nerveey.shop>"
 STORE_URL=https://www.nerveey.shop
+
 ```
 
 ## Testing Migrations
@@ -174,12 +192,16 @@ supabase db push --linked
 
 ### "Cannot find project ref"
 
-***REMOVED***
+**_REMOVED_**
+
 # Re-link the project
+
 supabase link --project-ref gfmxvvjqlhrnmidutjwx
 
 # Or list available projects
+
 supabase projects list
+
 ```
 
 ### Migration Fails
@@ -194,12 +216,16 @@ supabase db shell
 
 ### Function Deployment Issues
 
-***REMOVED***
+**_REMOVED_**
+
 # Check function logs
+
 supabase functions fetch-logs create-order
 
 # Deploy with debug info
+
 supabase functions deploy --debug
+
 ```
 
 ## Production Deployment Checklist

@@ -2,7 +2,7 @@
 /**
  * Generate public/sitemap.xml with dynamic product URLs.
  * Run at build time: node scripts/generate-sitemap.mjs
- * Requires VITE_SUPABASE_URL + your_removed_credential_here (or uses prod values from env only).
+ * Requires VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY (or uses prod values from env only).
  * Fails the build if the product fetch fails — never silently ships a partial sitemap.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -33,11 +33,11 @@ loadEnvFile(resolve(process.cwd(), '.env.local'));
 
 const STORE_URL = process.env.STORE_URL || process.env.VITE_APP_URL || 'https://www.nerveey.shop';
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.your_removed_credential_here;
+const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.error(
-    'Sitemap: missing VITE_SUPABASE_URL or your_removed_credential_here. ' +
+    'Sitemap: missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY. ' +
       'Set them in the build environment (Vercel project settings).',
   );
   process.exit(1);
@@ -81,6 +81,8 @@ const staticUrls = [
   { loc: `${STORE_URL}/faq`, changefreq: 'monthly', priority: '0.6' },
   { loc: `${STORE_URL}/size-guide`, changefreq: 'monthly', priority: '0.5' },
   { loc: `${STORE_URL}/contact`, changefreq: 'yearly', priority: '0.4' },
+  { loc: `${STORE_URL}/newsletter`, changefreq: 'monthly', priority: '0.4' },
+  { loc: `${STORE_URL}/track-order`, changefreq: 'yearly', priority: '0.4' },
   { loc: `${STORE_URL}/shipping`, changefreq: 'yearly', priority: '0.3' },
   { loc: `${STORE_URL}/returns`, changefreq: 'yearly', priority: '0.3' },
   { loc: `${STORE_URL}/privacy`, changefreq: 'yearly', priority: '0.3' },

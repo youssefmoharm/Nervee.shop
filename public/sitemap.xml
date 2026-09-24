@@ -43,6 +43,18 @@
     <priority>0.4</priority>
   </url>
   <url>
+    <loc>https://www.nerveey.shop/newsletter</loc>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://www.nerveey.shop/track-order</loc>
+    
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
     <loc>https://www.nerveey.shop/shipping</loc>
     
     <changefreq>yearly</changefreq>

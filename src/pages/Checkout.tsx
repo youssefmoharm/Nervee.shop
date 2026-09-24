@@ -82,6 +82,13 @@ export default function Checkout() {
   const [placing, setPlacing] = useState(false);
   const [placeError, setPlaceError] = useState<string | null>(null);
   const [orderNumber, setOrderNumber] = useState('');
+  const [confirmedOrder, setConfirmedOrder] = useState<{
+    orderNumber: string;
+    total: number;
+    subtotal: number;
+    shipping: number;
+    discount: number;
+  } | null>(null);
   const [applyingDiscount, setApplyingDiscount] = useState(false);
   const { showToast } = useToast();
   const [appliedDiscount, setAppliedDiscount] = useState<{
@@ -114,7 +121,15 @@ export default function Checkout() {
   // Fire begin_checkout once when checkout opens with items
   useEffect(() => {
     if (lines.length > 0 && step < 5) {
-      ecommerce.beginCheckout(subtotal);
+      ecommerce.beginCheckout(
+        subtotal,
+        lines.map(l => ({
+          item_id: l.productId,
+          item_name: l.name,
+          price: l.price,
+          quantity: l.quantity,
+        })),
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -241,11 +256,25 @@ export default function Checkout() {
     // The mock implementation just logged to console — skip the call entirely.
 
     setOrderNumber(order.order_number);
+    // Capture server-authoritative totals before cart clear (confirmation screen).
+    setConfirmedOrder({
+      orderNumber: order.order_number,
+      total: order.total,
+      subtotal: order.subtotal,
+      shipping: order.shipping_cost,
+      discount: order.discount_amount,
+    });
     setPlacing(false);
     setStep(5);
 
-    // Track purchase event for analytics
-    ecommerce.purchase(order.order_number, order.total);
+    // Track purchase event for analytics with cart items (GA4 requires items[])
+    const purchaseItems = lines.map(l => ({
+      item_id: l.productId,
+      item_name: l.name,
+      price: l.price,
+      quantity: l.quantity,
+    }));
+    ecommerce.purchase(order.order_number, order.total, purchaseItems);
 
     // Clear checkout session and cart on successful order
     clearCheckoutSession();
@@ -331,6 +360,7 @@ export default function Checkout() {
                     className={`text-xs nv-eyebrow ${
                       step === i + 1 ? 'text-navy' : 'text-navy/30'
                     }`}
+                    aria-current={step === i + 1 ? 'step' : undefined}
                   >
                     {t(label)}
                   </span>
@@ -639,6 +669,32 @@ export default function Checkout() {
                 <p data-testid="order-number" className="nv-eyebrow mt-4">
                   {t('Order')} #{orderNumber}
                 </p>
+                {confirmedOrder && (
+                  <div className="mt-6 mx-auto max-w-sm border border-navy/10 rounded-lg p-4 text-sm space-y-2 text-start">
+                    <div className="flex justify-between">
+                      <span className="text-navy/60">{t('Subtotal')}</span>
+                      <span>{formatEGP(confirmedOrder.subtotal)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-navy/60">{t('Shipping')}</span>
+                      <span>
+                        {confirmedOrder.shipping === 0
+                          ? t('Free')
+                          : formatEGP(confirmedOrder.shipping)}
+                      </span>
+                    </div>
+                    {confirmedOrder.discount > 0 && (
+                      <div className="flex justify-between text-navy">
+                        <span className="text-navy/60">{t('Discount')}</span>
+                        <span>- {formatEGP(confirmedOrder.discount)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-semibold border-t border-navy/10 pt-2">
+                      <span>{t('Total Paid (COD)')}</span>
+                      <span>{formatEGP(confirmedOrder.total)}</span>
+                    </div>
+                  </div>
+                )}
                 <Link
                   to="/shop"
                   className="inline-block mt-8 bg-navy text-white nv-eyebrow px-8 py-4 hover:bg-navy-2 transition-colors"
@@ -717,7 +773,7 @@ export default function Checkout() {
                         <p className="text-[10px] md:text-xs text-navy/50 mt-0.5">
                           {l.color} / {l.size}
                         </p>
-                        <p className="text-[10px] md:text-xs text-navy/40 mt-1">
+                        <p className="text-[10px] md:text-xs text-navy/55 mt-1">
                           {formatEGP(l.price)} × {l.quantity}
                         </p>
                       </div>
@@ -759,7 +815,7 @@ export default function Checkout() {
                   </span>
                 </div>
 
-                <div className="flex justify-between items-center text-navy/40 text-[11px]">
+                <div className="flex justify-between items-center text-navy/55 text-[11px]">
                   <span>{t('VAT (14% incl.)')}</span>
                   <span>{formatEGP(vatAmount)}</span>
                 </div>

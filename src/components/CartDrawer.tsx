@@ -20,6 +20,16 @@ export default function CartDrawer() {
     }
   }, [isOpen]);
 
+  // Escape closes the drawer (FocusTrap's escapeDeactivates only unfocuses).
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeCart();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [isOpen, closeCart]);
+
   if (!isOpen) {
     return null;
   }

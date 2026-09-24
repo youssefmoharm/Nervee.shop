@@ -307,10 +307,13 @@ LIMIT 1;
 
 **Edge Function Logs**:
 
-***REMOVED***
+**_REMOVED_**
+
 # In Supabase dashboard: Edge Functions > Logs
+
 # Check create-order logs for a successful order placement
-```
+
+````
 
 ---
 
@@ -340,7 +343,7 @@ LIMIT 1;
 ```sql
 -- Should NOT see a new order for this attempt
 SELECT COUNT(*) FROM orders WHERE created_at > NOW() - INTERVAL '5 minutes';
-```
+````
 
 ---
 
@@ -642,7 +645,7 @@ SELECT place_order(...);
 
 **Objective**: Verify admin-only functions reject unauthorized callers.
 
-**Setup**: Use a tool like Postman or ***REMOVED***
+**Setup**: Use a tool like Postman or **_REMOVED_**
 
 **Test 6.3a: Authenticated Admin Call**
 
@@ -686,8 +689,8 @@ scenarios:
       - post:
           url: '/functions/v1/create-order'
           headers:
-            Authorization: 'Bearer your_removed_credential_here'
-            apikey: 'your_removed_credential_here'
+            Authorization: 'Bearer ' + anonKey
+            apikey: anonKey
           json:
             email: 'test{{ $randomNumber() }}@example.com'
             firstName: 'Load'
@@ -707,10 +710,11 @@ scenarios:
 
 **Run**:
 
-***REMOVED***
+**_REMOVED_**
 npm install -g artillery
 artillery run load-test.yml
-```
+
+````
 
 **Expected**:
 
@@ -733,7 +737,7 @@ SELECT tablename, indexname, indexdef
 FROM pg_indexes
 WHERE schemaname = 'public'
 ORDER BY tablename, indexname;
-```
+````
 
 **Expected indexes**:
 

@@ -100,12 +100,16 @@ Requires `pg_cron` extension enabled on Supabase:
 
 ### Step 1: Run Migrations
 
-***REMOVED***
+**_REMOVED_**
+
 # Deploy migration 006 (email automation tables)
+
 supabase migration up
 
 # Deploy migration 007 (pg_cron scheduled jobs)
+
 supabase migration up
+
 ```
 
 ### Step 2: Enable pg_cron Extension
@@ -134,16 +138,17 @@ In Vercel/your deployment platform, add:
 
 ```
 VITE_SUPABASE_URL=https://your-project.supabase.co
-your_removed_credential_here=your-anon-key
+VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
 In Supabase Edge Function secrets:
 
-***REMOVED***
+**_REMOVED_**
 supabase secrets set RESEND_API_KEY=re_xxxxx
 supabase secrets set RESEND_FROM_EMAIL="NERVE <orders@yourdomain.com>"
 supabase secrets set STORE_URL="https://www.nerveey.shop"
-```
+
+````
 
 ### Step 5: Verify Scheduled Jobs
 
@@ -151,7 +156,7 @@ Check that cron jobs are registered:
 
 ```sql
 SELECT * FROM cron.job;
-```
+````
 
 Expected output:
 

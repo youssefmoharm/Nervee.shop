@@ -51,4 +51,4 @@ afterAll(() => {
 
 // Mock environment variables
 process.env.VITE_SUPABASE_URL = 'https://test.supabase.co';
-process.env.your_removed_credential_here = 'test-anon-key';
+process.env.VITE_SUPABASE_ANON_KEY = 'test-anon-key';

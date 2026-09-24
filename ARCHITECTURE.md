@@ -242,12 +242,16 @@ ecommerce.purchase('NRV-123456', 1497);
 
 Run migration `005_guest_tracking_and_reviews.sql` to add new tables:
 
-***REMOVED***
+**_REMOVED_**
+
 # Via Supabase CLI
+
 supabase db push
 
 # Or run in Supabase SQL Editor
+
 # Paste contents of supabase/migrations/005_guest_tracking_and_reviews.sql
+
 ```
 
 Migration includes:
@@ -280,3 +284,4 @@ Migration includes:
 - No PII sent to GA4 by default
 - User ID only set after authentication
 - Analytics ID exposed in browser (intentional for GA4)
+```

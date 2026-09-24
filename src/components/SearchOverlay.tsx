@@ -66,6 +66,17 @@ export default function SearchOverlay({ open, onClose }: { open: boolean; onClos
     }
   }, [open]);
 
+  // Escape closes (FocusTrap escapeDeactivates alone does not call onClose).
+  // Must be registered before any early return to keep hook order stable.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+
   useEffect(() => {
     if (!query.trim()) {
       setResults([]);

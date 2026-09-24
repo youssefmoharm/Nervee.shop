@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Menu, Search, ShoppingBag, User, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -33,17 +33,19 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
     setMobileOpen(false);
   }, [location.pathname]);
 
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [mobileOpen]);
+
   const solid = scrolled || !isHome;
 
   return (
     <>
-      {/* Skip to main content link for accessibility */}
-      <a
-        href="#main"
-        className="absolute start-0 top-0 z-[100] -translate-x-full rtl:translate-x-full px-4 py-2 bg-white text-navy nv-eyebrow focus:translate-x-0"
-      >
-        {t('Skip to main content')}
-      </a>
       <header
         className={`fixed top-0 inset-x-0 z-40 transition-all duration-300 ${
           solid ? 'bg-navy/95 backdrop-blur-md border-b border-white/10' : 'bg-transparent'
@@ -86,11 +88,13 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
               <button
                 type="button"
                 data-testid="lang-toggle"
-                aria-label={locale === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
+                aria-label={
+                  locale === 'ar' ? 'Switch to English' : 'Ø§Ù„ØªØ¨Ø¯ÙŠÙ„ Ø¥Ù„Ù‰ Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©'
+                }
                 onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
                 className="hidden sm:flex h-10 min-w-[2.5rem] items-center justify-center px-2 text-xs font-semibold tracking-wide hover:bg-mist rounded transition-colors border border-white/20 text-white"
               >
-                {locale === 'ar' ? 'EN' : 'ع'}
+                {locale === 'ar' ? 'EN' : 'Ø¹'}
               </button>
               <button
                 aria-label={t('Search')}
@@ -140,6 +144,17 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
       {/* Mobile full-screen drawer */}
       <div
         data-testid="mobile-menu"
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('Menu')}
+        aria-hidden={!mobileOpen}
+        tabIndex={-1}
+        ref={node => {
+          if (node) {
+            if (!mobileOpen) node.setAttribute('inert', '');
+            else node.removeAttribute('inert');
+          }
+        }}
         className={`fixed inset-0 z-50 bg-navy transition-transform duration-300 lg:hidden ${
           mobileOpen ? 'translate-x-0' : 'translate-x-full rtl:-translate-x-full'
         }`}
@@ -193,7 +208,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
             onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
             className="px-3 py-1.5 border border-white/25 rounded hover:text-white transition-colors"
           >
-            {locale === 'ar' ? 'English' : 'العربية'}
+            {locale === 'ar' ? 'English' : 'Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©'}
           </button>
           <a
             href="https://www.instagram.com/gotthenerve58/"

@@ -40,6 +40,7 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
   const threshold = product.lowStockThreshold ?? LOW_STOCK_DEFAULT_THRESHOLD;
   const hasLowStock =
     product.isLowStock ?? (stockValues.length > 0 && Math.min(...stockValues) <= threshold);
+  const isSoldOut = product.sizes.length > 0 && product.sizes.every(s => !s.inStock);
 
   // Check if product is new (created within last 7 days)
   const createdDate = new Date(product.createdAt);
@@ -101,25 +102,31 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
 
         {/* Scarcity badges */}
         <div className="absolute top-3 start-3 space-y-2 flex flex-col">
+          {isSoldOut && (
+            <span className="block bg-navy text-white text-[10px] font-semibold tracking-widest2 uppercase px-2.5 py-1">
+              {t('Sold Out')}
+            </span>
+          )}
+
           {product.badge && (
             <span className="block bg-navy text-white text-[10px] font-semibold tracking-widest2 uppercase px-2.5 py-1">
               {product.badge}
             </span>
           )}
 
-          {hasLowStock && (
+          {!isSoldOut && hasLowStock && (
             <span className="block bg-red-600 text-white text-[10px] font-semibold tracking-widest2 uppercase px-2.5 py-1">
               {t('Low Stock')}
             </span>
           )}
 
-          {isTrending && !product.badge && (
+          {!isSoldOut && isTrending && !product.badge && (
             <span className="block bg-orange-500 text-white text-[10px] font-semibold tracking-widest2 uppercase px-2.5 py-1">
               {t('🔥 Trending')}
             </span>
           )}
 
-          {isNew && !product.badge && (
+          {!isSoldOut && isNew && !product.badge && (
             <span className="block bg-green-600 text-white text-[10px] font-semibold tracking-widest2 uppercase px-2.5 py-1">
               {t('✨ New')}
             </span>

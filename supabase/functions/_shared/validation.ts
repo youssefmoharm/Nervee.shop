@@ -145,8 +145,9 @@ export function validateName(name: string, fieldName: string, required = true): 
     errors.push({ field: fieldName, message: `${fieldName} too long (max 100 characters)` });
   }
 
-  // Allow only letters, spaces, hyphens, and apostrophes
-  const nameRegex = /^[a-zA-Z\s'-]+$/;
+  // Allow letters (incl. Arabic/Unicode), spaces, hyphens, apostrophes, periods
+  // Egyptian names frequently include Arabic script and diacritics.
+  const nameRegex = /^[\p{L}\p{M}\s'.-]+$/u;
   if (name.length > 0 && !nameRegex.test(name)) {
     errors.push({ field: fieldName, message: `${fieldName} contains invalid characters` });
   }

@@ -64,10 +64,10 @@ jobs:
           # Public VITE_* values required by prebuild sitemap. Configure as
           # GitHub Actions secrets — never commit credential values here.
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          your_removed_credential_here: ${{ secrets.your_removed_credential_here }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: |
-          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$your_removed_credential_here" ]; then
-            echo "::error::Missing GitHub secrets VITE_SUPABASE_URL and/or your_removed_credential_here. Set them under Settings → Secrets and variables → Actions."
+          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "VITE_SUPABASE_ANON_KEY" ]; then
+            echo "::error::Missing GitHub secrets VITE_SUPABASE_URL and/or VITE_SUPABASE_ANON_KEY. Set them under Settings → Secrets and variables → Actions."
             exit 1
           fi
           npm run build
@@ -144,10 +144,10 @@ jobs:
       - name: Build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          your_removed_credential_here: ${{ secrets.your_removed_credential_here }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: |
-          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$your_removed_credential_here" ]; then
-            echo "::error::Missing GitHub secrets VITE_SUPABASE_URL and/or your_removed_credential_here."
+          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "VITE_SUPABASE_ANON_KEY" ]; then
+            echo "::error::Missing GitHub secrets VITE_SUPABASE_URL and/or VITE_SUPABASE_ANON_KEY."
             exit 1
           fi
           npm run build

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { Heart, Loader2, Minus, Plus, RotateCcw, Ruler, Truck, Star, Share2 } from 'lucide-react';
 import type { Product, Size, ProductReview } from '../types';
 import { productService } from '../services/productService';
@@ -33,7 +33,7 @@ export default function ProductDetail() {
   const { t } = useI18n();
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { addLine, openCart } = useCart();
+  const { addLine } = useCart();
   const { toggle, has } = useWishlist();
   const { showToast } = useToast();
   const { user } = useAuth();
@@ -174,43 +174,54 @@ export default function ProductDetail() {
     if (!slug) return;
     let mounted = true;
     setLoading(true);
+    setProduct(null);
     setColorIdx(0);
     setSize(null);
     setActiveImage(0);
     setQty(1);
     setNotifySize(null);
     setNotifyStatus('idle');
-    productService.getBySlug(slug).then(async p => {
-      if (!mounted) return;
-      if (!p) {
+    productService
+      .getBySlug(slug)
+      .then(async p => {
+        if (!mounted) return;
+        if (!p) {
+          setProduct(null);
+          setLoading(false);
+          return;
+        }
+        setProduct(p);
+        ecommerce.viewProduct(p.id, p.name, p.category, p.price);
+        addView(p.id, p.category);
+        try {
+          const rel = await productService.getRelated(p);
+          if (mounted) setRelated(rel);
+
+          // Load reviews with loading state
+          setReviewsLoading(true);
+          setHelpfulVotes({});
+          const reviewData = await reviewService.getByProduct(p.id);
+          if (reviewData.reviews) {
+            const voted: Record<string, boolean> = {};
+            reviewData.reviews.forEach(r => {
+              if (reviewService.hasVoted(p.id, r.id)) voted[r.id] = true;
+            });
+            setHelpfulVotes(voted);
+            setReviews(reviewData.reviews);
+          }
+          const statsData = await reviewService.getStats(p.id);
+          if (statsData.stats) setReviewStats(statsData.stats);
+        } finally {
+          if (mounted) setReviewsLoading(false);
+        }
+        if (mounted) setLoading(false);
+      })
+      .catch(err => {
+        if (!mounted) return;
+        console.error('Failed to load product:', err);
         setProduct(null);
         setLoading(false);
-        return;
-      }
-      setProduct(p);
-      ecommerce.viewProduct(p.id, p.name, p.category, p.price);
-      addView(p.id, p.category);
-      const rel = await productService.getRelated(p);
-      if (mounted) setRelated(rel);
-
-      // Load reviews with loading state
-      setReviewsLoading(true);
-      setHelpfulVotes({});
-      const reviewData = await reviewService.getByProduct(p.id);
-      if (reviewData.reviews) {
-        const voted: Record<string, boolean> = {};
-        reviewData.reviews.forEach(r => {
-          if (reviewService.hasVoted(p.id, r.id)) voted[r.id] = true;
-        });
-        setHelpfulVotes(voted);
-        setReviews(reviewData.reviews);
-      }
-      const statsData = await reviewService.getStats(p.id);
-      if (statsData.stats) setReviewStats(statsData.stats);
-      setReviewsLoading(false);
-
-      setLoading(false);
-    });
+      });
     return () => {
       mounted = false;
     };
@@ -292,7 +303,7 @@ export default function ProductDetail() {
       return;
     }
     handleAddToBag();
-    openCart();
+    navigate('/checkout');
   };
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
@@ -434,16 +445,49 @@ export default function ProductDetail() {
           </div>
 
           <div className="md:pt-2">
+            <nav className="mb-4" aria-label="Breadcrumb">
+              <ol className="flex flex-wrap items-center gap-1 text-xs text-navy/60">
+                <li>
+                  <Link to="/" className="hover:text-navy">
+                    {t('Home')}
+                  </Link>
+                </li>
+                <li aria-hidden="true">/</li>
+                <li>
+                  <Link to="/shop" className="hover:text-navy">
+                    {t('Shop')}
+                  </Link>
+                </li>
+                <li aria-hidden="true">/</li>
+                <li>
+                  <Link
+                    to={`/shop?category=${encodeURIComponent(product.category)}`}
+                    className="hover:text-navy"
+                  >
+                    {product.category}
+                  </Link>
+                </li>
+                <li aria-hidden="true">/</li>
+                <li className="text-navy" aria-current="page">
+                  {product.name}
+                </li>
+              </ol>
+            </nav>
             {product.badge && (
               <span className="inline-block bg-navy text-white text-[10px] font-semibold tracking-widest2 uppercase px-2.5 py-1 mb-3">
                 {product.badge}
+              </span>
+            )}
+            {product.sizes.length > 0 && product.sizes.every(s => !s.inStock) && (
+              <span className="inline-block bg-navy text-white text-[10px] font-semibold tracking-widest2 uppercase px-2.5 py-1 mb-3 ms-2">
+                {t('Sold Out')}
               </span>
             )}
             <h1 className="nv-heading text-4xl md:text-5xl">{product.name}</h1>
             <div className="flex items-center gap-3 mt-3">
               <span className="text-xl font-medium">{formatEGP(product.price)}</span>
               {product.compareAtPrice && (
-                <span className="text-lg text-navy/40 line-through">
+                <span className="text-lg text-navy/55 line-through">
                   {formatEGP(product.compareAtPrice)}
                 </span>
               )}
@@ -598,7 +642,7 @@ export default function ProductDetail() {
                 <span className="w-10 text-center">{qty}</span>
                 <button
                   aria-label={t('Increase quantity')}
-                  onClick={() => setQty(q => Math.min(99, q + 1))}
+                  onClick={() => setQty(q => Math.min(10, q + 1))}
                   className="w-11 h-14 flex items-center justify-center hover:bg-mist"
                 >
                   <Plus size={14} />
@@ -1002,7 +1046,7 @@ export default function ProductDetail() {
                       <ReviewPhotoGallery photos={review.photos || []} productName={product.name} />
 
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mt-3 text-xs">
-                        <p className="text-navy/40">
+                        <p className="text-navy/55">
                           {new Date(review.createdAt).toLocaleDateString()} by{' '}
                           {review.customerName || 'Anonymous'}
                         </p>

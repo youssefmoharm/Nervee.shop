@@ -177,7 +177,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const updateQuantity = (productId: string, color: string, size: string, quantity: number) => {
-    const safeQuantity = Math.max(1, Math.min(99, quantity));
+    // Cap at 10 to match edge validation (max quantity per item is 10).
+    const safeQuantity = Math.max(1, Math.min(10, quantity));
     const prevLines = lines;
 
     setLines(prev =>

@@ -151,7 +151,7 @@ export default function Register() {
               onChange={e => setPassword(e.target.value)}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy transition-colors"
             />
-            <span className="text-xs text-navy/40 mt-1 block">
+            <span className="text-xs text-navy/55 mt-1 block">
               {t('Must be 8+ characters with uppercase, lowercase, number, and special character.')}
             </span>
 

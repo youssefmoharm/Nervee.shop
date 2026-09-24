@@ -4,6 +4,7 @@ import { adminService } from '../../services/adminService';
 import { logError } from '../../lib/sentry';
 import AdminLayout from './AdminLayout';
 import { formatEGP } from '../../lib/format';
+import { useToast } from '../../context/ToastContext';
 
 interface OrderRow {
   id: string;
@@ -21,6 +22,7 @@ const STATUSES = ['placed', 'processing', 'shipped', 'delivered', 'cancelled', '
 export default function AdminOrders() {
   const [orders, setOrders] = useState<OrderRow[] | null>(null);
   const [filter, setFilter] = useState('');
+  const { showToast } = useToast();
 
   const load = () =>
     adminService
@@ -36,9 +38,10 @@ export default function AdminOrders() {
   const changeStatus = async (id: string, status: string) => {
     const { error } = await adminService.updateOrderStatus(id, status);
     if (error) {
-      alert(error);
+      showToast(error, 'error', 4000);
       return;
     }
+    showToast('Order status updated', 'success', 2500);
     load();
   };
 
@@ -99,7 +102,7 @@ export default function AdminOrders() {
                     </select>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <span className="text-xs text-navy/40">COD</span>
+                    <span className="text-xs text-navy/55">COD</span>
                   </td>
                 </tr>
               ))}

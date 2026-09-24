@@ -29,6 +29,7 @@ export default function Cart() {
   const navigate = useNavigate();
   const [promo, setPromo] = useState('');
   const [promoStatus, setPromoStatus] = useState<'idle' | 'applied' | 'invalid'>('idle');
+  const [applyingPromo, setApplyingPromo] = useState(false);
   const [recommended, setRecommended] = useState<Product[]>([]);
 
   // Load session to get applied discount
@@ -60,27 +61,36 @@ export default function Cart() {
       showToast(t('Please enter a discount code'), 'error', 3000);
       return;
     }
+    if (applyingPromo) return;
 
-    const result = await discountService.validate(promo.trim(), subtotal);
+    setApplyingPromo(true);
+    try {
+      const result = await discountService.validate(promo.trim(), subtotal);
 
-    if (!result.valid || !result.discount) {
-      showToast(result.error || t('Please check your code and try again'), 'error', 3000);
+      if (!result.valid || !result.discount) {
+        showToast(result.error || t('Please check your code and try again'), 'error', 3000);
+        setPromoStatus('invalid');
+        return;
+      }
+
+      const amt = discountService.calculateDiscount(result.discount, subtotal);
+      saveCheckoutSession({
+        appliedDiscount: {
+          code: result.discount.code,
+          discount: result.discount,
+        },
+        promoCode: result.discount.code,
+        discountAmount: amt,
+      });
+      setPromoStatus('applied');
+      showToast(`${t('You saved')} ${formatEGP(amt)}`, 'success', 3000);
+    } catch (error) {
+      console.error('Failed to apply promo code:', error);
+      showToast(t('Please check your code and try again'), 'error', 3000);
       setPromoStatus('invalid');
-      return;
+    } finally {
+      setApplyingPromo(false);
     }
-
-    const amt = discountService.calculateDiscount(result.discount, subtotal);
-    // Save to checkout session so it persists to Checkout.tsx
-    saveCheckoutSession({
-      appliedDiscount: {
-        code: result.discount.code,
-        discount: result.discount,
-      },
-      promoCode: result.discount.code,
-      discountAmount: amt,
-    });
-    setPromoStatus('applied');
-    showToast(`${t('You saved')} ${formatEGP(amt)}`, 'success', 3000);
   };
 
   // Single source of truth: lib/checkout estimateShippingCost
@@ -157,7 +167,7 @@ export default function Cart() {
                       <button
                         aria-label={t('Remove item')}
                         onClick={() => removeLine(line.productId, line.color, line.size)}
-                        className="text-navy/40 hover:text-navy transition-colors"
+                        className="text-navy/55 hover:text-navy transition-colors"
                       >
                         <X size={16} />
                       </button>
@@ -189,9 +199,10 @@ export default function Cart() {
                   <button
                     onClick={applyPromo}
                     data-testid="promo-apply"
-                    className="px-4 border border-navy text-xs font-semibold uppercase hover:bg-navy hover:text-white transition-colors"
+                    disabled={applyingPromo}
+                    className="px-4 border border-navy text-xs font-semibold uppercase hover:bg-navy hover:text-white transition-colors disabled:opacity-60 disabled:cursor-wait"
                   >
-                    {t('Apply')}
+                    {applyingPromo ? t('Applying...') : t('Apply')}
                   </button>
                 </div>
                 {promoStatus === 'applied' && (

@@ -362,7 +362,7 @@ export default function Shop() {
                     className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-start text-sm text-navy/70 hover:bg-mist"
                   >
                     <span>{suggestion}</span>
-                    <span className="text-[11px] uppercase tracking-wider text-navy/40">
+                    <span className="text-[11px] uppercase tracking-wider text-navy/55">
                       {t('Quick search')}
                     </span>
                   </button>
@@ -458,10 +458,20 @@ export default function Shop() {
               </div>
             ) : products.length === 0 ? (
               <EmptyState
-                title={t('No products match that search')}
-                body={t('Try a broader keyword, clear a filter, or browse our full collection.')}
-                actionLabel={t('Reset filters')}
-                onAction={clearAllFilters}
+                title={
+                  activeFilterCount > 0 || debouncedQuery
+                    ? t('No products match that search')
+                    : t('No products yet')
+                }
+                body={
+                  activeFilterCount > 0 || debouncedQuery
+                    ? t('Try a broader keyword, clear a filter, or browse our full collection.')
+                    : t('Check back soon — new drops land regularly.')
+                }
+                actionLabel={
+                  activeFilterCount > 0 || debouncedQuery ? t('Reset filters') : undefined
+                }
+                onAction={activeFilterCount > 0 || debouncedQuery ? clearAllFilters : undefined}
               />
             ) : (
               <SectionErrorBoundary

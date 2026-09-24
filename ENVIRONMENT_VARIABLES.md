@@ -25,7 +25,7 @@ These are safe to commit (use placeholders):
 | Variable                 | Required | Type                                   | Location                 |
 | ------------------------ | -------- | -------------------------------------- | ------------------------ |
 | `VITE_SUPABASE_URL`      | ✓        | URL                                    | `.env`, Vercel           |
-| `your_removed_credential_here` | ✓        | String                                 | `.env`, Vercel           |
+| `VITE_SUPABASE_ANON_KEY` | ✓        | String                                 | `.env`, Vercel           |
 | `VITE_ENV`               | ✓        | `development`\|`staging`\|`production` | `.env`, Vercel           |
 | `VITE_APP_URL`           | ✓        | URL                                    | `.env`, Vercel           |
 | `VITE_SUPPORT_EMAIL`     | ✓        | Email                                  | `.env`, Vercel           |
@@ -41,13 +41,17 @@ These are safe to commit (use placeholders):
 
 These are **never** prefixed with `VITE_`. Set in Supabase only, never in `.env` files:
 
-***REMOVED***
+**_REMOVED_**
+
 # Set in Supabase (not in git)
+
 supabase secrets set RESEND_API_KEY=your_resend_api_key_here
 supabase secrets set GOOGLE_GEMINI_API_KEY=your_gemini_api_key_here
 
 # List all secrets
+
 supabase secrets list
+
 ```
 
 | Secret                  | Purpose              | Service          | Notes                                  |
@@ -76,13 +80,13 @@ These are **automatically available** inside Edge Functions. Never set them your
 
    ***REMOVED***
    cp .env.example .env
-   ```
+```
 
 2. **Update `.env` with local Supabase credentials:**
 
    ```env
    VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
-   your_removed_credential_here=your_supabase_anon_key_here
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
    ```
 
 3. **Use `.env.local` for personal overrides** (gitignored):
@@ -100,7 +104,7 @@ These are **automatically available** inside Edge Functions. Never set them your
    ```
 
    - `VITE_SUPABASE_URL`
-   - `your_removed_credential_here`
+   - `VITE_SUPABASE_ANON_KEY`
    - `VITE_ENV=production`
    - `VITE_APP_URL` (production domain)
    - `VITE_SENTRY_DSN` (real DSN, not placeholder)
@@ -109,16 +113,22 @@ These are **automatically available** inside Edge Functions. Never set them your
 
 2. **Set server secrets in Supabase:**
 
-   ***REMOVED***
+   **_REMOVED_**
    supabase secrets set RESEND_API_KEY=your_resend_api_key_here
    supabase secrets set RESEND_FROM_EMAIL="NERVE <orders@nerveey.shop>"
    supabase secrets set STORE_URL="https://www.nerveey.shop"
    supabase secrets set GOOGLE_GEMINI_API_KEY=your_gemini_api_key_here
+
+   ```
+
    ```
 
 3. **Verify:**
-   ***REMOVED***
+   **_REMOVED_**
    supabase secrets list
+
+   ```
+
    ```
 
 ## Security Checklist
@@ -140,7 +150,7 @@ These are **automatically available** inside Edge Functions. Never set them your
 ⚠️  [supabase] VITE_SUPABASE_URL not set — running in demo/mock mode
 ```
 
-**Solution**: Add `VITE_SUPABASE_URL` and `your_removed_credential_here` to `.env`
+**Solution**: Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to `.env`
 
 ### "Email not sending"
 
@@ -148,9 +158,10 @@ These are **automatically available** inside Edge Functions. Never set them your
 
 **Solution**:
 
-***REMOVED***
+**_REMOVED_**
 supabase secrets set RESEND_API_KEY=your_resend_api_key_here
 supabase secrets set STORE_URL=https://www.nerveey.shop
+
 ```
 
 ### "Analytics not tracking"
@@ -180,3 +191,4 @@ supabase secrets set STORE_URL=https://www.nerveey.shop
 - [Supabase: Secrets Management](https://supabase.com/docs/guides/local-development/cli/secrets)
 - [Resend: API Keys](https://resend.com/docs/api-reference/api-keys)
 - [OWASP: Secrets Management](https://owasp.org/www-community/Sensitive_Data_Exposure)
+```

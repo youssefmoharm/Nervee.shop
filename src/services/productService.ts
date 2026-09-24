@@ -39,6 +39,19 @@ interface ProductColorRow extends ColorRow {
 
 const SIZE_ORDER: Size[] = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
+/**
+ * Mock/demo catalog is for local dev only. In production builds we never
+ * return mock products (prevents fake inventory from ever reaching buyers) —
+ * we surface an empty catalog + logged error instead.
+ */
+function allowMock(): boolean {
+  if (import.meta.env.PROD) {
+    logError('productService: mock catalog blocked in production (Supabase unavailable or empty)');
+    return false;
+  }
+  return true;
+}
+
 function sortSizes(sizes: ProductVariantAvailability[]): ProductVariantAvailability[] {
   return [...sizes].sort((a, b) => SIZE_ORDER.indexOf(a.size) - SIZE_ORDER.indexOf(b.size));
 }
@@ -196,8 +209,9 @@ export const productService = {
    * List products with optional filters
    */
   async list(filters: ShopFilters = {}): Promise<Product[]> {
-    // Fallback to mock data if Supabase not configured
+    // Fallback to mock data if Supabase not configured (dev only)
     if (!isSupabaseConfigured) {
+      if (!allowMock()) return [];
       if (import.meta.env.DEV) {
         console.warn('Supabase not configured, using mock data');
       }
@@ -319,7 +333,7 @@ export const productService = {
    */
   async getBySlug(slug: string): Promise<Product | undefined> {
     if (!isSupabaseConfigured) {
-      return getMockProductBySlug(slug);
+      return allowMock() ? getMockProductBySlug(slug) : undefined;
     }
 
     try {
@@ -346,6 +360,7 @@ export const productService = {
    */
   async getNewDrop(): Promise<Product[]> {
     if (!isSupabaseConfigured) {
+      if (!allowMock()) return [];
       if (import.meta.env.DEV) {
         console.info('[productService] Supabase not configured, using mock data for new drop');
       }
@@ -368,15 +383,15 @@ export const productService = {
             '[productService] getNewDrop: Supabase returned 0 active products, using mock data',
           );
         }
-        return getMockNewDrop();
+        return allowMock() ? getMockNewDrop() : [];
       }
 
       const results = await attachAvailability(mapProductRows(data));
       const valid = results.filter(p => p.colors && p.colors.length > 0);
-      return valid.length > 0 ? valid : getMockNewDrop();
+      return valid.length > 0 ? valid : allowMock() ? getMockNewDrop() : [];
     } catch (error) {
       logError('Error fetching new drop:', error);
-      return getMockNewDrop();
+      return allowMock() ? getMockNewDrop() : [];
     }
   },
 
@@ -385,7 +400,7 @@ export const productService = {
    */
   async getBestSellers(): Promise<Product[]> {
     if (!isSupabaseConfigured) {
-      return getMockBestSellers();
+      return allowMock() ? getMockBestSellers() : [];
     }
 
     try {
@@ -399,10 +414,10 @@ export const productService = {
       if (error) throw error;
 
       const results = await attachAvailability(mapProductRows(data));
-      return results.length > 0 ? results : getMockBestSellers();
+      return results.length > 0 ? results : allowMock() ? getMockBestSellers() : [];
     } catch (error) {
       logError('Error fetching best sellers:', error);
-      return getMockBestSellers();
+      return allowMock() ? getMockBestSellers() : [];
     }
   },
 
@@ -411,7 +426,7 @@ export const productService = {
    */
   async getRelated(product: Product): Promise<Product[]> {
     if (!isSupabaseConfigured) {
-      return getMockRelated(product);
+      return allowMock() ? getMockRelated(product) : [];
     }
 
     try {
@@ -437,7 +452,7 @@ export const productService = {
    */
   async getCollections(): Promise<Collection[]> {
     if (!isSupabaseConfigured) {
-      return mockCollections;
+      return allowMock() ? mockCollections : [];
     }
 
     try {
@@ -449,10 +464,10 @@ export const productService = {
       if (error) throw error;
 
       const results = (data || []).map(transformCollection);
-      return results.length > 0 ? results : mockCollections;
+      return results.length > 0 ? results : allowMock() ? mockCollections : [];
     } catch (error) {
       logError('Error fetching collections:', error);
-      return mockCollections;
+      return allowMock() ? mockCollections : [];
     }
   },
 
@@ -461,7 +476,7 @@ export const productService = {
    */
   async getCollection(id: string): Promise<Collection | undefined> {
     if (!isSupabaseConfigured) {
-      return getMockCollection(id);
+      return allowMock() ? getMockCollection(id) : undefined;
     }
 
     try {
@@ -482,7 +497,7 @@ export const productService = {
    */
   async getProductsByCollection(id: string): Promise<Product[]> {
     if (!isSupabaseConfigured) {
-      return getMockProductsByCollection(id);
+      return allowMock() ? getMockProductsByCollection(id) : [];
     }
 
     try {
@@ -510,6 +525,7 @@ export const productService = {
     if (!q) return [];
 
     if (!isSupabaseConfigured) {
+      if (!allowMock()) return [];
       const lowerQ = q.toLowerCase();
       return mockProducts.filter(
         p =>

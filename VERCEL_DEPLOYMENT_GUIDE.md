@@ -133,7 +133,7 @@ Your `package.json` is **correctly set up** with:
 
 ```
 VITE_SUPABASE_URL=
-your_removed_credential_here=
+VITE_SUPABASE_ANON_KEY=
 VITE_ENV=
 VITE_APP_URL=
 VITE_SUPPORT_EMAIL=
@@ -149,7 +149,7 @@ VITE_SUPPORT_EMAIL=
 | Variable                 | Value                                  | Source               |
 | ------------------------ | -------------------------------------- | -------------------- |
 | `VITE_SUPABASE_URL`      | `https://YOUR_PROJECT_REF.supabase.co` | From .env            |
-| `your_removed_credential_here` | `your_supabase_anon_key_here`          | From .env            |
+| `VITE_SUPABASE_ANON_KEY` | `your_supabase_anon_key_here`          | From .env            |
 | `VITE_ENV`               | `production`                           | For prod             |
 | `VITE_APP_URL`           | `https://www.nerveey.shop`             | Your domain          |
 | `VITE_SUPPORT_EMAIL`     | `nerveey.shop@gmail.com`               | Support email        |
@@ -224,13 +224,19 @@ Current config has it ✅
 
 ### Step 1: Verify Local Build (Already Done ✅)
 
-***REMOVED***
+**_REMOVED_**
 npm run build
+
 # Result: ✅ 283.72 kB (76.51 kB gzip)
+
 npm run typecheck
+
 # Result: ✅ 0 errors
+
 npm run lint
+
 # Result: ✅ 0 critical errors
+
 ```
 
 ### Step 2: Push to GitHub (Already Done ✅)
@@ -250,10 +256,13 @@ git push origin main
 
 ### Step 4: Trigger Deployment
 
-***REMOVED***
+**_REMOVED_**
 git push origin main
+
 # OR manually trigger from Vercel dashboard
+
 # Vercel automatically builds and deploys
+
 ```
 
 ### Step 5: Monitor Deployment
@@ -329,18 +338,26 @@ https://www.nerveey.shop/cart
 
 ### Health Checks ✅
 
-***REMOVED***
+**_REMOVED_**
+
 # Check main page loads
-***REMOVED*** -I https://www.nerveey.shop
+
+**_REMOVED_** -I https://www.nerveey.shop
+
 # Expected: 200 OK
 
 # Check SPA routing
-***REMOVED*** -I https://www.nerveey.shop/product/test
+
+**_REMOVED_** -I https://www.nerveey.shop/product/test
+
 # Expected: 200 OK (rewritten to index.html)
 
 # Check assets are cached
-***REMOVED*** -I https://www.nerveey.shop/assets/vendor-*.js
+
+**_REMOVED_** -I https://www.nerveey.shop/assets/vendor-*.js
+
 # Expected: Cache-Control: public, max-age=31536000
+
 ```
 
 ### Performance Checks 🚀
@@ -358,15 +375,22 @@ https://pagespeed.web.dev/?url=https://www.nerveey.shop
 
 ### Security Checks 🔒
 
-***REMOVED***
+**_REMOVED_**
+
 # Verify security headers
-***REMOVED*** -I https://www.nerveey.shop | grep -E "X-|Strict|Content-Security"
+
+**_REMOVED_** -I https://www.nerveey.shop | grep -E "X-|Strict|Content-Security"
 
 # Expected headers:
+
 # X-Content-Type-Options: nosniff
+
 # Strict-Transport-Security: max-age=63072000
+
 # X-Frame-Options: DENY
+
 # Content-Security-Policy: ...
+
 ```
 
 ---
@@ -422,7 +446,7 @@ git push origin main
 - [ ] Code pushed to GitHub (main branch)
 - [ ] Environment variables set in Vercel
   - [ ] VITE_SUPABASE_URL
-  - [ ] your_removed_credential_here
+  - [ ] VITE_SUPABASE_ANON_KEY
   - [ ] VITE_ENV=production
   - [ ] VITE_APP_URL
   - [ ] VITE_SUPPORT_EMAIL
@@ -432,7 +456,7 @@ git push origin main
 - [ ] Build logs reviewed (no errors)
 - [ ] Production URL loads correctly
 - [ ] SPA routing works (test /product/\*, /shop, etc.)
-- [ ] Security headers present (***REMOVED*** -I)
+- [ ] Security headers present (**_REMOVED_** -I)
 - [ ] CSS/JS loads correctly (no console errors)
 - [ ] Supabase connection working (if applicable)
 

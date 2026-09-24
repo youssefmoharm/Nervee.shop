@@ -439,7 +439,7 @@ export default function ProductForm() {
               </div>
             ))}
           </div>
-          <p className="text-xs text-navy/40 mt-2">
+          <p className="text-xs text-navy/55 mt-2">
             Upload images to the <code>product-images</code> Supabase Storage bucket first, then
             paste the public URL here (path convention:{' '}
             <code>products/&#123;slug&#125;/&#123;color&#125;/01-front.jpg</code>).
@@ -479,7 +479,7 @@ export default function ProductForm() {
               </div>
             ))}
           </div>
-          <p className="text-xs text-navy/40 mt-2">
+          <p className="text-xs text-navy/55 mt-2">
             The storefront low-stock badge uses each size&apos;s threshold (default 5).
           </p>
         </div>

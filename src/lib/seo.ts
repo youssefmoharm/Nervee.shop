@@ -64,10 +64,9 @@ export function updateMetaTags(tags: MetaTags) {
   updateMetaTag('og:type', ogType);
   updateMetaTag('twitter:card', twitterCard);
 
-  // Update robots
-  if (robots) {
-    updateMetaTag('robots', robots);
-  }
+  // Always write robots — default to index/follow so a prior noindex page
+  // (cart, checkout, account…) never sticks after client-side navigation.
+  updateMetaTag('robots', robots || 'index, follow');
 
   // Update keywords
   if (keywords) {

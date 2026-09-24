@@ -8,11 +8,13 @@ import { addStructuredData } from '../lib/seo';
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useStructuredData(data: Record<string, any>): void {
+  // Serialize so the effect only re-runs when values change — inline object
+  // literals are new every render and would thrash the DOM script tag.
+  const key = JSON.stringify(data);
+
   useEffect(() => {
-    if (!data || Object.keys(data).length === 0) return;
-
-    const cleanup = addStructuredData(data);
-
-    return cleanup;
-  }, [data]);
+    if (!key || key === '{}') return;
+    const parsed = JSON.parse(key) as Record<string, any>;
+    return addStructuredData(parsed);
+  }, [key]);
 }

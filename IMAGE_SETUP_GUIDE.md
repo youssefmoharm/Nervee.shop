@@ -119,13 +119,16 @@ const handleImageUpload = async (file: File) => {
 
 ### Option 3: Batch Upload Script
 
-***REMOVED***
+**_REMOVED_**
+
 # Create folder structure in Supabase
+
 products/nerve-core-tee/navy/
 products/nerve-core-tee/white/
 products/nerve-tank-top/navy/
 products/nerve-tank-top/charcoal/
-```
+
+````
 
 Then upload images via:
 
@@ -175,7 +178,7 @@ Modern formats automatically negotiated:
 ```env
 VITE_API_URL=https://[project-id].supabase.co
 VITE_ANON_KEY=[your-anon-key]
-```
+````
 
 ### Supabase RLS Policies ✅
 
@@ -216,9 +219,10 @@ CREATE POLICY "Allow admin upload" ON storage.objects
 
 ### View in Development
 
-***REMOVED***
+**_REMOVED_**
 npm run dev
-```
+
+````
 
 Navigate to:
 
@@ -272,7 +276,7 @@ export function ProductImageUpload({ productSlug, color }: Props) {
     </div>
   );
 }
-```
+````
 
 ---
 

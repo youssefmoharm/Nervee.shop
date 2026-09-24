@@ -242,9 +242,10 @@ COD path, following the same "create a session, return a redirect/client
 secret" shape, without touching the checkout UI's structure. Provider
 secrets (never `VITE_`-prefixed) must live as Edge Function secrets:
 
-***REMOVED***
-supabase secrets set <PROVIDER>_API_KEY=your_key
-supabase secrets set <PROVIDER>_HMAC_SECRET=your_hmac_secret
+**_REMOVED_**
+supabase secrets set <PROVIDER>\_API_KEY=your_key
+supabase secrets set <PROVIDER>\_HMAC_SECRET=your_hmac_secret
+
 ```
 
 A webhook handler authenticates server-side via its HMAC signature and must
@@ -266,7 +267,8 @@ you don't set those.
    supabase secrets set RESEND_API_KEY=your_resend_api_key
    supabase secrets set RESEND_FROM_EMAIL="NERVE <orders@yourdomain.com>"
    supabase secrets set STORE_URL=https://www.nerveey.shop
-   ```
+```
+
 5. Test: place a Cash on Delivery order and confirm the order-received email
    arrives. If `RESEND_API_KEY` isn't set, emails are silently skipped (logged
    to the function's logs) rather than blocking checkout — so the store
@@ -284,9 +286,10 @@ back-in-stock notifications run **hourly**, abandoned-cart emails run
 
 ### 1. Copy Environment Template
 
-***REMOVED***
+**_REMOVED_**
 cp .env.example .env
-```
+
+````
 
 ### 2. Fill in Values
 
@@ -295,11 +298,11 @@ Edit `.env` with your actual credentials:
 ```env
 # Supabase Configuration
 VITE_SUPABASE_URL=https://xxxxx.supabase.co
-your_removed_credential_here=your_supabase_anon_key_here
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
 
 # Environment
 VITE_ENV=development
-```
+````
 
 ### 3. Secure Your Keys
 
@@ -324,8 +327,9 @@ In CI the workflow expects Playwright browsers to be installable via `npx playwr
 
 ### 1. Install Dependencies
 
-***REMOVED***
+**_REMOVED_**
 npm install
+
 ```
 
 ### 2. Start Development Server
@@ -362,13 +366,14 @@ Check that:
 
 ### 4. Development Workflow
 
-***REMOVED***
-npm run typecheck       # TypeScript, no emit
-npm run lint            # ESLint
-npm run format:check    # Prettier
-npm run test -- --run   # Vitest unit/component tests (single run)
-npm run test:e2e        # Playwright E2E (@live specs excluded by default)
-npm run ci              # typecheck + lint + unit tests + build
+**_REMOVED_**
+npm run typecheck # TypeScript, no emit
+npm run lint # ESLint
+npm run format:check # Prettier
+npm run test -- --run # Vitest unit/component tests (single run)
+npm run test:e2e # Playwright E2E (@live specs excluded by default)
+npm run ci # typecheck + lint + unit tests + build
+
 ```
 
 ---
@@ -385,8 +390,9 @@ npm install -g vercel
 
 #### 2. Connect Project
 
-***REMOVED***
+**_REMOVED_**
 vercel
+
 ```
 
 Follow prompts to:
@@ -403,7 +409,7 @@ In Vercel dashboard:
 1. Go to **Project Settings** → **Environment Variables**
 2. Add all variables from `.env`:
    - `VITE_SUPABASE_URL`
-   - `your_removed_credential_here`
+   - `VITE_SUPABASE_ANON_KEY`
    - `VITE_ENV` (set to `production`)
    - Optional observability: `VITE_SENTRY_DSN`, `VITE_GA_ID`,
      `VITE_META_PIXEL_ID` (omit for now — the app no-ops without them)
@@ -503,7 +509,7 @@ After basic setup is complete:
 1. Check email provider is enabled in Supabase
 2. Verify redirect URLs are configured
 3. Check browser console for CORS errors
-4. Ensure `your_removed_credential_here` is correct
+4. Ensure `VITE_SUPABASE_ANON_KEY` is correct
 
 ### Database Connection Issues
 

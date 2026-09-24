@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isSupabaseConfigured) {
       return {
         error:
-          'Authentication is not configured. Set VITE_SUPABASE_URL and your_removed_credential_here.',
+          'Authentication is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
       };
     }
 
@@ -145,7 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isSupabaseConfigured) {
       return {
         error:
-          'Authentication is not configured. Set VITE_SUPABASE_URL and your_removed_credential_here.',
+          'Authentication is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
       };
     }
 

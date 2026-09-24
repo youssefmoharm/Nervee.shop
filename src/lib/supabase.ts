@@ -4,20 +4,20 @@ import { createClient } from '@supabase/supabase-js';
 // The anon/publishable key is public by design (sent to the browser
 // regardless); the database itself is protected by row-level security.
 const envUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const envKey = import.meta.env.your_removed_credential_here as string | undefined;
+const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
 const isProdBuild = import.meta.env.PROD;
 
 if (!envUrl || !envKey) {
   if (isProdBuild) {
     console.error(
-      '[supabase] Missing required build-time env: VITE_SUPABASE_URL and/or your_removed_credential_here. ' +
+      '[supabase] Missing required build-time env: VITE_SUPABASE_URL and/or VITE_SUPABASE_ANON_KEY. ' +
         'Set them in your hosting provider (e.g. Vercel → Settings → Environment Variables) and rebuild. ' +
         'The app will render but backend features (auth, cart sync, orders) will not work.',
     );
   } else if (import.meta.env.DEV) {
     console.warn(
-      '[supabase] VITE_SUPABASE_URL / your_removed_credential_here not set — running in demo/mock mode (development only).',
+      '[supabase] VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY not set — running in demo/mock mode (development only).',
     );
   }
 }

@@ -7,6 +7,7 @@ export default function NotFound() {
   useSEO({
     title: 'Page Not Found | NERVE',
     description: 'The page you are looking for could not be found.',
+    robots: 'noindex, follow',
   });
   return (
     <div className="bg-navy min-h-screen flex flex-col items-center justify-center text-center px-5">

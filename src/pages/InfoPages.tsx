@@ -30,7 +30,7 @@ export function Contact() {
     description:
       'Got questions about sizing, your order, or just want to say hi? Reach NERVE via email or Instagram DM — we usually reply within 24 hours.',
   });
-  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
+  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '', website: '' });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   const submit = async (e: FormEvent) => {
@@ -42,7 +42,7 @@ export function Contact() {
       return;
     }
     setStatus('success');
-    setForm({ name: '', email: '', subject: '', message: '' });
+    setForm({ name: '', email: '', subject: '', message: '', website: '' });
   };
 
   return (
@@ -134,6 +134,22 @@ export function Contact() {
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
             />
           </label>
+          {/* Honeypot — hidden from humans, bots fill it and get silently dropped */}
+          <div
+            className="absolute -left-[9999px] top-auto w-px h-px overflow-hidden"
+            aria-hidden="true"
+          >
+            <label>
+              Website
+              <input
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                value={form.website}
+                onChange={e => setForm({ ...form, website: e.target.value })}
+              />
+            </label>
+          </div>
           {status === 'error' && (
             <p className="text-xs text-red-600">
               {t('Something went wrong. Please try again or email us directly.')}

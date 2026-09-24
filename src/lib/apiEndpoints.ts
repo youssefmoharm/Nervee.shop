@@ -19,6 +19,9 @@ export const API_ENDPOINTS = {
   CHAT_AI: `${FUNCTIONS_BASE}/chat-ai`,
   CREATE_SUPPORT_TICKET: `${FUNCTIONS_BASE}/create-support-ticket`,
 
+  // Contact form + newsletter (rate-limited edge; never raw table inserts)
+  CONTACT: `${FUNCTIONS_BASE}/contact`,
+
   // Email & Unsubscribe
   SEND_EMAIL: `${FUNCTIONS_BASE}/send-email`,
   HANDLE_UNSUBSCRIBE: `${FUNCTIONS_BASE}/handle-unsubscribe`,

@@ -43,8 +43,9 @@ A production-ready e-commerce platform for NERVE, an Egyptian fashion concept st
 
 ### Installation
 
-***REMOVED***
+**_REMOVED_**
 npm install
+
 ```
 
 ### Development
@@ -83,18 +84,19 @@ nerve/
 
 ## Available Scripts
 
-***REMOVED***
-npm run dev            # Start dev server
-npm run build          # Build for production (runs sitemap prebuild + tsc -b)
-npm run preview        # Preview production build
-npm run typecheck      # Type check (tsc --noEmit)
-npm run lint           # Lint src, tests, and scripts
-npm run format         # Format with Prettier
-npm run format:check   # Verify formatting
-npm run test           # Unit/component tests (Vitest, watch)
-npm run test -- --run  # Unit/component tests, single run
-npm run test:e2e       # E2E tests (Playwright; @live specs excluded by default)
-npm run ci             # typecheck + lint + test --run + build
+**_REMOVED_**
+npm run dev # Start dev server
+npm run build # Build for production (runs sitemap prebuild + tsc -b)
+npm run preview # Preview production build
+npm run typecheck # Type check (tsc --noEmit)
+npm run lint # Lint src, tests, and scripts
+npm run format # Format with Prettier
+npm run format:check # Verify formatting
+npm run test # Unit/component tests (Vitest, watch)
+npm run test -- --run # Unit/component tests, single run
+npm run test:e2e # E2E tests (Playwright; @live specs excluded by default)
+npm run ci # typecheck + lint + test --run + build
+
 ```
 
 ## Database Setup
@@ -106,9 +108,9 @@ npm run ci             # typecheck + lint + test --run + build
    ***REMOVED***
    supabase link --project-ref <your-ref>
    supabase db push --linked --include-all
-   ```
+```
 
-   (Or paste them one by one into the SQL Editor in lexical order.)
+(Or paste them one by one into the SQL Editor in lexical order.)
 
 3. Run `supabase/seed.sql` for sample data
 
@@ -119,9 +121,10 @@ See [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) for details.
 Functions live under `supabase/functions/` (one directory per function) and
 deploy with:
 
-***REMOVED***
+**_REMOVED_**
 supabase functions deploy
-```
+
+````
 
 For the COD-only launch there are 17 functions: `auth-sign-in`,
 `auth-sign-up`, `create-order`, `update-order-status`, `send-email`,
@@ -138,17 +141,18 @@ Create `.env` from `.env.example` (never commit `.env`):
 
 ```env
 VITE_SUPABASE_URL=your-supabase-project-url
-your_removed_credential_here=your-supabase-anon-key
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 VITE_GA_ID=your-google-analytics-id
 VITE_ENV=development
-```
+````
 
 Edge Functions require these secrets (set via Supabase dashboard):
 
-***REMOVED***
+**_REMOVED_**
 supabase secrets set RESEND_API_KEY=your-resend-api-key
 supabase secrets set RESEND_FROM_EMAIL="NERVE <orders@yourdomain.com>"
 supabase secrets set STORE_URL=https://www.nerveey.shop
+
 ```
 
 ## Security
@@ -167,17 +171,18 @@ See [SECURITY_IMPLEMENTATION.md](./SECURITY_IMPLEMENTATION.md) for full details.
    ***REMOVED***
    npm install -g vercel
    vercel --prod
-   ```
+```
 
 2. Add environment variables in Vercel dashboard
 3. Run [PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md) checklist
 
 ## Testing
 
-***REMOVED***
-npm run test -- --run   # Unit/component tests (Vitest + Testing Library + MSW)
-npm run test:e2e        # E2E tests (Playwright — excludes @live specs)
-npm run ci              # Full local CI: typecheck + lint + unit tests + build
+**_REMOVED_**
+npm run test -- --run # Unit/component tests (Vitest + Testing Library + MSW)
+npm run test:e2e # E2E tests (Playwright — excludes @live specs)
+npm run ci # Full local CI: typecheck + lint + unit tests + build
+
 ```
 
 - **Unit/component tests** (`src/test/**`, `tests/security.test.ts`):
@@ -199,3 +204,4 @@ This is a proprietary project. For internal development team only.
 ## License
 
 Proprietary - NERVE Concept Store © 2026
+```

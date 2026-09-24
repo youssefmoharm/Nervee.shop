@@ -36,9 +36,10 @@
 
 ### Step 1: Deploy Database (1 min)
 
-***REMOVED***
+**_REMOVED_**
 cd supabase
-supabase migration up  # Runs migrations 006, 007, 008
+supabase migration up # Runs migrations 006, 007, 008
+
 ```
 
 ### Step 2: Enable pg_cron (2 min)
@@ -57,10 +58,11 @@ supabase functions deploy send-back-in-stock --no-verify
 
 ### Step 4: Set Secrets (1 min)
 
-***REMOVED***
-supabase secrets set RESEND_API_KEY=re_your_removed_credential_here
+**_REMOVED_**
+supabase secrets set RESEND_API_KEY=your_resend_api_key_here
 supabase secrets set RESEND_FROM_EMAIL="NERVE <orders@yourdomain.com>"
 supabase secrets set STORE_URL="https://www.nerveey.shop"
+
 ```
 
 ### Step 5: Test (Instant)
@@ -467,16 +469,17 @@ LIMIT 20;
 
 ### Manual Test Email
 
-***REMOVED***
-***REMOVED*** -X POST https://YOUR_PROJECT.supabase.co/functions/v1/send-email \
-  -H "Authorization: Bearer your_removed_credential_here" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "to": "test@example.com",
-    "subject": "Test Email",
-    "html": "<h1>Hello!</h1><p>This is a test.</p>",
-    "type": "test"
-  }'
+**_REMOVED_**
+**_REMOVED_** -X POST https://YOUR_PROJECT.supabase.co/functions/v1/send-email \
+ -H "Authorization: Bearer $VITE_SUPABASE_ANON_KEY" \
+ -H "Content-Type: application/json" \
+ -d '{
+"to": "test@example.com",
+"subject": "Test Email",
+"html": "<h1>Hello!</h1><p>This is a test.</p>",
+"type": "test"
+}'
+
 ```
 
 ### Verify Setup
@@ -557,7 +560,7 @@ under `src/test/` for client-side coverage.
 ## 🚀 Next Steps
 
 1. **Deploy** - Follow Quick Start above (5 minutes)
-2. **Test** - Send test email via ***REMOVED***
+2. **Test** - Send test email via **_REMOVED_**
 3. **Integrate** - Update components (30 minutes)
 4. **Monitor** - Watch email_logs table
 5. **Optimize** - Adjust cron schedules based on volume
