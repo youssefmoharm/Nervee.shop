@@ -39,6 +39,17 @@ body {
   overflow-x: hidden;
 }
 
+:focus-visible {
+  outline: 2px solid #061735;
+  outline-offset: 2px;
+}
+
+.bg-navy :focus-visible,
+header :focus-visible,
+.nv-checker-inv :focus-visible {
+  outline-color: #ffffff;
+}
+
 /* Signature checkerboard — the recurring NERVE mark.
    Two sizes: .nv-checker (bold, navy/white) and .nv-checker-soft (subtle, mist/navy) */
 .nv-checker {
