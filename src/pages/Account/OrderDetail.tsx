@@ -174,6 +174,8 @@ export default function OrderDetail() {
             <div className="w-16 h-20 bg-mist flex-shrink-0 overflow-hidden">
               {item.image && (
                 <img
+                  decoding="async"
+                  loading="lazy"
                   src={item.image}
                   alt={item.product_name}
                   className="w-full h-full object-cover"

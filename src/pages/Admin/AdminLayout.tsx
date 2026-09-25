@@ -21,6 +21,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       <header className="bg-navy text-white h-16 flex items-center px-6 justify-between">
         <Link to="/" className="flex items-center">
           <img
+            decoding="async"
+            loading="lazy"
             src="/assets/images/nerve final logo.png"
             alt="NERVE"
             className="h-6 w-auto brightness-0 invert mr-2"

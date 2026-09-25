@@ -56,6 +56,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
           <div className="flex items-center justify-between h-16 md:h-20">
             <Link to="/" className="flex items-center">
               <img
+                decoding="async"
                 src="/assets/images/nerve final logo.png"
                 alt="NERVE"
                 className="h-8 md:h-10 w-auto brightness-0 invert"
@@ -173,6 +174,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
             <div className="flex items-center justify-between h-16 px-5 border-b border-white/10">
               <div className="flex items-center">
                 <img
+                  decoding="async"
                   src="/assets/images/nerve final logo.png"
                   alt="NERVE"
                   className="h-6 w-auto brightness-0 invert"

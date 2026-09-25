@@ -46,6 +46,8 @@ export default function ReviewPhotoGallery({ photos, productName }: ReviewPhotoG
             className="relative w-12 h-12 rounded-lg overflow-hidden border border-navy/10 hover:border-navy transition-colors"
           >
             <img
+              decoding="async"
+              loading="lazy"
               src={photo}
               alt={`Customer submission ${i + 1}${productName ? ` for ${productName}` : ''}`}
               className="w-full h-full object-cover"
@@ -77,6 +79,8 @@ export default function ReviewPhotoGallery({ photos, productName }: ReviewPhotoG
               <div className="relative w-full max-w-2xl max-h-[90vh]">
                 {/* Main image */}
                 <img
+                  decoding="async"
+                  loading="lazy"
                   src={currentPhoto}
                   alt={`Customer submission ${currentPhotoIdx + 1} of ${photos.length}${
                     productName ? ` for ${productName}` : ''

@@ -227,6 +227,8 @@ export default function Register() {
             />
             {photoPreview && (
               <img
+                decoding="async"
+                loading="lazy"
                 src={photoPreview}
                 alt="Profile preview"
                 className="mt-2 w-24 h-24 object-cover rounded-full"

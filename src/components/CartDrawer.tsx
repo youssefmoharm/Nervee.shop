@@ -100,6 +100,8 @@ export default function CartDrawer() {
                         className="w-20 h-24 bg-mist flex-shrink-0 overflow-hidden"
                       >
                         <img
+                          decoding="async"
+                          loading="lazy"
                           src={line.image}
                           alt={line.name}
                           className="w-full h-full object-cover"

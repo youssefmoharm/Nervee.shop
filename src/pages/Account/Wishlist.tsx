@@ -50,7 +50,13 @@ export default function Wishlist() {
                 </button>
                 <Link to={`/product/${item.slug}`} className="block">
                   <div className="aspect-[3/4] bg-mist overflow-hidden mb-2">
-                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    <img
+                      decoding="async"
+                      loading="lazy"
+                      src={item.image}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <p className="nv-edit text-xs font-semibold uppercase truncate">{item.name}</p>
                   <p className="text-xs text-navy/60 mt-0.5">{formatEGP(item.price)}</p>

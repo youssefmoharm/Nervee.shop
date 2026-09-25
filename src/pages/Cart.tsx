@@ -123,7 +123,13 @@ export default function Cart() {
                     to={`/product/${line.slug}`}
                     className="w-28 h-32 bg-mist flex-shrink-0 overflow-hidden"
                   >
-                    <img src={line.image} alt={line.name} className="w-full h-full object-cover" />
+                    <img
+                      decoding="async"
+                      loading="lazy"
+                      src={line.image}
+                      alt={line.name}
+                      className="w-full h-full object-cover"
+                    />
                   </Link>
                   <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>

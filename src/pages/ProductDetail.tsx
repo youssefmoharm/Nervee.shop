@@ -1287,6 +1287,8 @@ export default function ProductDetail() {
                           {reviewPhotos.map((photo, i) => (
                             <div key={i} className="relative w-16 h-16 rounded-lg overflow-hidden">
                               <img
+                                decoding="async"
+                                loading="lazy"
                                 src={photo.preview}
                                 alt={`${t('Uploaded')} ${i + 1}`}
                                 className="w-full h-full object-cover"
@@ -1518,6 +1520,8 @@ export default function ProductDetail() {
                 <X size={20} />
               </button>
               <img
+                decoding="async"
+                loading="lazy"
                 src={activeSrc}
                 alt={product.name}
                 className="relative z-[1] max-w-full max-h-full object-contain select-none"

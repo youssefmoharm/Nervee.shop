@@ -766,7 +766,13 @@ export default function Checkout() {
                       className="flex gap-2 md:gap-3 pb-2 md:pb-3 border-b border-navy/5 last:border-0"
                     >
                       <div className="w-12 md:w-14 h-14 md:h-16 bg-mist flex-shrink-0 overflow-hidden rounded-lg relative">
-                        <img src={l.image} alt={l.name} className="w-full h-full object-cover" />
+                        <img
+                          decoding="async"
+                          loading="lazy"
+                          src={l.image}
+                          alt={l.name}
+                          className="w-full h-full object-cover"
+                        />
                         <span className="absolute -top-2 -end-2 bg-navy text-white text-[10px] font-semibold w-4 h-4 rounded-full flex items-center justify-center">
                           {l.quantity}
                         </span>

@@ -24,6 +24,8 @@ export default function Collections() {
             className="group relative aspect-[3/4] overflow-hidden block"
           >
             <img
+              decoding="async"
+              loading="lazy"
               src={c.image}
               alt={c.name}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"

@@ -103,6 +103,8 @@ export default function ComparisonModal({
                     <td key={product.id} className="p-3 md:p-4 text-center w-1/3">
                       <div className="space-y-2">
                         <img
+                          decoding="async"
+                          loading="lazy"
                           src={product.colors[0].image}
                           alt={product.name}
                           className="w-full aspect-[4/5] object-cover rounded-lg"

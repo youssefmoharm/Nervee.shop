@@ -136,6 +136,8 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
           <div className="space-y-3">
             <div className="aspect-[4/5] bg-mist rounded-lg overflow-hidden">
               <img
+                decoding="async"
+                loading="lazy"
                 src={mainProduct.colors[0].image}
                 alt={mainProduct.name}
                 className="w-full h-full object-cover"
@@ -193,6 +195,8 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
                 <div className="relative">
                   <div className="aspect-[4/5] bg-mist rounded-lg overflow-hidden">
                     <img
+                      decoding="async"
+                      loading="lazy"
                       src={item.colors[0].image}
                       alt={item.name}
                       className="w-full h-full object-cover"

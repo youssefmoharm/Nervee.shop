@@ -27,6 +27,7 @@ export default function Loader({ onDone }: { onDone: () => void }) {
         }`}
       >
         <img
+          decoding="async"
           src="/assets/images/nerve final logo.png"
           alt="NERVE"
           className="h-16 md:h-20 w-auto mx-auto mb-4"

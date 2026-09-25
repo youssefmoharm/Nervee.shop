@@ -153,6 +153,8 @@ export default function ProductQuickView() {
               <div className="flex flex-col gap-4">
                 <div className="relative bg-mist aspect-[4/5] rounded-lg overflow-hidden group">
                   <img
+                    decoding="async"
+                    loading="lazy"
                     src={image}
                     alt={`${product.name} — ${color.name}`}
                     className="w-full h-full object-cover"
@@ -211,6 +213,8 @@ export default function ProductQuickView() {
                         }`}
                       >
                         <img
+                          decoding="async"
+                          loading="lazy"
                           src={img}
                           alt={`Product ${idx + 1}`}
                           className="w-full h-full object-cover"

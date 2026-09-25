@@ -77,6 +77,7 @@ export default function OptimizedImage({
       )}
 
       <img
+        decoding="async"
         src={src}
         alt={alt}
         width={width}

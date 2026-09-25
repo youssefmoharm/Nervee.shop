@@ -414,6 +414,8 @@ export default function ProductForm() {
                   <div className="flex gap-2 mb-2 flex-wrap">
                     <div className="flex-shrink-0">
                       <img
+                        decoding="async"
+                        loading="lazy"
                         src={c.image}
                         alt={`Preview for ${c.name}`}
                         className="w-20 h-28 object-cover bg-mist rounded border border-navy/10"
@@ -425,6 +427,8 @@ export default function ProductForm() {
                     {c.hover_image && (
                       <div className="flex-shrink-0">
                         <img
+                          decoding="async"
+                          loading="lazy"
                           src={c.hover_image}
                           alt={`Hover preview for ${c.name}`}
                           className="w-20 h-28 object-cover bg-mist rounded border border-navy/10"

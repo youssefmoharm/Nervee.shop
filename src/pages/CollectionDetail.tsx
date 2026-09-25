@@ -60,6 +60,8 @@ export default function CollectionDetail() {
     <div className="bg-white text-navy min-h-screen">
       <div className="relative h-[50vh] min-h-[340px] mt-16 md:mt-20">
         <img
+          decoding="async"
+          loading="lazy"
           src={collection.image}
           alt={collection.name}
           className="absolute inset-0 w-full h-full object-cover"
