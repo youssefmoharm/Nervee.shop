@@ -158,4 +158,7 @@ jobs:
       - name: Run Lighthouse CI
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
-        run: npx lhci autorun
+        # Pinned + ephemeral: @lhci/cli was removed from package.json so the
+        # vulnerable tmp/uuid/puppeteer dev chain stays out of the lockfile
+        # (audit SEC-11). Same version the budgets were tuned against.
+        run: npx --yes @lhci/cli@0.14.0 autorun
