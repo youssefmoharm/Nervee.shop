@@ -12,12 +12,7 @@ import {
 } from 'lucide-react';
 import type { Product } from '../types';
 import { productService } from '../services/productService';
-import {
-  collections,
-  categories,
-  getNewDrop as getMockNewDrop,
-  getBestSellers as getMockBestSellers,
-} from '../data/products';
+import { collections, categories } from '../data/products';
 import { useSEO, useStructuredData } from '../lib/seo';
 import { logError } from '../lib/sentry';
 import HeroCarousel from '../components/HeroCarousel';
@@ -154,6 +149,8 @@ export default function Home() {
 
   const [newDrop, setNewDrop] = useState<Product[]>([]);
   const [bestSellers, setBestSellers] = useState<Product[]>([]);
+  const [newDropError, setNewDropError] = useState(false);
+  const [bestSellersError, setBestSellersError] = useState(false);
   const [loadingNewDrop, setLoadingNewDrop] = useState(true);
   const [loadingBestSellers, setLoadingBestSellers] = useState(true);
 
@@ -174,21 +171,19 @@ export default function Home() {
       .getNewDrop()
       .then(data => {
         if (!mounted) return;
-        const products = data && data.length > 0 ? data : getMockNewDrop();
         if (import.meta.env.DEV) {
-          console.info(
-            `[Home] New Drop loaded: ${products.length} products (source: ${
-              data && data.length > 0 ? 'supabase' : 'mock'
-            })`,
-          );
+          console.info(`[Home] New Drop loaded: ${data?.length ?? 0} products`);
         }
-        setNewDrop(products);
+        setNewDrop(data ?? []);
+        setNewDropError(false);
         setLoadingNewDrop(false);
       })
       .catch(error => {
         if (!mounted) return;
         logError('Failed to load new drop:', error);
-        setNewDrop(getMockNewDrop());
+        // Never substitute demo products: buyers must not see fake inventory (BUG-07).
+        setNewDrop([]);
+        setNewDropError(true);
         setLoadingNewDrop(false);
       });
     return () => {
@@ -202,13 +197,15 @@ export default function Home() {
       .getBestSellers()
       .then(data => {
         if (!mounted) return;
-        setBestSellers(data && data.length > 0 ? data : getMockBestSellers());
+        setBestSellers(data ?? []);
+        setBestSellersError(false);
         setLoadingBestSellers(false);
       })
       .catch(error => {
         if (!mounted) return;
         logError('Failed to load best sellers:', error);
-        setBestSellers(getMockBestSellers());
+        setBestSellers([]);
+        setBestSellersError(true);
         setLoadingBestSellers(false);
       });
     return () => {
@@ -254,6 +251,13 @@ export default function Home() {
           >
             {loadingNewDrop ? (
               <ProductGridSkeleton />
+            ) : newDropError ? (
+              <div className="text-center py-12">
+                <AlertTriangle className="w-8 h-8 text-navy/30 mx-auto mb-3" aria-hidden="true" />
+                <p className="text-navy/55 text-sm">
+                  {t('Unable to load products. Please try refreshing.')}
+                </p>
+              </div>
             ) : newDrop.length > 0 ? (
               <div className={productGridClass}>
                 {newDrop.slice(0, 8).map(p => (
@@ -440,6 +444,13 @@ export default function Home() {
           >
             {loadingBestSellers ? (
               <ProductGridSkeleton />
+            ) : bestSellersError ? (
+              <div className="text-center py-12">
+                <AlertTriangle className="w-8 h-8 text-navy/30 mx-auto mb-3" aria-hidden="true" />
+                <p className="text-navy/55 text-sm">
+                  {t('Unable to load products. Please try refreshing.')}
+                </p>
+              </div>
             ) : bestSellers.length > 0 ? (
               <div className={productGridClass}>
                 {bestSellers.slice(0, 4).map(p => (
