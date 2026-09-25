@@ -109,7 +109,9 @@ export interface Order {
   updatedAt: string;
 }
 
-export type SortOption = 'featured' | 'newest' | 'price-asc' | 'price-desc' | 'best-selling';
+// Only sorts backed by real product data: created_at, price and is_best_seller.
+// There is no `featured` flag in the schema, so no featured sort is offered.
+export type SortOption = 'newest' | 'price-asc' | 'price-desc' | 'best-selling';
 
 export interface GuestOrder {
   id: string;

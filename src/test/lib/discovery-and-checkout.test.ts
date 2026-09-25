@@ -48,9 +48,25 @@ describe('product discovery helpers', () => {
   });
 
   it('filters products by query and category', () => {
-    const result = filterProducts(sampleProducts, 'hoodie', 'Hoodies');
-    expect(result).toHaveLength(1);
-    expect(result[0].name).toBe('Slim Hoodie');
+    const { products, fuzzy } = filterProducts(sampleProducts, {
+      query: 'hoodie',
+      category: 'Hoodies',
+    });
+    expect(products).toHaveLength(1);
+    expect(products[0].name).toBe('Slim Hoodie');
+    expect(fuzzy).toBe(false);
+  });
+
+  it('recovers from typos with fuzzy matching', () => {
+    const { products, fuzzy } = filterProducts(sampleProducts, { query: 'hoddie' });
+    expect(products.map(p => p.name)).toContain('Slim Hoodie');
+    expect(fuzzy).toBe(true);
+  });
+
+  it('returns everything for an empty query without flagging fuzzy', () => {
+    const { products, fuzzy } = filterProducts(sampleProducts, { query: '' });
+    expect(products).toHaveLength(2);
+    expect(fuzzy).toBe(false);
   });
 });
 
