@@ -110,7 +110,7 @@ export default function SharedWishlist() {
           <Link to="/" className="text-navy/60 hover:text-navy transition-colors">
             {t('Home')}
           </Link>
-          <ChevronRight size={16} className="text-navy/40" />
+          <ChevronRight size={16} className="text-navy/60" />
           <span className="text-navy font-semibold">{t('Shared Wishlist')}</span>
         </nav>
 

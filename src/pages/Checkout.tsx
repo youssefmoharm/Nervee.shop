@@ -338,7 +338,7 @@ export default function Checkout() {
           <>
             <Link
               to="/cart"
-              className="inline-flex items-center gap-1 text-sm text-navy/50 hover:text-navy mb-6"
+              className="inline-flex items-center gap-1 text-sm text-navy/60 hover:text-navy mb-6"
             >
               <ChevronLeft size={16} /> {t('Back to bag')}
             </Link>
@@ -581,7 +581,7 @@ export default function Checkout() {
                       </div>
                     </label>
                   </div>
-                  <p className="text-xs text-navy/50 mt-2">
+                  <p className="text-xs text-navy/60 mt-2">
                     {t('Online card payment is not available — every order is cash on delivery.')}
                   </p>
                 </div>
@@ -721,7 +721,7 @@ export default function Checkout() {
                     <button
                       type="button"
                       onClick={back}
-                      className="text-sm text-navy/50 hover:text-navy"
+                      className="text-sm text-navy/60 hover:text-navy"
                     >
                       {t('Back')}
                     </button>
@@ -775,10 +775,10 @@ export default function Checkout() {
                         <p className="text-[11px] md:text-xs font-semibold uppercase text-navy truncate">
                           {l.name}
                         </p>
-                        <p className="text-[10px] md:text-xs text-navy/50 mt-0.5">
+                        <p className="text-[10px] md:text-xs text-navy/60 mt-0.5">
                           {l.color} / {l.size}
                         </p>
-                        <p className="text-[10px] md:text-xs text-navy/55 mt-1">
+                        <p className="text-[10px] md:text-xs text-navy/60 mt-1">
                           {formatEGP(l.price)} × {l.quantity}
                         </p>
                       </div>
@@ -820,7 +820,7 @@ export default function Checkout() {
                   </span>
                 </div>
 
-                <div className="flex justify-between items-center text-navy/55 text-[11px]">
+                <div className="flex justify-between items-center text-navy/60 text-[11px]">
                   <span>{t('VAT (14% incl.)')}</span>
                   <span>{formatEGP(vatAmount)}</span>
                 </div>
@@ -883,7 +883,7 @@ export default function Checkout() {
 
               {/* Footer */}
               <div className="bg-mist/30 border-t border-navy/10 px-3 md:px-6 py-2 md:py-3 text-[10px] md:text-[11px] text-navy/60 flex items-start gap-2">
-                <Truck size={14} className="flex-shrink-0 mt-0.5 text-navy/50" />
+                <Truck size={14} className="flex-shrink-0 mt-0.5 text-navy/60" />
                 <span>
                   <span className="font-semibold text-navy/80">
                     {t('Standard 2–5 days · Express 1–2 days')}

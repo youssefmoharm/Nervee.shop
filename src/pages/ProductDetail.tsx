@@ -508,7 +508,7 @@ export default function ProductDetail() {
           i < rating
             ? 'fill-navy text-navy'
             : i < Math.ceil(rating)
-            ? 'fill-navy text-navy/50'
+            ? 'fill-navy text-navy/60'
             : 'text-navy/20'
         }
       />
@@ -681,7 +681,7 @@ export default function ProductDetail() {
               <span className="text-2xl font-semibold">{formatEGP(product.price)}</span>
               {product.compareAtPrice && product.compareAtPrice > product.price && (
                 <>
-                  <span className="text-lg text-navy/50 line-through">
+                  <span className="text-lg text-navy/60 line-through">
                     {formatEGP(product.compareAtPrice)}
                   </span>
                   <span className="text-sm text-red-600 font-medium">
@@ -775,7 +775,7 @@ export default function ProductDetail() {
                   {t('Size')}
                   {size ? `: ${size}` : ''}
                   {!size && hasAnyStock && (
-                    <span className="text-navy/40 font-normal normal-case tracking-normal ms-2 text-xs">
+                    <span className="text-navy/60 font-normal normal-case tracking-normal ms-2 text-xs">
                       {t('Select a size')}
                     </span>
                   )}
@@ -837,8 +837,8 @@ export default function ProductDetail() {
                   {t('Please select a size.')}
                 </p>
               )}
-              {product.fitNotes && <p className="text-xs text-navy/50 mt-2">{product.fitNotes}</p>}
-              <p className="text-xs text-navy/45 mt-1">
+              {product.fitNotes && <p className="text-xs text-navy/60 mt-2">{product.fitNotes}</p>}
+              <p className="text-xs text-navy/60 mt-1">
                 {t('True to size — check the size guide for measurements.')}
               </p>
 
@@ -931,7 +931,7 @@ export default function ProductDetail() {
                 aria-disabled={isSoldOut}
                 className={`flex-1 nv-eyebrow py-4 transition-colors flex items-center justify-center gap-2 ${
                   isSoldOut
-                    ? 'bg-navy/20 text-navy/50 cursor-not-allowed'
+                    ? 'bg-navy/20 text-navy/60 cursor-not-allowed'
                     : addedPulse
                     ? 'bg-green-700 text-white'
                     : 'bg-navy text-white hover:bg-navy-2'
@@ -1020,14 +1020,14 @@ export default function ProductDetail() {
               aria-disabled={isSoldOut}
               className={`mt-3 w-full border nv-eyebrow py-4 transition-colors ${
                 isSoldOut
-                  ? 'border-navy/20 text-navy/40 cursor-not-allowed'
+                  ? 'border-navy/20 text-navy/60 cursor-not-allowed'
                   : 'border-navy hover:bg-navy hover:text-white'
               }`}
             >
               {isSoldOut ? t('Sold Out') : t('Buy Now')}
             </button>
             {!isSoldOut && (
-              <p className="text-xs text-navy/50 mt-2 flex items-center gap-1.5">
+              <p className="text-xs text-navy/60 mt-2 flex items-center gap-1.5">
                 <Mail size={12} aria-hidden="true" />
                 {t('Questions?')}{' '}
                 <a href={`mailto:${SUPPORT_EMAIL}`} className="underline hover:text-navy">
@@ -1081,7 +1081,7 @@ export default function ProductDetail() {
                                 ))}
                               </ul>
                             ) : (
-                              <p className="text-navy/50">{t('No care instructions listed.')}</p>
+                              <p className="text-navy/60">{t('No care instructions listed.')}</p>
                             )}
                           </div>
                           <div className="flex items-start gap-2 pt-1">
@@ -1174,7 +1174,7 @@ export default function ProductDetail() {
                   </span>
                 </>
               ) : (
-                <span className="text-sm text-navy/50">{t('No reviews yet')}</span>
+                <span className="text-sm text-navy/60">{t('No reviews yet')}</span>
               )}
             </div>
           </div>
@@ -1326,7 +1326,7 @@ export default function ProductDetail() {
               )}
             </div>
           ) : (
-            <p className="text-sm text-navy/50 mb-4">
+            <p className="text-sm text-navy/60 mb-4">
               {t('Please')}{' '}
               <Link to="/login" className="text-navy underline">
                 {t('sign in')}
@@ -1407,7 +1407,7 @@ export default function ProductDetail() {
                   <ReviewPhotoGallery photos={review.photos || []} productName={product.name} />
 
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mt-3 text-xs">
-                    <p className="text-navy/55">
+                    <p className="text-navy/60">
                       {new Date(review.createdAt).toLocaleDateString()} {t('by')}{' '}
                       {review.customerName || t('Anonymous')}
                     </p>
@@ -1428,7 +1428,7 @@ export default function ProductDetail() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-navy/50">{t('No reviews yet. Be the first to review!')}</p>
+            <p className="text-sm text-navy/60">{t('No reviews yet. Be the first to review!')}</p>
           )}
         </section>
 
@@ -1458,7 +1458,7 @@ export default function ProductDetail() {
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-navy/10 bg-white/95 p-3 backdrop-blur md:hidden safe-pb">
         <div className="mx-auto flex max-w-5xl items-center gap-2">
           <div className="min-w-0 shrink">
-            <p className="text-[11px] text-navy/50 truncate max-w-[7rem]">{product.name}</p>
+            <p className="text-[11px] text-navy/60 truncate max-w-[7rem]">{product.name}</p>
             <p className="text-sm font-semibold leading-tight">
               {formatEGP(product.price)}
               {salePct !== null && (
@@ -1481,7 +1481,7 @@ export default function ProductDetail() {
             data-testid="sticky-add-to-bag"
             className={`flex-1 rounded-full px-4 py-3 text-sm font-semibold ${
               isSoldOut
-                ? 'bg-navy/20 text-navy/50'
+                ? 'bg-navy/20 text-navy/60'
                 : addedPulse
                 ? 'bg-green-700 text-white'
                 : 'bg-navy text-white'

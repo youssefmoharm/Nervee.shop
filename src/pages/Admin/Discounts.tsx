@@ -191,7 +191,7 @@ export default function Discounts() {
       )}
 
       {!discounts ? (
-        <Loader2 className="animate-spin text-navy/40" size={20} />
+        <Loader2 className="animate-spin text-navy/60" size={20} />
       ) : discounts.length === 0 ? (
         <p className="text-navy/60">No discount codes yet.</p>
       ) : (
@@ -234,7 +234,7 @@ export default function Discounts() {
                     <button
                       onClick={() => toggleActive(d)}
                       className={`nv-eyebrow text-[10px] px-2.5 py-1 ${
-                        d.is_active ? 'bg-navy text-white' : 'bg-mist text-navy/50'
+                        d.is_active ? 'bg-navy text-white' : 'bg-mist text-navy/60'
                       }`}
                     >
                       {d.is_active ? 'Active' : 'Inactive'}
@@ -244,7 +244,7 @@ export default function Discounts() {
                     <button
                       aria-label="Delete"
                       onClick={() => remove(d.id, d.code)}
-                      className="text-navy/40 hover:text-red-600"
+                      className="text-navy/60 hover:text-red-600"
                     >
                       <Trash2 size={15} />
                     </button>

@@ -233,7 +233,7 @@ export default function ProductQuickView() {
                       {formatEGP(product.price)}
                     </span>
                     {product.compareAtPrice && (
-                      <span className="text-sm text-navy/40 line-through">
+                      <span className="text-sm text-navy/60 line-through">
                         {formatEGP(product.compareAtPrice)}
                       </span>
                     )}
@@ -359,7 +359,7 @@ export default function ProductQuickView() {
                 </Link>
 
                 {/* Info */}
-                <div className="text-xs text-navy/50 space-y-1 pt-2 border-t border-navy/10">
+                <div className="text-xs text-navy/60 space-y-1 pt-2 border-t border-navy/10">
                   <p>{t('Free returns within 14 days')}</p>
                   <p>{t('Cash on delivery available')}</p>
                 </div>

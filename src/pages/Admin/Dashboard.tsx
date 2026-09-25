@@ -31,7 +31,7 @@ export default function Dashboard() {
   if (!stats) {
     return (
       <AdminLayout>
-        <Loader2 className="animate-spin text-navy/40" size={20} />
+        <Loader2 className="animate-spin text-navy/60" size={20} />
       </AdminLayout>
     );
   }
@@ -42,30 +42,30 @@ export default function Dashboard() {
 
       <div className="grid sm:grid-cols-3 gap-5 mb-10" data-testid="admin-dashboard">
         <div className="border border-navy/10 p-6" data-testid="total-revenue-card">
-          <p className="nv-eyebrow text-xs text-navy/50 mb-2">Total Revenue</p>
+          <p className="nv-eyebrow text-xs text-navy/60 mb-2">Total Revenue</p>
           <p className="text-3xl font-semibold">{formatEGP(stats.totalRevenue)}</p>
         </div>
         <div className="border border-navy/10 p-6" data-testid="total-orders-card">
-          <p className="nv-eyebrow text-xs text-navy/50 mb-2">Total Orders</p>
+          <p className="nv-eyebrow text-xs text-navy/60 mb-2">Total Orders</p>
           <p className="text-3xl font-semibold">{stats.totalOrders}</p>
         </div>
         <div className="border border-navy/10 p-6" data-testid="total-customers-card">
-          <p className="nv-eyebrow text-xs text-navy/50 mb-2">Total Customers</p>
+          <p className="nv-eyebrow text-xs text-navy/60 mb-2">Total Customers</p>
           <p className="text-3xl font-semibold">{stats.totalCustomers}</p>
         </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-8">
         <div>
-          <h2 className="nv-eyebrow text-xs text-navy/50 mb-3">Recent Orders</h2>
+          <h2 className="nv-eyebrow text-xs text-navy/60 mb-3">Recent Orders</h2>
           {stats.recentOrders.length === 0 ? (
-            <p className="text-sm text-navy/50">No orders yet.</p>
+            <p className="text-sm text-navy/60">No orders yet.</p>
           ) : (
             <ul className="divide-y divide-navy/10 border border-navy/10">
               {stats.recentOrders.map((o, i) => (
                 <li key={i} className="flex justify-between px-4 py-3 text-sm">
                   <span>{o.order_number ?? '—'}</span>
-                  <span className="text-navy/50 capitalize">{o.status}</span>
+                  <span className="text-navy/60 capitalize">{o.status}</span>
                   <span>{formatEGP(o.total)}</span>
                 </li>
               ))}
@@ -73,9 +73,9 @@ export default function Dashboard() {
           )}
         </div>
         <div>
-          <h2 className="nv-eyebrow text-xs text-navy/50 mb-3">Low Stock</h2>
+          <h2 className="nv-eyebrow text-xs text-navy/60 mb-3">Low Stock</h2>
           {stats.lowStock.length === 0 ? (
-            <p className="text-sm text-navy/50">Nothing running low.</p>
+            <p className="text-sm text-navy/60">Nothing running low.</p>
           ) : (
             <ul className="divide-y divide-navy/10 border border-navy/10">
               {stats.lowStock.map((row, i) => (

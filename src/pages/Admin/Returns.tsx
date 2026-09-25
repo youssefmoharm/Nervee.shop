@@ -80,7 +80,7 @@ export default function AdminReturns() {
         </select>
       </div>
       {!rows ? (
-        <Loader2 className="animate-spin text-navy/40" size={20} />
+        <Loader2 className="animate-spin text-navy/60" size={20} />
       ) : rows.length === 0 ? (
         <p className="text-navy/60">No requests.</p>
       ) : (
@@ -148,7 +148,7 @@ export default function AdminReturns() {
           </table>
         </div>
       )}
-      <p className="text-xs text-navy/55 mt-4">
+      <p className="text-xs text-navy/60 mt-4">
         Approve → then go to Orders and set status to <span className="font-medium">refunded</span>{' '}
         or <span className="font-medium">cancelled</span> to restock inventory (once via
         update_order_status). One request per order/type enforced via UNIQUE.

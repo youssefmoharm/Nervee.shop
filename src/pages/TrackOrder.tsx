@@ -237,7 +237,7 @@ export function TrackOrder() {
                 placeholder="NRV-123456"
                 className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy rounded-lg font-mono"
               />
-              <p className="text-[10px] text-navy/55 mt-1">{t('Example: NRV-123456')}</p>
+              <p className="text-[10px] text-navy/60 mt-1">{t('Example: NRV-123456')}</p>
             </label>
           </div>
 

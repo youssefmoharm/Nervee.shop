@@ -179,7 +179,7 @@ export default function ComparisonModal({
                             className={`px-2 py-1 text-xs font-medium rounded border ${
                               size.inStock
                                 ? 'bg-white border-navy text-navy'
-                                : 'bg-navy/5 border-navy/20 text-navy/40 line-through'
+                                : 'bg-navy/5 border-navy/20 text-navy/60 line-through'
                             }`}
                           >
                             {size.size}
@@ -230,7 +230,7 @@ export default function ComparisonModal({
                           {product.badge}
                         </span>
                       ) : (
-                        <span className="text-navy/40">—</span>
+                        <span className="text-navy/60">—</span>
                       )}
                     </td>
                   ))}

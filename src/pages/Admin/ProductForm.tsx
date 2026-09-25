@@ -214,7 +214,7 @@ export default function ProductForm() {
   if (loading) {
     return (
       <AdminLayout>
-        <Loader2 className="animate-spin text-navy/40" size={20} />
+        <Loader2 className="animate-spin text-navy/60" size={20} />
       </AdminLayout>
     );
   }
@@ -360,7 +360,7 @@ export default function ProductForm() {
 
         <div>
           <div className="flex items-center justify-between mb-3">
-            <span className="nv-eyebrow text-xs text-navy/50">Colors</span>
+            <span className="nv-eyebrow text-xs text-navy/60">Colors</span>
             <button
               type="button"
               onClick={() =>
@@ -405,7 +405,7 @@ export default function ProductForm() {
                   <button
                     type="button"
                     onClick={() => setColors(prev => prev.filter((_, idx) => idx !== i))}
-                    className="text-navy/40 hover:text-red-600"
+                    className="text-navy/60 hover:text-red-600"
                   >
                     <Trash2 size={15} />
                   </button>
@@ -439,7 +439,7 @@ export default function ProductForm() {
               </div>
             ))}
           </div>
-          <p className="text-xs text-navy/55 mt-2">
+          <p className="text-xs text-navy/60 mt-2">
             Upload images to the <code>product-images</code> Supabase Storage bucket first, then
             paste the public URL here (path convention:{' '}
             <code>products/&#123;slug&#125;/&#123;color&#125;/01-front.jpg</code>).
@@ -447,7 +447,7 @@ export default function ProductForm() {
         </div>
 
         <div>
-          <span className="nv-eyebrow text-xs text-navy/50 mb-3 block">Inventory by Size</span>
+          <span className="nv-eyebrow text-xs text-navy/60 mb-3 block">Inventory by Size</span>
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
             {SIZES.map(size => (
               <div key={size} className="space-y-2">
@@ -464,7 +464,7 @@ export default function ProductForm() {
                   />
                 </label>
                 <label className="block">
-                  <span className="text-xs text-navy/45 mb-1 block">Low-stock at</span>
+                  <span className="text-xs text-navy/60 mb-1 block">Low-stock at</span>
                   <input
                     type="number"
                     min={0}
@@ -479,7 +479,7 @@ export default function ProductForm() {
               </div>
             ))}
           </div>
-          <p className="text-xs text-navy/55 mt-2">
+          <p className="text-xs text-navy/60 mt-2">
             The storefront low-stock badge uses each size&apos;s threshold (default 5).
           </p>
         </div>

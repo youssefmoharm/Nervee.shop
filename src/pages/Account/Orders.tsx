@@ -67,7 +67,7 @@ export default function Orders() {
       <h2 className="nv-heading text-3xl mb-6">{t('Orders')}</h2>
 
       {!orders ? (
-        <Loader2 className="animate-spin text-navy/40" size={20} />
+        <Loader2 className="animate-spin text-navy/60" size={20} />
       ) : orders.length === 0 ? (
         <div className="text-center py-16 border border-navy/10">
           <p className="text-navy/60 mb-4">{t("You haven't placed any orders yet.")}</p>
@@ -85,7 +85,7 @@ export default function Orders() {
               >
                 <div>
                   <p className="nv-edit font-semibold text-sm">#{o.order_number}</p>
-                  <p className="text-xs text-navy/50 mt-0.5">
+                  <p className="text-xs text-navy/60 mt-0.5">
                     {new Date(o.created_at).toLocaleDateString('en-GB', {
                       day: 'numeric',
                       month: 'short',

@@ -115,7 +115,7 @@ export default function WishlistShareModal({
                   rows={3}
                   maxLength={200}
                 />
-                <p className="text-xs text-navy/50 mt-1">
+                <p className="text-xs text-navy/60 mt-1">
                   {message.length}/200 {t('characters')}
                 </p>
               </div>

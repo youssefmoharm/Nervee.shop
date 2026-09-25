@@ -131,7 +131,7 @@ export default function OrderDetail() {
   if (order === undefined) {
     return (
       <AccountLayout>
-        <Loader2 className="animate-spin text-navy/40" size={20} />
+        <Loader2 className="animate-spin text-navy/60" size={20} />
       </AccountLayout>
     );
   }
@@ -148,14 +148,14 @@ export default function OrderDetail() {
     <AccountLayout>
       <Link
         to="/account/orders"
-        className="inline-flex items-center gap-1 text-sm text-navy/50 hover:text-navy mb-6"
+        className="inline-flex items-center gap-1 text-sm text-navy/60 hover:text-navy mb-6"
       >
         <ChevronLeft size={16} /> {t('Back to orders')}
       </Link>
       <h2 className="nv-heading text-3xl mb-1">
         {t('Order')} #{order.order_number}
       </h2>
-      <p className="text-navy/50 text-sm mb-8">
+      <p className="text-navy/60 text-sm mb-8">
         Placed{' '}
         {new Date(order.created_at).toLocaleDateString('en-GB', {
           day: 'numeric',
@@ -182,7 +182,7 @@ export default function OrderDetail() {
             </div>
             <div className="flex-1">
               <p className="nv-edit text-sm font-semibold uppercase">{item.product_name}</p>
-              <p className="text-xs text-navy/50 mt-1">
+              <p className="text-xs text-navy/60 mt-1">
                 {item.color} / {item.size} · Qty {item.quantity}
               </p>
             </div>
@@ -213,7 +213,7 @@ export default function OrderDetail() {
           </div>
         </div>
         <div className="text-sm">
-          <p className="nv-eyebrow text-xs text-navy/50 mb-2">{t('Shipping Address')}</p>
+          <p className="nv-eyebrow text-xs text-navy/60 mb-2">{t('Shipping Address')}</p>
           <p>{order.address}</p>
           <p>
             {order.city}, {order.governorate} {order.postal_code}
@@ -227,7 +227,7 @@ export default function OrderDetail() {
           <div className="flex items-start gap-4">
             <div className="flex-shrink-0">
               <div className="w-10 h-10 bg-navy/5 rounded-full flex items-center justify-center">
-                <Loader2 className="text-navy/50" size={20} />
+                <Loader2 className="text-navy/60" size={20} />
               </div>
             </div>
             <div className="flex-1">
@@ -296,7 +296,7 @@ export default function OrderDetail() {
                   {t('Close')}
                 </button>
               </div>
-              <p className="text-[11px] text-navy/55">
+              <p className="text-[11px] text-navy/60">
                 {t(
                   'Returns: delivered only, 14 days. Cancellations: placed/processing, 2 hours. One request per order.',
                 )}

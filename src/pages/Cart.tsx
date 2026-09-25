@@ -133,7 +133,7 @@ export default function Cart() {
                       >
                         {line.name}
                       </Link>
-                      <p className="text-sm text-navy/50 mt-1">
+                      <p className="text-sm text-navy/60 mt-1">
                         {line.color} / {line.size}
                       </p>
                       <p className="text-sm font-medium mt-2 sm:hidden">
@@ -168,7 +168,7 @@ export default function Cart() {
                       <button
                         aria-label={t('Remove item')}
                         onClick={() => removeLine(line.productId, line.color, line.size)}
-                        className="text-navy/55 hover:text-navy transition-colors"
+                        className="text-navy/60 hover:text-navy transition-colors"
                       >
                         <X size={16} />
                       </button>
@@ -245,22 +245,22 @@ export default function Cart() {
                 >
                   {t('Proceed to Checkout')}
                 </Link>
-                <p className="text-xs text-navy/55 leading-relaxed">
+                <p className="text-xs text-navy/60 leading-relaxed">
                   {t('Standard delivery')} 2–5 {t('business days')}.{' '}
                   <Link to="/shipping" className="underline hover:text-navy">
                     {t('Shipping details')}
                   </Link>
                 </p>
-                <p className="flex items-center justify-center gap-2 text-xs text-navy/50">
+                <p className="flex items-center justify-center gap-2 text-xs text-navy/60">
                   <Lock size={12} /> {t('Cash on delivery — pay the courier')}
                 </p>
-                <p className="flex items-center justify-center gap-2 text-xs text-navy/50">
+                <p className="flex items-center justify-center gap-2 text-xs text-navy/60">
                   <ShieldCheck size={12} />
                   <Link to="/returns" className="underline hover:text-navy">
                     {t('14-day returns on unworn items')}
                   </Link>
                 </p>
-                <p className="text-center text-xs text-navy/45">
+                <p className="text-center text-xs text-navy/60">
                   <Link to="/faq" className="underline hover:text-navy">
                     {t('FAQ')}
                   </Link>

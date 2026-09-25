@@ -65,7 +65,7 @@ export default function AdminOrders() {
       </div>
 
       {!orders ? (
-        <Loader2 className="animate-spin text-navy/40" size={20} />
+        <Loader2 className="animate-spin text-navy/60" size={20} />
       ) : orders.length === 0 ? (
         <p className="text-navy/60">No orders found.</p>
       ) : (
@@ -102,7 +102,7 @@ export default function AdminOrders() {
                     </select>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <span className="text-xs text-navy/55">COD</span>
+                    <span className="text-xs text-navy/60">COD</span>
                   </td>
                 </tr>
               ))}

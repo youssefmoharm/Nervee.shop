@@ -224,9 +224,9 @@ export default function ProfileForm() {
               type="email"
               value={user?.email ?? ''}
               disabled
-              className="w-full border border-navy/10 bg-mist/60 px-4 py-3 text-sm text-navy/50"
+              className="w-full border border-navy/10 bg-mist/60 px-4 py-3 text-sm text-navy/60"
             />
-            <p className="text-xs text-navy/55 mt-1">{t('Email cannot be changed')}</p>
+            <p className="text-xs text-navy/60 mt-1">{t('Email cannot be changed')}</p>
           </div>
 
           {/* Name fields */}
@@ -359,7 +359,7 @@ export default function ProfileForm() {
               placeholder={t('Tell us a bit about yourself...')}
               maxLength={500}
             />
-            <p className="text-xs text-navy/55 mt-1">
+            <p className="text-xs text-navy/60 mt-1">
               {profile.bio.length}/500 {t('characters')}
             </p>
           </div>
@@ -402,7 +402,7 @@ export default function ProfileForm() {
               <button
                 type="button"
                 onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
-                className="absolute end-3 top-1/2 -translate-y-1/2 text-navy/40 hover:text-navy"
+                className="absolute end-3 top-1/2 -translate-y-1/2 text-navy/60 hover:text-navy"
               >
                 {showPasswords.current ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -427,7 +427,7 @@ export default function ProfileForm() {
               <button
                 type="button"
                 onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))}
-                className="absolute end-3 top-1/2 -translate-y-1/2 text-navy/40 hover:text-navy"
+                className="absolute end-3 top-1/2 -translate-y-1/2 text-navy/60 hover:text-navy"
               >
                 {showPasswords.new ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -469,7 +469,7 @@ export default function ProfileForm() {
               <button
                 type="button"
                 onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
-                className="absolute end-3 top-1/2 -translate-y-1/2 text-navy/40 hover:text-navy"
+                className="absolute end-3 top-1/2 -translate-y-1/2 text-navy/60 hover:text-navy"
               >
                 {showPasswords.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>

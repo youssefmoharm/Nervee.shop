@@ -156,7 +156,7 @@ export default function Addresses() {
           </button>
         </div>
       ) : !addresses ? (
-        <Loader2 className="animate-spin text-navy/40" size={20} />
+        <Loader2 className="animate-spin text-navy/60" size={20} />
       ) : addresses.length === 0 && !showForm ? (
         <p className="text-navy/60">{t('No saved addresses yet.')}</p>
       ) : (
@@ -167,7 +167,7 @@ export default function Addresses() {
                 <p className="nv-edit font-semibold text-sm flex items-center gap-2">
                   {a.label || t('Address')}
                   {a.is_default && (
-                    <span className="nv-eyebrow text-[10px] text-navy/50">{t('Default')}</span>
+                    <span className="nv-eyebrow text-[10px] text-navy/60">{t('Default')}</span>
                   )}
                 </p>
                 <p className="text-sm text-navy/70 mt-1">{a.address}</p>
@@ -180,7 +180,7 @@ export default function Addresses() {
                   <button
                     aria-label={t('Set as default')}
                     onClick={() => setDefault(a.id)}
-                    className="text-navy/40 hover:text-navy"
+                    className="text-navy/60 hover:text-navy"
                   >
                     <Star size={16} />
                   </button>
@@ -188,7 +188,7 @@ export default function Addresses() {
                 <button
                   aria-label={t('Delete address')}
                   onClick={() => remove(a.id)}
-                  className="text-navy/40 hover:text-red-600"
+                  className="text-navy/60 hover:text-red-600"
                 >
                   <Trash2 size={16} />
                 </button>

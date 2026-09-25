@@ -26,7 +26,7 @@ export default function CustomerDetail() {
   if (!customer || !orders) {
     return (
       <AdminLayout>
-        <Loader2 className="animate-spin text-navy/40" size={20} />
+        <Loader2 className="animate-spin text-navy/60" size={20} />
       </AdminLayout>
     );
   }
@@ -38,7 +38,7 @@ export default function CustomerDetail() {
       </h1>
 
       <section className="mb-6">
-        <h2 className="nv-eyebrow text-xs text-navy/50 mb-2">Profile</h2>
+        <h2 className="nv-eyebrow text-xs text-navy/60 mb-2">Profile</h2>
         <div className="border border-navy/10 p-4">
           <p>
             <strong>Email:</strong> {customer.email}
@@ -53,7 +53,7 @@ export default function CustomerDetail() {
       </section>
 
       <section className="mb-6">
-        <h2 className="nv-eyebrow text-xs text-navy/50 mb-2">Addresses</h2>
+        <h2 className="nv-eyebrow text-xs text-navy/60 mb-2">Addresses</h2>
         {customer.customer_addresses?.length ? (
           <ul className="space-y-2">
             {customer.customer_addresses.map((a: any) => (
@@ -71,7 +71,7 @@ export default function CustomerDetail() {
       </section>
 
       <section>
-        <h2 className="nv-eyebrow text-xs text-navy/50 mb-2">Recent Orders</h2>
+        <h2 className="nv-eyebrow text-xs text-navy/60 mb-2">Recent Orders</h2>
         {orders.length === 0 ? (
           <p className="text-navy/60">No orders</p>
         ) : (

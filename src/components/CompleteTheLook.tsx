@@ -147,7 +147,7 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
                 <p className="nv-edit text-sm font-bold">
                   {formatEGP(discountedUnitPrice(mainProduct.price))}
                 </p>
-                <p className="text-xs text-navy/40 line-through">{formatEGP(mainProduct.price)}</p>
+                <p className="text-xs text-navy/60 line-through">{formatEGP(mainProduct.price)}</p>
               </div>
             </div>
             {mainProduct.sizes.some(s => s.inStock) && (
@@ -212,7 +212,7 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
                     <p className="nv-edit text-sm font-bold">
                       {formatEGP(discountedUnitPrice(item.price))}
                     </p>
-                    <p className="text-xs text-navy/40 line-through">{formatEGP(item.price)}</p>
+                    <p className="text-xs text-navy/60 line-through">{formatEGP(item.price)}</p>
                   </div>
                 </div>
                 {isSelected && item.sizes.some(s => s.inStock) && (
@@ -277,7 +277,7 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
               <ShoppingBag size={18} />
               {t('Add Bundle to Bag')}
             </button>
-            <p className="text-xs text-navy/50 mt-3 text-center">
+            <p className="text-xs text-navy/60 mt-3 text-center">
               {t('Free shipping on orders over')} {formatEGP(FREE_SHIPPING_THRESHOLD)}
             </p>
           </div>

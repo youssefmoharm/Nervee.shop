@@ -119,12 +119,12 @@ export default function CartDrawer() {
                             aria-label={t('Remove item')}
                             data-testid="remove-item"
                             onClick={() => removeLine(line.productId, line.color, line.size)}
-                            className="text-navy/40 hover:text-navy transition-colors flex-shrink-0"
+                            className="text-navy/60 hover:text-navy transition-colors flex-shrink-0"
                           >
                             <X size={15} />
                           </button>
                         </div>
-                        <p className="text-xs text-navy/50 mt-1">
+                        <p className="text-xs text-navy/60 mt-1">
                           {line.color} / {line.size}
                         </p>
                         <div className="flex items-center justify-between mt-3">
@@ -180,7 +180,7 @@ export default function CartDrawer() {
                     {formatEGP(subtotal)}
                   </span>
                 </div>
-                <p className="text-xs text-navy/50">
+                <p className="text-xs text-navy/60">
                   {t('Shipping and taxes calculated at checkout.')}
                 </p>
                 <button

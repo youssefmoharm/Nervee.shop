@@ -51,7 +51,7 @@ export default function Products() {
       </div>
 
       {!products ? (
-        <Loader2 className="animate-spin text-navy/40" size={20} />
+        <Loader2 className="animate-spin text-navy/60" size={20} />
       ) : (
         <div className="overflow-x-auto border border-navy/10">
           <table className="w-full text-sm" data-testid="products-table">
@@ -89,14 +89,14 @@ export default function Products() {
                         <Link
                           to={`/admin/products/${p.id}`}
                           aria-label="Edit"
-                          className="text-navy/50 hover:text-navy"
+                          className="text-navy/60 hover:text-navy"
                         >
                           <Pencil size={15} />
                         </Link>
                         <button
                           aria-label="Delete"
                           onClick={() => remove(p.id, p.name)}
-                          className="text-navy/50 hover:text-red-600"
+                          className="text-navy/60 hover:text-red-600"
                         >
                           <Trash2 size={15} />
                         </button>

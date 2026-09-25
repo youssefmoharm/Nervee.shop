@@ -25,7 +25,7 @@ export default function Contacts() {
   if (!messages)
     return (
       <AdminLayout>
-        <Loader2 className="animate-spin text-navy/40" size={20} />
+        <Loader2 className="animate-spin text-navy/60" size={20} />
       </AdminLayout>
     );
 

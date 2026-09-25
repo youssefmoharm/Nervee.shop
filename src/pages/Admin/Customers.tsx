@@ -29,7 +29,7 @@ export default function Customers() {
       <h1 className="nv-heading text-4xl mb-8">Customers</h1>
 
       {!customers ? (
-        <Loader2 className="animate-spin text-navy/40" size={20} />
+        <Loader2 className="animate-spin text-navy/60" size={20} />
       ) : customers.length === 0 ? (
         <p className="text-navy/60">No customers yet.</p>
       ) : (

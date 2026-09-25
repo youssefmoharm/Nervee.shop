@@ -74,7 +74,7 @@ export default function CollectionDetail() {
       <div className="px-5 md:px-8 py-10">
         <p className="max-w-2xl text-navy/70 mb-12">{collection.description}</p>
         {products.length === 0 ? (
-          <p className="text-navy/50">{t('No products in this collection yet.')}</p>
+          <p className="text-navy/60">{t('No products in this collection yet.')}</p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-10 pb-16">
             {products.map(p => (

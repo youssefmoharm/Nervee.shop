@@ -55,7 +55,7 @@ function PolicyNav({ current }: { current: 'shipping' | 'returns' | 'faq' }) {
           className={
             l.id === current
               ? 'text-navy underline underline-offset-4'
-              : 'text-navy/50 hover:text-navy transition-colors'
+              : 'text-navy/60 hover:text-navy transition-colors'
           }
           aria-current={l.id === current ? 'page' : undefined}
         >
@@ -264,7 +264,7 @@ export function Shipping() {
           </tbody>
         </table>
       </div>
-      <p className="text-sm text-navy/55">
+      <p className="text-sm text-navy/60">
         {t('Timelines are estimates after the order ships and may vary by governorate or courier')}.
       </p>
 
@@ -285,7 +285,7 @@ export function Shipping() {
         <li>{t("You'll receive a tracking link by email once your order ships.")}</li>
         <li>{t('The courier delivers to your address; you pay cash on arrival.')}</li>
       </ol>
-      <p className="text-sm text-navy/55">
+      <p className="text-sm text-navy/60">
         {t('Track anytime on the')}{' '}
         <Link to="/track-order" className="underline hover:text-navy/80">
           {t('Track Order')}

@@ -48,7 +48,7 @@ export default function ShippingProgressBar({ subtotal }: ShippingProgressBarPro
           <span className="font-medium text-navy">
             {formatNumber((progress / 100) * FREE_SHIPPING_THRESHOLD)}
           </span>
-          <span className="text-navy/50">{Math.round(progress)}%</span>
+          <span className="text-navy/60">{Math.round(progress)}%</span>
           <span className="font-medium text-navy">{formatNumber(FREE_SHIPPING_THRESHOLD)}</span>
         </div>
       </div>
@@ -65,7 +65,7 @@ export default function ShippingProgressBar({ subtotal }: ShippingProgressBarPro
       </p>
 
       {/* Info note */}
-      <p className="text-xs text-navy/50 border-t border-navy/10 pt-3">
+      <p className="text-xs text-navy/60 border-t border-navy/10 pt-3">
         {t('Applied to all orders within Egypt')}
       </p>
     </div>

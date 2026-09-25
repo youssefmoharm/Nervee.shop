@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
@@ -243,7 +243,7 @@ export default function Home() {
             fallback={
               <div className="text-center py-12">
                 <AlertTriangle className="w-8 h-8 text-navy/30 mx-auto mb-3" aria-hidden="true" />
-                <p className="text-navy/55 text-sm">
+                <p className="text-navy/60 text-sm">
                   {t('Unable to load products. Please try refreshing.')}
                 </p>
               </div>
@@ -254,7 +254,7 @@ export default function Home() {
             ) : newDropError ? (
               <div className="text-center py-12">
                 <AlertTriangle className="w-8 h-8 text-navy/30 mx-auto mb-3" aria-hidden="true" />
-                <p className="text-navy/55 text-sm">
+                <p className="text-navy/60 text-sm">
                   {t('Unable to load products. Please try refreshing.')}
                 </p>
               </div>
@@ -266,8 +266,8 @@ export default function Home() {
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-navy/55 text-sm">{t('No products yet')}</p>
-                <p className="text-navy/50 text-sm mt-1">
+                <p className="text-navy/60 text-sm">{t('No products yet')}</p>
+                <p className="text-navy/60 text-sm mt-1">
                   {t('Check back soon — new drops land regularly.')}
                 </p>
               </div>
@@ -436,7 +436,7 @@ export default function Home() {
             fallback={
               <div className="text-center py-12">
                 <AlertTriangle className="w-8 h-8 text-navy/30 mx-auto mb-3" aria-hidden="true" />
-                <p className="text-navy/55 text-sm">
+                <p className="text-navy/60 text-sm">
                   {t('Unable to load products. Please try refreshing.')}
                 </p>
               </div>
@@ -447,7 +447,7 @@ export default function Home() {
             ) : bestSellersError ? (
               <div className="text-center py-12">
                 <AlertTriangle className="w-8 h-8 text-navy/30 mx-auto mb-3" aria-hidden="true" />
-                <p className="text-navy/55 text-sm">
+                <p className="text-navy/60 text-sm">
                   {t('Unable to load products. Please try refreshing.')}
                 </p>
               </div>
@@ -459,7 +459,7 @@ export default function Home() {
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-navy/55 text-sm">{t('No products yet')}</p>
+                <p className="text-navy/60 text-sm">{t('No products yet')}</p>
               </div>
             )}
           </SectionErrorBoundary>
