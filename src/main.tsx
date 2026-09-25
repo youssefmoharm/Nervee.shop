@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { AuthProvider } from './context/AuthContext';
-import { ReactQueryProvider } from './lib/queryClient';
 import { I18nProvider } from './lib/i18n';
 import { getAppLocale } from './lib/format';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -22,15 +21,13 @@ if (!rootEl) {
 } else {
   ReactDOM.createRoot(rootEl).render(
     <React.StrictMode>
-      {/* Outermost boundary: a throw inside any provider (i18n, router, auth,
-          query) would otherwise white-screen with no recovery UI (BUG-02). */}
+      {/* Outermost boundary: a throw inside any provider (i18n, router, auth)
+          would otherwise white-screen with no recovery UI (BUG-02). */}
       <ErrorBoundary>
         <I18nProvider>
           <BrowserRouter>
             <AuthProvider>
-              <ReactQueryProvider>
-                <App />
-              </ReactQueryProvider>
+              <App />
             </AuthProvider>
           </BrowserRouter>
         </I18nProvider>
