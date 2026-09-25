@@ -87,6 +87,7 @@ export function Newsletter() {
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="you@example.com"
+              aria-label={t('Email Address')}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"
             />
           </label>

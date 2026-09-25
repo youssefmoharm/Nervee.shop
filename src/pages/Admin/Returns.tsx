@@ -70,6 +70,7 @@ export default function AdminReturns() {
         <select
           value={filter}
           onChange={e => setFilter(e.target.value as any)}
+          aria-label="Filter returns by status"
           className="border border-navy/20 px-3 py-2 text-sm"
         >
           <option value="">All</option>

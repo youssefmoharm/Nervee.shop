@@ -875,6 +875,7 @@ export default function ProductDetail() {
                           value={notifyEmail}
                           onChange={e => setNotifyEmail(e.target.value)}
                           placeholder="you@email.com"
+                          aria-label={t('Email address')}
                           className="flex-1 border border-navy/20 px-3 py-2.5 text-sm focus:outline-none focus:border-navy"
                         />
                         <button

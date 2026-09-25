@@ -52,6 +52,7 @@ export default function AdminOrders() {
         <select
           value={filter}
           onChange={e => setFilter(e.target.value)}
+          aria-label="Filter orders by status"
           className="border border-navy/20 px-3 py-2 text-sm"
           data-testid="order-status-filter"
         >
@@ -92,6 +93,7 @@ export default function AdminOrders() {
                     <select
                       value={o.status}
                       onChange={e => changeStatus(o.id, e.target.value)}
+                      aria-label={`Status for order ${o.order_number}`}
                       className="border border-navy/20 px-2 py-1.5 text-xs"
                     >
                       {STATUSES.map(s => (

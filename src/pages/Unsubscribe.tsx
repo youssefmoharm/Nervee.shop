@@ -148,6 +148,7 @@ export default function Unsubscribe() {
                 value={feedback}
                 onChange={e => setFeedback(e.target.value)}
                 placeholder={t('Optional: Tell us what we could improve...')}
+                aria-label={t('Optional: Tell us what we could improve...')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-navy resize-none"
                 rows={3}
               />
