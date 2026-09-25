@@ -352,14 +352,14 @@ export default function Checkout() {
                         ? 'bg-navy text-white'
                         : step === i + 1
                         ? 'border-2 border-navy'
-                        : 'border border-navy/20 text-navy/30'
+                        : 'border border-navy/20 text-navy/60'
                     }`}
                   >
                     {step > i + 1 ? <Check size={13} /> : i + 1}
                   </div>
                   <span
                     className={`text-xs nv-eyebrow ${
-                      step === i + 1 ? 'text-navy' : 'text-navy/30'
+                      step === i + 1 ? 'text-navy' : 'text-navy/60'
                     }`}
                     aria-current={step === i + 1 ? 'step' : undefined}
                   >

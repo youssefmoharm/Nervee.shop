@@ -189,10 +189,7 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
           {suggestedItems.slice(0, 2).map(item => {
             const isSelected = selectedItems.includes(item.id);
             return (
-              <div
-                key={item.id}
-                className="space-y-3 opacity-75 hover:opacity-100 transition-opacity"
-              >
+              <div key={item.id} className="space-y-3 transition-opacity">
                 <div className="relative">
                   <div className="aspect-[4/5] bg-mist rounded-lg overflow-hidden">
                     <img
@@ -262,7 +259,7 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
                 <span className="text-navy/70">{t('Regular price')}:</span>
                 <span className="font-semibold">{formatEGP(regularTotal)}</span>
               </div>
-              <div className="flex justify-between text-sm text-green-600">
+              <div className="flex justify-between text-sm text-green-700">
                 <span>
                   {t('Save')} {BUNDLE_DISCOUNT_PERCENT}% {t('on bundle')}:
                 </span>
