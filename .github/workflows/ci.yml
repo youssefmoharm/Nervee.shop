@@ -65,6 +65,10 @@ jobs:
           # GitHub Actions secrets — never commit credential values here.
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          # Emit hidden source maps so the Sentry upload step below can
+          # symbolicate releases. This CI dist is never deployed (Vercel
+          # runs its own build without this flag, so no .map files ship).
+          SENTRY_UPLOAD: '1'
         run: |
           if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_ANON_KEY" ]; then
             echo "::error::Missing GitHub secrets VITE_SUPABASE_URL and/or VITE_SUPABASE_ANON_KEY. Set them under Settings → Secrets and variables → Actions."

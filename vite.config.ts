@@ -8,47 +8,60 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
   build: {
-    // Code splitting strategy for better caching
+    // Code splitting strategy for better caching.
+    // Vite 8 bundles with Rolldown, where the function form of
+    // output.manualChunks is deprecated and its @supabase branch never
+    // materialized (supabase-js stayed glued inside context-auth).
+    // advancedChunks is the supported Rolldown API - same grouping,
+    // explicit priorities so the narrowest test wins.
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          // Normalize Windows backslashes so path matching works on all platforms
-          const n = id.replace(/\\/g, '/');
-
-          // React core
-          if (n.includes('node_modules/react/') || n.includes('node_modules/react-dom/')) {
-            return 'vendor-react';
-          }
-          // UI Libraries
-          if (n.includes('node_modules/lucide-react/')) {
-            return 'vendor-ui';
-          }
-          // Supabase client in separate chunk — check BEFORE AuthContext so
-          // supabase-js never lands in the auth chunk on any OS path format.
-          if (n.includes('lib/supabase') || n.includes('node_modules/@supabase/')) {
-            return 'supabase';
-          }
-
-          // Split large contexts to prevent bundle bloat
-          if (n.includes('AuthContext')) {
-            return 'context-auth';
-          }
-          if (n.includes('CartContext')) {
-            return 'context-cart';
-          }
-          if (
-            n.includes('ToastContext') ||
-            n.includes('WishlistContext') ||
-            n.includes('QuickViewContext') ||
-            n.includes('BrowsingHistoryContext')
-          ) {
-            return 'context-other';
-          }
-
-          // Catch-all for other node_modules
-          if (n.includes('node_modules')) {
-            return 'vendor';
-          }
+        advancedChunks: {
+          groups: [
+            {
+              name: 'supabase',
+              priority: 90,
+              test: (id: string) => {
+                const n = id.replace(/\\/g, '/');
+                return n.includes('lib/supabase') || n.includes('node_modules/@supabase/');
+              },
+            },
+            {
+              name: 'vendor-react',
+              priority: 80,
+              test: (id: string) =>
+                /node_modules\/(react|react-dom|scheduler)\//.test(id.replace(/\\/g, '/')),
+            },
+            {
+              name: 'vendor-ui',
+              priority: 70,
+              test: (id: string) => id.replace(/\\/g, '/').includes('node_modules/lucide-react/'),
+            },
+            {
+              name: 'context-auth',
+              priority: 60,
+              test: (id: string) => id.includes('AuthContext'),
+            },
+            {
+              name: 'context-cart',
+              priority: 60,
+              test: (id: string) => id.includes('CartContext'),
+            },
+            {
+              name: 'context-other',
+              priority: 60,
+              test: (id: string) =>
+                id.includes('ToastContext') ||
+                id.includes('WishlistContext') ||
+                id.includes('QuickViewContext') ||
+                id.includes('BrowsingHistoryContext'),
+            },
+            {
+              name: 'vendor',
+              priority: 50,
+              test: (id: string) => id.replace(/\\/g, '/').includes('node_modules'),
+            },
+          ],
         },
       },
     },
@@ -56,8 +69,10 @@ export default defineConfig({
     // Optimize chunk sizes
     chunkSizeWarningLimit: 500,
 
-    // Hidden source maps in production (readable by Sentry, not linked from bundle)
-    sourcemap: 'hidden',
+    // Source maps exist only for Sentry symbolication: CI sets SENTRY_UPLOAD=1
+    // before building so .js.map files can be uploaded, then they are never
+    // emitted for the Vercel deployment (Vercel builds without the flag).
+    sourcemap: process.env.SENTRY_UPLOAD ? 'hidden' : false,
   },
 
   test: {
