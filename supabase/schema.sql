@@ -833,6 +833,18 @@ SELECT
 FROM product_inventory pi
 GROUP BY pi.product_id;
 
+-- review_authors: public reviewer display names only (039 / audit SEC-12).
+-- customers is owner-only under RLS, so the review embed returned null for
+-- everyone but the author; this view exposes exactly id/first/last for
+-- customers who wrote a review, nothing else.
+DROP VIEW IF EXISTS review_authors CASCADE;
+CREATE VIEW review_authors WITH (security_invoker = false) AS
+SELECT c.id, c.first_name, c.last_name
+FROM customers c
+WHERE EXISTS (
+  SELECT 1 FROM product_reviews pr WHERE pr.customer_id = c.id
+);
+
 -- ============================================================================
 -- 6. FUNCTIONS (RPCs)
 -- ============================================================================
@@ -2707,6 +2719,7 @@ GRANT SELECT ON product_inventory TO authenticated, service_role;
 GRANT SELECT ON product_availability TO anon, authenticated, service_role;
 GRANT SELECT ON product_review_stats TO anon, authenticated;
 GRANT SELECT ON product_stock_status TO anon, authenticated, service_role;
+GRANT SELECT ON review_authors TO anon, authenticated, service_role;
 
 -- ============================================================================
 -- 12. CRON JOBS (migrations 007 + 032)

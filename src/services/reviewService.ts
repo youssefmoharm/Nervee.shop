@@ -61,11 +61,7 @@ export const reviewService = {
           photos,
           helpful_count,
           verified,
-          created_at,
-          customers (
-            first_name,
-            last_name
-          )
+          created_at
         `,
         )
         .eq('product_id', productId)
@@ -76,7 +72,26 @@ export const reviewService = {
         return { reviews: [], error: error.message };
       }
 
-      const reviews = (data || []).map(r => ({
+      const rows = data || [];
+
+      // Reviewer display names come from the public `review_authors` view
+      // (migration 039): customers itself is owner-only under RLS, so the old
+      // customers(...) embed returned null for every viewer but the author.
+      const authorIds = [...new Set(rows.map(r => r.customer_id).filter(Boolean))] as string[];
+      const names = new Map<string, string>();
+      if (authorIds.length > 0) {
+        const { data: authors } = await supabase
+          .from('review_authors')
+          .select('id, first_name, last_name')
+          .in('id', authorIds);
+        for (const a of authors || []) {
+          if (a.first_name || a.last_name) {
+            names.set(a.id, `${a.first_name ?? ''} ${a.last_name ?? ''}`.trim());
+          }
+        }
+      }
+
+      const reviews = rows.map(r => ({
         id: r.id,
         productId: r.product_id,
         customerId: r.customer_id,
@@ -87,9 +102,7 @@ export const reviewService = {
         helpfulCount: typeof r.helpful_count === 'number' ? r.helpful_count : 0,
         verified: r.verified,
         createdAt: r.created_at,
-        customerName: r.customers?.[0]
-          ? `${r.customers[0].first_name} ${r.customers[0].last_name}`
-          : undefined,
+        customerName: r.customer_id ? names.get(r.customer_id) || undefined : undefined,
       }));
 
       return { reviews, error: null };
