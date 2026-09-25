@@ -54,8 +54,27 @@ export const wishlistService = {
   },
 
   async mergeGuestWishlist(items: WishlistItem[]) {
-    for (const item of items) {
-      await this.add(item.productId);
+    if (items.length === 0) return;
+    const userId = (await supabase.auth.getUser()).data.user?.id;
+    if (!userId) return;
+
+    const { data: wishlist, error: wishlistError } = await supabase
+      .from('wishlists')
+      .upsert({ customer_id: userId }, { onConflict: 'customer_id' })
+      .select('id')
+      .single();
+    if (wishlistError || !wishlist) {
+      logError('Error upserting wishlist during merge:', wishlistError);
+      return;
     }
+
+    const rows = items.map(item => ({
+      wishlist_id: wishlist.id,
+      product_id: item.productId,
+    }));
+    const { error } = await supabase
+      .from('wishlist_items')
+      .upsert(rows, { onConflict: 'wishlist_id,product_id' });
+    if (error) logError('Error merging guest wishlist:', error);
   },
 };

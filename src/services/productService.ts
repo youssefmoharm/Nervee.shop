@@ -357,6 +357,38 @@ export const productService = {
   },
 
   /**
+   * Batch variant of getBySlug: resolves many slugs in ONE products query
+   * plus a single availability/stock pair, instead of 2-3 queries per slug.
+   * Results keep the input slug order; unknown/inactive slugs are skipped.
+   */
+  async getBySlugs(slugs: string[]): Promise<Product[]> {
+    if (slugs.length === 0) return [];
+
+    if (!isSupabaseConfigured) {
+      if (!allowMock()) return [];
+      return slugs
+        .map(slug => getMockProductBySlug(slug))
+        .filter((p): p is Product => p !== undefined);
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select(PRODUCT_SELECT)
+        .in('slug', slugs)
+        .eq('is_active', true);
+      if (error) throw error;
+
+      const bySlug = new Map<string, Product>();
+      (await attachAvailability(mapProductRows(data ?? []))).forEach(p => bySlug.set(p.slug, p));
+      return slugs.map(slug => bySlug.get(slug)).filter((p): p is Product => p !== undefined);
+    } catch (error) {
+      logError('Error fetching products by slugs:', error);
+      return [];
+    }
+  },
+
+  /**
    * Get newest products (New Drop)
    */
   async getNewDrop(): Promise<Product[]> {

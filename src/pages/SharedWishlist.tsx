@@ -48,17 +48,9 @@ export default function SharedWishlist() {
       setMessage(shared.message);
 
       try {
-        const products = await Promise.all(
-          shared.items.map(async slug => {
-            try {
-              return await productService.getBySlug(slug);
-            } catch {
-              return undefined;
-            }
-          }),
-        );
+        const products = await productService.getBySlugs(shared.items);
         if (cancelled) return;
-        setWishlistProducts(products.filter((p): p is Product => p !== undefined));
+        setWishlistProducts(products);
       } catch {
         if (cancelled) return;
         setNotFound(true);
