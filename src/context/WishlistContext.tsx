@@ -46,9 +46,19 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   }, [items, user]);
 
   // On sign-in: merge the guest wishlist into the DB wishlist once, then load the
-  // authoritative DB wishlist. On sign-out: fall back to (now-empty) guest wishlist.
+  // authoritative DB wishlist. On sign-out: drop the previous user's wishlist so
+  // the next person on a shared device inherits nothing (FLOW-05).
   useEffect(() => {
     if (!user) {
+      if (mergedForUser.current) {
+        mergedForUser.current = null;
+        setItems([]);
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch {
+          /* storage unavailable — non-fatal */
+        }
+      }
       mergedForUser.current = null;
       return;
     }

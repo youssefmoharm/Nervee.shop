@@ -84,9 +84,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [lines]);
 
   // On sign-in: merge the guest cart into the DB cart once, then load the
-  // authoritative DB cart. On sign-out: fall back to (now-empty) guest cart.
+  // authoritative DB cart. On sign-out: drop the previous user's cart so the
+  // next person on a shared device inherits nothing (FLOW-05).
   useEffect(() => {
     if (!user) {
+      if (mergedForUser.current) {
+        mergedForUser.current = null;
+        pendingOperations.current.clear();
+        setLines([]);
+        setLastAdded(null);
+        try {
+          sessionStorage.removeItem(STORAGE_KEY);
+        } catch {
+          /* storage unavailable — non-fatal */
+        }
+        // Also wipes saved checkout form data (email/address) + discount.
+        clearCheckoutSession();
+      }
       mergedForUser.current = null;
       return;
     }
