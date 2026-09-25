@@ -80,9 +80,7 @@ test.describe('Trust & policy routes', () => {
 
   test('about page links to contact, shipping, returns, and faq', async ({ page }) => {
     await page.goto('/about', { waitUntil: 'load' });
-    await expect(
-      page.getByRole('link', { name: /contact us|contact/i }).first(),
-    ).toBeVisible();
+    await expect(page.getByRole('link', { name: /contact us|contact/i }).first()).toBeVisible();
     await expect(page.getByRole('link', { name: /shipping/i }).first()).toBeVisible();
     await expect(page.getByRole('link', { name: /returns/i }).first()).toBeVisible();
     await expect(page.getByRole('link', { name: /faq/i }).first()).toBeVisible();

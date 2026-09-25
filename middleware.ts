@@ -52,7 +52,8 @@ const STATIC_SEO: Record<string, RouteSeo> = {
   },
   '/collections': {
     title: 'Collections | NERVE Streetwear',
-    description: 'Explore NERVE collections — contemporary Egyptian streetwear and concept-store essentials.',
+    description:
+      'Explore NERVE collections — contemporary Egyptian streetwear and concept-store essentials.',
   },
   '/about': {
     title: 'About Us | NERVE',
@@ -69,7 +70,8 @@ const STATIC_SEO: Record<string, RouteSeo> = {
   },
   '/shipping': {
     title: 'Shipping & Delivery | NERVE',
-    description: 'NERVE shipping and delivery across Egypt — timelines, rates and free-shipping threshold.',
+    description:
+      'NERVE shipping and delivery across Egypt — timelines, rates and free-shipping threshold.',
   },
   '/returns': {
     title: 'Returns & Exchanges | NERVE',
@@ -81,7 +83,8 @@ const STATIC_SEO: Record<string, RouteSeo> = {
   },
   '/terms': {
     title: 'Terms of Service | NERVE',
-    description: 'The terms and conditions governing your use of nerveey.shop and purchases from NERVE.',
+    description:
+      'The terms and conditions governing your use of nerveey.shop and purchases from NERVE.',
   },
   '/size-guide': {
     title: 'Size Guide | NERVE',
@@ -192,8 +195,7 @@ async function fetchProduct(slug: string) {
     const stockRes = await fetch(stockUrl, { headers: SUPABASE_HEADERS });
     if (stockRes.ok) {
       const variants = await stockRes.json();
-      product.inStock =
-        Array.isArray(variants) && variants.some(v => v?.in_stock === true);
+      product.inStock = Array.isArray(variants) && variants.some(v => v?.in_stock === true);
     } else {
       product.inStock = false;
     }
@@ -359,10 +361,7 @@ export default async function middleware(request: Request): Promise<Response | u
       if (html === null) return;
       html = injectRouteMeta(html, route, {
         title: `${collection.name} | NERVE`,
-        description:
-          collection.description ||
-          collection.tagline ||
-          'Browse the NERVE collection.',
+        description: collection.description || collection.tagline || 'Browse the NERVE collection.',
       });
     } else {
       const seo = STATIC_SEO[route];
