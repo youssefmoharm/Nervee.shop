@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { safeImageSrc } from '../lib/images';
 import { Minus, Plus, X } from 'lucide-react';
 import FocusTrap from 'focus-trap-react';
 import { useCart } from '../context/CartContext';
@@ -102,7 +103,7 @@ export default function CartDrawer() {
                         <img
                           decoding="async"
                           loading="lazy"
-                          src={line.image}
+                          src={safeImageSrc(line.image)}
                           alt={line.name}
                           className="w-full h-full object-cover"
                         />

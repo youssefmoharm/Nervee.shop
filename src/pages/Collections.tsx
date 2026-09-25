@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { safeImageSrc } from '../lib/images';
 import { collections } from '../data/products';
 import { useSEO } from '../lib/seo';
 import { useI18n } from '../lib/i18n';
@@ -26,7 +27,7 @@ export default function Collections() {
             <img
               decoding="async"
               loading="lazy"
-              src={c.image}
+              src={safeImageSrc(c.image)}
               alt={c.name}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             />

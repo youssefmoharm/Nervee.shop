@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { safeImageSrc } from '../lib/images';
 import { Link, useParams } from 'react-router-dom';
 import type { Collection, Product } from '../types';
 import { productService } from '../services/productService';
@@ -62,7 +63,7 @@ export default function CollectionDetail() {
         <img
           decoding="async"
           loading="lazy"
-          src={collection.image}
+          src={safeImageSrc(collection.image)}
           alt={collection.name}
           className="absolute inset-0 w-full h-full object-cover"
         />

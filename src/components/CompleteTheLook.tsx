@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { safeImageSrc } from '../lib/images';
 import { ShoppingBag } from 'lucide-react';
 import type { Product, CartLine, Size } from '../types';
 import { useCart } from '../context/CartContext';
@@ -138,7 +139,7 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
               <img
                 decoding="async"
                 loading="lazy"
-                src={mainProduct.colors[0].image}
+                src={safeImageSrc(mainProduct.colors[0].image)}
                 alt={mainProduct.name}
                 className="w-full h-full object-cover"
               />
@@ -197,7 +198,7 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
                     <img
                       decoding="async"
                       loading="lazy"
-                      src={item.colors[0].image}
+                      src={safeImageSrc(item.colors[0].image)}
                       alt={item.name}
                       className="w-full h-full object-cover"
                     />

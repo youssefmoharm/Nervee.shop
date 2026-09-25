@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { safeImageSrc } from '../lib/images';
 import { Link, useNavigate } from 'react-router-dom';
 import { Check, ChevronLeft, Loader2, Truck, DollarSign, Package } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -769,7 +770,7 @@ export default function Checkout() {
                         <img
                           decoding="async"
                           loading="lazy"
-                          src={l.image}
+                          src={safeImageSrc(l.image)}
                           alt={l.name}
                           className="w-full h-full object-cover"
                         />

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { safeImageSrc } from '../lib/images';
 import FocusTrap from 'focus-trap-react';
 import { ChevronLeft, ChevronRight, Heart, X } from 'lucide-react';
 import { useQuickView } from '../context/QuickViewContext';
@@ -155,7 +156,7 @@ export default function ProductQuickView() {
                   <img
                     decoding="async"
                     loading="lazy"
-                    src={image}
+                    src={safeImageSrc(image)}
                     alt={`${product.name} — ${color.name}`}
                     className="w-full h-full object-cover"
                   />
@@ -215,7 +216,7 @@ export default function ProductQuickView() {
                         <img
                           decoding="async"
                           loading="lazy"
-                          src={img}
+                          src={safeImageSrc(img)}
                           alt={`Product ${idx + 1}`}
                           className="w-full h-full object-cover"
                         />

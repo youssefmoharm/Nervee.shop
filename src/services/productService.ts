@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { logError } from '../lib/sentry';
 import { containsArabic } from '../lib/format';
+import { safeImageSrc } from '../lib/images';
 import { ProductRow, ColorRow, AvailabilityRow, CollectionRow } from './types';
 import {
   products as mockProducts,
@@ -78,8 +79,8 @@ function transformProduct(row: ProductRow): Product {
     material: row.material || '',
     care: row.care || [],
     gallery:
-      (row.gallery as string[]) ||
-      (row.product_colors as ProductColorRow[] | undefined)?.map(c => c.image).filter(Boolean) ||
+      (row.gallery as string[] | undefined)?.map(safeImageSrc) ||
+      (row.product_colors as ProductColorRow[] | undefined)?.map(c => safeImageSrc(c.image)) ||
       [],
     isBestSeller: row.is_best_seller || false,
     createdAt: row.created_at,
@@ -98,8 +99,8 @@ function transformColor(row: ColorRow): ProductColor {
   return {
     name: row.name,
     hex: row.hex,
-    image: row.image,
-    hoverImage: row.hover_image || undefined,
+    image: safeImageSrc(row.image),
+    hoverImage: row.hover_image ? safeImageSrc(row.hover_image) : undefined,
   };
 }
 
@@ -185,7 +186,7 @@ function transformCollection(row: CollectionRow): Collection {
     name: row.name,
     tagline: row.tagline,
     description: row.description,
-    image: row.image,
+    image: safeImageSrc(row.image),
   };
 }
 

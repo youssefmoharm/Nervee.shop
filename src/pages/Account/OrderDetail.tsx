@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { safeImageSrc } from '../../lib/images';
 import { Link, useParams } from 'react-router-dom';
 import { ChevronLeft, Loader2 } from 'lucide-react';
 import { orderService } from '../../services/orderService';
@@ -176,7 +177,7 @@ export default function OrderDetail() {
                 <img
                   decoding="async"
                   loading="lazy"
-                  src={item.image}
+                  src={safeImageSrc(item.image)}
                   alt={item.product_name}
                   className="w-full h-full object-cover"
                 />

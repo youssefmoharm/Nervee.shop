@@ -12,6 +12,7 @@
  */
 
 import { useState, HTMLAttributes } from 'react';
+import { safeImageSrc } from '../lib/images';
 
 interface OptimizedImageProps extends Omit<HTMLAttributes<HTMLImageElement>, 'src' | 'alt'> {
   src?: string;
@@ -78,7 +79,7 @@ export default function OptimizedImage({
 
       <img
         decoding="async"
-        src={src}
+        src={safeImageSrc(src)}
         alt={alt}
         width={width}
         height={height}

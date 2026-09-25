@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { safeImageSrc } from '../lib/images';
 import FocusTrap from 'focus-trap-react';
 import { X } from 'lucide-react';
 import type { Product } from '../types';
@@ -105,7 +106,7 @@ export default function ComparisonModal({
                         <img
                           decoding="async"
                           loading="lazy"
-                          src={product.colors[0].image}
+                          src={safeImageSrc(product.colors[0].image)}
                           alt={product.name}
                           className="w-full aspect-[4/5] object-cover rounded-lg"
                         />

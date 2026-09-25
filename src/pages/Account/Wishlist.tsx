@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { safeImageSrc } from '../../lib/images';
 import { Link, useNavigate } from 'react-router-dom';
 import { X, Share2 } from 'lucide-react';
 import { useWishlist } from '../../context/WishlistContext';
@@ -53,7 +54,7 @@ export default function Wishlist() {
                     <img
                       decoding="async"
                       loading="lazy"
-                      src={item.image}
+                      src={safeImageSrc(item.image)}
                       alt={item.name}
                       className="w-full h-full object-cover"
                     />

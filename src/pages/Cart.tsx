@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { safeImageSrc } from '../lib/images';
 import { Link, useNavigate } from 'react-router-dom';
 import { Lock, Minus, Plus, ShieldCheck, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -126,7 +127,7 @@ export default function Cart() {
                     <img
                       decoding="async"
                       loading="lazy"
-                      src={line.image}
+                      src={safeImageSrc(line.image)}
                       alt={line.name}
                       className="w-full h-full object-cover"
                     />
