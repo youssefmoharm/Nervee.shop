@@ -48,14 +48,27 @@ export default function OrderDetail() {
   );
   const [returnError, setReturnError] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!id) return;
+    let cancelled = false;
+    setLoadError(false);
     orderService
       .getById(id)
-      .then(data => setOrder(data as OrderDetailData | null))
-      .catch(err => logError('Failed to load order', err));
-  }, [id]);
+      .then(data => {
+        if (!cancelled) setOrder(data as OrderDetailData | null);
+      })
+      .catch(err => {
+        logError('Failed to load order', err);
+        // `order` stays undefined on error -> infinite spinner (BUG-04).
+        if (!cancelled) setLoadError(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id, reloadKey]);
 
   const canReturn =
     order &&
@@ -103,6 +116,17 @@ export default function OrderDetail() {
     setIsCancelling(false);
     setTimeout(() => setShowReturn(false), 1500);
   };
+
+  if (loadError) {
+    return (
+      <AccountLayout>
+        <p className="text-navy/60 mb-4">{t("We couldn't load this order.")}</p>
+        <button onClick={() => setReloadKey(k => k + 1)} className="nv-eyebrow underline">
+          {t('Try again')}
+        </button>
+      </AccountLayout>
+    );
+  }
 
   if (order === undefined) {
     return (

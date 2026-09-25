@@ -27,13 +27,40 @@ const statusColor: Record<string, string> = {
 export default function Orders() {
   const { t } = useI18n();
   const [orders, setOrders] = useState<OrderRow[] | null>(null);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
+    setLoadError(false);
     orderService
       .listMine()
-      .then(data => setOrders(data as OrderRow[]))
-      .catch(err => logError('Failed to load orders', err));
-  }, []);
+      .then(data => {
+        if (!cancelled) setOrders(data as OrderRow[]);
+      })
+      .catch(err => {
+        logError('Failed to load orders', err);
+        // Leave `orders` null on error and the spinner never stops (BUG-04).
+        if (!cancelled) setLoadError(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadKey]);
+
+  if (loadError) {
+    return (
+      <AccountLayout>
+        <h2 className="nv-heading text-3xl mb-6">{t('Orders')}</h2>
+        <div className="text-center py-16 border border-navy/10">
+          <p className="text-navy/60 mb-4">{t("We couldn't load your orders.")}</p>
+          <button onClick={() => setReloadKey(k => k + 1)} className="nv-eyebrow underline">
+            {t('Try again')}
+          </button>
+        </div>
+      </AccountLayout>
+    );
+  }
 
   return (
     <AccountLayout>

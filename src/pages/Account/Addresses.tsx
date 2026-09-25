@@ -22,16 +22,26 @@ export default function Addresses() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const load = () =>
     addressService
       .list()
-      .then(setAddresses)
-      .catch(err => logError('Failed to load addresses', err));
+      .then(addrs => {
+        setLoadError(false);
+        setAddresses(addrs);
+      })
+      .catch(err => {
+        logError('Failed to load addresses', err);
+        // Never leave `addresses` null here: the list spinner never stops (BUG-04).
+        setLoadError(true);
+      });
 
   useEffect(() => {
     load();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reloadKey]);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -138,7 +148,14 @@ export default function Addresses() {
         </form>
       )}
 
-      {!addresses ? (
+      {loadError ? (
+        <div className="text-center py-16 border border-navy/10">
+          <p className="text-navy/60 mb-4">{t("We couldn't load your addresses.")}</p>
+          <button onClick={() => setReloadKey(k => k + 1)} className="nv-eyebrow underline">
+            {t('Try again')}
+          </button>
+        </div>
+      ) : !addresses ? (
         <Loader2 className="animate-spin text-navy/40" size={20} />
       ) : addresses.length === 0 && !showForm ? (
         <p className="text-navy/60">{t('No saved addresses yet.')}</p>
