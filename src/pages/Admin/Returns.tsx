@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { logError } from '../../lib/sentry';
 import AdminLayout from './AdminLayout';
 import { useToast } from '../../context/ToastContext';
 
@@ -20,8 +21,14 @@ export default function AdminReturns() {
     'pending',
   );
   const { showToast } = useToast();
+  // Keep the toast fn out of the fetch callback's deps: a fresh identity every
+  // render would re-run the effect forever (audit BUG-05).
+  const showToastRef = useRef(showToast);
+  useEffect(() => {
+    showToastRef.current = showToast;
+  }, [showToast]);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     let q = supabase
       .from('order_return_requests')
       .select(
@@ -32,17 +39,17 @@ export default function AdminReturns() {
     if (filter) q = q.eq('status', filter);
     const { data, error } = await q;
     if (error) {
-      console.error(error);
-      showToast('Failed to load returns', 'error', 3000);
+      logError('Failed to load return requests', error);
+      showToastRef.current('Failed to load returns', 'error', 3000);
       setRows([]);
       return;
     }
     setRows(data as unknown as ReturnRow[]);
-  };
+  }, [filter]);
 
   useEffect(() => {
     load();
-  }, [filter, load]);
+  }, [load]);
 
   const update = async (id: string, status: 'approved' | 'rejected' | 'completed') => {
     const { error } = await supabase
@@ -52,7 +59,7 @@ export default function AdminReturns() {
     if (error) showToast(error.message, 'error', 4000);
     else {
       showToast(`Return ${status}`, 'success', 2500);
-      load();
+      await load();
     }
   };
 
