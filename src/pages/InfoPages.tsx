@@ -553,8 +553,12 @@ export function Privacy() {
 
       <h2 className="text-navy font-semibold text-lg pt-2">{t('Who we share it with')}</h2>
       <p>
-        Service providers who help us run the store: Supabase (hosting/database), Resend
-        (transactional email), and delivery couriers, each only with what they need to do their job.
+        Service providers who help us run the store, each only with what they need for their job:
+        Supabase (hosting, database and sign-in), Resend (transactional email), delivery couriers
+        (to ship your order), Google Analytics (site usage statistics), Meta (measuring our ad
+        campaigns), Crisp (live chat support) and Sentry (error monitoring). Analytics and ad
+        measurement only run if you accept the analytics cookies described below. We don&apos;t sell
+        your personal data.
       </p>
 
       <h2 className="text-navy font-semibold text-lg pt-2">{t('Your rights')}</h2>
@@ -565,8 +569,12 @@ export function Privacy() {
 
       <h2 className="text-navy font-semibold text-lg pt-2">{t('Cookies')}</h2>
       <p>
-        We use essential cookies/local storage to keep you signed in and remember your cart. We
-        don&apos;t use third-party advertising trackers.
+        We use essential cookies and local storage to keep you signed in, remember your cart and
+        keep checkout working — these are always on. If you accept in the cookie banner, we also
+        load two analytics tools: Google Analytics (how the site is used) and Meta Pixel (whether
+        our ads lead to orders). If you choose &quot;Essential only&quot;, neither is loaded. You
+        can change your choice at any time by clearing this site&apos;s data in your browser
+        settings — the banner will ask again on your next visit.
       </p>
 
       <h2 className="text-navy font-semibold text-lg pt-2">{t('Contact')}</h2>
