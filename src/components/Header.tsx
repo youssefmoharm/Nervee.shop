@@ -90,13 +90,11 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
               <button
                 type="button"
                 data-testid="lang-toggle"
-                aria-label={
-                  locale === 'ar' ? 'Switch to English' : 'Ø§Ù„ØªØ¨Ø¯ÙŠÙ„ Ø¥Ù„Ù‰ Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©'
-                }
+                aria-label={locale === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
                 onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
                 className="hidden sm:flex h-10 min-w-[2.5rem] items-center justify-center px-2 text-xs font-semibold tracking-wide hover:bg-mist rounded transition-colors border border-white/20 text-white"
               >
-                {locale === 'ar' ? 'EN' : 'Ø¹'}
+                {locale === 'ar' ? 'EN' : 'AR'}
               </button>
               <button
                 aria-label={t('Search')}
@@ -210,7 +208,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
             onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
             className="px-3 py-1.5 border border-white/25 rounded hover:text-white transition-colors"
           >
-            {locale === 'ar' ? 'English' : 'Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©'}
+            {locale === 'ar' ? 'English' : 'العربية'}
           </button>
           <a
             href="https://www.instagram.com/gotthenerve58/"
