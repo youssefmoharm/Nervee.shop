@@ -2312,6 +2312,11 @@ DROP POLICY IF EXISTS "Users can update own enhanced profile" ON customers;
 CREATE POLICY "Users can update own enhanced profile" ON customers
   FOR UPDATE USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
+-- 038: admin read access (Admin → Customers, Dashboard counts, review author embeds)
+DROP POLICY IF EXISTS "Admins can view all customers" ON customers;
+CREATE POLICY "Admins can view all customers" ON customers FOR SELECT USING (
+  auth.uid() IN (SELECT user_id FROM admin_users)
+);
 
 DROP POLICY IF EXISTS "Users can view own addresses" ON customer_addresses;
 CREATE POLICY "Users can view own addresses" ON customer_addresses FOR SELECT USING (
@@ -2345,6 +2350,11 @@ CREATE POLICY "Admins can view all orders" ON orders FOR SELECT USING (
 DROP POLICY IF EXISTS "Users can view own order items" ON order_items;
 CREATE POLICY "Users can view own order items" ON order_items FOR SELECT USING (
   order_id IN (SELECT id FROM orders WHERE customer_id = auth.uid())
+);
+-- 038: admin read access (order line items / fulfillment data)
+DROP POLICY IF EXISTS "Admins can view all order items" ON order_items;
+CREATE POLICY "Admins can view all order items" ON order_items FOR SELECT USING (
+  auth.uid() IN (SELECT user_id FROM admin_users)
 );
 
 -- ---------------------------------------------------------------------------
