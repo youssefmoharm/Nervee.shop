@@ -1,12 +1,12 @@
 /**
  * Monitoring and alerting utilities for Edge Functions
  *
- * In production, these would integrate with services like:
- * - Sentry for error tracking
- * - Slack/Discord for real-time alerts
- * - Datadog/New Relic for metrics
- *
- * For now, logs to console (visible in Supabase Edge Function logs)
+ * - Always logs structured events to console (Supabase Edge Function logs).
+ * - When a Sentry DSN is configured (SENTRY_DSN function secret, falling back
+ *   to VITE_SENTRY_DSN), error/warning events are additionally forwarded to
+ *   Sentry's envelope endpoint so order/email/webhook failures raise real
+ *   alerts instead of dying in logs (audit OPS-02).
+ * - Forwarding is fire-and-forget and can never fail the request.
  */
 
 export interface MonitoringEvent {
@@ -20,6 +20,111 @@ export interface MonitoringEvent {
 
 // Correlation ID header name (can be customized)
 export const CORRELATION_ID_HEADER = 'x-correlation-id';
+
+const SENTRY_MAX_MESSAGE = 4096;
+const SENTRY_MAX_EXTRA_JSON = 64 * 1024;
+const SENTRY_CLIENT = 'nerve-edge-functions/1.0.0';
+
+function env(name: string): string | null {
+  try {
+    return Deno.env.get(name) || null;
+  } catch {
+    return null;
+  }
+}
+
+interface ParsedDsn {
+  publicKey: string;
+  origin: string;
+  projectId: string;
+}
+
+/** Parse https://<key>@<host>/<project_id> — never logs or returns the key. */
+export function parseSentryDsn(dsn: string): ParsedDsn | null {
+  try {
+    const url = new URL(dsn);
+    const projectId = url.pathname.replace(/^\//, '');
+    if (!url.username || !projectId) return null;
+    const port = url.port ? `:${url.port}` : '';
+    return {
+      publicKey: decodeURIComponent(url.username),
+      origin: `${url.protocol}//${url.hostname}${port}`,
+      projectId,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function safeExtra(data: unknown): Record<string, unknown> | undefined {
+  if (data === undefined) return undefined;
+  try {
+    const json = JSON.stringify(data);
+    if (json.length > SENTRY_MAX_EXTRA_JSON) {
+      return { truncated: true, originalBytes: json.length };
+    }
+    return { data };
+  } catch {
+    return undefined;
+  }
+}
+
+/** Best-effort forward to Sentry. Never throws, never blocks the caller. */
+export async function sendToSentry(event: MonitoringEvent): Promise<void> {
+  const dsn = env('SENTRY_DSN') || env('VITE_SENTRY_DSN');
+  if (!dsn) return;
+  const parsed = parseSentryDsn(dsn);
+  if (!parsed) {
+    console.warn('[MONITORING] SENTRY_DSN is set but unparseable; event not forwarded');
+    return;
+  }
+
+  const eventId = crypto.randomUUID().replace(/-/g, '');
+  const envelopeHeader = { event_id: eventId, sent_at: new Date().toISOString() };
+  const itemHeader = { type: 'event' };
+  const extra = safeExtra(event.data);
+  const payload = {
+    event_id: eventId,
+    level: event.type === 'error' ? 'error' : 'warning',
+    message: event.message.slice(0, SENTRY_MAX_MESSAGE),
+    logger: 'nerve-edge-functions',
+    platform: 'other',
+    environment: env('SENTRY_ENVIRONMENT') || env('VITE_ENV') || 'production',
+    release: env('SENTRY_RELEASE') || undefined,
+    timestamp: Date.now() / 1000,
+    tags: {
+      category: event.category,
+      source: 'supabase-edge-function',
+      ...(event.correlationId ? { correlation_id: event.correlationId } : {}),
+    },
+    ...(extra ? { extra } : {}),
+  };
+
+  const envelope = [
+    JSON.stringify(envelopeHeader),
+    JSON.stringify(itemHeader),
+    JSON.stringify(payload),
+  ].join('\n');
+
+  try {
+    const res = await fetch(`${parsed.origin}/api/${parsed.projectId}/envelope/`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/x-sentry-envelope',
+        'x-sentry-auth': `Sentry sentry_version=7, sentry_key=${parsed.publicKey}, sentry_client=${SENTRY_CLIENT}`,
+      },
+      body: envelope,
+    });
+    if (!res.ok) {
+      console.warn(`[MONITORING] Sentry forward rejected: HTTP ${res.status}`);
+    }
+  } catch (err) {
+    console.warn(
+      '[MONITORING] Sentry forward failed:',
+      err instanceof Error ? err.message : String(err),
+    );
+  }
+}
 
 /**
  * Generate a unique correlation ID
@@ -40,7 +145,8 @@ export function getCorrelationId(req: Request): string {
 }
 
 /**
- * Log a structured event with context
+ * Log a structured event with context.
+ * Error/warning events are additionally forwarded to Sentry when configured.
  */
 export function logEvent(event: MonitoringEvent) {
   const prefix = `[${event.type.toUpperCase()}] [${event.category}]`;
@@ -48,6 +154,11 @@ export function logEvent(event: MonitoringEvent) {
     console.log(prefix, `[${event.correlationId}]`, event.message, event.data || '');
   } else {
     console.log(prefix, event.message, event.data || '');
+  }
+
+  if (event.type === 'error' || event.type === 'warning') {
+    // Fire-and-forget: alerting must never slow down or fail the request.
+    void sendToSentry(event);
   }
 }
 

@@ -135,7 +135,7 @@ its own auth mode).
 ## 7. Sentry / Monitoring
 
 - Frontend: `src/lib/sentry.ts` — `initSentry()` reads `VITE_SENTRY_DSN`, tags `environment` from `VITE_ENV`, `tracesSampleRate` 0.1 in prod, 1.0 in dev, PII minimized.
-- Edge: `supabase/functions/_shared/monitoring.ts` — `PerformanceTimer`, `logEvent`, `logOrderSuccess/Failure`, `logRateLimitHit`, `logEmailSuccess`.
+- Edge: `supabase/functions/_shared/monitoring.ts` — `PerformanceTimer`, `logEvent`, `logOrderSuccess/Failure`, `logRateLimitHit`, `logEmailSuccess`. Error/warning events are additionally forwarded to Sentry's envelope endpoint when the `SENTRY_DSN` function secret is set (falls back to `VITE_SENTRY_DSN`); fire-and-forget, so alerting can never fail a request.
 - Every edge function logs with correlation: order creation, order status, ticket, rate limit, guest verification.
 - **Verify:** trigger a test error in staging and confirm ingestion in Sentry dashboard.
 
