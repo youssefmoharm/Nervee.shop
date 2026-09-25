@@ -697,6 +697,19 @@ CREATE INDEX IF NOT EXISTS products_name_simple_idx
   ON products USING GIN (to_tsvector('simple', name));
 CREATE INDEX IF NOT EXISTS products_search_simple_idx
   ON products USING GIN (to_tsvector('simple', name || ' ' || description || ' ' || category));
+-- Hot catalog filter/sort paths (PERF-06, migration 040)
+CREATE INDEX IF NOT EXISTS products_active_created_idx
+  ON products (is_active, created_at DESC);
+CREATE INDEX IF NOT EXISTS products_active_category_idx
+  ON products (is_active, category);
+CREATE INDEX IF NOT EXISTS products_active_price_idx
+  ON products (is_active, price);
+CREATE INDEX IF NOT EXISTS products_best_seller_idx
+  ON products (is_best_seller)
+  WHERE is_best_seller;
+CREATE INDEX IF NOT EXISTS products_collection_idx
+  ON products (collection_id)
+  WHERE collection_id IS NOT NULL;
 
 -- Core references
 CREATE INDEX IF NOT EXISTS product_colors_product_id_idx ON product_colors(product_id);
