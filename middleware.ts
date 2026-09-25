@@ -1,14 +1,31 @@
 /**
- * Vercel Edge Middleware — product page OG/meta injection for social scrapers.
+ * Vercel Edge Middleware — per-route HTML head injection for crawlers.
  *
- * Scrapers (WhatsApp, Facebook, Telegram, Slack, etc.) do not run JS, so a
- * pure SPA never exposes per-product Open Graph tags. This middleware rewrites
- * the SPA shell with real product meta for /product/:slug only when the product
- * exists. On any error it falls through to the normal SPA rewrite so humans
- * are never broken.
+ * Scrapers (WhatsApp, Facebook, Telegram, Slack, Googlebot's first pass, etc.)
+ * do not run JS, so a pure SPA never exposes per-route titles/canonicals or
+ * per-product Open Graph tags. This middleware rewrites the SPA shell with
+ * real meta for:
+ *   - /product/:slug        (fetched from Supabase)
+ *   - /collections/:id      (fetched from Supabase)
+ *   - known static routes   (title/description table below)
+ *
+ * On any error it falls through to the normal SPA rewrite so humans are
+ * never broken. Routes not listed here are untouched (index.html defaults).
  */
 export const config = {
-  matcher: '/product/:path*',
+  matcher: [
+    '/product/:path*',
+    '/shop',
+    '/collections/:path*',
+    '/about',
+    '/contact',
+    '/faq',
+    '/shipping',
+    '/returns',
+    '/privacy',
+    '/terms',
+    '/size-guide',
+  ],
 };
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
@@ -16,6 +33,61 @@ const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPA
 
 const SITE = 'https://www.nerveey.shop';
 const FALLBACK_IMAGE = `${SITE}/nervee-logo-favicon.png`;
+
+interface RouteSeo {
+  title: string;
+  description: string;
+}
+
+/**
+ * Mirrors each page's `useSEO({ title, description })` so the first HTML
+ * fetch (crawlers, social scrapers) matches what clients render after
+ * hydration (audit SEO-01: every route used to serve the homepage title +
+ * canonical=/ in HTML).
+ */
+const STATIC_SEO: Record<string, RouteSeo> = {
+  '/shop': {
+    title: 'Shop | NERVE - Cool but Chic',
+    description: 'Browse our curated collection of contemporary clothing and lifestyle products.',
+  },
+  '/collections': {
+    title: 'Collections | NERVE Streetwear',
+    description: 'Explore NERVE collections — contemporary Egyptian streetwear and concept-store essentials.',
+  },
+  '/about': {
+    title: 'About Us | NERVE',
+    description:
+      'NERVE is a contemporary Egyptian concept store built around individuality, movement, and everyday identity.',
+  },
+  '/contact': {
+    title: 'Contact Us | NERVE',
+    description: 'Get in touch with the NERVE team — questions, orders and collaborations.',
+  },
+  '/faq': {
+    title: 'FAQ | NERVE - Shipping, Returns & Sizing',
+    description: 'Answers about NERVE shipping, returns, exchanges, sizing and payments.',
+  },
+  '/shipping': {
+    title: 'Shipping & Delivery | NERVE',
+    description: 'NERVE shipping and delivery across Egypt — timelines, rates and free-shipping threshold.',
+  },
+  '/returns': {
+    title: 'Returns & Exchanges | NERVE',
+    description: 'NERVE returns and exchanges policy — how to start a return and what to expect.',
+  },
+  '/privacy': {
+    title: 'Privacy Policy | NERVE',
+    description: 'How NERVE collects, uses and protects your personal information.',
+  },
+  '/terms': {
+    title: 'Terms of Service | NERVE',
+    description: 'The terms and conditions governing your use of nerveey.shop and purchases from NERVE.',
+  },
+  '/size-guide': {
+    title: 'Size Guide | NERVE',
+    description: 'Find your NERVE size — measurements and fit guidance for every category.',
+  },
+};
 
 function escapeHtml(value: string): string {
   return value
@@ -71,18 +143,18 @@ function upsertCanonical(html: string, href: string): string {
   return html.replace('</head>', `  <link rel="canonical" href="${safe}">\n  </head>`);
 }
 
+const SUPABASE_HEADERS = {
+  apikey: SUPABASE_ANON_KEY,
+  Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+};
+
 async function fetchProduct(slug: string) {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
   // products has no image/images columns — primary art lives on product_colors.
   const productUrl = `${SUPABASE_URL}/rest/v1/products?slug=eq.${encodeURIComponent(
     slug,
   )}&is_active=eq.true&select=id,slug,name,description,price`;
-  const res = await fetch(productUrl, {
-    headers: {
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-    },
-  });
+  const res = await fetch(productUrl, { headers: SUPABASE_HEADERS });
   if (!res.ok) return null;
   const rows = await res.json();
   if (!Array.isArray(rows) || rows.length === 0) return null;
@@ -100,12 +172,7 @@ async function fetchProduct(slug: string) {
     const colorUrl = `${SUPABASE_URL}/rest/v1/product_colors?product_id=eq.${encodeURIComponent(
       product.id,
     )}&select=image,hover_image&order=sort_order.asc&limit=1`;
-    const colorRes = await fetch(colorUrl, {
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      },
-    });
+    const colorRes = await fetch(colorUrl, { headers: SUPABASE_HEADERS });
     if (colorRes.ok) {
       const colors = await colorRes.json();
       if (Array.isArray(colors) && colors.length > 0 && colors[0]?.image) {
@@ -117,6 +184,58 @@ async function fetchProduct(slug: string) {
   }
 
   return product;
+}
+
+async function fetchCollection(id: string) {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/collections?id=eq.${encodeURIComponent(
+      id,
+    )}&select=id,name,tagline,description`,
+    { headers: SUPABASE_HEADERS },
+  );
+  if (!res.ok) return null;
+  const rows = await res.json();
+  if (!Array.isArray(rows) || rows.length === 0) return null;
+  return rows[0] as { id: string; name: string; tagline?: string; description?: string };
+}
+
+/** Fetch the static SPA shell (real file, not the catch-all rewrite). */
+async function fetchShell(url: URL): Promise<string | null> {
+  const shellRes = await fetch(new URL('/index.html', url.origin), {
+    headers: { accept: 'text/html' },
+  });
+  if (!shellRes.ok) return null;
+  const shellType = shellRes.headers.get('content-type') || '';
+  if (!shellType.includes('text/html')) return null;
+  return shellRes.text();
+}
+
+function shellResponse(html: string): Response {
+  return new Response(html, {
+    status: 200,
+    headers: {
+      'content-type': 'text/html; charset=utf-8',
+      'cache-control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400',
+      'x-robots-tag': 'all',
+    },
+  });
+}
+
+/** Generic head injection: title, self-canonical, description + OG/Twitter. */
+function injectRouteMeta(html: string, route: string, seo: RouteSeo): string {
+  const pageUrl = `${SITE}${route}`;
+  let out = html;
+  out = upsertTitle(out, seo.title);
+  out = upsertCanonical(out, pageUrl);
+  out = upsertMeta(out, 'name', 'description', seo.description);
+  out = upsertMeta(out, 'property', 'og:title', seo.title);
+  out = upsertMeta(out, 'property', 'og:description', seo.description);
+  out = upsertMeta(out, 'property', 'og:url', pageUrl);
+  out = upsertMeta(out, 'property', 'og:type', 'website');
+  out = upsertMeta(out, 'name', 'twitter:title', seo.title);
+  out = upsertMeta(out, 'name', 'twitter:description', seo.description);
+  return out;
 }
 
 function injectProductMeta(
@@ -162,30 +281,42 @@ function injectProductMeta(
 export default async function middleware(request: Request): Promise<Response | undefined> {
   try {
     const url = new URL(request.url);
-    const slug = decodeURIComponent(url.pathname.replace(/^\/product\//, '').replace(/\/$/, ''));
-    if (!slug || slug.includes('/')) return;
+    // Normalize: '/shop/' and '/shop' are the same page (canonical parity).
+    const route = url.pathname.replace(/\/+$/, '') || '/';
 
-    const product = await fetchProduct(slug);
-    if (!product) return; // unknown product → normal SPA
+    let html: string | null = null;
 
-    // Fetch the static SPA shell (real file, not the catch-all rewrite).
-    const shellRes = await fetch(new URL('/index.html', url.origin), {
-      headers: { accept: 'text/html' },
-    });
-    if (!shellRes.ok) return;
-    const shellType = shellRes.headers.get('content-type') || '';
-    if (!shellType.includes('text/html')) return;
+    if (route.startsWith('/product/')) {
+      const slug = decodeURIComponent(route.slice('/product/'.length));
+      if (!slug || slug.includes('/')) return;
+      const product = await fetchProduct(slug);
+      if (!product) return; // unknown product → normal SPA
+      html = await fetchShell(url);
+      if (html === null) return;
+      html = injectProductMeta(html, product);
+    } else if (route.startsWith('/collections/')) {
+      const id = decodeURIComponent(route.slice('/collections/'.length));
+      if (!id || id.includes('/')) return;
+      const collection = await fetchCollection(id);
+      if (!collection) return; // unknown collection → normal SPA
+      html = await fetchShell(url);
+      if (html === null) return;
+      html = injectRouteMeta(html, route, {
+        title: `${collection.name} | NERVE`,
+        description:
+          collection.description ||
+          collection.tagline ||
+          'Browse the NERVE collection.',
+      });
+    } else {
+      const seo = STATIC_SEO[route];
+      if (!seo) return; // unmapped route → normal SPA
+      html = await fetchShell(url);
+      if (html === null) return;
+      html = injectRouteMeta(html, route, seo);
+    }
 
-    const html = await shellRes.text();
-    const injected = injectProductMeta(html, product);
-    return new Response(injected, {
-      status: 200,
-      headers: {
-        'content-type': 'text/html; charset=utf-8',
-        'cache-control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400',
-        'x-robots-tag': 'all',
-      },
-    });
+    return shellResponse(html);
   } catch {
     // Never break human navigation — fall through to SPA rewrite.
     return;
