@@ -200,10 +200,23 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
     sendMessage();
   };
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-4 end-4 z-[90] w-80 h-[500px] bg-white border border-navy/10 rounded-lg shadow-2xl flex flex-col overflow-hidden">
+    <div
+      className="fixed bottom-4 end-4 z-[90] w-80 h-[500px] bg-white border border-navy/10 rounded-lg shadow-2xl flex flex-col overflow-hidden"
+      role="dialog"
+      aria-label={t('NERVE AI Support')}
+    >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-navy/10 bg-navy text-white rounded-t-lg">
         <div className="flex items-center gap-3">

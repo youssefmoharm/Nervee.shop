@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import FocusTrap from 'focus-trap-react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -1494,54 +1495,58 @@ export default function ProductDetail() {
 
       {/* Zoom lightbox */}
       {zoomOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-label={t('Product image zoom')}
-        >
-          <button
-            type="button"
-            aria-label={t('Close zoom')}
-            className="absolute inset-0 border-0 p-0 bg-black/95 cursor-zoom-out"
-            onClick={() => setZoomOpen(false)}
-          />
-          <button
-            type="button"
-            aria-label={t('Close zoom')}
-            onClick={() => setZoomOpen(false)}
-            className="absolute top-4 end-4 z-10 w-11 h-11 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20"
-          >
-            <X size={20} />
-          </button>
-          <img
-            src={activeSrc}
-            alt={product.name}
-            className="relative z-[1] max-w-full max-h-full object-contain select-none"
-          />
-          {galleryImages.length > 1 && (
-            <>
+        <FocusTrap active onClickOutside={() => setZoomOpen(false)}>
+          <div className="contents">
+            <div
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+              role="dialog"
+              aria-modal="true"
+              aria-label={t('Product image zoom')}
+            >
               <button
                 type="button"
-                aria-label={t('Previous image')}
-                onClick={() =>
-                  setActiveImage(i => (i - 1 + galleryImages.length) % galleryImages.length)
-                }
-                className="absolute start-4 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20"
-              >
-                <ChevronLeft size={20} />
-              </button>
+                aria-label={t('Close zoom')}
+                className="absolute inset-0 border-0 p-0 bg-black/95 cursor-zoom-out"
+                onClick={() => setZoomOpen(false)}
+              />
               <button
                 type="button"
-                aria-label={t('Next image')}
-                onClick={() => setActiveImage(i => (i + 1) % galleryImages.length)}
-                className="absolute end-4 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20"
+                aria-label={t('Close zoom')}
+                onClick={() => setZoomOpen(false)}
+                className="absolute top-4 end-4 z-10 w-11 h-11 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20"
               >
-                <ChevronRight size={20} />
+                <X size={20} />
               </button>
-            </>
-          )}
-        </div>
+              <img
+                src={activeSrc}
+                alt={product.name}
+                className="relative z-[1] max-w-full max-h-full object-contain select-none"
+              />
+              {galleryImages.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    aria-label={t('Previous image')}
+                    onClick={() =>
+                      setActiveImage(i => (i - 1 + galleryImages.length) % galleryImages.length)
+                    }
+                    className="absolute start-4 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={t('Next image')}
+                    onClick={() => setActiveImage(i => (i + 1) % galleryImages.length)}
+                    className="absolute end-4 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </FocusTrap>
       )}
 
       {sizeGuideOpen && <SizeGuideModal onClose={() => setSizeGuideOpen(false)} />}

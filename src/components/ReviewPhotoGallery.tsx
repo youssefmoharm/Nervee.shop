@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import FocusTrap from 'focus-trap-react';
 
 interface ReviewPhotoGalleryProps {
   photos: string[];
@@ -9,6 +10,15 @@ interface ReviewPhotoGalleryProps {
 export default function ReviewPhotoGallery({ photos, productName }: ReviewPhotoGalleryProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentPhotoIdx, setCurrentPhotoIdx] = useState(0);
+
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxOpen(false);
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [lightboxOpen]);
 
   if (photos.length === 0) return null;
 
@@ -56,56 +66,65 @@ export default function ReviewPhotoGallery({ photos, productName }: ReviewPhotoG
 
       {/* Lightbox */}
       {lightboxOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-          <div className="relative w-full max-w-2xl max-h-[90vh]">
-            {/* Main image */}
-            <img
-              src={currentPhoto}
-              alt={`Customer submission ${currentPhotoIdx + 1} of ${photos.length}${
-                productName ? ` for ${productName}` : ''
-              }`}
-              className="w-full h-full object-contain rounded-lg"
-            />
-
-            {/* Close button */}
-            <button
-              onClick={() => setLightboxOpen(false)}
-              className="absolute top-4 end-4 p-2 bg-black/50 hover:bg-black/75 rounded-full text-white transition-colors"
-              aria-label="Close lightbox"
+        <FocusTrap active onClickOutside={() => setLightboxOpen(false)}>
+          <div className="contents">
+            <div
+              className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+              role="dialog"
+              aria-modal="true"
+              aria-label={`Customer photo ${currentPhotoIdx + 1} of ${photos.length}`}
             >
-              <X size={24} />
-            </button>
+              <div className="relative w-full max-w-2xl max-h-[90vh]">
+                {/* Main image */}
+                <img
+                  src={currentPhoto}
+                  alt={`Customer submission ${currentPhotoIdx + 1} of ${photos.length}${
+                    productName ? ` for ${productName}` : ''
+                  }`}
+                  className="w-full h-full object-contain rounded-lg"
+                />
 
-            {/* Previous button */}
-            {photos.length > 1 && (
-              <button
-                onClick={handlePrev}
-                className="absolute start-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/75 rounded-full text-white transition-colors"
-                aria-label="Previous photo"
-              >
-                <ChevronLeft size={24} />
-              </button>
-            )}
+                {/* Close button */}
+                <button
+                  onClick={() => setLightboxOpen(false)}
+                  className="absolute top-4 end-4 p-2 bg-black/50 hover:bg-black/75 rounded-full text-white transition-colors"
+                  aria-label="Close lightbox"
+                >
+                  <X size={24} />
+                </button>
 
-            {/* Next button */}
-            {photos.length > 1 && (
-              <button
-                onClick={handleNext}
-                className="absolute end-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/75 rounded-full text-white transition-colors"
-                aria-label="Next photo"
-              >
-                <ChevronRight size={24} />
-              </button>
-            )}
+                {/* Previous button */}
+                {photos.length > 1 && (
+                  <button
+                    onClick={handlePrev}
+                    className="absolute start-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/75 rounded-full text-white transition-colors"
+                    aria-label="Previous photo"
+                  >
+                    <ChevronLeft size={24} />
+                  </button>
+                )}
 
-            {/* Photo counter */}
-            {photos.length > 1 && (
-              <div className="absolute bottom-4 start-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
-                {currentPhotoIdx + 1} / {photos.length}
+                {/* Next button */}
+                {photos.length > 1 && (
+                  <button
+                    onClick={handleNext}
+                    className="absolute end-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/75 rounded-full text-white transition-colors"
+                    aria-label="Next photo"
+                  >
+                    <ChevronRight size={24} />
+                  </button>
+                )}
+
+                {/* Photo counter */}
+                {photos.length > 1 && (
+                  <div className="absolute bottom-4 start-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                    {currentPhotoIdx + 1} / {photos.length}
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
-        </div>
+        </FocusTrap>
       )}
     </>
   );

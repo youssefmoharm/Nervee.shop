@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
+import FocusTrap from 'focus-trap-react';
 import { Menu, Search, ShoppingBag, User, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -142,100 +143,111 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
       </header>
 
       {/* Mobile full-screen drawer */}
-      <div
-        data-testid="mobile-menu"
-        role="dialog"
-        aria-modal="true"
-        aria-label={t('Menu')}
-        aria-hidden={!mobileOpen}
-        tabIndex={-1}
-        ref={node => {
-          if (node) {
-            if (!mobileOpen) node.setAttribute('inert', '');
-            else node.removeAttribute('inert');
-          }
-        }}
-        className={`fixed inset-0 z-50 bg-navy transition-transform duration-300 lg:hidden ${
-          mobileOpen ? 'translate-x-0' : 'translate-x-full rtl:-translate-x-full'
-        }`}
-        style={{
-          transitionDuration: matchMedia('(prefers-reduced-motion: reduce)').matches
-            ? '0ms'
-            : '300ms',
-        }}
+      <FocusTrap
+        active={mobileOpen}
+        focusTrapOptions={{ escapeDeactivates: false, returnFocusOnDeactivate: true }}
       >
-        <div className="flex items-center justify-between h-16 px-5 border-b border-white/10">
-          <div className="flex items-center">
-            <img
-              src="/assets/images/nerve final logo.png"
-              alt="NERVE"
-              className="h-6 w-auto brightness-0 invert"
-              onError={e => {
-                // Fallback to text logo if image fails to load
-                e.currentTarget.style.display = 'none';
-                e.currentTarget.nextElementSibling?.classList.remove('hidden');
-              }}
-            />
-            <span className="nv-heading text-2xl hidden">NERVE</span>
+        <div className="contents">
+          <div
+            data-testid="mobile-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('Menu')}
+            aria-hidden={!mobileOpen}
+            tabIndex={-1}
+            ref={node => {
+              if (node) {
+                if (!mobileOpen) node.setAttribute('inert', '');
+                else node.removeAttribute('inert');
+              }
+            }}
+            className={`fixed inset-0 z-50 bg-navy transition-transform duration-300 lg:hidden ${
+              mobileOpen ? 'translate-x-0' : 'translate-x-full rtl:-translate-x-full'
+            }`}
+            style={{
+              transitionDuration: matchMedia('(prefers-reduced-motion: reduce)').matches
+                ? '0ms'
+                : '300ms',
+            }}
+          >
+            <div className="flex items-center justify-between h-16 px-5 border-b border-white/10">
+              <div className="flex items-center">
+                <img
+                  src="/assets/images/nerve final logo.png"
+                  alt="NERVE"
+                  className="h-6 w-auto brightness-0 invert"
+                  onError={e => {
+                    // Fallback to text logo if image fails to load
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+                <span className="nv-heading text-2xl hidden">NERVE</span>
+              </div>
+              <button
+                aria-label={t('Close menu')}
+                onClick={() => setMobileOpen(false)}
+                className="p-2"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <nav className="flex flex-col px-6 py-10 gap-1 overflow-y-auto max-h-[calc(100vh-4rem)]">
+              {links.map((l, i) => (
+                <Link
+                  key={l.label}
+                  to={l.to}
+                  className="nv-heading text-[13vw] leading-none py-3 border-b border-white/10 transition-opacity duration-300 opacity-0 animate-fadeUp"
+                  style={{
+                    animationDelay: `${i * 60}ms`,
+                    animationFillMode: 'forwards',
+                    ...(matchMedia('(prefers-reduced-motion: reduce)').matches && {
+                      animation: 'none',
+                      opacity: 1,
+                    }),
+                  }}
+                >
+                  {t(l.label)}
+                </Link>
+              ))}
+            </nav>
+            <div className="px-6 mt-4 flex flex-wrap items-center gap-4 nv-eyebrow text-silver">
+              <button
+                type="button"
+                data-testid="lang-toggle-mobile"
+                onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
+                className="px-3 py-1.5 border border-white/25 rounded hover:text-white transition-colors"
+              >
+                {locale === 'ar' ? 'English' : 'العربية'}
+              </button>
+              <a
+                href="https://www.instagram.com/gotthenerve58/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors"
+              >
+                Instagram
+              </a>
+              <a
+                href="https://www.tiktok.com/@user795916160817"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors"
+              >
+                TikTok
+              </a>
+              <a
+                href="https://www.linkedin.com/in/nerve-shop-b67623429"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors"
+              >
+                LinkedIn
+              </a>
+            </div>
           </div>
-          <button aria-label={t('Close menu')} onClick={() => setMobileOpen(false)} className="p-2">
-            <X size={24} />
-          </button>
         </div>
-        <nav className="flex flex-col px-6 py-10 gap-1 overflow-y-auto max-h-[calc(100vh-4rem)]">
-          {links.map((l, i) => (
-            <Link
-              key={l.label}
-              to={l.to}
-              className="nv-heading text-[13vw] leading-none py-3 border-b border-white/10 transition-opacity duration-300 opacity-0 animate-fadeUp"
-              style={{
-                animationDelay: `${i * 60}ms`,
-                animationFillMode: 'forwards',
-                ...(matchMedia('(prefers-reduced-motion: reduce)').matches && {
-                  animation: 'none',
-                  opacity: 1,
-                }),
-              }}
-            >
-              {t(l.label)}
-            </Link>
-          ))}
-        </nav>
-        <div className="px-6 mt-4 flex flex-wrap items-center gap-4 nv-eyebrow text-silver">
-          <button
-            type="button"
-            data-testid="lang-toggle-mobile"
-            onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
-            className="px-3 py-1.5 border border-white/25 rounded hover:text-white transition-colors"
-          >
-            {locale === 'ar' ? 'English' : 'العربية'}
-          </button>
-          <a
-            href="https://www.instagram.com/gotthenerve58/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-white transition-colors"
-          >
-            Instagram
-          </a>
-          <a
-            href="https://www.tiktok.com/@user795916160817"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-white transition-colors"
-          >
-            TikTok
-          </a>
-          <a
-            href="https://www.linkedin.com/in/nerve-shop-b67623429"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-white transition-colors"
-          >
-            LinkedIn
-          </a>
-        </div>
-      </div>
+      </FocusTrap>
     </>
   );
 }

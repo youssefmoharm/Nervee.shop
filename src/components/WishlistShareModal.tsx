@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, Copy, Mail } from 'lucide-react';
+import FocusTrap from 'focus-trap-react';
 import { createShare } from '../services/wishlistShareService';
 import Button from './Button';
 import { useToast } from '../context/ToastContext';
@@ -25,6 +26,23 @@ export default function WishlistShareModal({
   const [copied, setCopied] = useState(false);
   const [creating, setCreating] = useState(false);
   const { showToast } = useToast();
+
+  const handleClose = () => {
+    setShareCode(null);
+    setMessage('');
+    setEmail('');
+    onClose();
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleClose();
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -76,101 +94,105 @@ export default function WishlistShareModal({
     handleClose();
   };
 
-  const handleClose = () => {
-    setShareCode(null);
-    setMessage('');
-    setEmail('');
-    onClose();
-  };
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-md">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-navy/10">
-          <h2 className="text-xl font-bold text-navy">{t('Share Your Wishlist')}</h2>
-          <button
-            onClick={handleClose}
-            className="p-1 hover:bg-navy/10 rounded-full transition-colors"
-            aria-label={t('Close')}
+    <FocusTrap active onClickOutside={handleClose}>
+      <div className="contents">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="wishlist-share-title"
+            className="bg-white rounded-lg w-full max-w-md"
           >
-            <X size={24} className="text-navy" />
-          </button>
-        </div>
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-navy/10">
+              <h2 id="wishlist-share-title" className="text-xl font-bold text-navy">
+                {t('Share Your Wishlist')}
+              </h2>
+              <button
+                onClick={handleClose}
+                className="p-1 hover:bg-navy/10 rounded-full transition-colors"
+                aria-label={t('Close')}
+              >
+                <X size={24} className="text-navy" />
+              </button>
+            </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-6">
-          {!shareCode ? (
-            <>
-              <div>
-                <p className="text-sm text-navy/70 mb-3">
-                  {t('Share your wishlist')} ({wishlistCount} {t('items')}){' '}
-                  {t('with friends and family')}
-                </p>
-                <textarea
-                  value={message}
-                  onChange={e => setMessage(e.target.value)}
-                  placeholder={t('Add a personal message (optional)')}
-                  className="w-full border border-navy/20 rounded px-3 py-2 text-sm focus:outline-none focus:border-navy transition-colors resize-none"
-                  rows={3}
-                  maxLength={200}
-                />
-                <p className="text-xs text-navy/60 mt-1">
-                  {message.length}/200 {t('characters')}
-                </p>
-              </div>
-              <Button onClick={handleGenerateShare} disabled={creating} className="w-full">
-                {creating ? t('Creating link…') : t('Generate Share Link')}
-              </Button>
-            </>
-          ) : (
-            <>
-              <div className="bg-mist rounded-lg p-4">
-                <p className="text-xs text-navy/60 mb-2">{t('Share Link')}</p>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={shareUrl}
-                    readOnly
-                    className="flex-1 bg-white border border-navy/20 rounded px-3 py-2 text-xs font-mono"
-                  />
-                  <button
-                    onClick={handleCopy}
-                    className="p-2 hover:bg-navy/10 rounded transition-colors"
-                    title={copied ? t('Copied!') : t('Copy to clipboard')}
-                  >
-                    <Copy size={16} className={copied ? 'text-green-600' : 'text-navy'} />
-                  </button>
-                </div>
-              </div>
+            {/* Content */}
+            <div className="p-6 space-y-6">
+              {!shareCode ? (
+                <>
+                  <div>
+                    <p className="text-sm text-navy/70 mb-3">
+                      {t('Share your wishlist')} ({wishlistCount} {t('items')}){' '}
+                      {t('with friends and family')}
+                    </p>
+                    <textarea
+                      value={message}
+                      onChange={e => setMessage(e.target.value)}
+                      placeholder={t('Add a personal message (optional)')}
+                      className="w-full border border-navy/20 rounded px-3 py-2 text-sm focus:outline-none focus:border-navy transition-colors resize-none"
+                      rows={3}
+                      maxLength={200}
+                    />
+                    <p className="text-xs text-navy/60 mt-1">
+                      {message.length}/200 {t('characters')}
+                    </p>
+                  </div>
+                  <Button onClick={handleGenerateShare} disabled={creating} className="w-full">
+                    {creating ? t('Creating link…') : t('Generate Share Link')}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="bg-mist rounded-lg p-4">
+                    <p className="text-xs text-navy/60 mb-2">{t('Share Link')}</p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={shareUrl}
+                        readOnly
+                        className="flex-1 bg-white border border-navy/20 rounded px-3 py-2 text-xs font-mono"
+                      />
+                      <button
+                        onClick={handleCopy}
+                        className="p-2 hover:bg-navy/10 rounded transition-colors"
+                        title={copied ? t('Copied!') : t('Copy to clipboard')}
+                      >
+                        <Copy size={16} className={copied ? 'text-green-600' : 'text-navy'} />
+                      </button>
+                    </div>
+                  </div>
 
-              <div>
-                <p className="text-xs text-navy/60 mb-2">{t('Or share via email')}</p>
-                <div className="flex gap-2">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    placeholder="recipient@email.com"
-                    className="flex-1 border border-navy/20 rounded px-3 py-2 text-sm focus:outline-none focus:border-navy transition-colors"
-                  />
-                  <button
-                    onClick={handleEmailShare}
-                    disabled={!email}
-                    className="p-2 hover:bg-navy/10 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <Mail size={16} className="text-navy" />
-                  </button>
-                </div>
-              </div>
+                  <div>
+                    <p className="text-xs text-navy/60 mb-2">{t('Or share via email')}</p>
+                    <div className="flex gap-2">
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        placeholder="recipient@email.com"
+                        className="flex-1 border border-navy/20 rounded px-3 py-2 text-sm focus:outline-none focus:border-navy transition-colors"
+                      />
+                      <button
+                        onClick={handleEmailShare}
+                        disabled={!email}
+                        className="p-2 hover:bg-navy/10 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <Mail size={16} className="text-navy" />
+                      </button>
+                    </div>
+                  </div>
 
-              <Button onClick={handleClose} variant="outline" className="w-full">
-                {t('Done')}
-              </Button>
-            </>
-          )}
+                  <Button onClick={handleClose} variant="outline" className="w-full">
+                    {t('Done')}
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </FocusTrap>
   );
 }
