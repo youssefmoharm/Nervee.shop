@@ -106,7 +106,10 @@ function updateCanonical(url: string) {
 }
 
 /**
- * Add JSON-LD structured data
+ * Add JSON-LD structured data to page.
+ * Removes any existing script with the same top-level @type first, so the
+ * edge-injected Product schema is replaced (not duplicated) once the client
+ * renders live stock/ratings (SEO-02).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function addStructuredData(data: Record<string, any>) {
@@ -116,6 +119,20 @@ export function addStructuredData(data: Record<string, any>) {
     '@context': 'https://schema.org',
     ...data,
   });
+
+  if (data['@type']) {
+    for (const existing of Array.from(
+      document.querySelectorAll('script[type="application/ld+json"]'),
+    )) {
+      try {
+        const parsed = JSON.parse(existing.textContent || '') as { '@type'?: string };
+        if (parsed && parsed['@type'] === data['@type']) existing.remove();
+      } catch {
+        // leave malformed blocks alone
+      }
+    }
+  }
+
   document.head.appendChild(script);
   return () => script.remove();
 }

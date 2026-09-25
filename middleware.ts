@@ -166,6 +166,7 @@ async function fetchProduct(slug: string) {
     price?: number | string | null;
     image?: string | null;
     images?: unknown;
+    inStock: boolean;
   };
 
   try {
@@ -181,6 +182,23 @@ async function fetchProduct(slug: string) {
     }
   } catch {
     // image is optional — fall through to logo fallback
+  }
+
+  try {
+    // Variant stock for Product JSON-LD availability (SEO-02).
+    const stockUrl = `${SUPABASE_URL}/rest/v1/product_inventory?product_id=eq.${encodeURIComponent(
+      product.id,
+    )}&select=in_stock&limit=100`;
+    const stockRes = await fetch(stockUrl, { headers: SUPABASE_HEADERS });
+    if (stockRes.ok) {
+      const variants = await stockRes.json();
+      product.inStock =
+        Array.isArray(variants) && variants.some(v => v?.in_stock === true);
+    } else {
+      product.inStock = false;
+    }
+  } catch {
+    product.inStock = false;
   }
 
   return product;
@@ -238,6 +256,25 @@ function injectRouteMeta(html: string, route: string, seo: RouteSeo): string {
   return out;
 }
 
+/** Upsert a JSON-LD script by @type (replaces an existing same-type block). */
+function upsertJsonLd(html: string, data: Record<string, unknown>): string {
+  const json = JSON.stringify(data).replace(/</g, '\\u003c');
+  const script = `<script type="application/ld+json">${json}</script>`;
+  const re = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/g;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(html)) !== null) {
+    try {
+      const parsed = JSON.parse(match[1]) as { '@type'?: string };
+      if (parsed && parsed['@type'] === data['@type']) {
+        return html.replace(match[0], script);
+      }
+    } catch {
+      // malformed existing block — leave it alone
+    }
+  }
+  return html.replace('</head>', `  ${script}\n  </head>`);
+}
+
 function injectProductMeta(
   html: string,
   product: Awaited<ReturnType<typeof fetchProduct>>,
@@ -272,9 +309,28 @@ function injectProductMeta(
   out = upsertMeta(out, 'name', 'twitter:description', description);
   out = upsertMeta(out, 'name', 'twitter:image', image);
 
-  // Product JSON-LD is injected client-side after hydration (live stock/reviews).
-  // Edge only rewrites meta tags so social scrapers see correct OG without
-  // duplicating a hardcoded InStock Product schema.
+  // Product JSON-LD for first-fetch crawlers (SEO-02). After hydration the
+  // client rewrites the same @type block with live stock/rating data — the
+  // upsert-by-@type keeps exactly one Product schema in the DOM.
+  out = upsertJsonLd(out, {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description,
+    image,
+    url: pageUrl,
+    brand: { '@type': 'Brand', name: 'NERVE' },
+    offers: {
+      '@type': 'Offer',
+      price: String(product.price ?? ''),
+      priceCurrency: 'EGP',
+      url: pageUrl,
+      availability: product.inStock
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+    },
+  });
+
   return out;
 }
 

@@ -16,6 +16,7 @@ const SHELL = `<!doctype html>
   <title>NERVE - Cool but Chic | Contemporary Egyptian Concept Store</title>
   <link rel="canonical" href="https://www.nerveey.shop/" />
   <meta property="og:title" content="NERVE - Cool but Chic | Contemporary Egyptian Concept Store" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"NERVE"}</script>
 </head>
 <body><div id="root"></div></body>
 </html>`;
@@ -87,7 +88,7 @@ describe('middleware head injection (SEO-01)', () => {
     expect(res).toBeUndefined();
   });
 
-  it('still injects product meta when Supabase returns the product', async () => {
+  it('still injects product meta + Product JSON-LD when Supabase returns the product', async () => {
     stubFetch(url => {
       if (url.includes('/rest/v1/products?')) {
         return jsonResponse([
@@ -103,6 +104,9 @@ describe('middleware head injection (SEO-01)', () => {
       if (url.includes('/rest/v1/product_colors?')) {
         return jsonResponse([{ image: '/images/tee.jpg' }]);
       }
+      if (url.includes('/rest/v1/product_inventory?')) {
+        return jsonResponse([{ in_stock: true }]);
+      }
       return undefined;
     });
 
@@ -116,6 +120,36 @@ describe('middleware head injection (SEO-01)', () => {
     );
     expect(html).toContain('property="og:type" content="product"');
     expect(html).toContain('property="og:image" content="https://www.nerveey.shop/images/tee.jpg"');
+
+    // SEO-02: Product schema is in the *served* HTML (not only post-hydration),
+    // the pre-existing Organization block survives, and there is one Product.
+    const ldBlocks = [
+      ...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g),
+    ].map(m => JSON.parse(m[1]));
+    expect(ldBlocks.some(b => b['@type'] === 'Organization')).toBe(true);
+    const products = ldBlocks.filter(b => b['@type'] === 'Product');
+    expect(products).toHaveLength(1);
+    expect(products[0].offers.price).toBe('650');
+    expect(products[0].offers.priceCurrency).toBe('EGP');
+    expect(products[0].offers.availability).toBe('https://schema.org/InStock');
+    expect(products[0].url).toBe('https://www.nerveey.shop/product/nerve-core-tee');
+  });
+
+  it('reports OutOfStock when no variant is in stock', async () => {
+    stubFetch(url => {
+      if (url.includes('/rest/v1/products?')) {
+        return jsonResponse([{ id: 'p2', slug: 'sold-out-tee', name: 'Sold Out Tee', price: 400 }]);
+      }
+      if (url.includes('/rest/v1/product_inventory?')) {
+        return jsonResponse([{ in_stock: false }, { in_stock: false }]);
+      }
+      return undefined;
+    });
+
+    const res = await middleware(new Request('https://www.nerveey.shop/product/sold-out-tee'));
+    const html = await res!.text();
+
+    expect(html).toContain('"availability":"https://schema.org/OutOfStock"');
   });
 
   it('injects collection titles from Supabase for /collections/:id', async () => {
