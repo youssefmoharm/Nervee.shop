@@ -1299,6 +1299,7 @@ export default function ProductDetail() {
                                   URL.revokeObjectURL(photo.preview);
                                   setReviewPhotos(prev => prev.filter((_, idx) => idx !== i));
                                 }}
+                                aria-label={`${t('Remove photo')} ${i + 1}`}
                                 className="absolute top-0 end-0 p-1 bg-red-600 text-white rounded-bl text-xs"
                               >
                                 ×

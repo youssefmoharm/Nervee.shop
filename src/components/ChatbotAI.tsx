@@ -228,7 +228,11 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
             <p className="text-xs text-white/80">Powered by GPT-4</p>
           </div>
         </div>
-        <button onClick={onClose} className="p-1 hover:bg-white/20 rounded transition-colors">
+        <button
+          onClick={onClose}
+          aria-label={t('Close chat')}
+          className="p-1 hover:bg-white/20 rounded transition-colors"
+        >
           <X size={16} />
         </button>
       </div>
@@ -338,6 +342,7 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
           <button
             type="submit"
             disabled={!inputText.trim() || isLoading}
+            aria-label={t('Send message')}
             className="bg-navy text-white p-2 rounded-lg hover:bg-navy-2 transition-colors disabled:opacity-50"
           >
             <Send size={14} />

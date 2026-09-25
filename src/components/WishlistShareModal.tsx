@@ -177,6 +177,7 @@ export default function WishlistShareModal({
                       <button
                         onClick={handleEmailShare}
                         disabled={!email}
+                        aria-label={t('Send share link by email')}
                         className="p-2 hover:bg-navy/10 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
                         <Mail size={16} className="text-navy" />
