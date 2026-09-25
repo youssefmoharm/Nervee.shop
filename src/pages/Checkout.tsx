@@ -589,7 +589,12 @@ export default function Checkout() {
                 <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-sm text-green-800">
                     <span className="font-semibold">{t('✓ Order Protected')}</span> —{' '}
-                    {t('Your order is secured with our buyer protection guarantee.')}
+                    {t(
+                      'Cash on delivery only — you pay the courier when your order arrives. Unworn tagged items can be returned within 14 days of delivery.',
+                    )}{' '}
+                    <Link to="/returns" className="underline hover:text-green-900">
+                      {t('Returns policy')}
+                    </Link>
                   </p>
                 </div>
               </div>
@@ -880,8 +885,13 @@ export default function Checkout() {
               <div className="bg-mist/30 border-t border-navy/10 px-3 md:px-6 py-2 md:py-3 text-[10px] md:text-[11px] text-navy/60 flex items-start gap-2">
                 <Truck size={14} className="flex-shrink-0 mt-0.5 text-navy/50" />
                 <span>
-                  <span className="font-semibold text-navy/80">{t('Fast delivery updates')}</span>{' '}
-                  {t('and secure payment protection.')}
+                  <span className="font-semibold text-navy/80">
+                    {t('Standard 2–5 days · Express 1–2 days')}
+                  </span>{' '}
+                  {t('· cash on delivery across Egypt.')}{' '}
+                  <Link to="/shipping" className="underline hover:text-navy">
+                    {t('Shipping')}
+                  </Link>
                 </span>
               </div>
             </div>

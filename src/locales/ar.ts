@@ -464,6 +464,7 @@ export const ar: Record<string, string> = {
   'Please select a size for all items': 'اختر مقاسًا لجميع المنتجات',
   'Please select a size.': 'اختر مقاسًا.',
   'Please try again later.': 'حاول مرة أخرى لاحقًا.',
+  'Policy pages': 'صفحات السياسات',
   'Postal Code (optional)': 'الرمز البريدي (اختياري)',
   'Prefer not to say': 'أفضل عدم الإفصاح',
   'Previous image': 'الصورة السابقة',
@@ -499,6 +500,7 @@ export const ar: Record<string, string> = {
   return: 'إرجاع',
   Return: 'إرجاع',
   'Return to Store': 'العودة إلى المتجر',
+  'Returns & Exchanges': 'الإرجاع والاستبدال',
   'Returns & Sizing': 'الإرجاعات والمقاسات',
   'Review submitted successfully': 'تم إرسال التقييم بنجاح',
   'Review submitted, but some photos failed to upload.':

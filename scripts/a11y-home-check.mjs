@@ -4,7 +4,8 @@ import AxeBuilder from '@axe-core/playwright';
 const port = process.env.PORT || '5174';
 
 const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+const page = await context.newPage();
 await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle', timeout: 60000 });
 await page.waitForTimeout(2500);
 

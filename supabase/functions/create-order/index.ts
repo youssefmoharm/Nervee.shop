@@ -138,7 +138,14 @@ serve(async req => {
     const validationErrors = validateOrderRequest(body);
     if (validationErrors.length > 0) {
       return json(
-        { order: null, error: 'Validation failed', details: validationErrors },
+        {
+          order: null,
+          error:
+            validationErrors.length === 1
+              ? validationErrors[0]
+              : `Please fix the following: ${validationErrors.join('; ')}`,
+          details: validationErrors,
+        },
         400,
         corsHeaders,
       );
@@ -346,7 +353,11 @@ serve(async req => {
     });
     timer.end();
     return json(
-      { order: null, error: 'Something went wrong placing your order. Please try again.' },
+      {
+        order: null,
+        error:
+          'We could not place your order due to an unexpected error. Your bag is still saved — please try again, or email nerveey.shop@gmail.com with your name and phone number if it keeps failing.',
+      },
       500,
       errorHeaders,
     );

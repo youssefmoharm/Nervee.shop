@@ -5,21 +5,64 @@ import { contactService } from '../services/contactService';
 import { useSEO, getFAQSchema } from '../lib/seo';
 import { useStructuredData } from '../hooks/useStructuredData';
 import { faqItems } from '../data/sizingData';
-import { EXPRESS_SHIPPING_COST, FREE_SHIPPING_THRESHOLD } from '../lib/storeConfig';
+import {
+  EXPRESS_SHIPPING_COST,
+  FREE_SHIPPING_THRESHOLD,
+  STANDARD_SHIPPING_COST,
+} from '../lib/storeConfig';
 import { formatEGP } from '../lib/format';
 import { useI18n } from '../lib/i18n';
 
 const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || 'nerveey.shop@gmail.com';
 
-function Shell({ title, children }: { title: string; children: ReactNode }) {
+function Shell({
+  title,
+  children,
+  wide = false,
+}: {
+  title: string;
+  children: ReactNode;
+  wide?: boolean;
+}) {
   const { t } = useI18n();
   return (
     <div className="bg-white text-navy min-h-screen pt-32 pb-24 px-5 md:px-8">
-      <div className="mx-auto max-w-2xl">
+      <div className={wide ? 'mx-auto max-w-3xl' : 'mx-auto max-w-2xl'}>
         <h1 className="nv-heading text-5xl mb-8">{t(title)}</h1>
         <div className="text-navy/70 leading-relaxed space-y-4">{children}</div>
       </div>
     </div>
+  );
+}
+
+function PolicyNav({ current }: { current: 'shipping' | 'returns' | 'faq' }) {
+  const { t } = useI18n();
+  const links = [
+    { id: 'shipping' as const, to: '/shipping', label: t('Shipping') },
+    { id: 'returns' as const, to: '/returns', label: t('Returns & Exchanges') },
+    { id: 'faq' as const, to: '/faq', label: t('FAQ') },
+    { id: 'contact' as const, to: '/contact', label: t('Contact') },
+  ];
+  return (
+    <nav
+      aria-label={t('Policy pages')}
+      className="flex flex-wrap gap-x-5 gap-y-2 text-xs nv-eyebrow pb-6 mb-2 border-b border-navy/10"
+    >
+      {links.map(l => (
+        <Link
+          key={l.id}
+          to={l.to}
+          className={
+            l.id === current
+              ? 'text-navy underline underline-offset-4'
+              : 'text-navy/50 hover:text-navy transition-colors'
+          }
+          aria-current={l.id === current ? 'page' : undefined}
+        >
+          {l.label}
+        </Link>
+      ))}
+    </nav>
   );
 }
 
@@ -170,41 +213,180 @@ export function Contact() {
 }
 
 export function Shipping() {
+  const { t } = useI18n();
   useSEO({
     title: 'Shipping & Delivery | NERVE',
-    description: `Standard and express delivery across Egypt. Free standard shipping on orders over ${formatEGP(
+    description: `Standard delivery ${formatEGP(STANDARD_SHIPPING_COST)} (free over ${formatEGP(
       FREE_SHIPPING_THRESHOLD,
-    )}. Cash on delivery available.`,
+    )}) in 2–5 business days across Egypt. Express ${formatEGP(
+      EXPRESS_SHIPPING_COST,
+    )} in 1–2 business days. Cash on delivery available.`,
   });
   return (
-    <Shell title="Shipping">
+    <Shell title="Shipping" wide>
+      <PolicyNav current="shipping" />
       <p>
-        Standard delivery: 2–5 business days across Egypt. Free on orders over{' '}
-        {formatEGP(FREE_SHIPPING_THRESHOLD)}.
+        We deliver across Egypt with cash on delivery. Shipping is calculated at checkout from your
+        order subtotal and the delivery speed you choose.
       </p>
-      <p>Express delivery: 1–2 business days, {formatEGP(EXPRESS_SHIPPING_COST)}.</p>
+
+      <h2 className="text-navy font-semibold text-lg pt-4">{t('Delivery options')}</h2>
+      <div className="overflow-x-auto -mx-1 px-1">
+        <table className="w-full text-sm border border-navy/10 rounded-lg overflow-hidden">
+          <thead className="bg-mist/60 text-navy">
+            <tr>
+              <th scope="col" className="text-start font-semibold px-3 py-2.5">
+                {t('Option')}
+              </th>
+              <th scope="col" className="text-start font-semibold px-3 py-2.5">
+                {t('Timeline')}
+              </th>
+              <th scope="col" className="text-start font-semibold px-3 py-2.5">
+                {t('Cost')}
+              </th>
+            </tr>
+          </thead>
+          <tbody className="text-navy/70 divide-y divide-navy/10">
+            <tr>
+              <td className="px-3 py-2.5 font-medium text-navy">{t('Standard')}</td>
+              <td className="px-3 py-2.5">{t('2–5 business days')}</td>
+              <td className="px-3 py-2.5">
+                {formatEGP(STANDARD_SHIPPING_COST)}
+                {' — '}
+                {t('free over')} {formatEGP(FREE_SHIPPING_THRESHOLD)}
+              </td>
+            </tr>
+            <tr>
+              <td className="px-3 py-2.5 font-medium text-navy">{t('Express')}</td>
+              <td className="px-3 py-2.5">{t('1–2 business days')}</td>
+              <td className="px-3 py-2.5">{formatEGP(EXPRESS_SHIPPING_COST)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p className="text-sm text-navy/55">
+        {t('Timelines are estimates after the order ships and may vary by governorate or courier')}.
+      </p>
+
+      <h2 className="text-navy font-semibold text-lg pt-4">{t('Where we deliver')}</h2>
+      <p>{t('We deliver nationwide across Egypt with cash on delivery.')}</p>
+
+      <h2 className="text-navy font-semibold text-lg pt-4">{t('Payment on delivery')}</h2>
       <p>
-        Orders are processed within 24 hours on business days. You&apos;ll receive a tracking link
-        by email once your order ships.
+        {t(
+          'Cash on delivery is available across Egypt — payment is due to the courier when your order arrives. We never collect or store payment card details.',
+        )}
+      </p>
+
+      <h2 className="text-navy font-semibold text-lg pt-4">{t('What happens after you order')}</h2>
+      <ol className="list-decimal ps-5 space-y-2">
+        <li>{t('You receive an order confirmation by email.')}</li>
+        <li>{t('We process your order within 24 hours on business days.')}</li>
+        <li>{t("You'll receive a tracking link by email once your order ships.")}</li>
+        <li>{t('The courier delivers to your address; you pay cash on arrival.')}</li>
+      </ol>
+      <p className="text-sm text-navy/55">
+        {t('Track anytime on the')}{' '}
+        <Link to="/track-order" className="underline hover:text-navy/80">
+          {t('Track Order')}
+        </Link>{' '}
+        {t('page')}.
+      </p>
+
+      <h2 className="text-navy font-semibold text-lg pt-4">{t('Also helpful')}</h2>
+      <p className="text-sm">
+        <Link to="/returns" className="underline hover:text-navy/80">
+          {t('Returns & Exchanges')}
+        </Link>
+        {' · '}
+        <Link to="/faq" className="underline hover:text-navy/80">
+          {t('FAQ')}
+        </Link>
+        {' · '}
+        <Link to="/contact" className="underline hover:text-navy/80">
+          {t('Contact')}
+        </Link>
       </p>
     </Shell>
   );
 }
 
 export function Returns() {
+  const { t } = useI18n();
   useSEO({
     title: 'Returns & Exchanges | NERVE',
     description:
-      'Unworn items with tags can be returned within 14 days of delivery for a full refund. See our returns policy.',
+      'Return unworn tagged items within 14 days of delivery. Free size exchanges within 30 days. Cancel within 2 hours while the order is still processing. Cash on delivery store in Egypt.',
   });
   return (
-    <Shell title="Returns">
-      <p>
-        Unworn items with tags attached can be returned within 14 days of delivery for a full
-        refund.
+    <Shell title="Returns & Exchanges" wide>
+      <PolicyNav current="returns" />
+
+      <h2 className="text-navy font-semibold text-lg">{t('Returns (refund)')}</h2>
+      <ul className="list-disc ps-5 space-y-1.5">
+        <li>{t('Window: 14 days from delivery (orders must be marked delivered).')}</li>
+        <li>{t('Condition: unworn, unwashed, with tags attached.')}</li>
+        <li>{t('Outcome: full refund of the item price for accepted returns.')}</li>
+        <li>
+          {t('Exclusions:')} {t('Sale and limited/archive items are final sale unless faulty.')}
+        </li>
+        <li>{t('One return request per order.')}</li>
+      </ul>
+
+      <h2 className="text-navy font-semibold text-lg pt-4">{t('Exchanges')}</h2>
+      <ul className="list-disc ps-5 space-y-1.5">
+        <li>{t('Free size exchanges within 30 days.')}</li>
+        <li>{t('Same item in a different size, subject to stock.')}</li>
+        <li>{t('Items must be unworn with tags attached.')}</li>
+      </ul>
+
+      <h2 className="text-navy font-semibold text-lg pt-4">{t('Cancellations')}</h2>
+      <ul className="list-disc ps-5 space-y-1.5">
+        <li>{t('Orders can be cancelled within 2 hours while status is placed or processing.')}</li>
+        <li>{t('After that, use a return once the order is delivered (14-day window).')}</li>
+      </ul>
+
+      <h2 className="text-navy font-semibold text-lg pt-4">{t('How to start')}</h2>
+      <ol className="list-decimal ps-5 space-y-2">
+        <li>
+          {t('Sign in and open your order under')}{' '}
+          <Link to="/account/orders" className="underline hover:text-navy/80">
+            {t('Account → Orders')}
+          </Link>
+          {t(', or email us with your order number.')}
+        </li>
+        <li>{t('Tell us whether you need a return, size exchange, or cancellation.')}</li>
+        <li>{t('We review requests within 24 hours and reply with next steps.')}</li>
+      </ol>
+      <p className="text-sm">
+        {t('Email')}{' '}
+        <a href={`mailto:${SUPPORT_EMAIL}`} className="underline hover:text-navy/80">
+          {SUPPORT_EMAIL}
+        </a>
+        {t(' or see the')}{' '}
+        <Link to="/faq" className="underline hover:text-navy/80">
+          {t('FAQ')}
+        </Link>
+        .
       </p>
-      <p>To start a return, contact {SUPPORT_EMAIL} with your order number.</p>
-      <p>Sale and limited/archive items are final sale unless faulty.</p>
+
+      <div className="rounded-xl border border-navy/10 bg-mist/40 p-4 text-sm text-navy/65 space-y-1">
+        <p className="font-medium text-navy">{t('Good to know')}</p>
+        <p>
+          {t(
+            'Return shipping cost, pickup options, and how COD refunds are paid out are confirmed in our reply when we review your request.',
+          )}
+        </p>
+        <p>{t('Questions before you order? See Shipping or contact us.')}</p>
+        <p className="flex flex-wrap gap-x-4 gap-y-1">
+          <Link to="/shipping" className="underline hover:text-navy/80">
+            {t('Shipping')}
+          </Link>
+          <Link to="/contact" className="underline hover:text-navy/80">
+            {t('Contact')}
+          </Link>
+        </p>
+      </div>
     </Shell>
   );
 }
@@ -214,9 +396,26 @@ const shopFaqs = [
     question: 'How long does delivery take?',
     answer: `Standard delivery is 2–5 business days across Egypt (free over ${formatEGP(
       FREE_SHIPPING_THRESHOLD,
+    )}, otherwise ${formatEGP(
+      STANDARD_SHIPPING_COST,
     )}). Express delivery is 1–2 business days for ${formatEGP(
       EXPRESS_SHIPPING_COST,
     )}. Orders process within 24 hours on business days.`,
+  },
+  {
+    question: 'How much does shipping cost?',
+    answer: `Standard shipping is ${formatEGP(
+      STANDARD_SHIPPING_COST,
+    )} and free when your order subtotal is ${formatEGP(
+      FREE_SHIPPING_THRESHOLD,
+    )} or more. Express shipping is always ${formatEGP(
+      EXPRESS_SHIPPING_COST,
+    )}. Final shipping is shown at checkout.`,
+  },
+  {
+    question: 'Where do you deliver?',
+    answer:
+      'We deliver nationwide across Egypt. Delivery speed depends on the option you choose at checkout and courier coverage for your area.',
   },
   {
     question: 'Do you offer cash on delivery?',
@@ -229,9 +428,19 @@ const shopFaqs = [
       'Use the Track Order page with your order number, or check the tracking link emailed once your order ships. You can also email nerveey.shop@gmail.com.',
   },
   {
+    question: 'Can I cancel my order?',
+    answer:
+      'Yes — you can cancel within 2 hours while the order is still placed or processing. After delivery, use our 14-day return window instead.',
+  },
+  {
     question: 'Can I return or exchange an item?',
     answer:
-      'Unworn items with tags can be returned within 14 days of delivery for a full refund. Free size exchanges are available within 30 days. Sale and limited items are final sale unless faulty.',
+      'Unworn items with tags can be returned within 14 days of delivery for a full refund. Free size exchanges are available within 30 days. Sale and limited items are final sale unless faulty. One return request per order.',
+  },
+  {
+    question: 'How are refunds handled?',
+    answer:
+      'Accepted returns are refunded for the item price. For cash-on-delivery orders, we confirm the refund method (and any timing) in our reply when we review your return request — email us with your order number to start.',
   },
   {
     question: 'How do I choose the right size?',
@@ -254,7 +463,7 @@ export function Faq() {
   const { t } = useI18n();
   useSEO({
     title: 'FAQ | NERVE — Shipping, Returns & Sizing',
-    description: `Answers about NERVE shipping, cash on delivery, returns, exchanges, sizing, and how to reach us. Free standard shipping over ${formatEGP(
+    description: `Answers about NERVE shipping costs, delivery times, cash on delivery, returns, exchanges, sizing, and how to reach us. Free standard shipping over ${formatEGP(
       FREE_SHIPPING_THRESHOLD,
     )}.`,
   });
@@ -262,8 +471,12 @@ export function Faq() {
     '@context': 'https://schema.org',
     ...getFAQSchema([...faqItems, ...shopFaqs]),
   });
+  const deliveryFaqs = shopFaqs.slice(0, 6); // timing, cost, where, COD, track, cancel
+  const returnFaqs = shopFaqs.slice(6, 9); // returns, refunds, size
+  const moreFaqs = shopFaqs.slice(9); // based, contact
   return (
-    <Shell title="FAQ">
+    <Shell title="FAQ" wide>
+      <PolicyNav current="faq" />
       <p>
         Quick answers on shipping, returns, sizing, and orders. Still stuck? Email{' '}
         <a href={`mailto:${SUPPORT_EMAIL}`} className="underline hover:text-navy/80">
@@ -272,24 +485,21 @@ export function Faq() {
         .
       </p>
       <h2 className="text-navy font-semibold text-lg pt-4">{t('Orders & Delivery')}</h2>
-      {shopFaqs.slice(0, 3).map(faq => (
+      {deliveryFaqs.map(faq => (
         <div key={faq.question} className="pt-3">
           <h3 className="font-semibold text-navy">{faq.question}</h3>
           <p>{faq.answer}</p>
         </div>
       ))}
       <h2 className="text-navy font-semibold text-lg pt-4">{t('Returns & Sizing')}</h2>
-      {shopFaqs
-        .slice(3, 5)
-        .concat(faqItems.slice(0, 3))
-        .map(faq => (
-          <div key={faq.question} className="pt-3">
-            <h3 className="font-semibold text-navy">{faq.question}</h3>
-            <p>{faq.answer}</p>
-          </div>
-        ))}
+      {returnFaqs.concat(faqItems.slice(0, 3)).map(faq => (
+        <div key={faq.question} className="pt-3">
+          <h3 className="font-semibold text-navy">{faq.question}</h3>
+          <p>{faq.answer}</p>
+        </div>
+      ))}
       <h2 className="text-navy font-semibold text-lg pt-4">{t('More Questions')}</h2>
-      {shopFaqs.slice(5).map(faq => (
+      {moreFaqs.map(faq => (
         <div key={faq.question} className="pt-3">
           <h3 className="font-semibold text-navy">{faq.question}</h3>
           <p>{faq.answer}</p>

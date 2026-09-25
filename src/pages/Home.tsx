@@ -67,7 +67,7 @@ function SectionHeading({
   title,
   href,
   linkLabel,
-  eyebrowClass = 'text-navy/60',
+  eyebrowClass = 'text-navy/70',
   titleClass = '',
 }: {
   id?: string;
@@ -229,7 +229,7 @@ export default function Home() {
         <div className="mx-auto max-w-[1600px]">
           <div className="flex items-end justify-between mb-10 md:mb-14">
             <div>
-              <p className="nv-eyebrow text-navy/60 mb-2">{t('Just Landed')}</p>
+              <p className="nv-eyebrow text-navy/70 mb-2">{t('Just Landed')}</p>
               <h2 id="new-drop-heading" className="nv-heading text-4xl md:text-6xl">
                 {t('The New Drop')}
               </h2>
@@ -284,7 +284,7 @@ export default function Home() {
         aria-labelledby="brand-heading"
       >
         <div className="mx-auto max-w-4xl text-center">
-          <p className="nv-eyebrow text-navy/60 mb-3">{t('Alexandria, Egypt · EST 2026')}</p>
+          <p className="nv-eyebrow text-navy/70 mb-3">{t('Alexandria, Egypt · EST 2026')}</p>
           <h2 id="brand-heading" className="nv-heading text-3xl md:text-5xl mb-6">
             NERVE — Cool but Chic
           </h2>
@@ -415,7 +415,7 @@ export default function Home() {
         <div className="mx-auto max-w-[1600px]">
           <div className="flex items-end justify-between mb-10 md:mb-14">
             <div>
-              <p className="nv-eyebrow text-navy/60 mb-2">{t('Fan Favorites')}</p>
+              <p className="nv-eyebrow text-navy/70 mb-2">{t('Fan Favorites')}</p>
               <h2 id="best-sellers-heading" className="nv-heading text-4xl md:text-6xl">
                 {t('Best Sellers')}
               </h2>

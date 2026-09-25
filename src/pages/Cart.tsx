@@ -245,11 +245,29 @@ export default function Cart() {
                 >
                   {t('Proceed to Checkout')}
                 </Link>
-                <p className="flex items-center justify-center gap-2 text-xs text-navy/50">
-                  <Lock size={12} /> {t('Secure checkout — SSL encrypted')}
+                <p className="text-xs text-navy/55 leading-relaxed">
+                  {t('Standard delivery')} 2–5 {t('business days')}.{' '}
+                  <Link to="/shipping" className="underline hover:text-navy">
+                    {t('Shipping details')}
+                  </Link>
                 </p>
                 <p className="flex items-center justify-center gap-2 text-xs text-navy/50">
-                  <ShieldCheck size={12} /> {t('Free returns within 14 days')}
+                  <Lock size={12} /> {t('Cash on delivery — pay the courier')}
+                </p>
+                <p className="flex items-center justify-center gap-2 text-xs text-navy/50">
+                  <ShieldCheck size={12} />
+                  <Link to="/returns" className="underline hover:text-navy">
+                    {t('14-day returns on unworn items')}
+                  </Link>
+                </p>
+                <p className="text-center text-xs text-navy/45">
+                  <Link to="/faq" className="underline hover:text-navy">
+                    {t('FAQ')}
+                  </Link>
+                  {' · '}
+                  <Link to="/contact" className="underline hover:text-navy">
+                    {t('Contact')}
+                  </Link>
                 </p>
               </div>
             </div>

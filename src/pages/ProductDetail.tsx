@@ -720,12 +720,20 @@ export default function ProductDetail() {
                 </Link>
               </li>
               <li className="rounded-full bg-mist px-3 py-1 flex items-center gap-1.5">
+                <Ruler size={12} aria-hidden="true" />
+                <Link to="/returns" className="underline hover:text-navy">
+                  {t('Free size exchanges within 30 days.')}
+                </Link>
+              </li>
+              <li className="rounded-full bg-mist px-3 py-1 flex items-center gap-1.5">
                 <ShieldCheck size={12} aria-hidden="true" />
                 {t('Cash on Delivery')}
               </li>
               <li className="rounded-full bg-mist px-3 py-1 flex items-center gap-1.5">
                 <Lock size={12} aria-hidden="true" />
-                {t('Secure checkout')}
+                <Link to="/shipping" className="underline hover:text-navy">
+                  {t('Full shipping policy')}
+                </Link>
               </li>
             </ul>
 

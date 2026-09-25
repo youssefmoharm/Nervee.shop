@@ -26,6 +26,8 @@ export interface PlaceOrderResult {
     total: number;
   } | null;
   error: string | null;
+  /** Field-level validation messages from the edge function, when present. */
+  details?: string[];
 }
 
 let currentIdempotencyKey: string | null = null;
@@ -54,12 +56,12 @@ export const orderService = {
     if (!isSupabaseConfigured) {
       return {
         order: null,
-        error: 'Checkout requires Supabase to be configured. Please try again later.',
+        error: 'Checkout is temporarily unavailable. Please try again in a few minutes.',
       };
     }
 
     if (!lines || lines.length === 0) {
-      return { order: null, error: 'Your cart is empty.' };
+      return { order: null, error: 'Your bag is empty. Add a piece before checking out.' };
     }
 
     try {
@@ -80,18 +82,26 @@ export const orderService = {
       });
 
       if (error) {
+        const bodyError =
+          typeof data === 'object' && data && 'error' in data
+            ? (data as Record<string, unknown>).error
+            : null;
+        const details =
+          typeof data === 'object' && data && Array.isArray((data as { details?: unknown }).details)
+            ? (data as { details: string[] }).details
+            : undefined;
         const message =
-          (typeof data === 'object' &&
-            data &&
-            'error' in data &&
-            (data as Record<string, unknown>).error) ||
+          (typeof bodyError === 'string' && bodyError) ||
           error.message ||
-          'Could not place your order. Please try again.';
-        return { order: null, error: message as string };
+          'We could not place your order. Please check your connection and try again.';
+        return { order: null, error: message, details };
       }
 
       if (data?.error) {
-        return { order: null, error: data.error };
+        const details = Array.isArray((data as { details?: unknown }).details)
+          ? (data as { details: string[] }).details
+          : undefined;
+        return { order: null, error: data.error, details };
       }
 
       // Reset idempotency key on success so next order gets a new one
@@ -99,7 +109,10 @@ export const orderService = {
       return { order: data.order, error: null };
     } catch (err) {
       logError('placeOrder failed:', err);
-      return { order: null, error: 'Network error. Please check your connection and try again.' };
+      return {
+        order: null,
+        error: 'We could not reach the store. Please check your internet connection and try again.',
+      };
     }
   },
 

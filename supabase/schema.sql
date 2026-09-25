@@ -922,7 +922,7 @@ $$;
 DROP FUNCTION IF EXISTS decrement_inventory();
 
 -- ----------------------------------------------------------------------------
--- place_order (migration 003 final body; grants per migration 017)
+-- place_order (migration 036 final body; grants per 017 + 036: service_role only)
 -- 13 args: (UUID, 11 TEXT, JSONB)
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION place_order(
@@ -959,6 +959,8 @@ DECLARE
   v_order_number TEXT;
   v_open_cod_orders INTEGER;
   v_cod_open_order_cap CONSTANT INTEGER := 3;
+  v_qty INTEGER;
+  v_merged_items JSONB;
 BEGIN
   IF p_items IS NULL OR jsonb_array_length(p_items) = 0 THEN
     RAISE EXCEPTION 'Cart is empty' USING ERRCODE = 'P0001';
@@ -971,6 +973,33 @@ BEGIN
   IF p_payment_provider <> 'cod' THEN
     RAISE EXCEPTION 'Invalid payment method' USING ERRCODE = 'P0001';
   END IF;
+
+  -- Merge duplicate (product_id, size) lines so the per-item qty cap cannot be
+  -- bypassed by splitting one product across multiple JSON elements.
+  SELECT COALESCE(
+    jsonb_agg(
+      jsonb_build_object(
+        'product_id', product_id,
+        'color', MAX(color),
+        'size', size,
+        'quantity', SUM(qty),
+        'image', MAX(image)
+      )
+      ORDER BY product_id, size
+    ),
+    '[]'::jsonb
+  )
+  INTO v_merged_items
+  FROM (
+    SELECT
+      (elem->>'product_id') AS product_id,
+      (elem->>'size') AS size,
+      COALESCE(elem->>'color', '') AS color,
+      COALESCE(elem->>'image', '') AS image,
+      (elem->>'quantity')::INTEGER AS qty
+    FROM jsonb_array_elements(p_items) AS elem
+  ) AS lines
+  GROUP BY product_id, size;
 
   -- ---- Cash on Delivery abuse guard ----
   IF p_customer_id IS NOT NULL THEN
@@ -985,11 +1014,29 @@ BEGIN
       RAISE EXCEPTION 'You have % unpaid Cash on Delivery orders already. Please wait for one to be delivered (or contact us) before placing another.', v_open_cod_orders
         USING ERRCODE = 'P0001';
     END IF;
+  ELSIF p_email IS NOT NULL AND length(trim(p_email)) > 0 THEN
+    SELECT COUNT(*) INTO v_open_cod_orders
+      FROM orders
+      WHERE lower(email) = lower(trim(p_email))
+        AND customer_id IS NULL
+        AND payment_provider = 'cod'
+        AND payment_status = 'pending'
+        AND status IN ('placed', 'processing');
+
+    IF v_open_cod_orders >= v_cod_open_order_cap THEN
+      RAISE EXCEPTION 'There are already % unpaid Cash on Delivery orders for this email. Please wait for one to be delivered (or contact us) before placing another.', v_open_cod_orders
+        USING ERRCODE = 'P0001';
+    END IF;
   END IF;
 
-  -- ---- Validate & price every line against the DB, locking inventory rows
-  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
+  -- ---- Validate & price every merged line against the DB, locking inventory rows
+  FOR v_item IN SELECT * FROM jsonb_array_elements(v_merged_items)
   LOOP
+    v_qty := (v_item->>'quantity')::INTEGER;
+    IF v_qty IS NULL OR v_qty < 1 OR v_qty > 10 THEN
+      RAISE EXCEPTION 'Maximum quantity per item is 10' USING ERRCODE = 'P0001';
+    END IF;
+
     SELECT * INTO v_product FROM products
       WHERE id = (v_item->>'product_id') AND is_active IS DISTINCT FROM FALSE;
     IF NOT FOUND THEN
@@ -1003,28 +1050,28 @@ BEGIN
       RAISE EXCEPTION '% is not available in size %', v_product.name, (v_item->>'size') USING ERRCODE = 'P0001';
     END IF;
 
-    IF NOT v_inventory.in_stock OR v_inventory.stock_quantity < (v_item->>'quantity')::INTEGER THEN
+    IF NOT v_inventory.in_stock OR v_inventory.stock_quantity < v_qty THEN
       RAISE EXCEPTION '% (size %) only has % in stock', v_product.name, (v_item->>'size'), v_inventory.stock_quantity
         USING ERRCODE = 'P0001';
     END IF;
 
-    v_line_price := v_product.price * (v_item->>'quantity')::INTEGER;
+    v_line_price := v_product.price * v_qty;
     v_subtotal := v_subtotal + v_line_price;
 
     UPDATE product_inventory
-      SET stock_quantity = stock_quantity - (v_item->>'quantity')::INTEGER,
-          in_stock = (stock_quantity - (v_item->>'quantity')::INTEGER) > 0
+      SET stock_quantity = stock_quantity - v_qty,
+          in_stock = (stock_quantity - v_qty) > 0
       WHERE id = v_inventory.id;
   END LOOP;
 
-  -- ---- Shipping
+  -- ---- Shipping (parity with src/lib/checkout.ts: free at >= 2000)
   v_shipping := CASE
     WHEN p_delivery_method = 'express' THEN 200
-    WHEN v_subtotal > 2000 THEN 0
+    WHEN v_subtotal >= 2000 THEN 0
     ELSE 100
   END;
 
-  -- ---- Discount code
+  -- ---- Discount code: fail loudly when a code was supplied but cannot apply
   IF p_discount_code IS NOT NULL AND length(trim(p_discount_code)) > 0 THEN
     SELECT * INTO v_discount FROM discount_codes
       WHERE code = upper(trim(p_discount_code))
@@ -1034,13 +1081,20 @@ BEGIN
         AND (usage_limit IS NULL OR usage_count < usage_limit)
       FOR UPDATE;
 
-    IF FOUND AND (v_discount.minimum_purchase IS NULL OR v_subtotal >= v_discount.minimum_purchase) THEN
-      v_discount_amount := CASE
-        WHEN v_discount.discount_type = 'percentage' THEN (v_subtotal * v_discount.discount_value) / 100
-        ELSE LEAST(v_discount.discount_value, v_subtotal)
-      END;
-      UPDATE discount_codes SET usage_count = usage_count + 1 WHERE id = v_discount.id;
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'Invalid or expired discount code' USING ERRCODE = 'P0001';
     END IF;
+
+    IF v_discount.minimum_purchase IS NOT NULL AND v_subtotal < v_discount.minimum_purchase THEN
+      RAISE EXCEPTION 'Discount code requires a minimum purchase of % EGP', v_discount.minimum_purchase
+        USING ERRCODE = 'P0001';
+    END IF;
+
+    v_discount_amount := CASE
+      WHEN v_discount.discount_type = 'percentage' THEN (v_subtotal * v_discount.discount_value) / 100
+      ELSE LEAST(v_discount.discount_value, v_subtotal)
+    END;
+    UPDATE discount_codes SET usage_count = usage_count + 1 WHERE id = v_discount.id;
   END IF;
 
   v_total := GREATEST(v_subtotal + v_shipping - v_discount_amount, 0);
@@ -1060,10 +1114,10 @@ BEGIN
     p_delivery_method,
     'placed',
     'pending',
-    p_payment_provider
+    'cod'
   ) RETURNING * INTO v_order;
 
-  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
+  FOR v_item IN SELECT * FROM jsonb_array_elements(v_merged_items)
   LOOP
     SELECT * INTO v_product FROM products WHERE id = (v_item->>'product_id');
     INSERT INTO order_items (

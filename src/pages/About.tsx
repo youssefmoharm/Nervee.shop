@@ -7,7 +7,7 @@ export function About() {
   useSEO({
     title: 'About Us | NERVE',
     description:
-      'Learn about NERVE - your premier destination for premium streetwear and fashion in Egypt.',
+      'NERVE is a contemporary Egyptian concept store based in Alexandria. Cash on delivery, nationwide shipping, 14-day returns.',
   });
 
   return (
@@ -19,60 +19,46 @@ export function About() {
           <section className="mb-12">
             <h2 className="text-navy font-semibold text-2xl mb-6">{t('Who We Are')}</h2>
             <p className="text-xl leading-relaxed mb-6">
-              NERVE is Egypt&apos;s premier destination for premium streetwear and contemporary
-              fashion. Founded with a passion for quality, design, and authenticity, we&apos;re
-              committed to delivering exceptional products and experiences to our customers.
+              NERVE is a contemporary Egyptian concept store based in Alexandria. We sell
+              streetwear, casual essentials, and lifestyle pieces online — with cash on delivery and
+              shipping across Egypt.
             </p>
             <p className="text-xl leading-relaxed">
-              We believe that fashion is more than just clothing—it&apos;s a form of
-              self-expression, a way to connect with others, and a statement about who you are.
+              Fashion is how you show up. We keep the experience simple: clear product info, honest
+              policies, and real people to talk to if something is off.
             </p>
           </section>
 
           <section className="mb-12">
-            <h2 className="text-navy font-semibold text-2xl mb-6">{t('What We Do')}</h2>
-            <p className="text-lg leading-relaxed mb-6">
-              We curate a collection of high-quality streetwear, casual essentials, and premium
-              accessories that blend contemporary design with Egyptian craftsmanship.
-            </p>
-            <p className="text-lg leading-relaxed">
-              From limited edition drops to timeless essentials, every piece in our collection is
-              designed to make a statement and stand the test of time.
-            </p>
-          </section>
-
-          <section className="mb-12">
-            <h2 className="text-navy font-semibold text-2xl mb-6">{t('Our Mission')}</h2>
-            <div className="grid md:grid-cols-2 gap-8 mt-8">
-              <div>
-                <h3 className="font-semibold text-lg mb-3 text-navy/80">{t('Quality First')}</h3>
-                <p className="text-navy/70">
-                  We source only the finest materials and work with trusted manufacturers who share
-                  our commitment to quality.
-                </p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg mb-3 text-navy/80">{t('Customer Focus')}</h3>
-                <p className="text-navy/70">
-                  Your satisfaction is our priority. We&apos;re here to help with any questions,
-                  concerns, or feedback you might have.
-                </p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg mb-3 text-navy/80">{t('Authenticity')}</h3>
-                <p className="text-navy/70">
-                  We stay true to our roots and values, creating products that reflect our heritage
-                  while embracing contemporary trends.
-                </p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg mb-3 text-navy/80">{t('Sustainability')}</h3>
-                <p className="text-navy/70">
-                  We&apos;re committed to reducing our environmental impact and supporting ethical
-                  manufacturing practices.
-                </p>
-              </div>
-            </div>
+            <h2 className="text-navy font-semibold text-2xl mb-6">{t('How shopping works')}</h2>
+            <ul className="list-disc ps-5 space-y-2 text-lg text-navy/70">
+              <li>
+                {t('Order online')} — {t('pay cash when the courier arrives (Egypt only).')}
+              </li>
+              <li>
+                {t('Standard delivery')} 2–5 {t('business days')}, {t('free over')} EGP&nbsp;2,000{' '}
+                {t('or Express 1–2 days')}.
+              </li>
+              <li>
+                {t('Returns within 14 days')}{' '}
+                {t('on unworn tagged items; free size exchanges within 30 days.')}
+              </li>
+              <li>
+                {t('Questions?')}{' '}
+                <Link to="/contact" className="underline hover:text-navy/80">
+                  {t('Contact us')}
+                </Link>{' '}
+                {t('or read the')}{' '}
+                <Link to="/shipping" className="underline hover:text-navy/80">
+                  {t('Shipping')}
+                </Link>{' '}
+                {t('and')}{' '}
+                <Link to="/returns" className="underline hover:text-navy/80">
+                  {t('Returns')}
+                </Link>{' '}
+                {t('policies.')}
+              </li>
+            </ul>
           </section>
 
           <section className="mb-12">
@@ -92,14 +78,22 @@ export function About() {
           <section className="mb-12 text-center">
             <h2 className="text-navy font-semibold text-2xl mb-6">{t('Get In Touch')}</h2>
             <p className="text-lg leading-relaxed mb-8">
-              Have questions, suggestions, or want to collaborate? We&apos;d love to hear from you.
+              Have questions about sizing, an order, or returns? We&apos;d love to hear from you.
             </p>
-            <Link
-              to="/contact"
-              className="inline-block bg-navy text-white nv-eyebrow px-8 py-3.5 hover:bg-navy-2 transition-colors"
-            >
-              {t('Contact Us')}
-            </Link>
+            <div className="flex flex-wrap justify-center gap-3">
+              <Link
+                to="/contact"
+                className="inline-block bg-navy text-white nv-eyebrow px-8 py-3.5 hover:bg-navy-2 transition-colors"
+              >
+                {t('Contact Us')}
+              </Link>
+              <Link
+                to="/faq"
+                className="inline-block border border-navy text-navy nv-eyebrow px-8 py-3.5 hover:bg-mist transition-colors"
+              >
+                {t('FAQ')}
+              </Link>
+            </div>
           </section>
         </div>
       </div>

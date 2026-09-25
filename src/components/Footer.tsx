@@ -15,7 +15,7 @@ const NAV_LINKS = [
 const INFO_LINKS = [
   { name: 'Track Order', href: '/track-order' },
   { name: 'Shipping', href: '/shipping' },
-  { name: 'Returns', href: '/returns' },
+  { name: 'Returns & Exchanges', href: '/returns' },
   { name: 'FAQ', href: '/faq' },
   { name: 'Size Guide', href: '/size-guide' },
   { name: 'Privacy', href: '/privacy' },
