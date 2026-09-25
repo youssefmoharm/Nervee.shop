@@ -6,6 +6,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ReactQueryProvider } from './lib/queryClient';
 import { I18nProvider } from './lib/i18n';
 import { getAppLocale } from './lib/format';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import './index.css';
 
 // Apply lang/dir before first paint (avoids RTL flash).
@@ -21,15 +22,19 @@ if (!rootEl) {
 } else {
   ReactDOM.createRoot(rootEl).render(
     <React.StrictMode>
-      <I18nProvider>
-        <BrowserRouter>
-          <AuthProvider>
-            <ReactQueryProvider>
-              <App />
-            </ReactQueryProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </I18nProvider>
+      {/* Outermost boundary: a throw inside any provider (i18n, router, auth,
+          query) would otherwise white-screen with no recovery UI (BUG-02). */}
+      <ErrorBoundary>
+        <I18nProvider>
+          <BrowserRouter>
+            <AuthProvider>
+              <ReactQueryProvider>
+                <App />
+              </ReactQueryProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </I18nProvider>
+      </ErrorBoundary>
     </React.StrictMode>,
   );
 }
