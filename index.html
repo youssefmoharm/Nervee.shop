@@ -3,6 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Self-hosted fonts used on first paint (font-display: swap in
+         index.css; preload removes the CSS-roundtrip discovery delay). -->
+    <link
+      rel="preload"
+      href="/fonts/anton-latin-400-normal.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/archivo-narrow-latin-normal.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/inter-latin-normal.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <script>
       // Early locale/dir apply to prevent RTL flash before the React bundle loads.
       (function () {
