@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { adminService } from '../../services/adminService';
+import { uploadProductImage } from '../../services/imageService';
+import { useToast } from '../../context/ToastContext';
 import AdminLayout from './AdminLayout';
 
 const CATEGORIES = [
@@ -47,6 +49,8 @@ export default function ProductForm() {
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
+  const { showToast } = useToast();
 
   const [name, setName] = useState('');
   // Slug frozen at creation time: renaming a product must not break its
@@ -139,6 +143,31 @@ export default function ProductForm() {
 
   const updateColor = (i: number, patch: Partial<ColorRow>) =>
     setColors(prev => prev.map((c, idx) => (idx === i ? { ...c, ...patch } : c)));
+
+  // FLOW-08: wire imageService.uploadProductImage (5MB/type validation,
+  // products/{slug}/{color}/01-front.jpg path) into the form so admins upload
+  // straight from here instead of manually pasting Storage URLs.
+  const handleUpload = async (i: number, file: File | undefined) => {
+    if (!file) return;
+    const slug = existingSlug ?? slugify(name);
+    const colorName = colors[i]?.name?.trim() ?? '';
+    if (!slug || !colorName) {
+      showToast('Enter the product name and color name before uploading.', 'error');
+      return;
+    }
+    setUploadingIdx(i);
+    try {
+      const result = await uploadProductImage(file, slug, slugify(colorName), '01-front');
+      if (!result.success || !result.url) {
+        showToast(result.error ?? 'Upload failed. Please try again.', 'error');
+        return;
+      }
+      updateColor(i, { image: result.url });
+      showToast('Image uploaded.', 'success');
+    } finally {
+      setUploadingIdx(null);
+    }
+  };
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -406,6 +435,21 @@ export default function ProductForm() {
                     onChange={e => updateColor(i, { hover_image: e.target.value })}
                     className="border border-navy/20 px-2 py-2 text-xs"
                   />
+                  <label className="flex flex-col gap-1 text-[11px] text-navy/60">
+                    {uploadingIdx === i ? 'Uploading…' : 'Upload image'}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/avif"
+                      data-testid={`upload-image-${i}`}
+                      disabled={uploadingIdx !== null}
+                      onChange={e => {
+                        const file = e.target.files?.[0];
+                        e.target.value = '';
+                        void handleUpload(i, file);
+                      }}
+                      className="text-xs text-navy/70 file:mr-2 file:border file:border-navy/20 file:bg-white file:px-2 file:py-1 file:text-[11px]"
+                    />
+                  </label>
                   <button
                     type="button"
                     onClick={() => setColors(prev => prev.filter((_, idx) => idx !== i))}
@@ -448,9 +492,10 @@ export default function ProductForm() {
             ))}
           </div>
           <p className="text-xs text-navy/60 mt-2">
-            Upload images to the <code>product-images</code> Supabase Storage bucket first, then
-            paste the public URL here (path convention:{' '}
-            <code>products/&#123;slug&#125;/&#123;color&#125;/01-front.jpg</code>).
+            Use <strong>Upload image</strong> to send a file straight to the{' '}
+            <code>product-images</code> Supabase Storage bucket (JPG/PNG/WEBP/AVIF, max 5MB, path
+            convention <code>products/&#123;slug&#125;/&#123;color&#125;/01-front.jpg</code>), or
+            paste a public URL directly. Hover images stay URL-only.
           </p>
         </div>
 
