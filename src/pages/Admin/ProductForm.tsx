@@ -49,6 +49,9 @@ export default function ProductForm() {
   const [error, setError] = useState<string | null>(null);
 
   const [name, setName] = useState('');
+  // Slug frozen at creation time: renaming a product must not break its
+  // URL (AUDIT FLOW-11).
+  const [existingSlug, setExistingSlug] = useState<string | null>(null);
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [collectionId, setCollectionId] = useState('');
   const [price, setPrice] = useState('');
@@ -95,6 +98,7 @@ export default function ProductForm() {
             setLoading(false);
             return;
           }
+          setExistingSlug(data.slug);
           setName(data.name);
           setCategory(data.category);
           setCollectionId(data.collection_id ?? '');
@@ -144,7 +148,7 @@ export default function ProductForm() {
     const productId = isNew ? slugify(name) : id!;
     const productPayload = {
       id: productId,
-      slug: slugify(name),
+      slug: existingSlug ?? slugify(name),
       name,
       category,
       collection_id: collectionId || null,
