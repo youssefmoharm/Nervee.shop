@@ -4,14 +4,8 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { AuthProvider } from './context/AuthContext';
 import { I18nProvider } from './lib/i18n';
-import { getAppLocale } from './lib/format';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import './index.css';
-
-// Apply lang/dir before first paint (avoids RTL flash).
-const initialLocale = getAppLocale();
-document.documentElement.lang = initialLocale;
-document.documentElement.dir = initialLocale === 'ar' ? 'rtl' : 'ltr';
 
 const rootEl = document.getElementById('root');
 

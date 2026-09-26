@@ -26,17 +26,6 @@
       type="font/woff2"
       crossorigin
     />
-    <script>
-      // Early locale/dir apply to prevent RTL flash before the React bundle loads.
-      (function () {
-        try {
-          var locale = localStorage.getItem('nerve.locale') === 'ar' ? 'ar' : 'en';
-          document.documentElement.lang = locale;
-          document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';
-        } catch (e) {}
-      })();
-    </script>
-
     <!-- Primary Meta Tags -->
     <title>NERVE — Cool but Chic | Contemporary Egyptian Concept Store EST 2026</title>
     <meta name="title" content="NERVE — Cool but Chic | Contemporary Egyptian Concept Store" />

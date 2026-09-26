@@ -12,8 +12,13 @@ import AxeBuilder from '@axe-core/playwright';
  * (12 active products, prices 750–3450, all with at least one in-stock size):
  * Jackets 3 · Navy 8 · XXL in stock 6 · Navy+XXL 4 · Jackets+Navy 1 ·
  * price ≤ 3400 → 11 · availability filter alone → 12.
+ * Pagination and sold-out stock cannot be expressed by that dataset (it is
+ * exactly PAGE_SIZE rows and everything is in stock), so those two tests mock
+ * the REST layer through mockCatalog() below.
  */
 const TOTAL = 12;
+/** Mirrors PAGE_SIZE in src/pages/Shop.tsx — the first grid page. */
+const PAGE_SIZE = 12;
 const BEST_SELLERS = [
   'NERVE CORE TEE',
   'CORE ZIP HOODIE',
@@ -116,6 +121,56 @@ async function fetchCatalogSnapshot(request: APIRequestContext) {
   return { rows, byProduct };
 }
 
+/**
+ * Replaces the Supabase REST responses the shop reads on mount with a synthetic
+ * catalog. Pagination and availability need a dataset the 12-row dev catalog
+ * cannot express: more rows than PAGE_SIZE, and stock rows that are actually
+ * sold out.
+ */
+async function mockCatalog(
+  page: Page,
+  { count, soldOut = 0 }: { count: number; soldOut?: number },
+) {
+  const products: Array<Record<string, unknown>> = [];
+  const availability: AvailabilityRow[] = [];
+
+  for (let i = 0; i < count; i += 1) {
+    const id = `mock-${i + 1}`;
+    const isSoldOut = i >= count - soldOut;
+    products.push({
+      id,
+      slug: `mock-item-${i + 1}`,
+      name: `MOCK ITEM ${String(i + 1).padStart(2, '0')}`,
+      category: 'T-Shirts',
+      collection_id: null,
+      price: 750 + i * 10,
+      compare_at_price: null,
+      currency: 'EGP',
+      product_colors: [
+        { name: 'Navy', hex: '#001f3f', image: '/mock.jpg', hover_image: null, sort_order: 0 },
+      ],
+      badge: null,
+      description: 'Synthetic row for pagination tests',
+      material: 'Cotton',
+      care: [],
+      gallery: ['/mock.jpg'],
+      is_best_seller: false,
+      created_at: `2026-01-${String((i % 28) + 1).padStart(2, '0')}T00:00:00.000Z`,
+      is_active: true,
+      fit_notes: null,
+      low_stock_threshold: null,
+    });
+    availability.push({ product_id: id, size: 'M', in_stock: !isSoldOut });
+    if (!isSoldOut) availability.push({ product_id: id, size: 'L', in_stock: true });
+  }
+
+  await page.route('**/rest/v1/products*', route => route.fulfill({ json: products }));
+  await page.route('**/rest/v1/product_availability*', route =>
+    route.fulfill({ json: availability }),
+  );
+  await page.route('**/rest/v1/product_stock_status*', route => route.fulfill({ json: [] }));
+}
+
 test.describe('Product discovery — live catalog contract', () => {
   test('the dev catalog still matches every count this spec asserts', async ({ request }) => {
     // TEST-03: no .env in this environment — structural skip locally, CI failure
@@ -202,6 +257,20 @@ test.describe('Product discovery — search', () => {
     await expect(page).not.toHaveURL(/q=/);
     await expect(cards).toHaveCount(TOTAL);
     await expect(empty).toHaveCount(0);
+  });
+
+  test('a query that matches nothing never offers a correction', async ({ page }) => {
+    const { input } = locators(page);
+    await gotoShop(page);
+
+    // Fuse scores short scribbles generously; noise queries must stay silent
+    // instead of one length surfacing a suggestion while another does not.
+    for (const noise of ['xyz', 'xyzzyq']) {
+      await input.fill(noise);
+      await expect(page).toHaveURL(new RegExp(`q=${noise}`));
+      await expect(page.getByTestId('empty-state')).toBeVisible();
+      await expect(page.getByText('Did you mean:')).toHaveCount(0);
+    }
   });
 
   test('suggestions follow the combobox pattern for keyboard users', async ({ page }) => {
@@ -450,6 +519,53 @@ test.describe('Product discovery — filters, sorting and URL state', () => {
   });
 });
 
+test.describe('Product discovery — pagination and availability (mocked catalog)', () => {
+  test('Load More pages through a catalog larger than one screen', async ({ page }) => {
+    const { cards } = locators(page);
+    await mockCatalog(page, { count: 30 });
+    await gotoShop(page);
+
+    const status = page.getByRole('status').filter({ hasText: 'Showing' });
+    await expect(cards).toHaveCount(PAGE_SIZE);
+    await expect(status).toHaveText('Showing 12 of 30 products');
+
+    const loadMore = page.getByRole('button', { name: /Load More/ });
+    await expect(loadMore).toHaveText('Load More (18 remaining)');
+
+    await loadMore.click();
+    await expect(cards).toHaveCount(24);
+    await expect(status).toHaveText('Showing 24 of 30 products');
+    await expect(loadMore).toHaveText('Load More (6 remaining)');
+
+    await loadMore.click();
+    await expect(cards).toHaveCount(30);
+    await expect(status).toHaveText('Showing 30 of 30 products');
+    await expect(loadMore).toHaveCount(0);
+  });
+
+  test('the availability filter shrinks a catalog that has sold-out stock', async ({ page }) => {
+    const { cards, filters, chips } = locators(page);
+    await mockCatalog(page, { count: 6, soldOut: 2 });
+    await gotoShop(page);
+
+    const status = page.getByRole('status').filter({ hasText: 'Showing' });
+    await expect(cards).toHaveCount(6);
+    await expect(status).toHaveText('Showing 6 of 6 products');
+
+    await filters.getByRole('button', { name: 'In stock only' }).click();
+    await expect(page).toHaveURL(/availability=in-stock/);
+    await expect(cards).toHaveCount(4);
+    // The status counts the filtered set (visible), not the raw catalog.
+    await expect(status).toHaveText('Showing 4 of 4 products');
+    await expect(chips.getByRole('button', { name: 'Remove filter: In stock only' })).toBeVisible();
+
+    await chips.getByRole('button', { name: 'Remove filter: In stock only' }).click();
+    await expect(page).not.toHaveURL(/availability/);
+    await expect(cards).toHaveCount(6);
+    await expect(status).toHaveText('Showing 6 of 6 products');
+  });
+});
+
 test.describe('Product discovery — mobile filter drawer', () => {
   test.use({ viewport: { width: 375, height: 667 } });
 
@@ -488,6 +604,20 @@ test.describe('Product discovery — mobile filter drawer', () => {
     await page.getByRole('button', { name: 'Open filters' }).click();
     await expect(page.getByTestId('mobile-filters')).toHaveAttribute('aria-hidden', 'false');
     await expect(page.locator('#mobile-filters-close')).toBeFocused();
+
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+    const serious = results.violations.filter(
+      v => v.impact === 'serious' || v.impact === 'critical',
+    );
+    expect(serious.map(v => ({ id: v.id, impact: v.impact, nodes: v.nodes.length }))).toEqual([]);
+  });
+
+  test('no serious/critical axe violations with the drawer closed on mobile', async ({ page }) => {
+    await gotoShop(page);
+    await expect(page.getByTestId('mobile-filters')).toHaveAttribute('aria-hidden', 'true');
+    await expect(page.locator('aside')).toBeHidden();
 
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -553,45 +683,5 @@ test.describe('Product discovery — header search overlay', () => {
     await expect(dialog.getByRole('heading', { name: /Recent Searches/ })).toBeVisible();
     await dialog.getByRole('button', { name: 'hood', exact: true }).click();
     await expect(dialog.getByLabel('Search query')).toHaveValue('hood');
-  });
-});
-
-test.describe('Product discovery — Arabic locale', () => {
-  test('keeps search and filtering usable in RTL with translated chrome', async ({ page }) => {
-    const { cards } = locators(page);
-    await gotoShop(page);
-
-    await page.getByTestId('lang-toggle').click();
-    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-    await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
-
-    // Accessible names come from the Arabic catalogue (src/locales/ar.ts), so
-    // every name-based locator has to be re-declared after the switch.
-    const input = page.getByLabel('ابحث عن منتجات');
-    const sort = page.getByLabel('ترتيب المنتجات');
-    const filters = page.getByRole('complementary', { name: 'عوامل التصفية' });
-    const chips = page.getByRole('group', { name: 'عوامل التصفية النشطة' });
-
-    await expect(input).toHaveAttribute('data-testid', 'search-input');
-    await expect(sort).toHaveValue('newest');
-    await expect(filters).toBeVisible();
-
-    // Category buttons keep their canonical (English) values, so filtering
-    // still works after the layout flips to RTL.
-    await filters.getByRole('button', { name: 'Jackets', exact: true }).click();
-    await expect(page).toHaveURL(/category=Jackets/);
-    await expect(cards).toHaveCount(3);
-
-    await chips.getByRole('button', { name: 'إزالة عامل التصفية: Jackets' }).click();
-    await expect(page).not.toHaveURL(/category=/);
-    await expect(cards).toHaveCount(TOTAL);
-
-    await input.fill('hoodie');
-    await expect(page).toHaveURL(/q=hoodie/);
-    await expect(cards).toHaveCount(1);
-
-    await sort.selectOption('price-asc');
-    await expect(page).toHaveURL(/sort=price-asc/);
-    await expect(cards).toHaveCount(1);
   });
 });

@@ -75,8 +75,12 @@ describe('shipping address validation', () => {
     expect(validateAddress('123 Nile Corniche, Alexandria').valid).toBe(true);
   });
 
-  it('accepts Arabic address text', () => {
-    expect(validateAddress('شارع النيل، الإسكندرية').valid).toBe(true);
+  it('accepts Arabic-script address text (unicode-escaped fixture)', () => {
+    expect(
+      validateAddress(
+        '\u0634\u0627\u0631\u0639\u0020\u0627\u0644\u0646\u064a\u0644\u060c\u0020\u0627\u0644\u0625\u0633\u0643\u0646\u062f\u0631\u064a\u0629',
+      ).valid,
+    ).toBe(true);
   });
 });
 

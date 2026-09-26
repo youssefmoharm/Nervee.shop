@@ -36,7 +36,15 @@ const SORT_OPTIONS: Array<{ value: SortOption; label: string }> = [
   { value: 'best-selling', label: 'Best Selling' },
 ];
 
-const FILTER_PARAM_KEYS = ['q', 'category', 'colors', 'sizes', 'priceMax', 'availability'];
+const FILTER_PARAM_KEYS = [
+  'q',
+  'category',
+  'colors',
+  'sizes',
+  'priceMax',
+  'availability',
+  'badges',
+];
 
 function parseList(value: string | null): string[] {
   if (!value) return [];
@@ -66,12 +74,14 @@ export default function Shop() {
   const category = params.get('category');
   const colorsParam = params.get('colors') ?? '';
   const sizesParam = params.get('sizes') ?? '';
+  const badgesParam = params.get('badges') ?? '';
   const priceMaxParam = params.get('priceMax') ?? '';
   const availabilityParam = params.get('availability') ?? '';
   const sortParam = params.get('sort') ?? '';
 
   const colors = useMemo(() => parseList(colorsParam), [colorsParam]);
   const sizes = useMemo(() => parseList(sizesParam), [sizesParam]);
+  const badges = useMemo(() => parseList(badgesParam), [badgesParam]);
   const inStockOnly = availabilityParam === 'in-stock';
 
   // The catalog is fetched once; every filter/search/sort below runs
@@ -208,10 +218,11 @@ export default function Shop() {
       category: category && category !== 'New Arrivals' ? category : null,
       colors,
       sizes,
+      badges,
       priceMax: priceMaxActive,
       inStockOnly,
     }),
-    [qParam, category, colors, sizes, priceMaxActive, inStockOnly],
+    [qParam, category, colors, sizes, badges, priceMaxActive, inStockOnly],
   );
 
   const { visible, fuzzy } = useMemo(() => {
@@ -244,6 +255,7 @@ export default function Shop() {
   const hasActiveFacets =
     colors.length > 0 ||
     sizes.length > 0 ||
+    badges.length > 0 ||
     priceMaxActive !== undefined ||
     inStockOnly ||
     Boolean(category);
@@ -251,6 +263,7 @@ export default function Shop() {
   const activeFilterCount =
     colors.length +
     sizes.length +
+    badges.length +
     (priceMaxActive !== undefined ? 1 : 0) +
     (inStockOnly ? 1 : 0) +
     (category ? 1 : 0);
@@ -270,6 +283,15 @@ export default function Shop() {
       const next = list.includes(size) ? list.filter(x => x !== size) : [...list, size];
       if (next.length) prev.set('sizes', next.join(','));
       else prev.delete('sizes');
+      return prev;
+    });
+
+  const toggleBadge = (badge: string) =>
+    updateParams(prev => {
+      const list = parseList(prev.get('badges'));
+      const next = list.includes(badge) ? list.filter(x => x !== badge) : [...list, badge];
+      if (next.length) prev.set('badges', next.join(','));
+      else prev.delete('badges');
       return prev;
     });
 
@@ -362,6 +384,15 @@ export default function Shop() {
     () => Array.from(new Set([...options.sizes, ...sizes])),
     [options.sizes, sizes],
   );
+  // Badges are derived from the catalog rather than offered statically — only
+  // badges that actually exist in the product set are shown as options.
+  const badgeOptions = useMemo(() => {
+    const available = new Set<string>();
+    catalog.forEach(p => {
+      if (p.badge) available.add(p.badge);
+    });
+    return Array.from(new Set([...available, ...badges]));
+  }, [catalog, badges]);
 
   const chips: Array<{ key: string; label: string; remove: () => void }> = [];
   if (qParam) {
@@ -386,6 +417,9 @@ export default function Shop() {
       label: `${t('Size')}: ${size}`,
       remove: () => toggleSize(size),
     }),
+  );
+  badges.forEach(badge =>
+    chips.push({ key: `badge-${badge}`, label: badge, remove: () => toggleBadge(badge) }),
   );
   if (priceMaxActive !== undefined) {
     chips.push({
@@ -476,6 +510,27 @@ export default function Shop() {
               }`}
             >
               {size}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h4 className="nv-eyebrow mb-3">{t('Badge')}</h4>
+        <div className="flex flex-wrap gap-2">
+          {badgeOptions.map(badge => (
+            <button
+              key={badge}
+              type="button"
+              onClick={() => toggleBadge(badge)}
+              aria-pressed={badges.includes(badge)}
+              className={`text-xs px-3 py-1.5 border rounded transition-colors ${
+                badges.includes(badge)
+                  ? 'bg-navy text-white border-navy'
+                  : 'border-navy/25 text-navy/70 hover:bg-mist'
+              }`}
+            >
+              {badge}
             </button>
           ))}
         </div>
@@ -638,9 +693,15 @@ export default function Shop() {
               ? t('Loading…')
               : status === 'error'
               ? t('Failed to load products')
-              : `${t('Showing')} ${displayed.length} ${t('of')} ${visible.length} ${
-                  visible.length === 1 ? t('product') : t('products')
-                }`}
+              : visible.length === 1
+              ? t('Showing {shown} of {total} product', {
+                  shown: displayed.length,
+                  total: visible.length,
+                })
+              : t('Showing {shown} of {total} products', {
+                  shown: displayed.length,
+                  total: visible.length,
+                })}
           </span>
 
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
@@ -738,7 +799,7 @@ export default function Shop() {
             <div
               id="mobile-filters-panel"
               className={`absolute inset-y-0 start-0 w-[min(20rem,85vw)] bg-white overflow-y-auto transition-transform duration-300 ${
-                filtersOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'
+                filtersOpen ? 'translate-x-0' : '-translate-x-full'
               }`}
             >
               <div className="flex items-center justify-between px-5 h-14 border-b border-navy/10 sticky top-0 bg-white z-10">
@@ -891,7 +952,7 @@ export default function Shop() {
                       >
                         {t('Load More')}{' '}
                         {visible.length - displayCount > 0 &&
-                          `(${visible.length - displayCount} remaining)`}
+                          t('({count} remaining)', { count: visible.length - displayCount })}
                       </button>
                     </div>
                   )}

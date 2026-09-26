@@ -19,7 +19,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { count, openCart } = useCart();
   const { user } = useAuth();
-  const { locale, setLocale, t } = useI18n();
+  const { t } = useI18n();
   const location = useLocation();
   const isHome = location.pathname === '/';
 
@@ -95,15 +95,6 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
 
             <div className="flex items-center gap-2 sm:gap-3">
               <button
-                type="button"
-                data-testid="lang-toggle"
-                aria-label={locale === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
-                onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
-                className="flex h-11 min-w-[2.75rem] items-center justify-center px-2 text-xs font-semibold tracking-wide hover:bg-mist rounded transition-colors border border-white/20 text-white"
-              >
-                {locale === 'ar' ? 'EN' : 'AR'}
-              </button>
-              <button
                 aria-label={t('Search')}
                 data-testid="search-button"
                 onClick={onSearch}
@@ -172,7 +163,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
               }
             }}
             className={`fixed inset-0 z-50 bg-navy transition-transform duration-300 lg:hidden ${
-              mobileOpen ? 'translate-x-0' : 'translate-x-full rtl:-translate-x-full'
+              mobileOpen ? 'translate-x-0' : 'translate-x-full'
             }`}
             style={{
               transitionDuration: matchMedia('(prefers-reduced-motion: reduce)').matches

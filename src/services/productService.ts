@@ -1,6 +1,5 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { logError } from '../lib/sentry';
-import { containsArabic } from '../lib/format';
 import { safeImageSrc } from '../lib/images';
 import { ProductRow, ColorRow, AvailabilityRow, CollectionRow } from './types';
 import {
@@ -569,16 +568,15 @@ export const productService = {
     }
 
     try {
-      // English queries use the english websearch config; Arabic (or mixed)
-      // queries use the multilingual 'simple' config (index from migration 033).
-      const isArabic = containsArabic(q);
+      // English queries use the english websearch config (index from
+      // migration 033).
       const { data, error } = await supabase
         .from('products')
         .select(PRODUCT_SELECT)
         .eq('is_active', true)
         .textSearch('name', q, {
-          type: isArabic ? 'plain' : 'websearch',
-          config: isArabic ? 'simple' : 'english',
+          type: 'websearch',
+          config: 'english',
         });
 
       if (error) throw error;
