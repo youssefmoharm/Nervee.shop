@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { skipGuard, hasBackendSecrets } from './skipGuard';
 import AxeBuilder from '@axe-core/playwright';
 
 /**
@@ -93,7 +94,8 @@ test.describe('Accessibility — axe-core scans', () => {
   test('no serious/critical violations on product detail', async ({ page }) => {
     await page.goto('/shop', { waitUntil: 'networkidle' });
     const href = await page.locator('a[href^="/product/"]').first().getAttribute('href');
-    test.skip(!href, 'catalog has no product links');
+    // TEST-03: empty catalog — structural skip locally, CI failure with backend secrets
+    skipGuard(!href, 'catalog has no product links', { failInCi: hasBackendSecrets() });
     await scan(page, href!);
   });
 });

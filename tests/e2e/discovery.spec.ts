@@ -1,4 +1,8 @@
-import { test, expect, type Page, type Locator } from '@playwright/test';
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { test, expect, type APIRequestContext, type Page, type Locator } from '@playwright/test';
+import { skipGuard, hasBackendSecrets } from './skipGuard';
+import AxeBuilder from '@axe-core/playwright';
 
 /**
  * Product discovery — search, suggestions, filters, sorting, URL state,
@@ -58,6 +62,98 @@ function locators(page: Page) {
     chips: page.getByRole('group', { name: 'Active filters' }),
   };
 }
+
+type AvailabilityRow = { product_id: string; size: string; in_stock: boolean };
+type ProductRow = {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  is_best_seller: boolean;
+  product_colors?: Array<{ name: string }>;
+};
+
+/**
+ * Reads the same Supabase credentials Vite bakes into the bundle, so the
+ * numbers every test below asserts can be re-derived from the source of truth
+ * instead of silently rotting when the dev catalog changes.
+ */
+async function fetchCatalogSnapshot(request: APIRequestContext) {
+  const envPath = resolve('.env');
+  const env: Record<string, string> = {};
+  for (const line of readFileSync(envPath, 'utf8').split(/\r?\n/)) {
+    const match = /^([A-Z0-9_]+)=(.*)$/.exec(line.trim());
+    if (match) env[match[1]] = match[2].trim();
+  }
+  const headers = {
+    apikey: env.VITE_SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${env.VITE_SUPABASE_ANON_KEY}`,
+  };
+  const [products, availability] = await Promise.all([
+    request.get(`${env.VITE_SUPABASE_URL}/rest/v1/products`, {
+      headers,
+      params: {
+        select: 'id,name,category,price,is_best_seller,product_colors(name)',
+        is_active: 'eq.true',
+      },
+    }),
+    request.get(`${env.VITE_SUPABASE_URL}/rest/v1/product_availability`, {
+      headers,
+      params: { select: 'product_id,size,in_stock' },
+    }),
+  ]);
+  if (!products.ok() || !availability.ok()) {
+    throw new Error(`Supabase REST responded ${products.status()}/${availability.status()}`);
+  }
+  const rows: ProductRow[] = await products.json();
+  const availabilityRows: AvailabilityRow[] = await availability.json();
+  const byProduct = new Map<string, AvailabilityRow[]>();
+  for (const row of availabilityRows) {
+    const list = byProduct.get(row.product_id) ?? [];
+    list.push(row);
+    byProduct.set(row.product_id, list);
+  }
+  return { rows, byProduct };
+}
+
+test.describe('Product discovery — live catalog contract', () => {
+  test('the dev catalog still matches every count this spec asserts', async ({ request }) => {
+    // TEST-03: no .env in this environment — structural skip locally, CI failure
+    // when backend secrets are configured via env vars or .env files.
+    skipGuard(!existsSync(resolve('.env')), 'no .env with Supabase credentials', {
+      failInCi: hasBackendSecrets(),
+    });
+
+    const { rows, byProduct } = await fetchCatalogSnapshot(request);
+    const hasColor = (row: ProductRow, color: string) =>
+      (row.product_colors ?? []).some(c => c.name === color);
+    const sizesOf = (row: ProductRow) => byProduct.get(row.id) ?? [];
+    const hasSizeInStock = (row: ProductRow, size: string) =>
+      sizesOf(row).some(s => s.size === size && s.in_stock);
+    const inStock = (row: ProductRow) =>
+      sizesOf(row).length === 0 || sizesOf(row).some(s => s.in_stock);
+
+    expect(rows).toHaveLength(TOTAL);
+    expect(Math.min(...rows.map(r => r.price))).toBe(750);
+    expect(Math.max(...rows.map(r => r.price))).toBe(3450);
+    expect(rows.filter(r => r.price <= 3400)).toHaveLength(11);
+    expect(rows.filter(r => r.category === 'Jackets')).toHaveLength(3);
+    expect(rows.filter(r => hasColor(r, 'Navy'))).toHaveLength(8);
+    expect(rows.filter(r => hasSizeInStock(r, 'XXL'))).toHaveLength(6);
+    expect(rows.filter(r => hasColor(r, 'Navy') && hasSizeInStock(r, 'XXL'))).toHaveLength(4);
+    expect(rows.filter(r => r.category === 'Jackets' && hasColor(r, 'Navy'))).toHaveLength(1);
+    expect(rows.filter(inStock)).toHaveLength(TOTAL);
+    // Drives the suggestion counts asserted by the combobox tests.
+    expect(rows.filter(r => r.name.toLowerCase().includes('tee'))).toHaveLength(3);
+    expect(rows.filter(r => r.name.toLowerCase().includes('hood'))).toHaveLength(1);
+    expect(
+      rows
+        .filter(r => r.is_best_seller)
+        .map(r => r.name)
+        .sort(),
+    ).toEqual([...BEST_SELLERS].sort());
+  });
+});
 
 test.describe('Product discovery — search', () => {
   test('search narrows the grid, writes the query to the URL and survives reload', async ({
@@ -330,6 +426,28 @@ test.describe('Product discovery — filters, sorting and URL state', () => {
     await expect(sort).toHaveValue('price-desc');
     await expect(cards).toHaveCount(TOTAL);
   });
+
+  test('the grid/list toggle is exposed and switches the layout', async ({ page }) => {
+    const { cards } = locators(page);
+    await gotoShop(page);
+    const grid = page.getByRole('button', { name: 'Grid view' });
+    const list = page.getByRole('button', { name: 'List view' });
+
+    await expect(grid).toHaveAttribute('aria-pressed', 'true');
+    await expect(list).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.getByTestId('products-grid')).toHaveClass(/grid-cols-2/);
+
+    await list.click();
+    await expect(list).toHaveAttribute('aria-pressed', 'true');
+    await expect(grid).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.getByTestId('products-grid')).toHaveClass(/grid-cols-1/);
+    await expect(cards).toHaveCount(TOTAL);
+
+    await grid.click();
+    await expect(grid).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId('products-grid')).toHaveClass(/grid-cols-2/);
+    await expect(cards).toHaveCount(TOTAL);
+  });
 });
 
 test.describe('Product discovery — mobile filter drawer', () => {
@@ -364,6 +482,21 @@ test.describe('Product discovery — mobile filter drawer', () => {
     await expect(drawer).toHaveAttribute('aria-hidden', 'true');
     await expect(open).toHaveAttribute('aria-expanded', 'false');
   });
+
+  test('no serious/critical axe violations while the drawer is open', async ({ page }) => {
+    await gotoShop(page);
+    await page.getByRole('button', { name: 'Open filters' }).click();
+    await expect(page.getByTestId('mobile-filters')).toHaveAttribute('aria-hidden', 'false');
+    await expect(page.locator('#mobile-filters-close')).toBeFocused();
+
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+    const serious = results.violations.filter(
+      v => v.impact === 'serious' || v.impact === 'critical',
+    );
+    expect(serious.map(v => ({ id: v.id, impact: v.impact, nodes: v.nodes.length }))).toEqual([]);
+  });
 });
 
 test.describe('Product discovery — header search overlay', () => {
@@ -386,5 +519,79 @@ test.describe('Product discovery — header search overlay', () => {
     await expect(page.getByTestId('products-grid')).toBeVisible();
     await expect(page.getByTestId('product-card').first()).toBeVisible();
     expect(await page.getByTestId('product-card').count()).toBeGreaterThan(0);
+  });
+
+  test('the idle overlay offers data-backed trending searches', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'load' });
+    await waitForLoader(page);
+
+    await page.getByTestId('search-button').click();
+    const dialog = page.getByRole('dialog', { name: 'Search products' });
+    // Trending terms are derived from the catalog, so this heading only shows
+    // once the lazily-fetched catalog has landed.
+    await expect(dialog.getByRole('heading', { name: /What's Hot/ })).toBeVisible();
+
+    const trend = dialog.getByRole('button', { name: 'NERVE CORE TEE', exact: true });
+    await trend.click();
+    await expect(dialog.getByLabel('Search query')).toHaveValue('NERVE CORE TEE');
+    await expect(dialog.getByRole('status').filter({ hasText: /results/ })).toContainText(
+      /\d+ results/,
+    );
+  });
+
+  test('recent searches are remembered for the rest of the session', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'load' });
+    await waitForLoader(page);
+
+    await page.getByTestId('search-button').click();
+    const dialog = page.getByRole('dialog', { name: 'Search products' });
+    await dialog.getByLabel('Search query').fill('hood');
+    await dialog.getByRole('link', { name: 'View all results' }).click();
+    await expect(page).toHaveURL(/\/shop\?q=hood/);
+
+    await page.getByTestId('search-button').click();
+    await expect(dialog.getByRole('heading', { name: /Recent Searches/ })).toBeVisible();
+    await dialog.getByRole('button', { name: 'hood', exact: true }).click();
+    await expect(dialog.getByLabel('Search query')).toHaveValue('hood');
+  });
+});
+
+test.describe('Product discovery — Arabic locale', () => {
+  test('keeps search and filtering usable in RTL with translated chrome', async ({ page }) => {
+    const { cards } = locators(page);
+    await gotoShop(page);
+
+    await page.getByTestId('lang-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
+
+    // Accessible names come from the Arabic catalogue (src/locales/ar.ts), so
+    // every name-based locator has to be re-declared after the switch.
+    const input = page.getByLabel('ابحث عن منتجات');
+    const sort = page.getByLabel('ترتيب المنتجات');
+    const filters = page.getByRole('complementary', { name: 'عوامل التصفية' });
+    const chips = page.getByRole('group', { name: 'عوامل التصفية النشطة' });
+
+    await expect(input).toHaveAttribute('data-testid', 'search-input');
+    await expect(sort).toHaveValue('newest');
+    await expect(filters).toBeVisible();
+
+    // Category buttons keep their canonical (English) values, so filtering
+    // still works after the layout flips to RTL.
+    await filters.getByRole('button', { name: 'Jackets', exact: true }).click();
+    await expect(page).toHaveURL(/category=Jackets/);
+    await expect(cards).toHaveCount(3);
+
+    await chips.getByRole('button', { name: 'إزالة عامل التصفية: Jackets' }).click();
+    await expect(page).not.toHaveURL(/category=/);
+    await expect(cards).toHaveCount(TOTAL);
+
+    await input.fill('hoodie');
+    await expect(page).toHaveURL(/q=hoodie/);
+    await expect(cards).toHaveCount(1);
+
+    await sort.selectOption('price-asc');
+    await expect(page).toHaveURL(/sort=price-asc/);
+    await expect(cards).toHaveCount(1);
   });
 });

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { skipGuard } from './skipGuard';
 
 /**
  * IDOR / Cross-user isolation regression tests.
@@ -22,9 +23,12 @@ const liveConfigured = Boolean(supabaseUrl && anonKey);
 
 test.describe('@live Security — IDOR / cross-user isolation (backend boundary)', () => {
   test.beforeEach(() => {
-    test.skip(
+    // TEST-03: @live suite is excluded from CI runs (grepInvert in
+    // playwright.config.ts) — env-gated skip, never exercised in CI.
+    skipGuard(
       !liveConfigured,
       'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to run @live IDOR tests.',
+      { failInCi: false },
     );
   });
 

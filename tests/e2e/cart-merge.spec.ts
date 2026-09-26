@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { skipGuard } from './skipGuard';
 
 /**
  * Guest cart → sign-in merge.
@@ -37,9 +38,11 @@ async function seedGuestCart(page: Page) {
 
 test.describe('Cart merge on sign-in', () => {
   test('guest sessionStorage cart survives and merges after login', async ({ page }) => {
-    test.skip(
+    // TEST-03: no login credentials in this environment - structural skip until CI seeds AUTH_TEST_* fixtures.
+    skipGuard(
       !AUTH_EMAIL || !AUTH_PASSWORD,
       'AUTH_TEST_EMAIL / AUTH_TEST_PASSWORD not set — login-with-UI merge requires live credentials',
+      { failInCi: false },
     );
 
     await seedGuestCart(page);
@@ -59,9 +62,11 @@ test.describe('Cart merge on sign-in', () => {
       .then(() => true)
       .catch(() => false);
 
-    test.skip(
+    // TEST-03: creds configured but login failed - CI failure (fixture/config regression)
+    skipGuard(
       !loggedIn,
       'Login did not reach /account (email confirmation / invalid creds) — cannot assert cart merge',
+      { failInCi: !!AUTH_EMAIL && !!AUTH_PASSWORD },
     );
 
     // Back to cart: count must be >= 1 (merged guest line or pre-existing DB lines)

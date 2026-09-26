@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { skipGuard } from './skipGuard';
 
 /**
  * Cookie consent must gate analytics script loading (GA4 / Meta Pixel).
@@ -19,7 +20,11 @@ async function analyticsScriptSrcs(page: Page): Promise<string[]> {
 
 test.describe('Cookie consent gates analytics', () => {
   test('no gtag/fbq scripts before accepting; they load after accepting', async ({ page }) => {
-    test.skip(!HAS_ANALYTICS_IDS, 'VITE_GA_ID / VITE_META_PIXEL_ID not set in this environment');
+    // TEST-03: analytics IDs are an optional fixture — stays a skip (seed
+    // VITE_GA_ID / VITE_META_PIXEL_ID in CI env to enable; see GO_LIVE_CHECKLIST).
+    skipGuard(!HAS_ANALYTICS_IDS, 'VITE_GA_ID / VITE_META_PIXEL_ID not set in this environment', {
+      failInCi: false,
+    });
 
     await page.goto('/', { waitUntil: 'networkidle' });
 

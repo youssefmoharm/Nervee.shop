@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { skipGuard, hasBackendSecrets } from './skipGuard';
 
 /**
  * Policy / trust route integrity.
@@ -69,7 +70,8 @@ test.describe('Trust & policy routes', () => {
     await expect(page).toHaveURL(/\/shipping/);
     await expect(page.getByRole('heading', { level: 1 })).toContainText(/shipping/i);
 
-    await page.locator('footer').getByRole('link', { name: 'Returns', exact: true }).click();
+    // footer label is 'Returns & Exchanges' - substring match, not exact
+    await page.locator('footer').getByRole('link', { name: 'Returns', exact: false }).click();
     await expect(page).toHaveURL(/\/returns/);
     await expect(page.getByRole('heading', { level: 1 })).toContainText(/returns/i);
 
@@ -89,7 +91,10 @@ test.describe('Trust & policy routes', () => {
   test('cart shows delivery ETA and policy links when items exist', async ({ page }) => {
     await page.goto('/shop', { waitUntil: 'load' });
     const cards = page.getByTestId('product-card');
-    test.skip((await cards.count()) === 0, 'No products available');
+    // TEST-03: empty catalog — structural skip locally, CI failure with backend secrets
+    skipGuard((await cards.count()) === 0, 'No products available', {
+      failInCi: hasBackendSecrets(),
+    });
     await cards.first().locator('a').first().click();
     await page.waitForURL(/\/product\//, { timeout: 10000 });
     await page.getByTestId('size-option').first().click();

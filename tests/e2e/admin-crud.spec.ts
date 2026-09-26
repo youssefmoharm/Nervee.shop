@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { skipGuard } from './skipGuard';
 
 /**
  * Admin CRUD smoke: sign in as admin, open /admin, create a product, assert
@@ -12,6 +13,11 @@ import { test, expect, type Page } from '@playwright/test';
 
 const ADMIN_EMAIL = process.env.ADMIN_TEST_EMAIL;
 const ADMIN_PASSWORD = process.env.ADMIN_TEST_PASSWORD;
+const HAVE_ADMIN_CREDS = !!ADMIN_EMAIL && !!ADMIN_PASSWORD;
+
+// TEST-03: fixture-driven skips below stay skips locally, but become CI
+// failures whenever admin credentials are configured (seed admin + catalog
+// fixtures in CI — see GO_LIVE_CHECKLIST 'E2E fixtures').
 
 async function loginAsAdmin(page: Page) {
   await page.goto('/login', { waitUntil: 'networkidle' });
@@ -23,9 +29,12 @@ async function loginAsAdmin(page: Page) {
 
 test.describe('Admin — product CRUD', () => {
   test.beforeEach(() => {
-    test.skip(
-      !ADMIN_EMAIL || !ADMIN_PASSWORD,
+    // TEST-03: no admin credentials in this environment — structural skip
+    // (failInCi: false until CI seeds ADMIN_TEST_EMAIL / ADMIN_TEST_PASSWORD).
+    skipGuard(
+      !HAVE_ADMIN_CREDS,
       'ADMIN_TEST_EMAIL / ADMIN_TEST_PASSWORD not set — admin CRUD requires live credentials',
+      { failInCi: false },
     );
   });
 
@@ -35,7 +44,10 @@ test.describe('Admin — product CRUD', () => {
     await page.goto('/admin', { waitUntil: 'networkidle' });
     // Admin guard redirects non-admins; if we land here as admin, dashboard renders
     const onLogin = page.url().includes('/login');
-    test.skip(onLogin, 'Signed-in user is not an admin_users row — skipping admin suite');
+    // TEST-03: creds present but not an admin_users row — CI failure (misconfigured fixture)
+    skipGuard(onLogin, 'Signed-in user is not an admin_users row — skipping admin suite', {
+      failInCi: HAVE_ADMIN_CREDS,
+    });
 
     await expect(page.getByTestId('admin-dashboard')).toBeVisible();
     await page.getByRole('link', { name: /^products$/i }).click();
@@ -48,7 +60,10 @@ test.describe('Admin — product CRUD', () => {
 
     await page.goto('/admin/products', { waitUntil: 'networkidle' });
     const onLogin = page.url().includes('/login');
-    test.skip(onLogin, 'Signed-in user is not an admin_users row — skipping admin suite');
+    // TEST-03: creds present but not an admin_users row — CI failure (misconfigured fixture)
+    skipGuard(onLogin, 'Signed-in user is not an admin_users row — skipping admin suite', {
+      failInCi: HAVE_ADMIN_CREDS,
+    });
 
     await expect(page.getByTestId('new-product-link')).toBeVisible();
     await page.getByTestId('new-product-link').click();
@@ -70,9 +85,11 @@ test.describe('Admin — product CRUD', () => {
       .then(() => true)
       .catch(() => false);
 
-    test.skip(
+    // TEST-03: save failed while admin creds are configured — CI failure (RLS/network regression)
+    skipGuard(
       !returnedToList,
       'Product save did not navigate back (RLS/network/admin service unavailable) — skipping list assertions',
+      { failInCi: HAVE_ADMIN_CREDS },
     );
 
     await expect(page.getByTestId('products-table')).toBeVisible();
@@ -84,15 +101,20 @@ test.describe('Admin — product CRUD', () => {
 
     await page.goto('/admin/products', { waitUntil: 'networkidle' });
     const onLogin = page.url().includes('/login');
-    test.skip(onLogin, 'Signed-in user is not an admin_users row — skipping admin suite');
+    // TEST-03: creds present but not an admin_users row — CI failure (misconfigured fixture)
+    skipGuard(onLogin, 'Signed-in user is not an admin_users row — skipping admin suite', {
+      failInCi: HAVE_ADMIN_CREDS,
+    });
 
     const table = page.getByTestId('products-table');
     const hasRows = await table.isVisible().catch(() => false);
-    test.skip(!hasRows, 'Products table not available');
+    // TEST-03: empty catalog with admin creds — CI failure (seed catalog fixture)
+    skipGuard(!hasRows, 'Products table not available', { failInCi: HAVE_ADMIN_CREDS });
 
     const firstEdit = page.getByRole('link', { name: /edit/i }).first();
     const hasEdit = await firstEdit.isVisible().catch(() => false);
-    test.skip(!hasEdit, 'No editable product rows');
+    // TEST-03: catalog seeded without editable rows — CI failure
+    skipGuard(!hasEdit, 'No editable product rows', { failInCi: HAVE_ADMIN_CREDS });
 
     await firstEdit.click();
     await page.waitForURL(/\/admin\/products\/[^/]+/, { timeout: 10000 });
