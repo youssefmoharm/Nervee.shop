@@ -8,7 +8,9 @@ import type { ReactNode } from 'react';
  */
 export default function FloatingDock({ children }: { children: ReactNode }) {
   return (
-    <div className="nv-floating-dock" data-floating-dock aria-label="Quick actions">
+    // Positioning container only — no aria-label (axe aria-prohibited-attr:
+    // generic divs may not be named). Each child control carries its own label.
+    <div className="nv-floating-dock" data-floating-dock>
       {children}
     </div>
   );
