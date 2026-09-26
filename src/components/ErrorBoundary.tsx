@@ -6,11 +6,24 @@ interface Props {
   children: ReactNode;
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+  /**
+   * When any value in this list changes after an error, the boundary
+   * resets and re-renders its children (BUG-03: a caught crash used to
+   * stick forever until a full page reload, even after navigating away).
+   */
+  resetKeys?: ReadonlyArray<unknown>;
 }
 
 interface State {
   hasError: boolean;
   error: Error | null;
+}
+
+function resetKeysChanged(prev: Props['resetKeys'], next: Props['resetKeys']): boolean {
+  if (!next || next.length === 0) return false;
+  const a = prev ?? [];
+  if (a.length !== next.length) return true;
+  return next.some((value, i) => !Object.is(value, a[i]));
 }
 
 /**
@@ -26,6 +39,53 @@ interface State {
  *   <YourComponent />
  * </ErrorBoundary>
  */
+/**
+ * Full-page recovery UI, also served at /500 (BUG-03) so the server can
+ * deep-link users to a retry screen instead of a blank page.
+ */
+export function ErrorFallback({ error }: { error?: Error | null }) {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+        <div className="flex justify-center mb-4">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+            <AlertTriangle className="w-8 h-8 text-red-600" />
+          </div>
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Something went wrong</h1>
+        <p className="text-gray-600 mb-6">
+          We&apos;re sorry, but something unexpected happened. Please try refreshing the page.
+        </p>
+        <div className="space-y-3">
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full bg-[#061735] text-white py-3 rounded-md hover:bg-[#061735]/90 transition-colors"
+          >
+            Refresh Page
+          </button>
+          <button
+            onClick={() => (window.location.href = '/')}
+            className="w-full border border-gray-300 text-gray-700 py-3 rounded-md hover:bg-gray-50 transition-colors"
+          >
+            Go to Homepage
+          </button>
+        </div>
+        {import.meta.env.DEV && error && (
+          <details className="mt-6 text-start">
+            <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
+              Error Details (Dev Only)
+            </summary>
+            <pre className="mt-2 p-4 bg-gray-100 rounded text-xs overflow-auto max-h-40">
+              {error.toString()}
+              {error.stack}
+            </pre>
+          </details>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -34,6 +94,12 @@ export class ErrorBoundary extends Component<Props, State> {
 
   static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    if (this.state.hasError && resetKeysChanged(prevProps.resetKeys, this.props.resetKeys)) {
+      this.setState({ hasError: false, error: null });
+    }
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
@@ -55,47 +121,7 @@ export class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
-      // Default error UI
-      return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-8 h-8 text-red-600" />
-              </div>
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Something went wrong</h1>
-            <p className="text-gray-600 mb-6">
-              We&apos;re sorry, but something unexpected happened. Please try refreshing the page.
-            </p>
-            <div className="space-y-3">
-              <button
-                onClick={() => window.location.reload()}
-                className="w-full bg-[#061735] text-white py-3 rounded-md hover:bg-[#061735]/90 transition-colors"
-              >
-                Refresh Page
-              </button>
-              <button
-                onClick={() => (window.location.href = '/')}
-                className="w-full border border-gray-300 text-gray-700 py-3 rounded-md hover:bg-gray-50 transition-colors"
-              >
-                Go to Homepage
-              </button>
-            </div>
-            {import.meta.env.DEV && this.state.error && (
-              <details className="mt-6 text-start">
-                <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
-                  Error Details (Dev Only)
-                </summary>
-                <pre className="mt-2 p-4 bg-gray-100 rounded text-xs overflow-auto max-h-40">
-                  {this.state.error.toString()}
-                  {this.state.error.stack}
-                </pre>
-              </details>
-            )}
-          </div>
-        </div>
-      );
+      return <ErrorFallback error={this.state.error} />;
     }
 
     return this.props.children;
@@ -113,6 +139,12 @@ export class SectionErrorBoundary extends Component<Props, State> {
 
   static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    if (this.state.hasError && resetKeysChanged(prevProps.resetKeys, this.props.resetKeys)) {
+      this.setState({ hasError: false, error: null });
+    }
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {

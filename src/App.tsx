@@ -13,7 +13,7 @@ import CookieConsent, { getCookieConsent } from './components/CookieConsent';
 import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
-import { ErrorBoundary } from './components/ErrorBoundary';
+import { ErrorBoundary, ErrorFallback } from './components/ErrorBoundary';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { BrowsingHistoryProvider } from './context/BrowsingHistoryContext';
@@ -389,13 +389,20 @@ function AppContent() {
           }
         />
 
+        <Route path="/500" element={<ErrorFallback />} />
+
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
   );
 
   return (
-    <ErrorBoundary onError={handleError}>
+    <ErrorBoundary
+      onError={handleError}
+      // Reset the boundary on navigation so one crashed route doesn't
+      // pin the fallback over every later page (BUG-03).
+      resetKeys={[location.pathname, location.search]}
+    >
       {isAdminRoute ? (
         routes
       ) : (
