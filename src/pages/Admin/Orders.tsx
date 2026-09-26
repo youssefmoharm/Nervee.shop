@@ -35,7 +35,20 @@ export default function AdminOrders() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
-  const changeStatus = async (id: string, status: string) => {
+  const changeStatus = async (id: string, status: string, current: string) => {
+    if (status === current) return;
+    // cancel/refund restock inventory server-side and cannot be undone
+    // (AUDIT FLOW-09) - require an explicit confirmation with the delta.
+    if (status === 'cancelled' || status === 'refunded') {
+      const ok = window.confirm(
+        `Change order status from "${current}" to "${status}"? ` +
+          'This will restock inventory and cannot be undone.',
+      );
+      if (!ok) {
+        load(); // re-render so the select snaps back to the stored status
+        return;
+      }
+    }
     const { error } = await adminService.updateOrderStatus(id, status);
     if (error) {
       showToast(error, 'error', 4000);
@@ -92,7 +105,7 @@ export default function AdminOrders() {
                   <td className="px-4 py-3">
                     <select
                       value={o.status}
-                      onChange={e => changeStatus(o.id, e.target.value)}
+                      onChange={e => changeStatus(o.id, e.target.value, o.status)}
                       aria-label={`Status for order ${o.order_number}`}
                       className="border border-navy/20 px-2 py-1.5 text-xs"
                     >

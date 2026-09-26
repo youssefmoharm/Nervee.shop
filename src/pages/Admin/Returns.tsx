@@ -51,7 +51,18 @@ export default function AdminReturns() {
     load();
   }, [load]);
 
-  const update = async (id: string, status: 'approved' | 'rejected' | 'completed') => {
+  const update = async (
+    id: string,
+    status: 'approved' | 'rejected' | 'completed',
+    current: string,
+  ) => {
+    if (status === current) return;
+    // Approving/rejecting/completing resolves the request and is not
+    // reversible from the UI (AUDIT FLOW-09).
+    const ok = window.confirm(
+      `Change return request from "${current}" to "${status}"? This cannot be undone.`,
+    );
+    if (!ok) return;
     const { error } = await supabase
       .from('order_return_requests')
       .update({ status, resolved_at: new Date().toISOString() })
@@ -115,13 +126,13 @@ export default function AdminReturns() {
                     {r.status === 'pending' && (
                       <>
                         <button
-                          onClick={() => update(r.id, 'approved')}
+                          onClick={() => update(r.id, 'approved', r.status)}
                           className="bg-navy text-white px-3 py-1.5 text-xs"
                         >
                           Approve
                         </button>
                         <button
-                          onClick={() => update(r.id, 'rejected')}
+                          onClick={() => update(r.id, 'rejected', r.status)}
                           className="border border-navy px-3 py-1.5 text-xs"
                         >
                           Reject
@@ -130,7 +141,7 @@ export default function AdminReturns() {
                     )}
                     {r.status === 'approved' && (
                       <button
-                        onClick={() => update(r.id, 'completed')}
+                        onClick={() => update(r.id, 'completed', r.status)}
                         className="border border-navy px-3 py-1.5 text-xs"
                       >
                         Mark Completed
