@@ -194,3 +194,56 @@ Covered by SEC-01, FLOW-02/03/07/08/09/11/17. Product CRUD, inventory, discounts
 | Needs check | 3     | SEC-08 (captcha config), OPS-05 (PITR), TEST-04                                                                                                       |
 
 Fixes are committed in severity order; see `CHANGELOG.md` for the ID → commit mapping and `GO_LIVE_CHECKLIST.md` for the final ✅/❌ status.
+
+---
+
+## Resolution (final)
+
+Campaign outcome after the fix queue below. Commit IDs are short hashes on
+`main`; full mapping in `CHANGELOG.md`.
+
+### Fixed and verified (launch-blocking or user-visible)
+
+| Group    | IDs                                                                    | Verification                                                                             |
+| -------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Security | SEC-01 (+ FLOW-02/03), SEC-11, SEC-12                                  | migrations 038/039; npm audit 0; review authors render live                              |
+| Flows    | FLOW-01, FLOW-04, FLOW-05, FLOW-06, FLOW-07, FLOW-08, FLOW-09, FLOW-11 | unit + admin suites; 211/211 vitest                                                      |
+| Bugs     | BUG-02, BUG-03, BUG-04, BUG-05, BUG-06, BUG-07, BUG-08, BUG-13         | ErrorBoundary/Shop/Account suites; BUG-06/08 resolved by the search refactor (`5c82a53`) |
+| Perf     | PERF-01, PERF-02, PERF-03, PERF-05, PERF-06, PERF-07                   | build passes; 0 audit vulns; wishlist batched in service tests                           |
+| SEO      | SEO-01, SEO-02, SEO-03, SEO-04, SEO-05                                 | edge middleware + robots/sitemap gates in CI                                             |
+| UI/UX    | UX-01, UX-03                                                           | mojibake literal fix; tap-target audit (WCAG 2.5.8)                                      |
+| A11Y     | A11Y-02, A11Y-03, A11Y-04, A11Y-05, A11Y-06 + FloatingDock aria fix    | axe: 17 scans + discovery spec green                                                     |
+| Legal    | LEG-01, LEG-03                                                         | policy copy matches live tracking; consent reopen link                                   |
+| Ops      | OPS-01, OPS-02                                                         | consent-aware Sentry; edge failures forwarded                                            |
+| Testing  | TEST-02, TEST-03                                                       | skipGuard policy; Playwright 255 pass / 0 fail / 24 annotated skips                      |
+
+### Owner / infra actions (not code-complete)
+
+See `GO_LIVE_CHECKLIST.md` sections 2-5: `supabase db push` (036-040),
+`SENTRY_DSN` server secret + `VITE_SENTRY_DSN`/GA/Meta Vercel env, CI E2E
+fixtures (`ADMIN_TEST_*`/`AUTH_TEST_*`), real product photography, Resend
+from-address, PITR confirmation (OPS-05).
+
+### Deferred (launch-safe, tracked)
+
+- **PERF-04** unbounded `list()`/`search()` -> server pagination (catalog fits
+  the client slice today; indexes from PERF-06 already applied).
+- **PERF-09** PDP data waterfall / request coalescing.
+- **FLOW-10** order-tracking timeline UI (server data + history table exist).
+- **UX-02** 63 missing `ar.ts` keys (English fallback is correct, not broken).
+- **A11Y-01** `/shop` heading order (exempted in `a11y.spec.ts`
+  `HEADING_ORDER_EXEMPT` until the Shop heading restructure ships).
+- **BUG-09** `DiscountCodeInput.tsx` + `comparisonService.ts` still dead
+  (imageService half fixed by FLOW-08).
+- **LEG-02** newsletter double opt-in; **SEC-08** captcha decision;
+  **OPS-04** staging environment.
+- Low backlog: FLOW-12/13/14/16/17, BUG-01/10/11/12/14, SEO-06, UX-04/07,
+  LEG-04, TEST-01 (discount-service coverage), TEST-04 (component tests),
+  5 aria-label ar.ts translations + `text-navy` leftovers.
+
+### Needs check (external, cannot verify from repo)
+
+- **SEC-08** captcha/Turnstile config (none configured today; rate limits are
+  active regardless).
+- **OPS-05** PITR/backup state in the Supabase dashboard.
+- **TEST-04** component-test coverage for PDP/Header/Footer/i18n/analytics.
