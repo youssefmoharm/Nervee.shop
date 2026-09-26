@@ -52,7 +52,7 @@ export default function Toast({ message, type = 'info', duration = 3000, onClose
             onClose();
           }}
           aria-label="Dismiss notification"
-          className="ms-1 p-1 hover:opacity-70 shrink-0"
+          className="ms-1 p-2 hover:opacity-70 shrink-0"
         >
           <X size={16} />
         </button>

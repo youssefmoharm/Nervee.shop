@@ -146,7 +146,7 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
               price: product.price,
             })
           }
-          className="absolute top-3 end-3 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center transition-transform hover:scale-110"
+          className="absolute top-3 end-3 w-11 h-11 rounded-full bg-white/90 flex items-center justify-center transition-transform hover:scale-110"
         >
           <Heart
             size={15}
@@ -224,7 +224,7 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
                 key={c.name}
                 aria-label={`Select color: ${c.name}`}
                 onClick={() => setColorIdx(i)}
-                className={`w-4 h-4 rounded-full border transition-all ${
+                className={`w-6 h-6 rounded-full border transition-all ${
                   i === colorIdx
                     ? 'ring-1 ring-offset-2 ring-offset-white ring-navy'
                     : 'border-navy/20'

@@ -165,7 +165,7 @@ export default function ProductQuickView() {
                   {/* Close button */}
                   <button
                     onClick={close}
-                    className="absolute top-3 end-3 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-navy"
+                    className="absolute top-3 end-3 w-11 h-11 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-navy"
                     aria-label={t('Close modal')}
                   >
                     <X size={16} className="text-navy" />
@@ -177,7 +177,7 @@ export default function ProductQuickView() {
                       <button
                         type="button"
                         onClick={handlePrevImage}
-                        className="absolute start-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors md:opacity-0 md:group-hover:opacity-100"
+                        className="absolute start-3 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors md:opacity-0 md:group-hover:opacity-100"
                         aria-label={t('Previous image')}
                       >
                         <ChevronLeft size={16} className="text-navy" />
@@ -185,7 +185,7 @@ export default function ProductQuickView() {
                       <button
                         type="button"
                         onClick={handleNextImage}
-                        className="absolute end-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors md:opacity-0 md:group-hover:opacity-100"
+                        className="absolute end-3 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors md:opacity-0 md:group-hover:opacity-100"
                         aria-label={t('Next image')}
                       >
                         <ChevronRight size={16} className="text-navy" />

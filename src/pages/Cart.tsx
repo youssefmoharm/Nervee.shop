@@ -178,7 +178,7 @@ export default function Cart() {
                         type="button"
                         aria-label={t('Remove item')}
                         onClick={() => removeLine(line.productId, line.color, line.size)}
-                        className="text-navy/60 hover:text-navy transition-colors"
+                        className="p-2 -m-1 text-navy/60 hover:text-navy transition-colors"
                       >
                         <X size={16} />
                       </button>

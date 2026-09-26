@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import FocusTrap from 'focus-trap-react';
 import { Menu, Search, ShoppingBag, User, X } from 'lucide-react';
@@ -99,7 +99,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
                 data-testid="lang-toggle"
                 aria-label={locale === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
                 onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
-                className="flex h-10 min-w-[2.5rem] items-center justify-center px-2 text-xs font-semibold tracking-wide hover:bg-mist rounded transition-colors border border-white/20 text-white"
+                className="flex h-11 min-w-[2.75rem] items-center justify-center px-2 text-xs font-semibold tracking-wide hover:bg-mist rounded transition-colors border border-white/20 text-white"
               >
                 {locale === 'ar' ? 'EN' : 'AR'}
               </button>
@@ -107,7 +107,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
                 aria-label={t('Search')}
                 data-testid="search-button"
                 onClick={onSearch}
-                className="w-10 h-10 flex items-center justify-center hover:bg-mist rounded transition-colors"
+                className="w-11 h-11 flex items-center justify-center hover:bg-mist rounded transition-colors"
               >
                 <Search size={20} strokeWidth={1.75} />
               </button>
@@ -115,7 +115,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
                 to={user ? '/account' : '/login'}
                 aria-label={t('Account')}
                 data-testid="account-link"
-                className="flex w-10 h-10 items-center justify-center hover:bg-mist rounded transition-colors"
+                className="flex w-11 h-11 items-center justify-center hover:bg-mist rounded transition-colors"
               >
                 <User size={20} strokeWidth={1.75} />
               </Link>
@@ -123,7 +123,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
                 aria-label={`${t('Bag')}, ${count} ${t('items')}`}
                 data-testid="bag-button"
                 onClick={openCart}
-                className="relative w-10 h-10 flex items-center justify-center hover:bg-mist rounded transition-colors"
+                className="relative w-11 h-11 flex items-center justify-center hover:bg-mist rounded transition-colors"
               >
                 <ShoppingBag size={20} strokeWidth={1.75} />
                 {count > 0 && (
@@ -199,7 +199,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
                 type="button"
                 aria-label={t('Close menu')}
                 onClick={() => setMobileOpen(false)}
-                className="p-2"
+                className="w-11 h-11 flex items-center justify-center"
               >
                 <X size={24} />
               </button>

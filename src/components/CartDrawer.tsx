@@ -71,7 +71,7 @@ export default function CartDrawer() {
                 aria-label={t('Close bag')}
                 data-testid="close-bag"
                 onClick={closeCart}
-                className="p-1"
+                className="w-11 h-11 flex items-center justify-center"
               >
                 <X size={20} />
               </button>
@@ -129,7 +129,7 @@ export default function CartDrawer() {
                             aria-label={t('Remove item')}
                             data-testid="remove-item"
                             onClick={() => removeLine(line.productId, line.color, line.size)}
-                            className="text-navy/60 hover:text-navy transition-colors flex-shrink-0"
+                            className="p-2 -m-1 text-navy/60 hover:text-navy transition-colors flex-shrink-0"
                           >
                             <X size={15} />
                           </button>
@@ -150,7 +150,7 @@ export default function CartDrawer() {
                                   line.quantity - 1,
                                 )
                               }
-                              className="w-7 h-7 flex items-center justify-center hover:bg-mist transition-colors"
+                              className="w-9 h-9 flex items-center justify-center hover:bg-mist transition-colors"
                             >
                               <Minus size={12} />
                             </button>
@@ -166,7 +166,7 @@ export default function CartDrawer() {
                                   line.quantity + 1,
                                 )
                               }
-                              className="w-7 h-7 flex items-center justify-center hover:bg-mist transition-colors"
+                              className="w-9 h-9 flex items-center justify-center hover:bg-mist transition-colors"
                             >
                               <Plus size={12} />
                             </button>

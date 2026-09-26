@@ -58,7 +58,7 @@ export function ComparisonTable({
           <button
             type="button"
             onClick={onPrimaryAction}
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-navy/10 text-navy hover:bg-navy/20 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-navy"
+            className="w-11 h-11 flex items-center justify-center rounded-full bg-navy/10 text-navy hover:bg-navy/20 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-navy"
             aria-label={t('Close modal')}
           >
             <X size={18} />
