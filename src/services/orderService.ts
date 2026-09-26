@@ -131,8 +131,23 @@ export const orderService = {
 
   async getById(id: string) {
     const { data: order, error } = await supabase.from('orders').select('*').eq('id', id).single();
-    if (error || !order) return null;
-    const { data: items } = await supabase.from('order_items').select('*').eq('order_id', id);
+    if (error) {
+      // PGRST116 = zero rows -> genuine "not found". Anything else
+      // (network failure, RLS, outage) is transient: throw so callers
+      // show a retry UI instead of "Order not found" (AUDIT BUG-13).
+      if (error.code === 'PGRST116') return null;
+      logError('Error fetching order:', error);
+      throw error;
+    }
+    if (!order) return null;
+    const { data: items, error: itemsError } = await supabase
+      .from('order_items')
+      .select('*')
+      .eq('order_id', id);
+    if (itemsError) {
+      logError('Error fetching order items:', itemsError);
+      throw itemsError;
+    }
     return { ...order, items: items ?? [] };
   },
 };
