@@ -6,6 +6,7 @@ import { logError } from '../../lib/sentry';
 import { LOW_STOCK_DEFAULT_THRESHOLD } from '../../lib/storeConfig';
 import AdminLayout from './AdminLayout';
 import { formatEGP } from '../../lib/format';
+import { useToast } from '../../context/ToastContext';
 
 interface ProductRow {
   id: string;
@@ -20,6 +21,7 @@ interface ProductRow {
 
 export default function Products() {
   const [products, setProducts] = useState<ProductRow[] | null>(null);
+  const { showToast } = useToast();
 
   const load = () =>
     adminService
@@ -31,9 +33,26 @@ export default function Products() {
     load();
   }, []);
 
+  // FLOW-07: surface the result instead of silently reloading after a
+  // (possibly failed) delete; products with order history are hidden, not erased.
   const remove = async (id: string, name: string) => {
-    if (!confirm(`Delete "${name}"? This can't be undone.`)) return;
-    await adminService.deleteProduct(id);
+    if (
+      !confirm(
+        `Delete "${name}"? Products with past orders are hidden from the store instead of erased; the rest are permanently deleted.`,
+      )
+    ) {
+      return;
+    }
+    const { error, hidden } = await adminService.deleteProduct(id);
+    if (error) {
+      logError('Failed to delete product', new Error(error), { productId: id });
+      showToast(`Failed to delete "${name}". Please try again.`, 'error');
+      return;
+    }
+    showToast(
+      hidden ? `"${name}" is hidden from the store (it has order history).` : `"${name}" deleted.`,
+      'success',
+    );
     load();
   };
 
@@ -72,7 +91,17 @@ export default function Products() {
                 );
                 return (
                   <tr key={p.id}>
-                    <td className="px-4 py-3 font-medium">{p.name}</td>
+                    <td className="px-4 py-3 font-medium">
+                      {p.name}
+                      {!p.is_active && (
+                        <span
+                          data-testid="hidden-badge"
+                          className="ms-2 inline-block bg-mist text-navy/70 text-[10px] px-1.5 py-0.5 rounded align-middle"
+                        >
+                          Hidden
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-navy/70">{p.category}</td>
                     <td className="px-4 py-3">{formatEGP(p.price)}</td>
                     <td

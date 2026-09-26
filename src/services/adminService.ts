@@ -191,9 +191,28 @@ export const adminService = {
     return { error: error?.message ?? null };
   },
 
-  async deleteProduct(id: string) {
+  /**
+   * FLOW-07: products referenced by order history are soft-deleted
+   * (is_active=false) so past orders keep their product row — a hard delete
+   * would hit order_items ON DELETE SET NULL and cascade away reviews.
+   * Products with no order history are hard-deleted as before. If the history
+   * check itself fails, defaults to the non-destructive soft delete.
+   */
+  async deleteProduct(id: string): Promise<{ error: string | null; hidden: boolean }> {
+    const { data: used, error: usageError } = await supabase
+      .from('order_items')
+      .select('id')
+      .eq('product_id', id)
+      .limit(1);
+    if (usageError) {
+      logError('Order history check failed, soft-deleting product', usageError);
+    }
+    if (usageError || (used && used.length > 0)) {
+      const { error } = await supabase.from('products').update({ is_active: false }).eq('id', id);
+      return { error: error?.message ?? null, hidden: !error };
+    }
     const { error } = await supabase.from('products').delete().eq('id', id);
-    return { error: error?.message ?? null };
+    return { error: error?.message ?? null, hidden: false };
   },
 
   async setInventory(productId: string, size: string, stockQuantity: number) {
