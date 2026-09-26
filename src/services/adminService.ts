@@ -14,6 +14,33 @@ export const adminService = {
         .limit(200),
     ]);
 
+    // Get order counts by status
+    const orderStatusCounts = await supabase
+      .from('orders')
+      .select('status', { count: 'exact', head: false });
+
+    const statusMap = new Map<string, number>();
+    if (orderStatusCounts.data) {
+      orderStatusCounts.data.forEach(o => {
+        statusMap.set(o.status, (statusMap.get(o.status) || 0) + 1);
+      });
+    }
+
+    // Get pending returns count
+    const { count: pendingReturnsCount } = await supabase
+      .from('order_return_requests')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending');
+
+    // Get processing orders count
+    const processingOrdersCount = statusMap.get('processing') || 0;
+
+    // Get shipped orders count
+    const shippedOrdersCount = statusMap.get('shipped') || 0;
+
+    // Get delivered orders count
+    const deliveredOrdersCount = statusMap.get('delivered') || 0;
+
     // Two-step low stock query: find the highest threshold first, then fetch candidates.
     const { data: maxThresholdRow } = await supabase
       .from('product_inventory')
@@ -43,6 +70,16 @@ export const adminService = {
         return row.stock_quantity <= threshold;
       })
       .slice(0, 20);
+
+    // Count low stock products
+    const lowStockProducts = new Set(lowStock.map(s => s.product_id)).size;
+
+    // Count out of stock products
+    const { count: outOfStockCount } = await supabase
+      .from('product_inventory')
+      .select('*', { count: 'exact', head: true })
+      .eq('stock_quantity', 0);
+    const outOfStockProducts = outOfStockCount || 0;
 
     const revenue = (orders ?? [])
       .filter(o => o.status !== 'cancelled')
@@ -86,7 +123,16 @@ export const adminService = {
       totalRevenue: revenue,
       totalOrders: orderCount ?? 0,
       totalCustomers: customerCount ?? 0,
+      pendingOrders: statusMap.get('placed') || 0,
+      processingOrders: processingOrdersCount,
+      shippedOrders: shippedOrdersCount,
+      deliveredOrders: deliveredOrdersCount,
+      completedOrders: deliveredOrdersCount + (statusMap.get('refunded') || 0),
+      cancelledOrders: statusMap.get('cancelled') || 0,
+      pendingReturns: pendingReturnsCount || 0,
       totalProducts: 0, // Can be fetched separately if needed
+      lowStockProducts,
+      outOfStockProducts,
       totalCartAbandonments: 0, // Can be fetched from cart_abandonment_tracking table
       recentOrders: orders?.slice(0, 10) ?? [],
       lowStock,
@@ -95,7 +141,14 @@ export const adminService = {
     };
   },
 
-  async listOrders(status?: string, page = 1, pageSize = 50) {
+  async listOrders(
+    status?: string,
+    search?: string,
+    dateFrom?: string,
+    dateTo?: string,
+    page = 1,
+    pageSize = 50,
+  ) {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
     let query = supabase
@@ -103,7 +156,26 @@ export const adminService = {
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(from, to);
+
     if (status) query = query.eq('status', status);
+
+    if (search) {
+      query = query.or(
+        `order_number.ilike.%${search}%,email.ilike.%${search}%,first_name.ilike.%${search}%,last_name.ilike.%${search}%`,
+      );
+    }
+
+    if (dateFrom) {
+      query = query.gte('created_at', new Date(dateFrom).toISOString());
+    }
+
+    if (dateTo) {
+      // Add one day to include the entire date
+      const endDate = new Date(dateTo);
+      endDate.setDate(endDate.getDate() + 1);
+      query = query.lte('created_at', endDate.toISOString());
+    }
+
     const { data, error, count } = await query;
     if (error) logError(error);
     return { data: data ?? [], total: count ?? 0, page, pageSize };
@@ -182,6 +254,23 @@ export const adminService = {
   },
 
   async createProduct(product: Record<string, unknown>) {
+    // Check for duplicate product name
+    const { count, error: countError } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .ilike('name', String(product.name));
+
+    if (countError) {
+      logError('Product name uniqueness check failed', countError);
+    }
+
+    if (count && count > 0) {
+      return {
+        data: null,
+        error: 'A product with this name already exists. Product names must be unique.',
+      };
+    }
+
     const { data, error } = await supabase.from('products').insert(product).select().single();
     return { data, error: error?.message ?? null };
   },
@@ -216,11 +305,11 @@ export const adminService = {
   },
 
   async setInventory(productId: string, size: string, stockQuantity: number) {
-    const { error } = await supabase
-      .from('product_inventory')
-      .update({ stock_quantity: stockQuantity, in_stock: stockQuantity > 0 })
-      .eq('product_id', productId)
-      .eq('size', size);
+    const { error } = await supabase.rpc('update_inventory_with_lock', {
+      p_product_id: productId,
+      p_size: size,
+      p_new_quantity: Math.max(0, stockQuantity), // Prevent negative
+    });
     return { error: error?.message ?? null };
   },
 

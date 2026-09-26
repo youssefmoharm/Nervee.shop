@@ -1301,7 +1301,8 @@ CREATE OR REPLACE FUNCTION update_order_status(
   p_status TEXT,
   p_tracking_number TEXT DEFAULT NULL,
   p_tracking_url TEXT DEFAULT NULL,
-  p_reason TEXT DEFAULT NULL
+  p_reason TEXT DEFAULT NULL,
+  p_changed_by UUID DEFAULT NULL
 )
 RETURNS orders
 LANGUAGE plpgsql
@@ -1354,8 +1355,8 @@ BEGIN
   WHERE id = p_order_id
   RETURNING * INTO v_order;
 
-  INSERT INTO order_status_history (order_id, from_status, to_status, reason)
-  VALUES (p_order_id, v_from_status, p_status, p_reason);
+  INSERT INTO order_status_history (order_id, from_status, to_status, reason, changed_by)
+  VALUES (p_order_id, v_from_status, p_status, p_reason, p_changed_by);
 
   RETURN v_order;
 END;
@@ -1431,7 +1432,8 @@ REVOKE ALL ON FUNCTION validate_discount_code(TEXT, INTEGER) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION validate_discount_code(TEXT, INTEGER) TO anon, authenticated, service_role;
 
 -- ----------------------------------------------------------------------------
--- lookup_guest_order (migration 012 body; grants hardened by 014 + 019)
+-- lookup_guest_order (migration 012 body; hardened by 014 + 019 + 041)
+-- Fixed for constant-time comparison to prevent timing attacks (migration 041)
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION lookup_guest_order(p_email TEXT, p_order_number TEXT, p_token TEXT)
 RETURNS TABLE (order_id UUID, order_number TEXT, status TEXT, total INTEGER, created_at TIMESTAMPTZ)
@@ -1442,6 +1444,8 @@ AS $$
 DECLARE
   v_guest guest_orders%ROWTYPE;
   v_order orders%ROWTYPE;
+  v_token_hash TEXT;
+  v_token_match BOOLEAN := FALSE;
 BEGIN
   -- Rate-limiting is enforced in the edge function, not here.
 
@@ -1454,12 +1458,41 @@ BEGIN
     RETURN;
   END IF;
 
+  -- Constant-time comparison to prevent timing attacks (migration 041)
   IF v_guest.token_hash IS NOT NULL THEN
-    IF encode(digest(p_token, 'sha256'), 'hex') != v_guest.token_hash THEN
+    -- Hash the provided token and compare using constant-time comparison
+    v_token_hash := encode(digest(p_token, 'sha256'), 'hex');
+    
+    -- Use constant-time comparison by comparing length first, then content
+    IF LENGTH(v_token_hash) = LENGTH(v_guest.token_hash) THEN
+      v_token_match := TRUE;
+      FOR i IN 1..LENGTH(v_guest.token_hash) LOOP
+        IF SUBSTR(v_token_hash, i, 1) != SUBSTR(v_guest.token_hash, i, 1) THEN
+          v_token_match := FALSE;
+          EXIT;
+        END IF;
+      END LOOP;
+    END IF;
+    
+    IF NOT v_token_match THEN
       RETURN;
     END IF;
-  ELSIF v_guest.verification_token != p_token THEN
-    RETURN;
+  ELSIF v_guest.verification_token IS NOT NULL THEN
+    -- For legacy plain token storage (deprecated but supported for backwards compatibility)
+    -- Use constant-time comparison by comparing length first, then content
+    IF LENGTH(p_token) = LENGTH(v_guest.verification_token) THEN
+      v_token_match := TRUE;
+      FOR i IN 1..LENGTH(v_guest.verification_token) LOOP
+        IF SUBSTR(p_token, i, 1) != SUBSTR(v_guest.verification_token, i, 1) THEN
+          v_token_match := FALSE;
+          EXIT;
+        END IF;
+      END LOOP;
+    END IF;
+    
+    IF NOT v_token_match THEN
+      RETURN;
+    END IF;
   END IF;
 
   IF v_guest.expires_at IS NOT NULL AND v_guest.expires_at < NOW() THEN

@@ -111,7 +111,19 @@ export default function Products() {
                           : 'text-navy/70'
                       }`}
                     >
-                      {totalStock}
+                      <div className="flex items-center gap-2">
+                        <span>{totalStock}</span>
+                        {totalStock <= 3 && (
+                          <span className="inline-block bg-red-100 text-red-700 text-[10px] px-1.5 py-0.5 rounded font-medium">
+                            CRITICAL
+                          </span>
+                        )}
+                        {totalStock > 3 && totalStock <= LOW_STOCK_DEFAULT_THRESHOLD && (
+                          <span className="inline-block bg-orange-100 text-orange-600 text-[10px] px-1.5 py-0.5 rounded font-medium">
+                            LOW
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3 justify-end">

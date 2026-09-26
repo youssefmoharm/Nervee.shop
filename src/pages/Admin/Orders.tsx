@@ -19,24 +19,56 @@ interface OrderRow {
 
 const STATUSES = ['placed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'];
 
+// Define valid status transitions for orders
+const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
+  placed: ['processing', 'cancelled'],
+  processing: ['shipped', 'cancelled'],
+  shipped: ['delivered'],
+  delivered: [],
+  cancelled: [],
+  refunded: [],
+};
+
 export default function AdminOrders() {
   const [orders, setOrders] = useState<OrderRow[] | null>(null);
   const [filter, setFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const { showToast } = useToast();
 
   const load = () =>
     adminService
-      .listOrders(filter || undefined)
+      .listOrders(
+        filter || undefined,
+        searchQuery || undefined,
+        dateFrom || undefined,
+        dateTo || undefined,
+      )
       .then(result => setOrders(result.data as OrderRow[]))
       .catch(err => logError('Failed to load orders', err));
 
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter]);
+  }, [filter, searchQuery, dateFrom, dateTo]);
 
   const changeStatus = async (id: string, status: string, current: string) => {
     if (status === current) return;
+
+    // Validate status transition
+    const validNextStates = VALID_STATUS_TRANSITIONS[current] || [];
+    if (!validNextStates.includes(status)) {
+      showToast(
+        `Invalid status transition. From "${current}", valid states are: ${
+          validNextStates.join(', ') || 'none'
+        }`,
+        'error',
+        4000,
+      );
+      return;
+    }
+
     // cancel/refund restock inventory server-side and cannot be undone
     // (AUDIT FLOW-09) - require an explicit confirmation with the delta.
     if (status === 'cancelled' || status === 'refunded') {
@@ -60,22 +92,49 @@ export default function AdminOrders() {
 
   return (
     <AdminLayout>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="nv-heading text-4xl">Orders</h1>
-        <select
-          value={filter}
-          onChange={e => setFilter(e.target.value)}
-          aria-label="Filter orders by status"
-          className="border border-navy/20 px-3 py-2 text-sm"
-          data-testid="order-status-filter"
-        >
-          <option value="">All statuses</option>
-          {STATUSES.map(s => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h1 className="nv-heading text-4xl">Orders</h1>
+          <select
+            value={filter}
+            onChange={e => setFilter(e.target.value)}
+            aria-label="Filter orders by status"
+            className="border border-navy/20 px-3 py-2 text-sm"
+            data-testid="order-status-filter"
+          >
+            <option value="">All statuses</option>
+            {STATUSES.map(s => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Search and Date Filters */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <input
+            type="text"
+            placeholder="Search by order number, email..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="flex-1 border border-navy/20 px-4 py-2 text-sm focus:outline-none focus:border-navy"
+          />
+          <input
+            type="date"
+            placeholder="From date"
+            value={dateFrom}
+            onChange={e => setDateFrom(e.target.value)}
+            className="border border-navy/20 px-4 py-2 text-sm focus:outline-none focus:border-navy"
+          />
+          <input
+            type="date"
+            placeholder="To date"
+            value={dateTo}
+            onChange={e => setDateTo(e.target.value)}
+            className="border border-navy/20 px-4 py-2 text-sm focus:outline-none focus:border-navy"
+          />
+        </div>
       </div>
 
       {!orders ? (

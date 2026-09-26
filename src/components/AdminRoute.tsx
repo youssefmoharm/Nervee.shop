@@ -15,10 +15,19 @@ export default function AdminRoute({ children }: { children: ReactNode }) {
 
   if (!user) return <Navigate to="/login" replace />;
 
-  // Real authorization happens server-side via RLS (admin_users table) on
-  // every query and via place_order/edge functions — this guard is only a
-  // UX convenience so non-admins don't see an empty/broken dashboard shell.
-  if (!isAdmin) return <Navigate to="/" replace />;
+  // If not already marked as admin, verify via server
+  if (!isAdmin) {
+    // In supervised mode, show unauthorized page
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center px-6">
+          <h1 className="text-4xl font-bold text-navy mb-4">Access Denied</h1>
+          <p className="text-navy/60 mb-6">You do not have admin access to this area.</p>
+          <Navigate to="/" replace />
+        </div>
+      </div>
+    );
+  }
 
   return <>{children}</>;
 }

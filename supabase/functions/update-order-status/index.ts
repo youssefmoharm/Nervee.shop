@@ -50,6 +50,8 @@ serve(async req => {
       p_status: status,
       p_tracking_number: trackingNumber ?? null,
       p_tracking_url: trackingUrl ?? null,
+      p_reason: req.body.reason || null,
+      p_changed_by: admin.id,
     });
 
     if (error || !order) {
