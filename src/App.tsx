@@ -154,13 +154,12 @@ function AppContent() {
   // so a crash in any of them doesn't kill the entire module graph.
   // initSentry is async (dynamic import) — fire-and-forget.
   useEffect(() => {
-    // Sentry only after explicit cookie consent (same gate as analytics).
+    // OPS-01: Sentry initializes immediately in error-only mode; performance
+    // sampling and interaction breadcrumbs switch on once consent is granted.
     const maybeInitSentry = () => {
-      if (getCookieConsent() === 'granted') {
-        initSentry().catch(() => {
-          /* Sentry init failed, continue without it */
-        });
-      }
+      initSentry({ consent: getCookieConsent() === 'granted' }).catch(() => {
+        /* Sentry init failed, continue without it */
+      });
     };
     maybeInitSentry();
     // Analytics only after explicit cookie consent (GDPR / privacy policy)
