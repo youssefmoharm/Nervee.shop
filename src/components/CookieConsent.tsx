@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '../lib/i18n';
 
@@ -30,6 +30,26 @@ export function setCookieConsent(value: CookieConsentValue) {
 export default function CookieConsent() {
   const { t } = useI18n();
   const [visible, setVisible] = useState(false);
+  const bannerRef = useRef<HTMLDivElement>(null);
+
+  // Publish the banner height plus a 1rem breathing gap so the floating
+  // dock (and chat panel) lift above it — the fixed 8rem fallback clearance
+  // is not enough on narrow screens where the banner wraps taller.
+  // Layout effect: the value is set before the first paint.
+  useLayoutEffect(() => {
+    if (!visible) return;
+    const el = bannerRef.current;
+    if (!el) return;
+    const sync = () =>
+      document.documentElement.style.setProperty('--nv-banner-lift', `${el.offsetHeight + 16}px`);
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      document.documentElement.style.removeProperty('--nv-banner-lift');
+    };
+  }, [visible]);
 
   useEffect(() => {
     if (!getCookieConsent()) {
@@ -59,6 +79,7 @@ export default function CookieConsent() {
 
   return (
     <div
+      ref={bannerRef}
       role="dialog"
       aria-label={t('Cookie consent')}
       aria-live="polite"

@@ -140,12 +140,14 @@ header :focus-visible,
   --fab-inset-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
   --fab-inset-end: max(1rem, env(safe-area-inset-right, 0px), env(safe-area-inset-left, 0px));
   --fab-clearance: 0px;
+  /* Live cookie-banner lift (height + 1rem), published by CookieConsent. */
+  --nv-banner-lift: 0px;
 }
 
 .nv-floating-dock {
   position: fixed;
   z-index: 85;
-  bottom: calc(var(--fab-inset-bottom) + var(--fab-clearance));
+  bottom: calc(var(--fab-inset-bottom) + max(var(--fab-clearance), var(--nv-banner-lift)));
   inset-inline-end: var(--fab-inset-end);
   display: flex;
   flex-direction: column;
@@ -162,7 +164,9 @@ header :focus-visible,
    above the FAB row — width clamps so it never overflows 320px viewports. */
 .nv-chat-panel {
   position: fixed;
-  bottom: calc(var(--fab-inset-bottom) + var(--fab-clearance) + 4.25rem);
+  bottom: calc(
+    var(--fab-inset-bottom) + max(var(--fab-clearance), var(--nv-banner-lift)) + 4.25rem
+  );
   inset-inline-end: var(--fab-inset-end);
   width: min(20rem, calc(100vw - 2rem));
   height: min(31.25rem, calc(100dvh - 8rem));
