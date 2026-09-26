@@ -159,7 +159,7 @@ export default function Shop() {
 
   useEffect(() => {
     setSliderValue(clampPrice(priceMaxRaw, sliderMin, priceBoundMax));
-  }, [priceMaxParam, sliderMin, priceBoundMax]);
+  }, [priceMaxRaw, sliderMin, priceBoundMax]);
 
   useEffect(() => {
     setActiveSuggestion(-1);
@@ -374,6 +374,9 @@ export default function Shop() {
       },
     });
   }
+  if (category) {
+    chips.push({ key: 'category', label: category, remove: () => setParam('category', null) });
+  }
   colors.forEach(color =>
     chips.push({ key: `color-${color}`, label: color, remove: () => toggleColor(color) }),
   );
@@ -526,7 +529,7 @@ export default function Shop() {
         <Breadcrumb items={[{ label: t('Shop') }]} />
         <div className="mb-8 md:mb-12">
           <p className="nv-eyebrow text-navy/60 mb-2">{category || t('Shop All')}</p>
-          <h1 className="nv-heading text-5xl md:text-7xl">{category || t('Shop')}</h1>
+          <h1 className="nv-heading text-4xl sm:text-5xl md:text-7xl">{category || t('Shop')}</h1>
         </div>
 
         <div className="mb-6 max-w-2xl">
@@ -629,18 +632,18 @@ export default function Shop() {
           </div>
         )}
 
-        <div className="flex items-center justify-between border-y border-navy/10 py-3 mb-8 sticky top-16 md:top-20 bg-white z-20">
-          <span role="status" className="text-sm text-navy/60">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-y border-navy/10 py-3 mb-8 sticky top-16 md:top-20 bg-white z-20">
+          <span role="status" className="text-sm text-navy/60 min-w-0 truncate">
             {status === 'loading'
               ? t('Loading…')
               : status === 'error'
               ? t('Failed to load products')
-              : `Showing ${displayed.length} of ${visible.length} product${
-                  visible.length !== 1 ? 's' : ''
+              : `${t('Showing')} ${displayed.length} ${t('of')} ${visible.length} ${
+                  visible.length === 1 ? t('product') : t('products')
                 }`}
           </span>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <button
               type="button"
               onClick={() => setFiltersOpen(true)}
@@ -660,7 +663,7 @@ export default function Shop() {
             <select
               value={sort}
               onChange={e => setParam('sort', e.target.value)}
-              className="text-sm border border-navy/20 px-3 py-2 bg-white focus:outline-none"
+              className="text-sm border border-navy/20 px-3 py-2 bg-white focus:outline-none max-w-[10rem] sm:max-w-none"
               aria-label={t('Sort products')}
               data-testid="sort-select"
             >
@@ -702,6 +705,9 @@ export default function Shop() {
             clickOutsideDeactivates: true,
             escapeDeactivates: false,
             returnFocusOnDeactivate: true,
+            // The drawer only traps while open and its contents are never
+            // display-toggled, so skip layout-based tabbable checks.
+            tabbableOptions: { displayCheck: 'none' },
           }}
         >
           <div
@@ -719,12 +725,15 @@ export default function Shop() {
             }}
             className={`fixed inset-0 z-50 lg:hidden ${filtersOpen ? '' : 'pointer-events-none'}`}
           >
+            {/* Decorative click-to-dismiss backdrop: not focusable and not
+                announced, so the labelled X (#mobile-filters-close) stays
+                the single "Close filters" control. */}
             <div
+              aria-hidden="true"
               className={`absolute inset-0 bg-navy/50 transition-opacity ${
                 filtersOpen ? 'opacity-100' : 'opacity-0'
               }`}
               onClick={() => setFiltersOpen(false)}
-              aria-hidden="true"
             />
             <div
               id="mobile-filters-panel"

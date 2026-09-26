@@ -3,6 +3,10 @@ import { useComparison } from '../hooks/useComparison';
 import ComparisonModal from './ComparisonModal';
 import { useState } from 'react';
 
+/**
+ * Compare FAB — positioning is owned by FloatingDock (parent).
+ * Do not add fixed/absolute positioning here.
+ */
 export default function ComparisonWidget() {
   const { items, remove, clear } = useComparison();
   const [modalOpen, setModalOpen] = useState(false);
@@ -13,19 +17,18 @@ export default function ComparisonWidget() {
 
   return (
     <>
-      {/* Floating widget */}
       <button
+        type="button"
         onClick={() => setModalOpen(true)}
-        className="fixed bottom-6 end-6 z-40 w-14 h-14 rounded-full bg-navy text-white shadow-lg flex items-center justify-center gap-2 hover:bg-navy-2 transition-all duration-200 hover:scale-110"
+        className="relative w-14 h-14 rounded-full bg-navy text-white shadow-lg flex items-center justify-center hover:bg-navy-2 transition-all duration-200 hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy"
         aria-label={`Compare ${items.length} products`}
       >
-        <BarChart3 size={20} />
-        <span className="absolute -top-2 -end-2 bg-red-600 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+        <BarChart3 size={20} aria-hidden="true" />
+        <span className="absolute -top-1 -end-1 bg-red-600 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center tabular-nums">
           {items.length}
         </span>
       </button>
 
-      {/* Modal */}
       {modalOpen && (
         <ComparisonModal
           products={items}

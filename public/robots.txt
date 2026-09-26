@@ -4,10 +4,17 @@
 # Default rules for all bots
 User-agent: *
 Allow: /
+Disallow: /admin
 Disallow: /admin/
+Disallow: /account
 Disallow: /account/
+Disallow: /checkout
 Disallow: /checkout/
+Disallow: /cart
 Disallow: /cart/
+Disallow: /compare
+Disallow: /compare/
+Disallow: /my-orders
 Disallow: /my-orders/
 Disallow: /*?*sort=
 Disallow: /*?*filter=

@@ -5,9 +5,9 @@ import { useI18n } from '../lib/i18n';
 export function About() {
   const { t } = useI18n();
   useSEO({
-    title: 'About Us | NERVE',
+    title: 'About NERVE | Contemporary Egyptian Streetwear',
     description:
-      'NERVE is a contemporary Egyptian concept store based in Alexandria. Cash on delivery, nationwide shipping, 14-day returns.',
+      'NERVE is a contemporary Egyptian concept store. Cool but chic — pieces for the way you move through the world.',
   });
 
   return (
@@ -64,14 +64,13 @@ export function About() {
           <section className="mb-12">
             <h2 className="text-navy font-semibold text-2xl mb-6">{t('Our Story')}</h2>
             <p className="text-lg leading-relaxed mb-6">
-              Started in 2026, NERVE was born from a simple idea: to create a fashion brand that
-              combines international trends with local craftsmanship, offering Egyptian customers
-              premium streetwear that reflects their identity.
+              Started in 2026 in Alexandria, NERVE grew from a single question: why should Egyptian
+              dressing today have to choose between global trends and local identity?
             </p>
             <p className="text-lg leading-relaxed">
-              NERVE is still a young brand. We&apos;re building a community of people across Egypt
-              who care about quality, design, and dressing with intention — and we&apos;d love for
-              you to be part of it.
+              We design pieces that refuse the trade-off — heavyweight essentials worn every day,
+              technical cuts built for the city&apos;s pace, and numbered releases for those who
+              show up first. Cool but chic.
             </p>
           </section>
 

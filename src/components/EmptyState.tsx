@@ -16,7 +16,10 @@ export default function EmptyState({
   children,
 }: EmptyStateProps) {
   return (
-    <div className="rounded-2xl border border-navy/10 bg-mist/30 px-6 py-10 text-center">
+    <div
+      data-testid="empty-state"
+      className="rounded-2xl border border-navy/10 bg-mist/30 px-6 py-10 text-center"
+    >
       <h3 className="nv-heading text-2xl mb-3">{title}</h3>
       <p className="text-sm text-navy/65 max-w-md mx-auto">{body}</p>
       {children}

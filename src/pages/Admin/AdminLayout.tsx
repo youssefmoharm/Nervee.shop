@@ -32,7 +32,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <img
             decoding="async"
             loading="lazy"
-            src="/assets/images/nerve final logo.png"
+            src="/assets/images/nerve-final-logo.png"
             alt="NERVE"
             className="h-6 w-auto brightness-0 invert mr-2"
             onError={e => {

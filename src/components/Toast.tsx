@@ -22,9 +22,9 @@ export default function Toast({ message, type = 'info', duration = 3000, onClose
   }, [duration, onClose]);
 
   const icons = {
-    success: <CheckCircle size={20} />,
-    error: <AlertCircle size={20} />,
-    info: <Info size={20} />,
+    success: <CheckCircle size={20} aria-hidden="true" />,
+    error: <AlertCircle size={20} aria-hidden="true" />,
+    info: <Info size={20} aria-hidden="true" />,
   };
 
   const colors = {
@@ -35,23 +35,24 @@ export default function Toast({ message, type = 'info', duration = 3000, onClose
 
   return (
     <div
-      className={`fixed bottom-4 end-4 z-[100] transition-all duration-300 ${
+      className={`max-w-[min(24rem,calc(100vw-2rem))] transition-all duration-300 ${
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
       }`}
     >
       <div
-        className={`flex items-center gap-3 px-4 py-3 rounded-lg border ${colors[type]}`}
+        className={`flex items-start gap-3 px-4 py-3 rounded-lg border shadow-sm ${colors[type]}`}
         role="alert"
       >
-        {icons[type]}
-        <p className="text-sm font-medium">{message}</p>
+        <span className="mt-0.5 shrink-0">{icons[type]}</span>
+        <p className="text-sm font-medium flex-1 min-w-0 break-words">{message}</p>
         <button
+          type="button"
           onClick={() => {
             setIsVisible(false);
             onClose();
           }}
           aria-label="Dismiss notification"
-          className="ms-2 p-1 hover:opacity-70"
+          className="ms-1 p-1 hover:opacity-70 shrink-0"
         >
           <X size={16} />
         </button>

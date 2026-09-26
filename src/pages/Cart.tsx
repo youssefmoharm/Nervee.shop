@@ -100,7 +100,7 @@ export default function Cart() {
   return (
     <div className="bg-white text-navy min-h-screen pt-24 md:pt-28 px-5 md:px-8 pb-24">
       <div className="mx-auto max-w-[1600px]">
-        <h1 className="nv-heading text-5xl md:text-7xl mb-10">{t('Your Bag')}</h1>
+        <h1 className="nv-heading text-4xl sm:text-5xl md:text-7xl mb-10">{t('Your Bag')}</h1>
 
         {lines.length === 0 ? (
           <EmptyState
@@ -118,11 +118,11 @@ export default function Cart() {
                 <div
                   key={`${line.productId}-${line.color}-${line.size}`}
                   data-testid="cart-item"
-                  className="flex gap-5 py-6"
+                  className="flex gap-4 sm:gap-5 py-6"
                 >
                   <Link
                     to={`/product/${line.slug}`}
-                    className="w-28 h-32 bg-mist flex-shrink-0 overflow-hidden"
+                    className="w-24 sm:w-28 h-28 sm:h-32 bg-mist flex-shrink-0 overflow-hidden"
                   >
                     <img
                       decoding="async"
@@ -132,11 +132,11 @@ export default function Cart() {
                       className="w-full h-full object-cover"
                     />
                   </Link>
-                  <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
+                  <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="min-w-0">
                       <Link
                         to={`/product/${line.slug}`}
-                        className="nv-edit font-semibold uppercase"
+                        className="nv-edit font-semibold uppercase block truncate"
                       >
                         {line.name}
                       </Link>
@@ -147,9 +147,10 @@ export default function Cart() {
                         {formatEGP(line.price * line.quantity)}
                       </p>
                     </div>
-                    <div className="flex items-center gap-6">
+                    <div className="flex flex-wrap items-center gap-4 sm:gap-6">
                       <div className="flex items-center border border-navy/20">
                         <button
+                          type="button"
                           aria-label={t('Decrease quantity')}
                           onClick={() =>
                             updateQuantity(line.productId, line.color, line.size, line.quantity - 1)
@@ -160,6 +161,7 @@ export default function Cart() {
                         </button>
                         <span className="w-9 text-center text-sm">{line.quantity}</span>
                         <button
+                          type="button"
                           aria-label={t('Increase quantity')}
                           onClick={() =>
                             updateQuantity(line.productId, line.color, line.size, line.quantity + 1)
@@ -173,6 +175,7 @@ export default function Cart() {
                         {formatEGP(line.price * line.quantity)}
                       </span>
                       <button
+                        type="button"
                         aria-label={t('Remove item')}
                         onClick={() => removeLine(line.productId, line.color, line.size)}
                         className="text-navy/60 hover:text-navy transition-colors"

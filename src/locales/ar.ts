@@ -176,8 +176,8 @@ export const ar: Record<string, string> = {
   Required: 'مطلوب',
   'Free shipping': 'شحن مجاني',
   'Cash on delivery across Egypt': 'الدفع عند الاستلام في جميع أنحاء مصر',
-  'Premium streetwear for the bold and the beautiful. Egyptian design, global standards.':
-    'أزياء شارع فاخرة للجريئين والجميلين. تصميم مصري بمعايير عالمية.',
+  'Contemporary Egyptian streetwear. Cool but chic — Alexandria, Egypt.':
+    'أزياء شارع مصرية معاصرة. أنيق لكن أنيق — الإسكندرية، مصر.',
 
   // Newly wired UI strings
   ', a reset link is on its way.': '، رابط إعادة التعيين في طريقه إليك.',
@@ -621,6 +621,9 @@ export const ar: Record<string, string> = {
   'with friends and family': 'مع الأصدقاء والعائلة',
   'Write a Review': 'اكتب تقييمًا',
   'You can only compare up to 3 products': 'يمكنك مقارنة حتى 3 منتجات فقط',
+  'Swipe to compare': 'اسحب للمقارنة',
+  'View Product': 'عرض المنتج',
+  'Try again': 'حاول مرة أخرى',
   "You haven't placed any orders yet.": 'لم تقم بأي طلبات بعد.',
   'You saved': 'وفّرت',
   'You will receive a tracking number via email': 'ستتلقى رقم تتبع عبر البريد الإلكتروني',
@@ -654,14 +657,19 @@ export const ar: Record<string, string> = {
   'Pause slideshow': 'إيقاف العرض',
   'Play slideshow': 'تشغيل العرض',
   'New Season': 'موسم جديد',
-  'Pieces that become part of your everyday identity.': 'قطع تصبح جزءًا من هويتك اليومية.',
+  'The pieces that become part of who you are. Shop the new collection.':
+    'القطع التي تصبح جزءًا من من أنت. تسوق المجموعة الجديدة.',
   'Shop New Drop': 'تسوّق الإصدار الجديد',
+  'Core Essentials': 'الأساسيات الأساسية',
+  'Heavyweight cotton staples you reach for first. Cool but chic, always.':
+    'أساسيات قطنية سميكة تختارها أولًا. أنيق لكن أنيق، دائمًا.',
   'Shop Core': 'تسوّق الأساسية',
-  'Heavyweight staples built to be lived in.': 'قطع أساسية ثقيلة مصنوعة للعيش فيها.',
+  'Nerve Archive': 'أرشيف NERVE',
+  'Numbered releases. Small batches. Never coming back.': 'إصدارات مرقمة. دفعات صغيرة. لن تعود.',
   'Shop Archive': 'تسوّق الأرشيف',
-  'Small-batch releases that do not come back.': 'إصدارات محدودة لا تتكرر.',
+  'Street Form': 'ستريت فورم',
+  'Technical cuts built for the pace of the city.': 'قصّات تقنية مصممة لإيقاع المدينة.',
   'Shop Street Form': 'تسوّق ستريت فورم',
-  'Technical cuts for the pace of the city.': 'قصّات تقنية وإيقاع المدينة.',
   'Example: NRV-123456': 'مثال: NRV-123456',
   'sign in': 'تسجيل الدخول',
   'Up to': 'حتى',
@@ -670,8 +678,8 @@ export const ar: Record<string, string> = {
   apartment: 'الشقة',
   "All measurements in centimeters, taken flat. NERVE runs true to size — if you're between sizes, size up for an oversized fit or down for something more fitted.":
     'جميع القياسات بالسنتيمترات وبوضع مستوٍ. NERVE يطابق المقاس المعتاد — إذا كنت بين مقاسين، اختر الأكبر لقصة واسعة أو الأصغر لقصة ضيقة.',
-  'NERVE is a contemporary Egyptian concept store built around individuality, movement, and the pieces that become part of your everyday identity. Shop curated fashion, streetwear, and lifestyle products — with free standard shipping on orders over':
-    'NERVE متجر مصري معاصر يحتفي بالخصوصية والحركة والقطع التي تصبح جزءًا من هويتك اليومية. تسوق أزياء وملابس شارع ومنتجات أسلوب حياة منتقاة — مع شحن عادي مجاني للطلبات فوق',
+  'NERVE is a contemporary Egyptian concept store built around individuality, movement, and the pieces that become part of your everyday identity. Cool but chic — always.':
+    'NERVE متجر مصري معاصر يحتفي بالخصوصية والحركة والقطع التي تصبح جزءًا من هويتك اليومية. أنيق لكن أنيق — دائمًا.',
   'Returns: delivered only, 14 days. Cancellations: placed/processing, 2 hours. One request per order.':
     'الإرجاع: بعد التسليم فقط، خلال 14 يومًا. الإلغاء: عند الطلب/قيد المعالجة، خلال ساعتين. طلب واحد لكل طلبية.',
   'Subscribe to receive exclusive offers, early access to new drops, and fashion inspiration from NERVE.':
@@ -740,4 +748,20 @@ export const ar: Record<string, string> = {
   'Questions?': 'أسئلة؟',
   'NERVE fits true to size unless noted. If between sizes, size up for an oversized look or down for a fitted silhouette.':
     'NERVE يطابق المقاس المعتاد ما لم يُذكر خلاف ذلك. إذا كنت بين مقاسين، اختر الأكبر لإطلالة واسعة أو الأصغر لقصة ضيقة.',
+
+  // Discovery / search & filters
+  'Active filters': 'عوامل التصفية النشطة',
+  Availability: 'التوفر',
+  'Best Selling': 'الأكثر مبيعًا',
+  'In stock only': 'المتوفر فقط',
+  'Including close matches for': 'بما فيها النتائج المشابهة لـ',
+  Newest: 'الأحدث',
+  'No products match your filters': 'لا توجد منتجات تطابق عوامل التصفية',
+  'Price: Low to High': 'السعر: من الأقل إلى الأعلى',
+  'Price: High to Low': 'السعر: من الأعلى إلى الأقل',
+  'Remove filter': 'إزالة عامل التصفية',
+  'Search suggestions': 'اقتراحات البحث',
+  'Search the shop for': 'ابحث في المتجر عن',
+  'View all results': 'عرض كل النتائج',
+  results: 'نتيجة',
 };

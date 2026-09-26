@@ -122,19 +122,21 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
 
           {!isSoldOut && isTrending && !product.badge && (
             <span className="block bg-orange-500 text-white text-[10px] font-semibold tracking-widest2 uppercase px-2.5 py-1">
-              {t('🔥 Trending')}
+              {t('Trending')}
             </span>
           )}
 
           {!isSoldOut && isNew && !product.badge && (
             <span className="block bg-green-600 text-white text-[10px] font-semibold tracking-widest2 uppercase px-2.5 py-1">
-              {t('✨ New')}
+              {t('New')}
             </span>
           )}
         </div>
 
         <button
+          type="button"
           aria-label={wished ? t('Remove from wishlist') : t('Add to wishlist')}
+          aria-pressed={wished}
           onClick={() =>
             toggle({
               productId: product.id,
@@ -164,22 +166,25 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
           {!quickAddOpen ? (
             <>
               <button
+                type="button"
                 onClick={() => setQuickAddOpen(true)}
                 className="w-full bg-navy text-white text-xs font-semibold tracking-widest2 uppercase py-2.5 flex items-center justify-center gap-2 hover:bg-navy-2 transition-colors"
               >
-                <Plus size={14} /> {t('Quick Add')}
+                <Plus size={14} aria-hidden="true" /> {t('Quick Add')}
               </button>
               <button
+                type="button"
                 onClick={() => openQuickView(product)}
                 className="w-full bg-navy/80 text-white text-xs font-semibold tracking-widest2 uppercase py-2.5 flex items-center justify-center gap-2 hover:bg-navy transition-colors"
               >
-                <Eye size={14} /> {t('Quick View')}
+                <Eye size={14} aria-hidden="true" /> {t('Quick View')}
               </button>
             </>
           ) : (
             <div className="bg-navy p-2 flex flex-wrap gap-1.5">
               {product.sizes.map(s => (
                 <button
+                  type="button"
                   key={s.size}
                   disabled={!s.inStock}
                   onClick={() => handleQuickAdd(s.size)}

@@ -35,8 +35,10 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Avoid clipping sticky/fixed UI. Overflow is fixed at the source on
+   overflowing children (tables, carousels) rather than masking on body. */
 body {
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 :focus-visible {
@@ -127,4 +129,68 @@ header :focus-visible,
 /* iOS home-bar clearance for sticky bottom CTAs */
 .safe-pb {
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+/* ── Floating action dock (compare + chat) ───────────────────────────
+   One stacking context; children flex-column so they never occupy the
+   same screen coordinates. Extra clearance lifts the stack above the
+   cookie banner and the PDP mobile sticky CTA. */
+:root {
+  --fab-gap: 0.75rem;
+  --fab-inset-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  --fab-inset-end: max(1rem, env(safe-area-inset-right, 0px), env(safe-area-inset-left, 0px));
+  --fab-clearance: 0px;
+}
+
+.nv-floating-dock {
+  position: fixed;
+  z-index: 85;
+  bottom: calc(var(--fab-inset-bottom) + var(--fab-clearance));
+  inset-inline-end: var(--fab-inset-end);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--fab-gap);
+  pointer-events: none;
+}
+
+.nv-floating-dock > * {
+  pointer-events: auto;
+}
+
+/* Chat panel lives in the dock's stacking context but positions itself
+   above the FAB row — width clamps so it never overflows 320px viewports. */
+.nv-chat-panel {
+  position: fixed;
+  bottom: calc(var(--fab-inset-bottom) + var(--fab-clearance) + 4.25rem);
+  inset-inline-end: var(--fab-inset-end);
+  width: min(20rem, calc(100vw - 2rem));
+  height: min(31.25rem, calc(100dvh - 8rem));
+  max-height: calc(100dvh - 6rem);
+  z-index: 90;
+  pointer-events: auto;
+}
+
+/* Cookie consent banner occupies the bottom edge */
+body:has([data-testid='cookie-consent']) {
+  --fab-clearance: 8rem;
+}
+
+/* PDP sticky Add-to-Bag bar (mobile only) */
+body:has([data-pdp-sticky-cta]) {
+  --fab-clearance: 5.25rem;
+}
+
+body:has([data-testid='cookie-consent']):has([data-pdp-sticky-cta]) {
+  --fab-clearance: 12.5rem;
+}
+
+@media (min-width: 768px) {
+  body:has([data-pdp-sticky-cta]) {
+    --fab-clearance: 0px;
+  }
+
+  body:has([data-testid='cookie-consent']):has([data-pdp-sticky-cta]) {
+    --fab-clearance: 8rem;
+  }
 }

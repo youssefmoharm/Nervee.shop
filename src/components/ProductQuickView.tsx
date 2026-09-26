@@ -119,25 +119,26 @@ export default function ProductQuickView() {
   return (
     <>
       {/* Backdrop */}
-      <div
+      <button
+        type="button"
         onClick={handleBackdropClick}
-        onKeyDown={(e: React.KeyboardEvent) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            close();
-          }
-        }}
-        role="button"
-        tabIndex={0}
         aria-label={t('Close modal')}
-        className={`fixed inset-0 bg-black z-40 transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-black z-40 transition-opacity duration-300 border-0 p-0 cursor-default ${
           isOpen ? 'opacity-30' : 'opacity-0 pointer-events-none'
         }`}
-        aria-hidden={isOpen ? 'false' : 'true'}
+        tabIndex={isOpen ? 0 : -1}
+        aria-hidden={!isOpen}
       />
 
       {/* Modal */}
-      <FocusTrap active={isOpen} onClickOutside={close}>
+      <FocusTrap
+        active={isOpen}
+        focusTrapOptions={{
+          escapeDeactivates: true,
+          clickOutsideDeactivates: true,
+          onDeactivate: close,
+        }}
+      >
         <div
           className={`fixed inset-0 z-50 flex items-center justify-center px-4 transition-opacity duration-300 ${
             isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
@@ -170,19 +171,21 @@ export default function ProductQuickView() {
                     <X size={16} className="text-navy" />
                   </button>
 
-                  {/* Gallery Navigation */}
+                  {/* Gallery Navigation — always visible on touch; hover-reveal on desktop */}
                   {gallery.length > 1 && (
                     <>
                       <button
+                        type="button"
                         onClick={handlePrevImage}
-                        className="absolute start-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
+                        className="absolute start-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors md:opacity-0 md:group-hover:opacity-100"
                         aria-label={t('Previous image')}
                       >
                         <ChevronLeft size={16} className="text-navy" />
                       </button>
                       <button
+                        type="button"
                         onClick={handleNextImage}
-                        className="absolute end-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
+                        className="absolute end-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors md:opacity-0 md:group-hover:opacity-100"
                         aria-label={t('Next image')}
                       >
                         <ChevronRight size={16} className="text-navy" />

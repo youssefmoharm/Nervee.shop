@@ -294,9 +294,8 @@ export default function Home() {
           </h2>
           <p className="text-navy/75 leading-relaxed max-w-2xl mx-auto">
             {t(
-              'NERVE is a contemporary Egyptian concept store built around individuality, movement, and the pieces that become part of your everyday identity. Shop curated fashion, streetwear, and lifestyle products — with free standard shipping on orders over',
-            )}{' '}
-            {formatEGP(FREE_SHIPPING_THRESHOLD)} {t('and cash on delivery across Egypt.')}
+              'NERVE is a contemporary Egyptian concept store built around individuality, movement, and the pieces that become part of your everyday identity. Cool but chic — always.',
+            )}
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4 text-sm">
             <Link to="/about" className="nv-eyebrow underline underline-offset-4 hover:opacity-60">

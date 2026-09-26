@@ -21,6 +21,7 @@ import { ToastProvider } from './context/ToastContext';
 import { QuickViewProvider } from './context/QuickViewContext';
 import { ComparisonProvider } from './context/ComparisonContext';
 import ComparisonWidget from './components/ComparisonWidget';
+import FloatingDock from './components/FloatingDock';
 import { initSentry, trackError } from './lib/sentry';
 import { initAnalytics, usePageTracking } from './lib/analytics';
 import { initPerformanceMonitoring } from './lib/performance';
@@ -125,15 +126,19 @@ function StorefrontChrome({
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
       <CartDrawer />
       <ProductQuickView />
-      <ComparisonWidget />
       <CrispChat />
       <CookieConsent />
       <main id="main">{children}</main>
       <Footer />
 
-      {/* Chatbot */}
+      {/* Coordinated FABs — stacked so compare never sits under chat */}
+      <FloatingDock>
+        <ComparisonWidget />
+        {showChatTrigger && !chatbotOpen && (
+          <ChatbotAITrigger onClick={() => setChatbotOpen(true)} />
+        )}
+      </FloatingDock>
       <ChatbotAI isOpen={chatbotOpen} onClose={() => setChatbotOpen(false)} />
-      {showChatTrigger && !chatbotOpen && <ChatbotAITrigger onClick={() => setChatbotOpen(true)} />}
     </>
   );
 }

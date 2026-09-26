@@ -40,7 +40,12 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
       if (e.key === 'Escape') setMobileOpen(false);
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = previousOverflow;
+    };
   }, [mobileOpen]);
 
   const solid = scrolled || !isHome;
@@ -57,7 +62,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
             <Link to="/" className="flex items-center">
               <img
                 decoding="async"
-                src="/assets/images/nerve final logo.png"
+                src="/assets/images/nerve-final-logo.png"
                 alt="NERVE"
                 className="h-8 md:h-10 w-auto brightness-0 invert"
                 onError={e => {
@@ -94,7 +99,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
                 data-testid="lang-toggle"
                 aria-label={locale === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
                 onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
-                className="hidden sm:flex h-10 min-w-[2.5rem] items-center justify-center px-2 text-xs font-semibold tracking-wide hover:bg-mist rounded transition-colors border border-white/20 text-white"
+                className="flex h-10 min-w-[2.5rem] items-center justify-center px-2 text-xs font-semibold tracking-wide hover:bg-mist rounded transition-colors border border-white/20 text-white"
               >
                 {locale === 'ar' ? 'EN' : 'AR'}
               </button>
@@ -131,7 +136,10 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
                 )}
               </button>
               <button
+                type="button"
                 aria-label={t('Menu')}
+                aria-expanded={mobileOpen}
+                aria-controls="mobile-menu-panel"
                 data-testid="menu-button"
                 onClick={() => setMobileOpen(true)}
                 className="lg:hidden w-11 h-11 flex items-center justify-center hover:bg-mist rounded transition-colors"
@@ -150,6 +158,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
       >
         <div className="contents">
           <div
+            id="mobile-menu-panel"
             data-testid="mobile-menu"
             role="dialog"
             aria-modal="true"
@@ -175,7 +184,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
               <div className="flex items-center">
                 <img
                   decoding="async"
-                  src="/assets/images/nerve final logo.png"
+                  src="/assets/images/nerve-final-logo.png"
                   alt="NERVE"
                   className="h-6 w-auto brightness-0 invert"
                   onError={e => {
@@ -187,6 +196,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
                 <span className="nv-heading text-2xl hidden">NERVE</span>
               </div>
               <button
+                type="button"
                 aria-label={t('Close menu')}
                 onClick={() => setMobileOpen(false)}
                 className="p-2"
@@ -194,12 +204,12 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
                 <X size={24} />
               </button>
             </div>
-            <nav className="flex flex-col px-6 py-10 gap-1 overflow-y-auto max-h-[calc(100vh-4rem)]">
+            <nav className="flex flex-col px-6 py-10 gap-1 overflow-y-auto max-h-[calc(100dvh-4rem)]">
               {links.map((l, i) => (
                 <Link
                   key={l.label}
                   to={l.to}
-                  className="nv-heading text-[13vw] leading-none py-3 border-b border-white/10 transition-opacity duration-300 opacity-0 animate-fadeUp"
+                  className="nv-heading text-[clamp(1.75rem,11vw,3rem)] leading-none py-3 border-b border-white/10 transition-opacity duration-300 opacity-0 animate-fadeUp break-words"
                   style={{
                     animationDelay: `${i * 60}ms`,
                     animationFillMode: 'forwards',
@@ -213,15 +223,7 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
                 </Link>
               ))}
             </nav>
-            <div className="px-6 mt-4 flex flex-wrap items-center gap-4 nv-eyebrow text-silver">
-              <button
-                type="button"
-                data-testid="lang-toggle-mobile"
-                onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
-                className="px-3 py-1.5 border border-white/25 rounded hover:text-white transition-colors"
-              >
-                {locale === 'ar' ? 'English' : 'العربية'}
-              </button>
+            <div className="px-6 mt-4 flex flex-wrap items-center gap-4 nv-eyebrow text-silver safe-pb">
               <a
                 href="https://www.instagram.com/gotthenerve58/"
                 target="_blank"

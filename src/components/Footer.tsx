@@ -34,7 +34,7 @@ export default function Footer() {
               <img
                 decoding="async"
                 loading="lazy"
-                src="/assets/images/nerve final logo.png"
+                src="/assets/images/nerve-final-logo.png"
                 alt="NERVE"
                 className="h-8 w-auto"
                 onError={e => {
@@ -46,9 +46,7 @@ export default function Footer() {
               <h2 className="nv-heading text-2xl text-navy hidden">NERVE</h2>
             </div>
             <p className="text-sm text-navy/60">
-              {t(
-                'Premium streetwear for the bold and the beautiful. Egyptian design, global standards.',
-              )}
+              {t('Contemporary Egyptian streetwear. Cool but chic — Alexandria, Egypt.')}
             </p>
             <div className="flex items-center gap-3">
               <a

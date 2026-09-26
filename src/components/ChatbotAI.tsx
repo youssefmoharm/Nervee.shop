@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, User, Bot, AlertCircle } from 'lucide-react';
+import FocusTrap from 'focus-trap-react';
 import { useAuth } from '../context/AuthContext';
 import { logError } from '../lib/sentry';
 import { useToast } from '../context/ToastContext';
@@ -212,149 +213,161 @@ export default function ChatbotAI({ isOpen, onClose }: ChatbotProps) {
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed bottom-4 end-4 z-[90] w-80 h-[500px] bg-white border border-navy/10 rounded-lg shadow-2xl flex flex-col overflow-hidden"
-      role="dialog"
-      aria-label={t('NERVE AI Support')}
+    <FocusTrap
+      active={isOpen}
+      focusTrapOptions={{
+        escapeDeactivates: true,
+        clickOutsideDeactivates: false,
+        returnFocusOnDeactivate: true,
+      }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-navy/10 bg-navy text-white rounded-t-lg">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-            <Bot size={16} />
+      <div
+        className="nv-chat-panel fixed z-[90] bg-white border border-navy/10 rounded-lg shadow-2xl flex flex-col overflow-hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('NERVE AI Support')}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-navy/10 bg-navy text-white rounded-t-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+              <Bot size={16} />
+            </div>
+            <div>
+              <h3 className="font-medium text-sm">NERVE AI Support</h3>
+              <p className="text-xs text-white/80">Powered by GPT-4</p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-medium text-sm">NERVE AI Support</h3>
-            <p className="text-xs text-white/80">Powered by GPT-4</p>
-          </div>
-        </div>
-        <button
-          onClick={onClose}
-          aria-label={t('Close chat')}
-          className="p-1 hover:bg-white/20 rounded transition-colors"
-        >
-          <X size={16} />
-        </button>
-      </div>
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map(message => (
-          <div
-            key={message.id}
-            className={`flex gap-2 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+          <button
+            onClick={onClose}
+            aria-label={t('Close chat')}
+            className="p-1 hover:bg-white/20 rounded transition-colors"
           >
-            {message.sender === 'bot' && (
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages.map(message => (
+            <div
+              key={message.id}
+              className={`flex gap-2 ${
+                message.sender === 'user' ? 'justify-end' : 'justify-start'
+              }`}
+            >
+              {message.sender === 'bot' && (
+                <div className="w-6 h-6 bg-navy rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                  <Bot size={12} className="text-white" />
+                </div>
+              )}
+              <div
+                className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                  message.sender === 'user' ? 'bg-navy text-white' : 'bg-gray-100 text-black'
+                }`}
+              >
+                <p className="whitespace-pre-wrap">{message.text}</p>
+                <p className="text-xs mt-1 opacity-60">
+                  {message.timestamp.toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
+              </div>
+              {message.sender === 'user' && (
+                <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                  <User size={12} className="text-gray-600" />
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Typing indicator */}
+          {isLoading && (
+            <div className="flex gap-2">
               <div className="w-6 h-6 bg-navy rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                 <Bot size={12} className="text-white" />
               </div>
-            )}
-            <div
-              className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
-                message.sender === 'user' ? 'bg-navy text-white' : 'bg-gray-100 text-black'
-              }`}
-            >
-              <p className="whitespace-pre-wrap">{message.text}</p>
-              <p className="text-xs mt-1 opacity-60">
-                {message.timestamp.toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </p>
-            </div>
-            {message.sender === 'user' && (
-              <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                <User size={12} className="text-gray-600" />
+              <div className="bg-gray-100 rounded-lg px-3 py-2">
+                <div className="flex gap-1">
+                  <div
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: '0ms' }}
+                  />
+                  <div
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: '150ms' }}
+                  />
+                  <div
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: '300ms' }}
+                  />
+                </div>
               </div>
-            )}
-          </div>
-        ))}
+            </div>
+          )}
 
-        {/* Typing indicator */}
-        {isLoading && (
-          <div className="flex gap-2">
-            <div className="w-6 h-6 bg-navy rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-              <Bot size={12} className="text-white" />
-            </div>
-            <div className="bg-gray-100 rounded-lg px-3 py-2">
-              <div className="flex gap-1">
-                <div
-                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                  style={{ animationDelay: '0ms' }}
-                />
-                <div
-                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                  style={{ animationDelay: '150ms' }}
-                />
-                <div
-                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                  style={{ animationDelay: '300ms' }}
-                />
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Escalation Form */}
+        {showEscalation && (
+          <div className="px-4 py-3 border-t border-gray-200 bg-yellow-50">
+            <div className="flex gap-2 mb-3">
+              <AlertCircle size={16} className="text-yellow-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs font-medium text-yellow-800">Need personalized help?</p>
+                <p className="text-xs text-yellow-700 mt-1">
+                  Create a support ticket and our team will assist you directly.
+                </p>
               </div>
             </div>
+            <input
+              type="text"
+              value={ticketSubject}
+              onChange={e => setTicketSubject(e.target.value)}
+              placeholder="What's your issue about?"
+              className="w-full text-xs border border-yellow-200 rounded px-2 py-1.5 mb-2 focus:outline-none focus:border-yellow-400"
+              disabled={isLoading}
+            />
+            <button
+              onClick={handleCreateTicket}
+              disabled={!ticketSubject || isLoading}
+              className="w-full bg-yellow-600 text-white text-xs py-1.5 rounded hover:bg-yellow-700 transition-colors disabled:opacity-50"
+            >
+              Create Support Ticket
+            </button>
           </div>
         )}
 
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Escalation Form */}
-      {showEscalation && (
-        <div className="px-4 py-3 border-t border-gray-200 bg-yellow-50">
-          <div className="flex gap-2 mb-3">
-            <AlertCircle size={16} className="text-yellow-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-xs font-medium text-yellow-800">Need personalized help?</p>
-              <p className="text-xs text-yellow-700 mt-1">
-                Create a support ticket and our team will assist you directly.
-              </p>
-            </div>
+        {/* Input */}
+        <form onSubmit={handleSubmit} className="p-4 border-t border-navy/10">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={inputText}
+              onChange={e => setInputText(e.target.value)}
+              placeholder="Ask me anything..."
+              aria-label={t('Chat message')}
+              className="flex-1 border border-navy/20 rounded-lg px-3 py-2 text-sm text-black focus:outline-none focus:border-navy"
+              disabled={isLoading}
+            />
+            <button
+              type="submit"
+              disabled={!inputText.trim() || isLoading}
+              aria-label={t('Send message')}
+              className="bg-navy text-white p-2 rounded-lg hover:bg-navy-2 transition-colors disabled:opacity-50"
+            >
+              <Send size={14} />
+            </button>
           </div>
-          <input
-            type="text"
-            value={ticketSubject}
-            onChange={e => setTicketSubject(e.target.value)}
-            placeholder="What's your issue about?"
-            className="w-full text-xs border border-yellow-200 rounded px-2 py-1.5 mb-2 focus:outline-none focus:border-yellow-400"
-            disabled={isLoading}
-          />
-          <button
-            onClick={handleCreateTicket}
-            disabled={!ticketSubject || isLoading}
-            className="w-full bg-yellow-600 text-white text-xs py-1.5 rounded hover:bg-yellow-700 transition-colors disabled:opacity-50"
-          >
-            Create Support Ticket
-          </button>
-        </div>
-      )}
-
-      {/* Input */}
-      <form onSubmit={handleSubmit} className="p-4 border-t border-navy/10">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={inputText}
-            onChange={e => setInputText(e.target.value)}
-            placeholder="Ask me anything..."
-            aria-label={t('Chat message')}
-            className="flex-1 border border-navy/20 rounded-lg px-3 py-2 text-sm text-black focus:outline-none focus:border-navy"
-            disabled={isLoading}
-          />
-          <button
-            type="submit"
-            disabled={!inputText.trim() || isLoading}
-            aria-label={t('Send message')}
-            className="bg-navy text-white p-2 rounded-lg hover:bg-navy-2 transition-colors disabled:opacity-50"
-          >
-            <Send size={14} />
-          </button>
-        </div>
-      </form>
-    </div>
+        </form>
+      </div>
+    </FocusTrap>
   );
 }
 
-// Chatbot trigger button
+// Chatbot trigger — positioning owned by FloatingDock (parent).
 interface ChatbotTriggerProps {
   onClick: () => void;
 }
@@ -362,11 +375,12 @@ interface ChatbotTriggerProps {
 export function ChatbotAITrigger({ onClick }: ChatbotTriggerProps) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="fixed bottom-4 end-4 z-[85] w-14 h-14 md:w-12 md:h-12 bg-navy text-white rounded-full shadow-lg hover:bg-navy-2 transition-all hover:scale-110 flex items-center justify-center"
+      className="w-14 h-14 bg-navy text-white rounded-full shadow-lg hover:bg-navy-2 transition-all hover:scale-105 flex items-center justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy"
       aria-label="Open AI chat support"
     >
-      <MessageCircle size={20} />
+      <MessageCircle size={20} aria-hidden="true" />
     </button>
   );
 }

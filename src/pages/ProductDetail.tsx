@@ -294,7 +294,7 @@ export default function ProductDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
-  // Keyboard: gallery arrows + zoom close
+  // Keyboard: gallery arrows + zoom close (ignore when typing in form fields)
   useEffect(() => {
     if (!product || galleryImages.length === 0) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -303,6 +303,16 @@ export default function ProductDetail() {
         return;
       }
       if (zoomOpen) return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
       if (e.key === 'ArrowLeft') {
         setActiveImage(i => (i - 1 + galleryImages.length) % galleryImages.length);
       } else if (e.key === 'ArrowRight') {
@@ -1460,7 +1470,10 @@ export default function ProductDetail() {
       </div>
 
       {/* Mobile sticky CTA */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-navy/10 bg-white/95 p-3 backdrop-blur md:hidden safe-pb">
+      <div
+        data-pdp-sticky-cta
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-navy/10 bg-white/95 p-3 backdrop-blur md:hidden safe-pb"
+      >
         <div className="mx-auto flex max-w-5xl items-center gap-2">
           <div className="min-w-0 shrink">
             <p className="text-[11px] text-navy/60 truncate max-w-[7rem]">{product.name}</p>

@@ -11,7 +11,7 @@ import { useI18n } from '../lib/i18n';
 export default function CartDrawer() {
   const { t } = useI18n();
   const { lines, isOpen, closeCart, removeLine, updateQuantity, subtotal } = useCart();
-  const firstItemRef = useRef<HTMLDivElement>(null);
+  const firstItemRef = useRef<HTMLLIElement>(null);
   const navigate = useNavigate();
 
   // Focus management: move focus to first item when drawer opens
@@ -28,7 +28,12 @@ export default function CartDrawer() {
       if (e.key === 'Escape') closeCart();
     };
     document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = previousOverflow;
+    };
   }, [isOpen, closeCart]);
 
   if (!isOpen) {
@@ -53,11 +58,13 @@ export default function CartDrawer() {
           />
           <aside
             data-testid="cart-drawer"
-            className="fixed top-0 end-0 z-[70] h-full w-full sm:w-[420px] bg-white text-navy flex flex-col"
-            aria-hidden={false}
+            className="fixed top-0 end-0 z-[70] h-full w-full sm:w-[420px] max-w-[100vw] bg-white text-navy flex flex-col"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cart-drawer-title"
           >
             <div className="flex items-center justify-between px-6 h-16 border-b border-navy/10">
-              <h2 className="nv-eyebrow">
+              <h2 id="cart-drawer-title" className="nv-eyebrow">
                 {t('Your Bag')} ({lines.reduce((n, l) => n + l.quantity, 0)})
               </h2>
               <button
@@ -88,7 +95,7 @@ export default function CartDrawer() {
               ) : (
                 <ul className="space-y-6">
                   {lines.map((line, idx) => (
-                    <div
+                    <li
                       key={`${line.productId}-${line.color}-${line.size}`}
                       data-testid="cart-item"
                       ref={idx === 0 ? firstItemRef : null}
@@ -169,7 +176,7 @@ export default function CartDrawer() {
                           </span>
                         </div>
                       </div>
-                    </div>
+                    </li>
                   ))}
                 </ul>
               )}
