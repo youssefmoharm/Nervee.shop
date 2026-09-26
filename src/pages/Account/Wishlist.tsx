@@ -8,9 +8,15 @@ import EmptyState from '../../components/EmptyState';
 import AccountLayout from './AccountLayout';
 import { formatEGP } from '../../lib/format';
 import { useI18n } from '../../lib/i18n';
+import { useSEO } from '../../hooks/useSEO';
 
 export default function Wishlist() {
   const { t } = useI18n();
+  useSEO({
+    title: 'My Wishlist — NERVE',
+    description: 'Your saved NERVE pieces.',
+    robots: 'noindex, nofollow',
+  });
   const { items, toggle } = useWishlist();
   const navigate = useNavigate();
   const [shareModalOpen, setShareModalOpen] = useState(false);

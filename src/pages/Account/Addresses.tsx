@@ -5,6 +5,7 @@ import { logError } from '../../lib/sentry';
 import { EGYPT_GOVERNORATES } from '../../data/governorates';
 import AccountLayout from './AccountLayout';
 import { useI18n } from '../../lib/i18n';
+import { useSEO } from '../../hooks/useSEO';
 
 const emptyForm = {
   label: '',
@@ -17,6 +18,11 @@ const emptyForm = {
 
 export default function Addresses() {
   const { t } = useI18n();
+  useSEO({
+    title: 'Addresses — NERVE',
+    description: 'Manage your NERVE shipping addresses.',
+    robots: 'noindex, nofollow',
+  });
   const [addresses, setAddresses] = useState<Address[] | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);

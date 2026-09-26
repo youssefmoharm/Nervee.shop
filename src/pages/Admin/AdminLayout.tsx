@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useSEO } from '../../hooks/useSEO';
 
 const links = [
   { to: '/admin', label: 'Dashboard', end: true },
@@ -15,6 +16,14 @@ const links = [
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const { signOut } = useAuth();
+
+  // Admin routes must never be indexed and should not inherit the previous
+  // page's title/canonical (AUDIT SEO-03).
+  useSEO({
+    title: 'Admin — NERVE',
+    description: 'NERVE store administration.',
+    robots: 'noindex, nofollow',
+  });
 
   return (
     <div className="bg-white text-navy min-h-screen">

@@ -6,6 +6,7 @@ import { logError } from '../../lib/sentry';
 import AccountLayout from './AccountLayout';
 import { formatEGP } from '../../lib/format';
 import { useI18n } from '../../lib/i18n';
+import { useSEO } from '../../hooks/useSEO';
 
 interface OrderRow {
   id: string;
@@ -26,6 +27,11 @@ const statusColor: Record<string, string> = {
 
 export default function Orders() {
   const { t } = useI18n();
+  useSEO({
+    title: 'My Orders — NERVE',
+    description: 'Track and review your NERVE orders.',
+    robots: 'noindex, nofollow',
+  });
   const [orders, setOrders] = useState<OrderRow[] | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);

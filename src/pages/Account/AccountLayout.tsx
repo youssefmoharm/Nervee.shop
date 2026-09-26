@@ -1,7 +1,6 @@
 import { type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useSEO } from '../../hooks/useSEO';
 import { useI18n } from '../../lib/i18n';
 
 const links = [
@@ -15,11 +14,9 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
   const { t } = useI18n();
   const { signOut } = useAuth();
 
-  useSEO({
-    title: 'My Account — NERVE',
-    description: 'Manage your NERVE profile, orders, addresses, and wishlist.',
-    robots: 'noindex, nofollow',
-  });
+  // SEO is set per sub-page (each calls useSEO with its own title +
+  // noindex) - a shared call here would override child pages because
+  // parent effects run after child effects (AUDIT SEO-03).
 
   return (
     <div className="bg-white text-navy min-h-screen pt-24 md:pt-28 px-5 md:px-8 pb-24">

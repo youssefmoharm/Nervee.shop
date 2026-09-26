@@ -9,6 +9,7 @@ import { getEndpoint } from '../../lib/apiEndpoints';
 import AccountLayout from './AccountLayout';
 import { formatEGP } from '../../lib/format';
 import { useI18n } from '../../lib/i18n';
+import { useSEO } from '../../hooks/useSEO';
 
 interface OrderItem {
   id: string;
@@ -40,6 +41,11 @@ interface OrderDetailData {
 
 export default function OrderDetail() {
   const { t } = useI18n();
+  useSEO({
+    title: 'Order Details — NERVE',
+    description: 'Details and status for your NERVE order.',
+    robots: 'noindex, nofollow',
+  });
   const { id } = useParams();
   const [order, setOrder] = useState<OrderDetailData | null | undefined>(undefined);
   const [showReturn, setShowReturn] = useState(false);
