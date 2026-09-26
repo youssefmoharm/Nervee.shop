@@ -135,9 +135,19 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-navy/10 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-navy/60">
-            © {new Date().getFullYear()} NERVE. {t('All rights reserved')}.
-          </p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <p className="text-sm text-navy/60">
+              © {new Date().getFullYear()} NERVE. {t('All rights reserved')}.
+            </p>
+            <button
+              type="button"
+              data-testid="cookie-preferences"
+              onClick={() => window.dispatchEvent(new Event('nerve:open-cookie-consent'))}
+              className="text-sm text-navy/60 underline hover:text-navy transition-colors"
+            >
+              {t('Cookie preferences')}
+            </button>
+          </div>
           <p className="text-sm text-navy/60">
             Made with{' '}
             <a

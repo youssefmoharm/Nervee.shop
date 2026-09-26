@@ -35,6 +35,11 @@ export default function CookieConsent() {
     if (!getCookieConsent()) {
       setVisible(true);
     }
+    // The footer's "Cookie preferences" trigger reopens the banner so a
+    // stored choice can be changed or withdrawn later (AUDIT LEG-03).
+    const reopen = () => setVisible(true);
+    window.addEventListener('nerve:open-cookie-consent', reopen);
+    return () => window.removeEventListener('nerve:open-cookie-consent', reopen);
   }, []);
 
   if (!visible) return null;
