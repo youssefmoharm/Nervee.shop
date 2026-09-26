@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { skipGuard, hasBackendSecrets } from './skipGuard';
 
 /**
  * End-to-end COD checkout: shop → cart → Information → Shipping → Delivery →
@@ -6,16 +7,19 @@ import { test, expect, type Page } from '@playwright/test';
  *
  * Guard: when Supabase is not configured (demo mode) or the create-order edge
  * function / network is unreachable, place-order surfaces an inline error —
- * we test.skip() so local CI without secrets still passes structure.
+ * we skip so local runs without secrets still pass structurally.
+ * TEST-02: when backend secrets ARE present (CI with secrets), those skips
+ * become hard failures so CI cannot go green without a completed order.
  */
 
 async function addFirstProductToCart(page: Page) {
   await page.goto('/shop', { waitUntil: 'load' });
   const cards = page.getByTestId('product-card');
-  // No products (backend down / empty) → skip structural run
-  test.skip(
+  // TEST-02: empty catalog — structural skip locally, CI failure with secrets
+  skipGuard(
     (await cards.count()) === 0,
     'No product cards rendered (Supabase/mock data unavailable)',
+    { failInCi: hasBackendSecrets() },
   );
   await cards.first().locator('a').first().click();
   await page.waitForURL(/\/product\//, { timeout: 10000 });
@@ -75,11 +79,15 @@ test.describe('Checkout — COD end-to-end', () => {
         .then(() => 'error' as const),
     ]).catch(() => null);
 
-    test.skip(
+    // TEST-02: order backend unavailable — structural skip locally, but with
+    // secrets present in CI this must fail rather than self-skip past the
+    // confirmation assertions below.
+    skipGuard(
       outcome !== 'success',
       `Order backend unavailable (outcome=${
         outcome ?? 'timeout'
       }) — skipping confirmation assertions`,
+      { failInCi: hasBackendSecrets() },
     );
 
     await expect(page.getByTestId('order-success')).toBeVisible();
@@ -94,12 +102,12 @@ test.describe('Checkout — COD end-to-end', () => {
 
   test('step 1 validates Egyptian phone before advancing', async ({ page }) => {
     await addFirstProductToCart(page);
+    // TEST-02/03: FLOW-06 can restore a saved checkout session (mid-flow
+    // step), which used to hide this test behind a skip. Clear the session so
+    // step 1 always renders; never skip.
+    await page.evaluate(() => localStorage.removeItem('nerve.checkout-session'));
     await page.goto('/checkout', { waitUntil: 'load' });
-    // May resume mid-session from checkout session recovery; force step 1 fields if present
-    const phone = page.getByTestId('phone-input');
-    if (!(await phone.isVisible().catch(() => false))) {
-      test.skip(true, 'Checkout session restored past Information step');
-    }
+    await expect(page.getByTestId('phone-input')).toBeVisible();
     await page.getByTestId('email-input').fill('bad-phone@example.com');
     await page.getByTestId('firstName-input').fill('Nour');
     await page.getByTestId('lastName-input').fill('Hassan');
