@@ -82,6 +82,7 @@ export default function Checkout() {
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [placing, setPlacing] = useState(false);
   const [placeError, setPlaceError] = useState<string | null>(null);
+  const [placeDetails, setPlaceDetails] = useState<string[] | null>(null);
   const [orderNumber, setOrderNumber] = useState('');
   const [confirmedOrder, setConfirmedOrder] = useState<{
     orderNumber: string;
@@ -224,11 +225,13 @@ export default function Checkout() {
   };
 
   const placeOrder = async () => {
+    if (placing) return;
     setPlaceError(null);
+    setPlaceDetails(null);
     // Set placing immediately to prevent double-click before any async work
     setPlacing(true);
 
-    const { order, error } = await orderService.placeOrder(
+    const { order, error, details } = await orderService.placeOrder(
       {
         email: form.email ?? '',
         firstName: form.firstName,
@@ -250,6 +253,9 @@ export default function Checkout() {
       setPlaceError(
         error ?? t('We could not place your order. Please check your connection and try again.'),
       );
+      // Field-level server messages (e.g. sold-out line, quantity cap)
+      // shown inline instead of only in the generic toast (AUDIT FLOW-04).
+      setPlaceDetails(details && details.length > 0 ? details : null);
       return;
     }
 
@@ -292,6 +298,7 @@ export default function Checkout() {
       return;
     }
     if (step === 4) {
+      if (placing) return;
       void placeOrder();
       return;
     }
@@ -713,9 +720,16 @@ export default function Checkout() {
             {step !== 5 && (
               <div className="space-y-3 mt-8">
                 {placeError && (
-                  <p className="text-xs text-red-600" role="alert">
-                    {placeError}
-                  </p>
+                  <div className="text-xs text-red-600" role="alert">
+                    <p>{placeError}</p>
+                    {placeDetails && (
+                      <ul className="mt-1 space-y-0.5 list-disc ps-4">
+                        {placeDetails.map(d => (
+                          <li key={d}>{d}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                 )}
                 <div className="flex items-center gap-4">
                   {step > 1 && (

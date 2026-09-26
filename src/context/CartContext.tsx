@@ -137,23 +137,33 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     pendingOperations.current.add(key);
 
+    // Clamp like updateQuantity: max 10 per item to match the edge
+    // validation, so a bulk add can't push a line past the limit (AUDIT FLOW-04).
+    const quantity = Math.max(1, Math.min(10, line.quantity));
+    const clampedLine: CartLine = { ...line, quantity };
+
     setLines(prev => {
       const idx = prev.findIndex(
         l => l.productId === line.productId && l.color === line.color && l.size === line.size,
       );
       if (idx > -1) {
         const next = [...prev];
-        next[idx] = { ...next[idx], quantity: next[idx].quantity + line.quantity };
+        next[idx] = { ...next[idx], quantity: Math.min(10, next[idx].quantity + quantity) };
         return next;
       }
-      return [...prev, line];
+      return [...prev, clampedLine];
     });
-    setLastAdded(line);
+    setLastAdded(clampedLine);
     setIsOpen(true);
-    ecommerce.addToCart(line.productId, line.name, line.price, line.quantity);
+    ecommerce.addToCart(
+      clampedLine.productId,
+      clampedLine.name,
+      clampedLine.price,
+      clampedLine.quantity,
+    );
     if (user) {
       void cartService
-        .upsertLine(line)
+        .upsertLine(clampedLine)
         .catch(err => {
           console.error('Cart DB sync failed after addLine:', err);
         })

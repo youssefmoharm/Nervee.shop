@@ -688,7 +688,7 @@ describe('Cart Context', () => {
       expect(screen.getByTestId('cart-count')).toHaveTextContent('1');
     });
 
-    it('handles very large quantities', async () => {
+    it('clamps very large quantities to the per-item limit of 10', async () => {
       const user = userEvent.setup();
 
       const CartWithLargeQuantity = () => {
@@ -721,8 +721,10 @@ describe('Cart Context', () => {
       );
 
       await user.click(screen.getByRole('button', { name: 'Add Large Quantity' }));
-      expect(screen.getByTestId('cart-count')).toHaveTextContent('1000');
-      expect(screen.getByTestId('cart-subtotal')).toHaveTextContent('10000');
+      // addLine clamps to the edge validation cap (max 10 per item), so an
+      // unclamped bulk add can never create a line the server rejects (FLOW-04).
+      expect(screen.getByTestId('cart-count')).toHaveTextContent('10');
+      expect(screen.getByTestId('cart-subtotal')).toHaveTextContent('100');
     });
   });
 });
