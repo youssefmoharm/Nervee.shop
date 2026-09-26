@@ -24,6 +24,7 @@ interface CartContextValue {
   removeLine: (productId: string, color: string, size: string) => void;
   updateQuantity: (productId: string, color: string, size: string, quantity: number) => void;
   clear: () => void;
+  restoreLines: (lines: CartLine[]) => void;
   subtotal: number;
   count: number;
   lastAdded: CartLine | null;
@@ -235,6 +236,51 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  /**
+   * FLOW-06: restore cart lines saved by the checkout session (guest carts
+   * live in sessionStorage, which dies when the tab closes). Validates each
+   * line, clamps quantities like addLine, and never overwrites a non-empty cart.
+   */
+  const restoreLines = (incoming: CartLine[]) => {
+    if (!Array.isArray(incoming) || incoming.length === 0) return;
+
+    const valid: CartLine[] = [];
+    for (const raw of incoming) {
+      if (
+        !raw ||
+        typeof raw.productId !== 'string' ||
+        typeof raw.name !== 'string' ||
+        typeof raw.price !== 'number' ||
+        !Number.isFinite(raw.price) ||
+        typeof raw.quantity !== 'number' ||
+        !Number.isFinite(raw.quantity)
+      ) {
+        continue;
+      }
+      const quantity = Math.max(1, Math.min(10, Math.floor(raw.quantity)));
+      const existing = valid.find(
+        l => l.productId === raw.productId && l.color === raw.color && l.size === raw.size,
+      );
+      if (existing) {
+        existing.quantity = Math.min(10, existing.quantity + quantity);
+      } else {
+        valid.push({ ...raw, quantity });
+      }
+    }
+    if (valid.length === 0) return;
+
+    if (user) {
+      // Signed in: the DB cart is authoritative — merge, then reload it.
+      void cartService
+        .mergeGuestCart(valid)
+        .then(() => cartService.fetchMine())
+        .then(setLines)
+        .catch(err => console.error('Cart restore sync failed:', err));
+      return;
+    }
+    setLines(prev => (prev.length === 0 ? valid : prev));
+  };
+
   const subtotal = useMemo(
     () => Math.round(lines.reduce((sum, l) => sum + l.price * l.quantity, 0) * 100) / 100,
     [lines],
@@ -252,6 +298,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         removeLine,
         updateQuantity,
         clear,
+        restoreLines,
         subtotal,
         count,
         lastAdded,

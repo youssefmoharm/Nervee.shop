@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { safeImageSrc } from '../lib/images';
 import { Link, useNavigate } from 'react-router-dom';
 import { Check, ChevronLeft, Loader2, Truck, DollarSign, Package } from 'lucide-react';
@@ -69,7 +69,7 @@ export default function Checkout() {
     robots: 'noindex, nofollow',
   });
   const navigate = useNavigate();
-  const { lines, subtotal, clear } = useCart();
+  const { lines, subtotal, clear, restoreLines } = useCart();
   const { user } = useAuth();
 
   // Restore checkout session if available
@@ -119,6 +119,21 @@ export default function Checkout() {
       checkoutStep: step,
     });
   }, [form, appliedDiscount, step, lines, subtotal]);
+
+  // FLOW-06: guest carts only survive in sessionStorage, so a closed tab can
+  // leave an empty cart next to a saved checkout session. Restore the session's
+  // cart lines once on mount when the live cart is empty; restoreLines refuses
+  // to overwrite a cart that already has items.
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    if (restoredRef.current) return;
+    restoredRef.current = true;
+    const saved = session?.cartLines;
+    if (lines.length === 0 && saved && saved.length > 0) {
+      restoreLines(saved);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Fire begin_checkout once when checkout opens with items
   useEffect(() => {
@@ -327,20 +342,28 @@ export default function Checkout() {
     <div className="bg-white text-navy min-h-screen pt-24 md:pt-28 px-5 md:px-8 pb-24">
       <div className="mx-auto max-w-5xl">
         {/* Session recovery banner - only show when there's actual checkout progress */}
-        {session &&
-          step < 5 &&
-          (session.checkoutStep > 1 || Object.keys(session.formState ?? {}).length > 0) && (
+        {(() => {
+          const savedLines = session?.cartLines?.length ?? 0;
+          const hasFormProgress = Object.values(session?.formState ?? {}).some(
+            v => v !== '' && v !== undefined && v !== 'standard' && v !== 'cod',
+          );
+          return session &&
+            step < 5 &&
+            (session.checkoutStep > 1 || hasFormProgress || savedLines > 0) ? (
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800 flex items-start gap-3">
               <span className="text-lg">ℹ️</span>
               <div>
                 <p className="font-semibold">{t('Your checkout was saved')}</p>
                 <p className="text-xs text-blue-700 mt-1">
-                  {t('We recovered your cart and form data.')} {t("You're on step")} {step}{' '}
-                  {t('of 4.')}
+                  {savedLines > 0
+                    ? `${t('We recovered your cart and form data.')} `
+                    : `${t('We saved your form and order details.')} `}
+                  {t("You're on step")} {step} {t('of 4.')}
                 </p>
               </div>
             </div>
-          )}
+          ) : null;
+        })()}
 
         {step !== 4 && (
           <>

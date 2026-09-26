@@ -77,6 +77,50 @@ const CartTestComponent = () => {
         Close Cart
       </button>
 
+      <button
+        data-testid="restore-lines"
+        onClick={() =>
+          cart.restoreLines([
+            {
+              productId: 'session-1',
+              name: 'Session Product',
+              slug: 'session-product',
+              image: '/s.jpg',
+              price: 50,
+              color: 'Navy',
+              size: 'M',
+              quantity: 2,
+            },
+            {
+              productId: 'session-1',
+              name: 'Session Product',
+              slug: 'session-product',
+              image: '/s.jpg',
+              price: 50,
+              color: 'Navy',
+              size: 'M',
+              quantity: 1000,
+            },
+            {
+              productId: 'bad',
+              name: 'Bad',
+              slug: 'bad',
+              image: '',
+              price: NaN,
+              color: 'X',
+              size: 'S',
+              quantity: 1,
+            },
+          ])
+        }
+      >
+        Restore Lines
+      </button>
+
+      <button data-testid="restore-empty" onClick={() => cart.restoreLines([])}>
+        Restore Empty
+      </button>
+
       {cart.lastAdded && (
         <div data-testid="last-added">
           {cart.lastAdded.name} - {cart.lastAdded.color} - {cart.lastAdded.size}
@@ -725,6 +769,59 @@ describe('Cart Context', () => {
       // unclamped bulk add can never create a line the server rejects (FLOW-04).
       expect(screen.getByTestId('cart-count')).toHaveTextContent('10');
       expect(screen.getByTestId('cart-subtotal')).toHaveTextContent('100');
+    });
+  });
+
+  describe('restoreLines (FLOW-06)', () => {
+    it('restores saved session lines into an empty cart, validated and clamped', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <TestWrapper>
+          <CartTestComponent />
+        </TestWrapper>,
+      );
+
+      await user.click(screen.getByTestId('restore-lines'));
+
+      // duplicate variant merges (2 + clamp(1000)=10 -> capped at 10);
+      // the NaN-price line is dropped as invalid
+      expect(screen.getByTestId('cart-items')).toHaveTextContent('1');
+      expect(screen.getByTestId('line-0')).toHaveTextContent(
+        'Session Product - Navy - M - Qty: 10 - Price: 50',
+      );
+      // guest carts are mirrored back into sessionStorage by the persist effect
+      expect(sessionStorage.getItem('nerve.cart')).toContain('session-1');
+    });
+
+    it('never overwrites a cart that already has items', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <TestWrapper>
+          <CartTestComponent />
+        </TestWrapper>,
+      );
+
+      await user.click(screen.getByTestId('add-item'));
+      await user.click(screen.getByTestId('restore-lines'));
+
+      expect(screen.getByTestId('cart-items')).toHaveTextContent('1');
+      expect(screen.getByTestId('line-0')).toHaveTextContent('Test Product - Black');
+    });
+
+    it('ignores an empty payload', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <TestWrapper>
+          <CartTestComponent />
+        </TestWrapper>,
+      );
+
+      await user.click(screen.getByTestId('restore-empty'));
+      expect(screen.getByTestId('cart-items')).toHaveTextContent('0');
+      expect(screen.getByTestId('cart-count')).toHaveTextContent('0');
     });
   });
 });
