@@ -79,6 +79,24 @@
     <priority>0.3</priority>
   </url>
   <url>
+    <loc>https://www.nerveey.shop/collections/core-essentials</loc>
+    <lastmod>2026-08-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.nerveey.shop/collections/nerve-archive</loc>
+    <lastmod>2026-08-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.nerveey.shop/collections/street-form</loc>
+    <lastmod>2026-08-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.nerveey.shop/product/nerve-core-tee</loc>
     <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>

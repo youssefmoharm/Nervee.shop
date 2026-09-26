@@ -43,16 +43,13 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   process.exit(1);
 }
 
-async function fetchProducts() {
+async function fetchRows(path, label) {
   let lastError = 'unknown';
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/products?select=slug,updated_at&is_active=eq.true`,
-        {
-          headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
-        },
-      );
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+      });
       if (!res.ok) {
         lastError = `HTTP ${res.status}`;
         await new Promise(r => setTimeout(r, 500 * attempt));
@@ -69,9 +66,13 @@ async function fetchProducts() {
       await new Promise(r => setTimeout(r, 500 * attempt));
     }
   }
-  console.error(`Sitemap: product fetch failed after 3 attempts (${lastError}).`);
+  console.error(`Sitemap: ${label} fetch failed after 3 attempts (${lastError}).`);
   process.exit(1);
 }
+
+const fetchProducts = () =>
+  fetchRows('products?select=slug,updated_at&is_active=eq.true', 'product');
+const fetchCollections = () => fetchRows('collections?select=id,updated_at', 'collection');
 
 const staticUrls = [
   { loc: `${STORE_URL}/`, changefreq: 'weekly', priority: '1.0' },
@@ -89,7 +90,7 @@ const staticUrls = [
   { loc: `${STORE_URL}/terms`, changefreq: 'yearly', priority: '0.3' },
 ];
 
-const products = await fetchProducts();
+const [products, collections] = await Promise.all([fetchProducts(), fetchCollections()]);
 const productUrls = products.map(p => ({
   loc: `${STORE_URL}/product/${p.slug}`,
   changefreq: 'weekly',
@@ -97,11 +98,18 @@ const productUrls = products.map(p => ({
   lastmod: p.updated_at ? new Date(p.updated_at).toISOString().split('T')[0] : undefined,
 }));
 
+const collectionUrls = collections.map(c => ({
+  loc: `${STORE_URL}/collections/${c.id}`,
+  changefreq: 'weekly',
+  priority: '0.7',
+  lastmod: c.updated_at ? new Date(c.updated_at).toISOString().split('T')[0] : undefined,
+}));
+
 if (productUrls.length === 0) {
   console.warn('Sitemap: warning — catalog returned 0 active products (static URLs only).');
 }
 
-const allUrls = [...staticUrls, ...productUrls];
+const allUrls = [...staticUrls, ...collectionUrls, ...productUrls];
 
 const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -119,4 +127,6 @@ ${allUrls
 `;
 
 writeFileSync('public/sitemap.xml', xml, 'utf-8');
-console.log(`Sitemap generated: ${allUrls.length} URLs (${productUrls.length} products)`);
+console.log(
+  `Sitemap generated: ${allUrls.length} URLs (${collectionUrls.length} collections, ${productUrls.length} products)`,
+);
