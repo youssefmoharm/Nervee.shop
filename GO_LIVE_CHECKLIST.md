@@ -46,10 +46,14 @@ tracked below)
       it is included in the current production deployment.
 - [x] Owner-confirmed `nerveey.shop@gmail.com` is set as `VITE_SUPPORT_EMAIL`
       in Vercel Production.
+- [x] GA4 Measurement ID from the owner is set as `VITE_GA_ID` in Vercel
+      Production, included in the Ready deployment, and verified not to load
+      before cookie consent.
 - [x] `git ls-files .env*` confirms local secret files are not tracked.
 - [ ] Verify inbound support mail and a transactional Resend delivery end to end.
-- [ ] Add real `VITE_GA_ID` / `VITE_META_PIXEL_ID` values if analytics are
-      required at launch.
+- [ ] Add a real `VITE_META_PIXEL_ID` if Meta analytics are required at launch.
+- [ ] Confirm GA4 receives consented page/ecommerce events in the GA4 realtime
+      report; no synthetic production purchase was sent during verification.
 - [ ] Configure Sentry sourcemap upload settings if required. No server-side
       `SENTRY_DSN` is currently configured, and the repository does not contain
       an Edge Function Sentry integration to validate.
@@ -64,7 +68,8 @@ exist — seed them and the 24 skips collapse to real coverage:
 - [ ] ❌ `AUTH_TEST_EMAIL` / `AUTH_TEST_PASSWORD` — real customer
 - [ ] ❌ seed catalog rows expected by tests (orders to edit/return, products
       with `order_items` history) so CRUD/empty-catalog skips go live
-- [ ] ❌ `VITE_GA_ID`/`VITE_META_PIXEL_ID` for the consent.spec analytics skips
+- [ ] ❌ Provide `VITE_GA_ID` and/or `VITE_META_PIXEL_ID` in CI for consent.spec
+      coverage (the GA4 ID is currently configured in Vercel Production only)
 
 ## 5. Content & ops — ❌ / ⏸
 
