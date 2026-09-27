@@ -34,6 +34,7 @@ declare global {
   interface Window {
     gtag?: (...args: GtagArgs) => void;
     fbq?: (...args: FbqArgs) => void;
+    dataLayer?: unknown[];
   }
 }
 
@@ -246,6 +247,24 @@ export function markPurchaseFired(transactionId: string): void {
  * ------------------------------------------------------------------------- */
 
 let analyticsInitialized = false;
+
+const GOOGLE_TAG_MANAGER_ID = 'GTM-PL8STX4';
+
+function initGoogleTagManager() {
+  const existingScript = document.querySelector(
+    `script[data-gtm-container="${GOOGLE_TAG_MANAGER_ID}"]`,
+  );
+  if (existingScript) return;
+
+  const dataLayer = (window.dataLayer = window.dataLayer || []);
+  dataLayer.push({ 'gtm.start': Date.now(), event: 'gtm.js' });
+
+  const script = document.createElement('script');
+  script.async = true;
+  script.dataset.gtmContainer = GOOGLE_TAG_MANAGER_ID;
+  script.src = `https://www.googletagmanager.com/gtm.js?id=${GOOGLE_TAG_MANAGER_ID}`;
+  document.head.appendChild(script);
+}
 
 // Initialize Google Analytics 4
 export function initGoogleAnalytics() {
@@ -800,6 +819,7 @@ export function initAnalytics() {
   analyticsInitialized = true;
 
   // Initialize providers
+  initGoogleTagManager();
   initGoogleAnalytics();
   initMetaPixel();
 

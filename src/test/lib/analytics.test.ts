@@ -12,6 +12,7 @@ import {
   DEFAULT_CURRENCY,
   ecommerce,
   hasFiredPurchase,
+  initAnalytics,
   resetAnalyticsState,
   sanitizeParameters,
   trackContact,
@@ -63,8 +64,24 @@ beforeEach(() => {
 
 afterEach(() => {
   delete window.gtag;
+  delete window.dataLayer;
+  document.querySelectorAll('script[data-gtm-container]').forEach(script => script.remove());
   localStorage.clear();
   resetAnalyticsState();
+});
+
+describe('Google Tag Manager initialization', () => {
+  it('loads the configured container once and seeds the shared data layer', () => {
+    initAnalytics();
+    initAnalytics();
+
+    const scripts = document.querySelectorAll('script[data-gtm-container="GTM-PL8STX4"]');
+    expect(scripts).toHaveLength(1);
+    expect((scripts[0] as HTMLScriptElement).src).toBe(
+      'https://www.googletagmanager.com/gtm.js?id=GTM-PL8STX4',
+    );
+    expect(window.dataLayer?.[0]).toMatchObject({ event: 'gtm.js' });
+  });
 });
 
 describe('sanitizeParameters — PII never leaves the browser', () => {
