@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { safeImageSrc } from '../lib/images';
 import { Link, useNavigate } from 'react-router-dom';
 import { Lock, Minus, Plus, ShieldCheck, X } from 'lucide-react';
@@ -6,7 +6,7 @@ import { useCart } from '../context/CartContext';
 import { productService } from '../services/productService';
 import { discountService } from '../services/discountService';
 import { useSEO } from '../lib/seo';
-import { ecommerce } from '../lib/analytics';
+import { ecommerce, trackCoupon } from '../lib/analytics';
 import { useToast } from '../context/ToastContext';
 import { useI18n } from '../lib/i18n';
 import { formatEGP } from '../lib/format';
@@ -40,10 +40,23 @@ export default function Cart() {
     ? discountService.calculateDiscount(appliedDiscount.discount, subtotal)
     : 0;
 
+  // view_cart fires once per visit to the bag — re-rendering the list or
+  // tweaking a quantity must not inflate the funnel.
+  const viewCartFired = useRef(false);
   useEffect(() => {
-    if (lines.length > 0) {
-      ecommerce.viewCart(subtotal);
-    }
+    if (viewCartFired.current || lines.length === 0) return;
+    viewCartFired.current = true;
+    ecommerce.viewCart(
+      subtotal,
+      lines.map(l => ({
+        item_id: l.productId,
+        item_name: l.name,
+        item_category: l.category,
+        item_variant: l.color ? `${l.color} / ${l.size}` : l.size,
+        price: l.price,
+        quantity: l.quantity,
+      })),
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lines.length]);
 
@@ -69,6 +82,7 @@ export default function Cart() {
       const result = await discountService.validate(promo.trim(), subtotal);
 
       if (!result.valid || !result.discount) {
+        trackCoupon('apply', promo.trim(), { status: 'invalid' });
         showToast(result.error || t('Please check your code and try again'), 'error', 3000);
         setPromoStatus('invalid');
         return;
@@ -83,10 +97,12 @@ export default function Cart() {
         promoCode: result.discount.code,
         discountAmount: amt,
       });
+      trackCoupon('apply', result.discount.code, { status: 'applied', discount_amount: amt });
       setPromoStatus('applied');
       showToast(`${t('You saved')} ${formatEGP(amt)}`, 'success', 3000);
     } catch (error) {
       console.error('Failed to apply promo code:', error);
+      trackCoupon('apply', promo.trim(), { status: 'error' });
       showToast(t('Please check your code and try again'), 'error', 3000);
       setPromoStatus('invalid');
     } finally {

@@ -4,12 +4,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Check, ChevronLeft, Loader2, Truck, DollarSign, Package } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import type { CartLine } from '../types';
 import { orderService } from '../services/orderService';
 import { discountService, type DiscountCode } from '../services/discountService';
 import { useSEO } from '../lib/seo';
 import { useToast } from '../context/ToastContext';
 import { EGYPT_GOVERNORATES } from '../data/governorates';
-import { ecommerce } from '../lib/analytics';
+import { ecommerce, trackCoupon, type EcommerceItem } from '../lib/analytics';
 import { estimateShippingCost, getCheckoutSummary } from '../lib/checkout';
 import {
   validateEgyptianPhone,
@@ -31,6 +32,18 @@ import EmptyState from '../components/EmptyState';
 type Step = 1 | 2 | 3 | 4 | 5;
 
 const steps = ['Information', 'Shipping', 'Delivery & Payment', 'Review', 'Confirmation'] as const;
+
+/** Cart lines → GA4 `items[]`, carrying category and variant for every event. */
+function toEcommerceItems(lines: readonly CartLine[]): EcommerceItem[] {
+  return lines.map(l => ({
+    item_id: l.productId,
+    item_name: l.name,
+    item_category: l.category,
+    item_variant: l.color ? `${l.color} / ${l.size}` : l.size,
+    price: l.price,
+    quantity: l.quantity,
+  }));
+}
 
 interface FormState {
   email: string | undefined;
@@ -135,21 +148,16 @@ export default function Checkout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Fire begin_checkout once when checkout opens with items
+  // Fire begin_checkout once per checkout attempt. The guard is a ref rather
+  // than a mount-only effect because the cart can be restored from the saved
+  // session *after* mount (FLOW-06) — an empty `[]` effect would then miss it.
+  const beginCheckoutFired = useRef(false);
   useEffect(() => {
-    if (lines.length > 0 && step < 5) {
-      ecommerce.beginCheckout(
-        subtotal,
-        lines.map(l => ({
-          item_id: l.productId,
-          item_name: l.name,
-          price: l.price,
-          quantity: l.quantity,
-        })),
-      );
-    }
+    if (beginCheckoutFired.current || lines.length === 0 || step >= 5) return;
+    beginCheckoutFired.current = true;
+    ecommerce.beginCheckout(subtotal, toEcommerceItems(lines), appliedDiscount?.code);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [lines.length, step]);
 
   // Email field should be disabled for authenticated users
   const isEmailDisabled = !!user?.email;
@@ -192,6 +200,7 @@ export default function Checkout() {
       const result = await discountService.validate(form.discountCode.trim(), subtotal);
 
       if (!result.valid || !result.discount) {
+        trackCoupon('apply', form.discountCode.trim(), { status: 'invalid' });
         showToast(result.error || t('Please check your code and try again'), 'error', 3000);
         setAppliedDiscount(null);
         return;
@@ -210,13 +219,23 @@ export default function Checkout() {
         promoCode: result.discount.code,
         discountAmount: discountAmt,
       });
+      trackCoupon('apply', result.discount.code, {
+        status: 'applied',
+        discount_amount: discountAmt,
+      });
       showToast(`${t('You saved')} ${formatEGP(discountAmt)}`, 'success', 3000);
+    } catch (error) {
+      trackCoupon('apply', form.discountCode.trim(), { status: 'error' });
+      throw error;
     } finally {
       setApplyingDiscount(false);
     }
   };
 
   const handleRemoveDiscount = () => {
+    if (appliedDiscount) {
+      trackCoupon('remove', appliedDiscount.code, { status: 'applied' });
+    }
     setAppliedDiscount(null);
     setForm(f => ({ ...f, discountCode: '' }));
     saveCheckoutSession({ appliedDiscount: null, promoCode: null, discountAmount: null });
@@ -289,14 +308,15 @@ export default function Checkout() {
     setPlacing(false);
     setStep(5);
 
-    // Track purchase event for analytics with cart items (GA4 requires items[])
-    const purchaseItems = lines.map(l => ({
-      item_id: l.productId,
-      item_name: l.name,
-      price: l.price,
-      quantity: l.quantity,
-    }));
-    ecommerce.purchase(order.order_number, order.total, purchaseItems);
+    // Purchase carries the server-authoritative totals plus the full line
+    // detail. `ecommerce.purchase` refuses to report a transaction ID that the
+    // persistent ledger has already seen, so refreshing the confirmation view
+    // or re-running this path can never double-count revenue.
+    ecommerce.purchase(order.order_number, order.total, toEcommerceItems(lines), {
+      coupon: appliedDiscount?.code,
+      shipping_tier: form.delivery,
+      payment_type: form.paymentMethod,
+    });
 
     // Clear checkout session and cart on successful order
     clearCheckoutSession();
@@ -307,7 +327,22 @@ export default function Checkout() {
     e.preventDefault();
     if (step === 1 && !validateStep1()) return;
     if (step === 2 && !validateStep2()) return;
+    if (step === 2) {
+      // Shipping address submitted. The delivery *tier* is only chosen on the
+      // next step, so it is intentionally omitted here.
+      ecommerce.addShippingInfo(finalTotal, toEcommerceItems(lines));
+      setErrors({});
+      setStep(3);
+      return;
+    }
     if (step === 3) {
+      ecommerce.addPaymentInfo(
+        finalTotal,
+        toEcommerceItems(lines),
+        form.delivery,
+        form.paymentMethod,
+        appliedDiscount?.code,
+      );
       setErrors({});
       setStep(4);
       return;

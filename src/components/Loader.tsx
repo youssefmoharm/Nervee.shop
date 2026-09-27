@@ -28,8 +28,13 @@ export default function Loader({ onDone }: { onDone: () => void }) {
       >
         <img
           decoding="async"
-          src="/assets/images/nerve-final-logo.png"
+          fetchPriority="high"
+          src="/assets/images/nerve-logo-480.webp"
+          srcSet="/assets/images/nerve-logo-480.webp 480w, /assets/images/nerve-logo.webp 960w"
+          sizes="240px"
           alt="NERVE"
+          width={960}
+          height={321}
           className="h-16 md:h-20 w-auto mx-auto mb-4"
           onError={e => {
             // Fallback to text logo if image fails to load

@@ -16,7 +16,7 @@ const PLACEHOLDER_HOSTS = [
   'dummyimage.com',
 ];
 
-export const PRODUCT_FALLBACK_IMAGE = '/placeholder-product.jpg';
+export const PRODUCT_FALLBACK_IMAGE = '/placeholder-product.svg';
 
 export function isPlaceholderSrc(src?: string | null): boolean {
   if (!src) return false;
@@ -26,6 +26,9 @@ export function isPlaceholderSrc(src?: string | null): boolean {
 
 /** Returns a safe URL for rendering: placeholder hosts map to the local fallback in prod. */
 export function safeImageSrc(src?: string | null): string {
+  if (src?.endsWith('/placeholder-product.jpg') || src === 'placeholder-product.jpg') {
+    return PRODUCT_FALLBACK_IMAGE;
+  }
   if (src && (!import.meta.env.PROD || !isPlaceholderSrc(src))) return src;
   return PRODUCT_FALLBACK_IMAGE;
 }

@@ -1,7 +1,7 @@
 import type { Collection, Product } from '../types';
 
 // Production images are served from Supabase Storage; local placeholder until then.
-const img = (_productSlug?: string, _color?: string) => `/placeholder-product.jpg`;
+const img = (_productSlug?: string, _color?: string) => `/placeholder-product.svg`;
 
 export const collections: Collection[] = [
   {

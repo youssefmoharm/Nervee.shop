@@ -13,7 +13,7 @@ export type ImageFormat = 'jpeg' | 'webp' | 'avif';
 
 const STORAGE_BUCKET = 'product-images';
 // Use local placeholder images (fallback when Supabase is not configured or images not uploaded)
-const PLACEHOLDER_LOCAL = '/placeholder-product.jpg';
+const PLACEHOLDER_LOCAL = '/placeholder-product.svg';
 
 interface ImageOptions {
   size?: ImageSize;

@@ -195,6 +195,16 @@ describe('did-you-mean', () => {
   it('ignores queries too short to fuzzy match', () => {
     expect(getDidYouMean(catalog, 'c')).toEqual([]);
   });
+
+  it('stays silent for keystroke noise that shares no fragment with a name', () => {
+    // Fuse scores loose scribbles generously — before the shared-fragment guard
+    // these returned product names, so "xyz"-style queries could surface a
+    // correction while similar-length noise did not.
+    expect(getDidYouMean(catalog, 'xyz')).toEqual([]);
+    expect(getDidYouMean(catalog, 'xyzzyq')).toEqual([]);
+    expect(getDidYouMean(catalog, 'onk')).toEqual([]);
+    expect(getDidYouMean(catalog, 'rty')).toEqual([]);
+  });
 });
 
 describe('sortProducts', () => {
@@ -216,6 +226,20 @@ describe('sortProducts', () => {
       'ZIP HOODIE',
       'SOLD OUT CAP',
       'CORE TEE',
+    ]);
+  });
+
+  it('breaks createdAt ties by name so equal dates order the same every time', () => {
+    const sameDayA = { ...tee, id: '7', slug: 'aaa-tee', name: 'AAA TEE', createdAt: '2026-01-01' };
+    const sameDayZ = { ...tee, id: '8', slug: 'zzz-tee', name: 'ZZZ TEE', createdAt: '2026-01-01' };
+
+    expect(sortProducts([sameDayZ, sameDayA], 'newest').map(p => p.name)).toEqual([
+      'AAA TEE',
+      'ZZZ TEE',
+    ]);
+    expect(sortProducts([sameDayA, sameDayZ], 'newest').map(p => p.name)).toEqual([
+      'AAA TEE',
+      'ZZZ TEE',
     ]);
   });
 

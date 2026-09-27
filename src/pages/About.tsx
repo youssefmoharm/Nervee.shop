@@ -19,9 +19,8 @@ export function About() {
           <section className="mb-12">
             <h2 className="text-navy font-semibold text-2xl mb-6">{t('Who We Are')}</h2>
             <p className="text-xl leading-relaxed mb-6">
-              NERVE is a contemporary Egyptian concept store based in Alexandria. We sell
-              streetwear, casual essentials, and lifestyle pieces online — with cash on delivery and
-              shipping across Egypt.
+              NERVE is a contemporary Egyptian concept store based in Alexandria. We design
+              streetwear and lifestyle pieces for the way you move through the world.
             </p>
             <p className="text-xl leading-relaxed">
               Fashion is how you show up. We keep the experience simple: clear product info, honest
@@ -30,35 +29,27 @@ export function About() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-navy font-semibold text-2xl mb-6">{t('How shopping works')}</h2>
-            <ul className="list-disc ps-5 space-y-2 text-lg text-navy/70">
-              <li>
-                {t('Order online')} — {t('pay cash when the courier arrives (Egypt only).')}
-              </li>
-              <li>
-                {t('Standard delivery')} 2–5 {t('business days')}, {t('free over')} EGP&nbsp;2,000{' '}
-                {t('or Express 1–2 days')}.
-              </li>
-              <li>
-                {t('Returns within 14 days')}{' '}
-                {t('on unworn tagged items; free size exchanges within 30 days.')}
-              </li>
-              <li>
-                {t('Questions?')}{' '}
-                <Link to="/contact" className="underline hover:text-navy/80">
-                  {t('Contact us')}
-                </Link>{' '}
-                {t('or read the')}{' '}
-                <Link to="/shipping" className="underline hover:text-navy/80">
-                  {t('Shipping')}
-                </Link>{' '}
-                {t('and')}{' '}
-                <Link to="/returns" className="underline hover:text-navy/80">
-                  {t('Returns')}
-                </Link>{' '}
-                {t('policies.')}
-              </li>
-            </ul>
+            <h2 className="text-navy font-semibold text-2xl mb-6">{t('Shopping & Policies')}</h2>
+            <p className="text-lg leading-relaxed mb-4">
+              We ship across Egypt with cash on delivery — free standard shipping on orders over EGP
+              2,000, Express 1–2 day delivery available. Returns within 14 days on unworn tagged
+              items, with free size exchanges within 30 days.
+            </p>
+            <p className="text-lg leading-relaxed">
+              {t('Questions?')}{' '}
+              <Link to="/contact" className="underline hover:text-navy/80">
+                {t('Contact us')}
+              </Link>{' '}
+              {t('or read the')}{' '}
+              <Link to="/shipping" className="underline hover:text-navy/80">
+                {t('Shipping')}
+              </Link>{' '}
+              {t('and')}{' '}
+              <Link to="/returns" className="underline hover:text-navy/80">
+                {t('Returns')}
+              </Link>{' '}
+              {t('policies.')}
+            </p>
           </section>
 
           <section className="mb-12">

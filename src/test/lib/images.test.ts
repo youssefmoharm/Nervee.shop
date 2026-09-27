@@ -27,6 +27,13 @@ describe('placeholder image guard (FLOW-01)', () => {
     );
   });
 
+  it('normalizes legacy references to the mislabeled JPEG placeholder', () => {
+    expect(safeImageSrc('/placeholder-product.jpg')).toBe(PRODUCT_FALLBACK_IMAGE);
+    expect(safeImageSrc('https://www.nerveey.shop/placeholder-product.jpg')).toBe(
+      PRODUCT_FALLBACK_IMAGE,
+    );
+  });
+
   it('falls back for missing images in any environment', () => {
     expect(safeImageSrc(undefined)).toBe(PRODUCT_FALLBACK_IMAGE);
     expect(safeImageSrc('')).toBe(PRODUCT_FALLBACK_IMAGE);

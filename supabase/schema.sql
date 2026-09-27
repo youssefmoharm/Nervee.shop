@@ -116,7 +116,8 @@ CREATE TABLE IF NOT EXISTS product_inventory (
   updated_at TIMESTAMPTZ DEFAULT NOW(),
 
   UNIQUE(product_id, size),
-  CONSTRAINT valid_size CHECK (size IN ('XS', 'S', 'M', 'L', 'XL', 'XXL'))
+  CONSTRAINT valid_size CHECK (size IN ('XS', 'S', 'M', 'L', 'XL', 'XXL')),
+  CONSTRAINT valid_stock CHECK (stock_quantity >= 0)
 );
 
 -- ----------------------------------------------------------------------------
@@ -258,7 +259,8 @@ CREATE TABLE IF NOT EXISTS discount_codes (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
 
-  CONSTRAINT valid_discount_type CHECK (discount_type IN ('percentage', 'fixed'))
+  CONSTRAINT valid_discount_type CHECK (discount_type IN ('percentage', 'fixed')),
+  CONSTRAINT valid_percentage_discount CHECK (discount_type <> 'percentage' OR (discount_value BETWEEN 1 AND 100))
 );
 
 -- ----------------------------------------------------------------------------
@@ -1291,7 +1293,8 @@ REVOKE ALL ON FUNCTION merge_guest_cart(JSONB) FROM PUBLIC, anon, authenticated,
 GRANT EXECUTE ON FUNCTION merge_guest_cart(JSONB) TO authenticated;
 
 -- ----------------------------------------------------------------------------
--- update_order_status (migration 027: 5-arg + transition validation + history)
+-- update_order_status (6-arg, authoritative transitions — migration 050 mirror;
+-- originally migration 027, audit column added by the admin-fix commit)
 -- The old 4-arg signature from migration 003 is dropped.
 -- ----------------------------------------------------------------------------
 DROP FUNCTION IF EXISTS update_order_status(UUID, TEXT, TEXT, TEXT);
@@ -1325,12 +1328,21 @@ BEGIN
 
   v_from_status := v_order.status;
 
-  -- Status transition validation (terminal states cannot be left).
-  IF v_from_status IN ('cancelled', 'refunded') AND p_status NOT IN ('cancelled', 'refunded') THEN
-    RAISE EXCEPTION 'Cannot move order from % to %', v_from_status, p_status USING ERRCODE = 'P0001';
-  END IF;
-  IF v_from_status = 'delivered' AND p_status NOT IN ('delivered', 'refunded') THEN
-    RAISE EXCEPTION 'Cannot move order from delivered to %', p_status USING ERRCODE = 'P0001';
+  -- Authoritative transition map (kept in sync with src/lib/adminOrders.ts
+  -- and supabase/migrations/050_admin_ops_hardening.sql):
+  --   placed -> processing|cancelled; processing -> shipped|cancelled;
+  --   shipped -> delivered|cancelled; delivered -> refunded;
+  --   cancelled/refunded terminal (no cancelled<->refunded shuffle, no
+  --   state skipping, same-status no-ops allowed).
+  IF NOT (
+    (v_from_status = 'placed'       AND p_status IN ('processing', 'cancelled')) OR
+    (v_from_status = 'processing'   AND p_status IN ('shipped', 'cancelled')) OR
+    (v_from_status = 'shipped'      AND p_status IN ('delivered', 'cancelled')) OR
+    (v_from_status = 'delivered'    AND p_status IN ('refunded')) OR
+    (v_from_status = p_status)
+  ) THEN
+    RAISE EXCEPTION 'Cannot move order from % to %', v_from_status, p_status
+      USING ERRCODE = 'P0001';
   END IF;
 
   -- Restock once, only on the transition INTO cancelled/refunded (never twice).
@@ -1355,15 +1367,22 @@ BEGIN
   WHERE id = p_order_id
   RETURNING * INTO v_order;
 
-  INSERT INTO order_status_history (order_id, from_status, to_status, reason, changed_by)
-  VALUES (p_order_id, v_from_status, p_status, p_reason, p_changed_by);
+  -- Single audit writer; a no-op same-status re-write adds no row.
+  IF v_from_status IS DISTINCT FROM p_status THEN
+    INSERT INTO order_status_history (order_id, from_status, to_status, changed_by, reason)
+    VALUES (p_order_id, v_from_status, p_status, p_changed_by, p_reason);
+  END IF;
 
   RETURN v_order;
 END;
 $$;
 
-REVOKE ALL ON FUNCTION update_order_status(UUID, TEXT, TEXT, TEXT, TEXT) FROM PUBLIC, authenticated, anon;
-GRANT EXECUTE ON FUNCTION update_order_status(UUID, TEXT, TEXT, TEXT, TEXT) TO service_role;
+-- Grants must target the actual 6-parameter signature: against the old
+-- 5-parameter list, the 6-arg function kept PostgreSQL's default PUBLIC
+-- EXECUTE — any anon caller could drive order statuses through this
+-- SECURITY DEFINER function by calling the RPC directly.
+REVOKE ALL ON FUNCTION update_order_status(UUID, TEXT, TEXT, TEXT, TEXT, UUID) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION update_order_status(UUID, TEXT, TEXT, TEXT, TEXT, UUID) TO service_role;
 
 -- ----------------------------------------------------------------------------
 -- validate_discount_code (migration 012)
@@ -2876,5 +2895,199 @@ BEGIN
 END $$;
 
 -- ============================================================================
--- END OF SCHEMA (migrations 001-033)
+-- ADMIN OPS HARDENING (mirror of migration 050_admin_ops_hardening.sql)
+-- Fresh installs built from this file never run the migration files, so the
+-- admin-dashboard RPCs must exist here too.
+-- ============================================================================
+
+-- 1) Locked, admin-gated, non-negative inventory set. adminService.setInventory
+--    calls this; without it every admin stock save fails with "function does
+--    not exist". SECURITY DEFINER + in-function admin_users check: RLS alone
+--    would not protect the body.
+CREATE OR REPLACE FUNCTION update_inventory_with_lock(
+  p_product_id TEXT,
+  p_size TEXT,
+  p_new_quantity INTEGER
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_uid UUID := auth.uid();
+BEGIN
+  IF v_uid IS NULL OR NOT EXISTS (SELECT 1 FROM admin_users WHERE user_id = v_uid) THEN
+    RAISE EXCEPTION 'Admin access required' USING ERRCODE = '42501';
+  END IF;
+
+  IF p_size IS NULL OR length(trim(p_size)) = 0 THEN
+    RAISE EXCEPTION 'size is required' USING ERRCODE = 'P0001';
+  END IF;
+
+  IF p_new_quantity IS NULL OR p_new_quantity < 0 THEN
+    RAISE EXCEPTION 'Stock quantity cannot be negative (got %)', p_new_quantity
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  -- Row lock so a concurrent place_order decrement is never overwritten by a
+  -- stale admin write; CHECK (stock >= 0) keeps the row consistent regardless
+  -- of commit order.
+  INSERT INTO product_inventory (product_id, size, stock_quantity, in_stock)
+  VALUES (p_product_id, trim(p_size), p_new_quantity, p_new_quantity > 0)
+  ON CONFLICT (product_id, size) DO UPDATE
+    SET stock_quantity = EXCLUDED.stock_quantity,
+        in_stock = EXCLUDED.in_stock;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION update_inventory_with_lock(TEXT, TEXT, INTEGER) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION update_inventory_with_lock(TEXT, TEXT, INTEGER)
+  TO authenticated, service_role;
+
+-- 2) Dashboard overview RPC (read by src/pages/Admin/Dashboard.tsx).
+DROP FUNCTION IF EXISTS get_dashboard_overview(TIMESTAMPTZ, TIMESTAMPTZ, TIMESTAMPTZ, TIMESTAMPTZ) CASCADE;
+
+CREATE OR REPLACE FUNCTION get_dashboard_overview(
+  p_previous_period_start TIMESTAMPTZ,
+  p_previous_period_end TIMESTAMPTZ,
+  p_current_period_start TIMESTAMPTZ,
+  p_current_period_end TIMESTAMPTZ
+)
+RETURNS TABLE (
+  current_revenue BIGINT,
+  previous_revenue BIGINT,
+  gross_sales BIGINT,
+  total_refunds BIGINT,
+  total_discounts BIGINT,
+  current_orders BIGINT,
+  previous_orders BIGINT,
+  pending_orders BIGINT,
+  completed_orders BIGINT,
+  cancelled_orders BIGINT,
+  new_customers BIGINT,
+  total_customers BIGINT,
+  returning_customers BIGINT,
+  total_products BIGINT,
+  inactive_products BIGINT,
+  low_stock_products BIGINT,
+  out_of_stock_products BIGINT,
+  total_refund_amount BIGINT,
+  total_returns BIGINT,
+  average_order_value NUMERIC,
+  return_rate NUMERIC,
+  revenue_growth_percentage NUMERIC,
+  order_growth_percentage NUMERIC,
+  processing_orders BIGINT,
+  shipped_orders BIGINT,
+  delivered_orders BIGINT,
+  pending_returns BIGINT,
+  approved_returns BIGINT,
+  products_sold BIGINT
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN QUERY
+  WITH revenue_data AS (
+    SELECT
+      COALESCE(SUM(CASE WHEN o.status != 'cancelled' AND o.created_at >= p_current_period_start AND o.created_at <= p_current_period_end THEN o.total ELSE 0 END), 0) AS current_revenue,
+      COALESCE(SUM(CASE WHEN o.status != 'cancelled' AND o.created_at >= p_previous_period_start AND o.created_at <= p_previous_period_end THEN o.total ELSE 0 END), 0) AS previous_revenue,
+      COALESCE(SUM(CASE WHEN o.status IN ('delivered', 'shipped') THEN o.total ELSE 0 END), 0) AS gross_sales,
+      COALESCE(SUM(CASE WHEN o.status = 'refunded' THEN -o.total ELSE 0 END), 0) AS total_refunds,
+      COALESCE(SUM(o.discount_amount), 0) AS total_discounts
+    FROM orders o
+  ),
+  order_data AS (
+    SELECT
+      COUNT(CASE WHEN o.created_at >= p_current_period_start AND o.created_at <= p_current_period_end THEN 1 END) AS current_orders,
+      COUNT(CASE WHEN o.created_at >= p_previous_period_start AND o.created_at <= p_previous_period_end THEN 1 END) AS previous_orders,
+      COUNT(CASE WHEN o.status = 'placed' OR o.status = 'processing' THEN 1 END) AS pending_orders,
+      COUNT(CASE WHEN o.status = 'delivered' THEN 1 END) AS completed_orders,
+      COUNT(CASE WHEN o.status = 'cancelled' THEN 1 END) AS cancelled_orders,
+      COUNT(CASE WHEN o.status = 'processing' THEN 1 END) AS processing_orders,
+      COUNT(CASE WHEN o.status = 'shipped' THEN 1 END) AS shipped_orders,
+      COUNT(CASE WHEN o.status = 'delivered' THEN 1 END) AS delivered_orders
+    FROM orders o
+  ),
+  customer_data AS (
+    SELECT
+      COUNT(DISTINCT CASE WHEN c.created_at >= p_current_period_start THEN c.id END) AS new_customers,
+      COUNT(DISTINCT c.id) AS total_customers,
+      COUNT(DISTINCT CASE WHEN EXISTS (
+        SELECT 1 FROM orders o2
+        WHERE o2.customer_id = c.id
+        AND o2.status != 'cancelled'
+        GROUP BY o2.customer_id
+        HAVING COUNT(*) > 1
+      ) THEN c.id END) AS returning_customers
+    FROM customers c
+  ),
+  product_data AS (
+    SELECT
+      COUNT(*) AS total_products,
+      COUNT(CASE WHEN p.is_active = FALSE THEN 1 END) AS inactive_products,
+      COUNT(DISTINCT CASE WHEN pi.stock_quantity <= COALESCE(pi.low_stock_threshold, 5) THEN p.id END) AS low_stock_products,
+      COUNT(DISTINCT CASE WHEN pi.stock_quantity = 0 THEN p.id END) AS out_of_stock_products
+    FROM products p
+    LEFT JOIN product_inventory pi ON p.id = pi.product_id
+  ),
+  return_data AS (
+    SELECT
+      COUNT(*) AS total_returns,
+      COALESCE(SUM(CASE WHEN rf.status = 'completed' THEN rf.amount ELSE 0 END), 0) AS total_refund_amount,
+      COUNT(CASE WHEN r.status = 'pending' THEN 1 END) AS pending_returns,
+      COUNT(CASE WHEN r.status = 'approved' THEN 1 END) AS approved_returns
+    FROM order_return_requests r
+    LEFT JOIN refunds rf ON rf.order_id = r.order_id
+    WHERE r.type = 'return'
+  ),
+  items_data AS (
+    SELECT COALESCE(SUM(oi.quantity), 0) AS products_sold
+    FROM order_items oi
+    JOIN orders o ON o.id = oi.order_id
+    WHERE o.status != 'cancelled'
+  )
+  SELECT
+    rd.current_revenue,
+    rd.previous_revenue,
+    rd.gross_sales,
+    rd.total_refunds,
+    rd.total_discounts,
+    od.current_orders,
+    od.previous_orders,
+    od.pending_orders,
+    od.completed_orders,
+    od.cancelled_orders,
+    cd.new_customers,
+    cd.total_customers,
+    cd.returning_customers,
+    pd.total_products,
+    pd.inactive_products,
+    pd.low_stock_products,
+    pd.out_of_stock_products,
+    COALESCE(rd.total_refunds, 0) + COALESCE(ret.total_refund_amount, 0),
+    ret.total_returns,
+    CASE WHEN od.current_orders > 0 THEN rd.current_revenue::NUMERIC / od.current_orders ELSE 0 END,
+    CASE WHEN od.current_orders > 0 THEN (ret.total_returns * 100.0) / od.current_orders ELSE 0 END,
+    CASE WHEN rd.previous_revenue > 0 THEN ((rd.current_revenue - rd.previous_revenue) * 100.0) / rd.previous_revenue ELSE 0 END,
+    CASE WHEN od.previous_orders > 0 THEN ((od.current_orders - od.previous_orders) * 100.0) / od.previous_orders ELSE 0 END,
+    od.processing_orders,
+    od.shipped_orders,
+    od.delivered_orders,
+    ret.pending_returns,
+    ret.approved_returns,
+    idata.products_sold
+  FROM revenue_data rd, order_data od, customer_data cd, product_data pd, return_data ret,
+       items_data idata;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION get_dashboard_overview(TIMESTAMPTZ, TIMESTAMPTZ, TIMESTAMPTZ, TIMESTAMPTZ)
+  TO authenticated, service_role;
+
+-- ============================================================================
+-- END OF SCHEMA (migrations 001-033 + admin ops hardening mirror)
 -- ============================================================================

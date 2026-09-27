@@ -41,7 +41,7 @@ const CART_LINE = JSON.stringify([
     productId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
     name: 'Core Tee',
     slug: 'core-tee-navy',
-    image: '/placeholder-product.jpg',
+    image: '/placeholder-product.svg',
     price: 450,
     color: 'Navy',
     size: 'M',

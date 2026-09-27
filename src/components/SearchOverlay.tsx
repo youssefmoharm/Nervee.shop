@@ -8,6 +8,7 @@ import { searchCatalog, getDidYouMean, getTrendingTerms } from '../lib/productDi
 import { categories } from '../data/products';
 import { useToast } from '../context/ToastContext';
 import { formatEGP } from '../lib/format';
+import { trackSearch } from '../lib/analytics';
 import { useI18n } from '../lib/i18n';
 
 const RECENT_KEY = 'nerve.recentSearches';
@@ -137,6 +138,10 @@ export default function SearchOverlay({ open, onClose }: { open: boolean; onClos
     const next = [term, ...recent.filter(r => r !== term)].slice(0, 5);
     setRecent(next);
     sessionStorage.setItem(RECENT_KEY, JSON.stringify(next));
+    // Only report a result count when this term is the one currently rendered
+    // — category chips commit a term without ever searching for it.
+    const isLiveQuery = term.trim() === query.trim();
+    trackSearch(term, isLiveQuery ? results.length : undefined);
   };
 
   const goToShop = (term: string) => {

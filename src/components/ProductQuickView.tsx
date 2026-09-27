@@ -9,6 +9,7 @@ import { useToast } from '../context/ToastContext';
 import { Link } from 'react-router-dom';
 import type { Size } from '../types';
 import { formatEGP } from '../lib/format';
+import { trackVariantSelection } from '../lib/analytics';
 import { useI18n } from '../lib/i18n';
 
 export default function ProductQuickView() {
@@ -90,6 +91,7 @@ export default function ProductQuickView() {
       color: color.name,
       size: selectedSize,
       quantity,
+      category: product.category,
     });
 
     showToast(`${t('Added')} ${product.name} ${t('to bag')}`, 'success', 3000);
@@ -103,6 +105,7 @@ export default function ProductQuickView() {
       slug: product.slug,
       image: color.image,
       price: product.price,
+      category: product.category,
     });
 
     showToast(
@@ -259,6 +262,16 @@ export default function ProductQuickView() {
                         <button
                           key={c.name}
                           onClick={() => {
+                            if (i !== selectedColorIdx) {
+                              trackVariantSelection({
+                                product_id: product.id,
+                                product_name: product.name,
+                                category: product.category,
+                                variant_type: 'color',
+                                variant_value: c.name,
+                                price: product.price,
+                              });
+                            }
                             setSelectedColorIdx(i);
                             setGalleryIdx(0);
                           }}
@@ -288,7 +301,19 @@ export default function ProductQuickView() {
                     {product.sizes.map(s => (
                       <button
                         key={s.size}
-                        onClick={() => setSelectedSize(s.size)}
+                        onClick={() => {
+                          if (s.inStock && s.size !== selectedSize) {
+                            trackVariantSelection({
+                              product_id: product.id,
+                              product_name: product.name,
+                              category: product.category,
+                              variant_type: 'size',
+                              variant_value: s.size,
+                              price: product.price,
+                            });
+                          }
+                          setSelectedSize(s.size);
+                        }}
                         disabled={!s.inStock}
                         className={`py-2 text-xs font-semibold uppercase transition-colors ${
                           s.size === selectedSize

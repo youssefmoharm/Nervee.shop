@@ -26,6 +26,21 @@
       type="font/woff2"
       crossorigin
     />
+    <!-- Brand logo: painted by the boot loader + sticky header, so it is the
+         LCP candidate on cold visits. Preloading it starts the download with
+         the document instead of after React hydration (saves ~1 RTT + the
+         hydration delay). -->
+    <link
+      rel="preload"
+      as="image"
+      type="image/webp"
+      imagesrcset="/assets/images/nerve-logo-480.webp 480w, /assets/images/nerve-logo.webp 960w"
+      imagesizes="240px"
+      fetchpriority="high"
+    />
+    <!-- Supabase REST/auth is the first backend hop (catalog fetch, session
+         restore, storage images). Preconnecting hides DNS + TLS setup from it. -->
+    <link rel="preconnect" href="%VITE_SUPABASE_URL%" crossorigin />
     <!-- Primary Meta Tags -->
     <title>NERVE — Cool but Chic | Contemporary Egyptian Concept Store EST 2026</title>
     <meta name="title" content="NERVE — Cool but Chic | Contemporary Egyptian Concept Store" />

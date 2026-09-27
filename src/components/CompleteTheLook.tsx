@@ -124,6 +124,7 @@ export default function CompleteTheLook({ mainProduct, suggestedItems }: Complet
       color: color.name,
       size,
       quantity: 1,
+      category: product.category,
     };
   }
 

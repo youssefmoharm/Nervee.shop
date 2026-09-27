@@ -1,5 +1,12 @@
-import { useEffect, useMemo, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { trackFilter, trackSearch } from '../lib/analytics';
 import { LayoutGrid, List, Search, SlidersHorizontal, X } from 'lucide-react';
 import FocusTrap from 'focus-trap-react';
 import type { Product, SortOption } from '../types';
@@ -236,6 +243,59 @@ export default function Shop() {
   }, [status, catalog, filterValues, category, sort]);
 
   const displayed = visible.slice(0, displayCount);
+
+  /**
+   * `search` — one hit per committed query, with the number of results the
+   * customer actually saw. `trackSearch` dedupes on the term, so a search
+   * started in the header overlay and finished here still counts once.
+   */
+  const lastTrackedQuery = useRef<string | null>(null);
+  useEffect(() => {
+    if (status !== 'ready') return;
+    if (!qParam) {
+      lastTrackedQuery.current = null;
+      return;
+    }
+    if (lastTrackedQuery.current === qParam) return;
+    lastTrackedQuery.current = qParam;
+    trackSearch(qParam, visible.length);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qParam, status, visible.length]);
+
+  /**
+   * `filter_used` — emitted only for facets that actually changed, never on
+   * first render (a shared filtered link is a page view, not a filter action).
+   * The query is deliberately excluded: changing the search is a `search`, not
+   * a filter.
+   */
+  const facetSignature = useMemo(
+    () =>
+      JSON.stringify([
+        ['category', category ?? ''],
+        ['colors', colorsParam],
+        ['sizes', sizesParam],
+        ['badges', badgesParam],
+        ['priceMax', priceMaxActive !== undefined ? String(priceMaxActive) : ''],
+        ['availability', availabilityParam],
+        ['sort', sort],
+      ] as Array<[string, string]>),
+    [category, colorsParam, sizesParam, badgesParam, priceMaxActive, availabilityParam, sort],
+  );
+
+  const previousFacets = useRef<string | null>(null);
+  useEffect(() => {
+    const previous = previousFacets.current;
+    previousFacets.current = facetSignature;
+    if (previous === null || status !== 'ready') return;
+    const before = new Map<string, string>(JSON.parse(previous) as Array<[string, string]>);
+    const after = JSON.parse(facetSignature) as Array<[string, string]>;
+    for (const [type, value] of after) {
+      const was = before.get(type);
+      if (was === value) continue;
+      trackFilter(type, value, visible.length);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [facetSignature, status]);
 
   // Suggestions track what is being typed (not the debounced URL) for instant feedback.
   const suggestions = useMemo(

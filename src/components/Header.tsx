@@ -62,8 +62,13 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
             <Link to="/" className="flex items-center">
               <img
                 decoding="async"
-                src="/assets/images/nerve-final-logo.png"
+                fetchPriority="high"
+                src="/assets/images/nerve-logo-480.webp"
+                srcSet="/assets/images/nerve-logo-480.webp 480w, /assets/images/nerve-logo.webp 960w"
+                sizes="240px"
                 alt="NERVE"
+                width={960}
+                height={321}
                 className="h-8 md:h-10 w-auto brightness-0 invert"
                 onError={e => {
                   // Fallback to text logo if image fails to load
@@ -175,8 +180,12 @@ export default function Header({ onSearch }: { onSearch: () => void }) {
               <div className="flex items-center">
                 <img
                   decoding="async"
-                  src="/assets/images/nerve-final-logo.png"
+                  src="/assets/images/nerve-logo-480.webp"
+                  srcSet="/assets/images/nerve-logo-480.webp 480w, /assets/images/nerve-logo.webp 960w"
+                  sizes="240px"
                   alt="NERVE"
+                  width={960}
+                  height={321}
                   className="h-6 w-auto brightness-0 invert"
                   onError={e => {
                     // Fallback to text logo if image fails to load

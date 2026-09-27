@@ -1,146 +1,9 @@
 import { logError } from '../lib/sentry';
 import { supabase } from '../lib/supabase';
 import { LOW_STOCK_DEFAULT_THRESHOLD } from '../lib/storeConfig';
+import { sanitizeSearchInput } from '../lib/adminOrders';
 
 export const adminService = {
-  async getDashboardStats() {
-    const [{ count: orderCount }, { count: customerCount }, { data: orders }] = await Promise.all([
-      supabase.from('orders').select('*', { count: 'exact', head: true }),
-      supabase.from('customers').select('*', { count: 'exact', head: true }),
-      supabase
-        .from('orders')
-        .select('total, created_at, status')
-        .order('created_at', { ascending: false })
-        .limit(200),
-    ]);
-
-    // Get order counts by status
-    const orderStatusCounts = await supabase
-      .from('orders')
-      .select('status', { count: 'exact', head: false });
-
-    const statusMap = new Map<string, number>();
-    if (orderStatusCounts.data) {
-      orderStatusCounts.data.forEach(o => {
-        statusMap.set(o.status, (statusMap.get(o.status) || 0) + 1);
-      });
-    }
-
-    // Get pending returns count
-    const { count: pendingReturnsCount } = await supabase
-      .from('order_return_requests')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'pending');
-
-    // Get processing orders count
-    const processingOrdersCount = statusMap.get('processing') || 0;
-
-    // Get shipped orders count
-    const shippedOrdersCount = statusMap.get('shipped') || 0;
-
-    // Get delivered orders count
-    const deliveredOrdersCount = statusMap.get('delivered') || 0;
-
-    // Two-step low stock query: find the highest threshold first, then fetch candidates.
-    const { data: maxThresholdRow } = await supabase
-      .from('product_inventory')
-      .select('low_stock_threshold')
-      .not('low_stock_threshold', 'is', null)
-      .order('low_stock_threshold', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const maxThreshold =
-      typeof maxThresholdRow?.low_stock_threshold === 'number'
-        ? maxThresholdRow.low_stock_threshold
-        : LOW_STOCK_DEFAULT_THRESHOLD;
-
-    const { data: lowStockCandidates } = await supabase
-      .from('product_inventory')
-      .select('product_id, size, stock_quantity, low_stock_threshold, products(name)')
-      .lte('stock_quantity', maxThreshold)
-      .order('stock_quantity', { ascending: true });
-
-    const lowStock = (lowStockCandidates ?? [])
-      .filter(row => {
-        const threshold =
-          typeof row.low_stock_threshold === 'number'
-            ? row.low_stock_threshold
-            : LOW_STOCK_DEFAULT_THRESHOLD;
-        return row.stock_quantity <= threshold;
-      })
-      .slice(0, 20);
-
-    // Count low stock products
-    const lowStockProducts = new Set(lowStock.map(s => s.product_id)).size;
-
-    // Count out of stock products
-    const { count: outOfStockCount } = await supabase
-      .from('product_inventory')
-      .select('*', { count: 'exact', head: true })
-      .eq('stock_quantity', 0);
-    const outOfStockProducts = outOfStockCount || 0;
-
-    const revenue = (orders ?? [])
-      .filter(o => o.status !== 'cancelled')
-      .reduce((sum, o) => sum + (o.total ?? 0), 0);
-
-    // Calculate monthly revenue (last 12 months)
-    const monthlyRevenue = await supabase
-      .from('orders')
-      .select('total, created_at')
-      .gte('created_at', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString())
-      .order('created_at', { ascending: true });
-
-    const monthlyStats: { month: string; revenue: number }[] = [];
-    if (monthlyRevenue.data) {
-      const monthlyMap = new Map<string, number>();
-      monthlyRevenue.data.forEach(o => {
-        const month = new Date(o.created_at).toLocaleString('default', { month: 'short' });
-        monthlyMap.set(month, (monthlyMap.get(month) || 0) + (o.total || 0));
-      });
-      monthlyMap.forEach((rev, month) => monthlyStats.push({ month, revenue: rev }));
-    }
-
-    // Calculate daily order count (last 30 days)
-    const dailyOrders = await supabase
-      .from('orders')
-      .select('created_at')
-      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-      .order('created_at', { ascending: true });
-
-    const dailyStats: { day: string; count: number }[] = [];
-    if (dailyOrders.data) {
-      const dailyMap = new Map<string, number>();
-      dailyOrders.data.forEach(o => {
-        const day = new Date(o.created_at).toLocaleString('default', { weekday: 'short' });
-        dailyMap.set(day, (dailyMap.get(day) || 0) + 1);
-      });
-      dailyMap.forEach((count, day) => dailyStats.push({ day, count }));
-    }
-
-    return {
-      totalRevenue: revenue,
-      totalOrders: orderCount ?? 0,
-      totalCustomers: customerCount ?? 0,
-      pendingOrders: statusMap.get('placed') || 0,
-      processingOrders: processingOrdersCount,
-      shippedOrders: shippedOrdersCount,
-      deliveredOrders: deliveredOrdersCount,
-      completedOrders: deliveredOrdersCount + (statusMap.get('refunded') || 0),
-      cancelledOrders: statusMap.get('cancelled') || 0,
-      pendingReturns: pendingReturnsCount || 0,
-      totalProducts: 0, // Can be fetched separately if needed
-      lowStockProducts,
-      outOfStockProducts,
-      totalCartAbandonments: 0, // Can be fetched from cart_abandonment_tracking table
-      recentOrders: orders?.slice(0, 10) ?? [],
-      lowStock,
-      monthlyRevenue: monthlyStats,
-      dailyOrders: dailyStats,
-    };
-  },
-
   async listOrders(
     status?: string,
     search?: string,
@@ -159,9 +22,12 @@ export const adminService = {
 
     if (status) query = query.eq('status', status);
 
-    if (search) {
+    const term = search ? sanitizeSearchInput(search) : '';
+    if (term) {
+      // PostgREST or=(...) syntax: the term is sanitized above so user input
+      // can never inject filter clauses of its own.
       query = query.or(
-        `order_number.ilike.%${search}%,email.ilike.%${search}%,first_name.ilike.%${search}%,last_name.ilike.%${search}%`,
+        `order_number.ilike.%${term}%,email.ilike.%${term}%,first_name.ilike.%${term}%,last_name.ilike.%${term}%`,
       );
     }
 
@@ -185,9 +51,10 @@ export const adminService = {
     orderId: string,
     status: string,
     tracking?: { trackingNumber?: string; trackingUrl?: string },
+    reason?: string | null,
   ) {
     const { data, error } = await supabase.functions.invoke('update-order-status', {
-      body: { orderId, status, ...tracking },
+      body: { orderId, status, ...(tracking ?? {}), reason: reason ?? undefined },
     });
     if (error) return { error: error.message };
     if (data?.error) return { error: data.error };
@@ -209,14 +76,23 @@ export const adminService = {
       );
   },
 
-  async listCustomers(page = 1, pageSize = 50) {
+  async listCustomers(page = 1, pageSize = 50, search?: string) {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
-    const { data, error, count } = await supabase
+    let query = supabase
       .from('customers')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(from, to);
+
+    const term = search ? sanitizeSearchInput(search) : '';
+    if (term) {
+      query = query.or(
+        `email.ilike.%${term}%,first_name.ilike.%${term}%,last_name.ilike.%${term}%`,
+      );
+    }
+
+    const { data, error, count } = await query;
     if (error) logError(error);
     return { data: data ?? [], total: count ?? 0, page, pageSize };
   },
@@ -241,16 +117,90 @@ export const adminService = {
     return data ?? [];
   },
 
-  async listProducts(page = 1, pageSize = 50) {
+  async listProducts(page = 1, pageSize = 50, search?: string, active?: boolean) {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
-    const { data, error, count } = await supabase
+    let query = supabase
       .from('products')
       .select('*, product_colors(*), product_inventory(*)', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(from, to);
+
+    const term = search ? sanitizeSearchInput(search) : '';
+    if (term) query = query.or(`name.ilike.%${term}%,category.ilike.%${term}%`);
+    if (active !== undefined) query = query.eq('is_active', active);
+
+    const { data, error, count } = await query;
     if (error) logError(error);
     return { data: data ?? [], total: count ?? 0, page, pageSize };
+  },
+
+  /**
+   * Size-level low stock rows for the dashboard's restock queue: every
+   * inventory row at or under its own threshold (default from storeConfig),
+   * worst first. Filter happens in SQL via the max threshold scan first so
+   * the candidate set stays small.
+   */
+  async listLowStock(limit = 10): Promise<
+    {
+      product_id: string;
+      size: string;
+      stock_quantity: number;
+      low_stock_threshold: number | null;
+      product: { name: string; slug: string } | null;
+    }[]
+  > {
+    const { data: maxRow } = await supabase
+      .from('product_inventory')
+      .select('low_stock_threshold')
+      .not('low_stock_threshold', 'is', null)
+      .order('low_stock_threshold', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const maxThreshold =
+      typeof maxRow?.low_stock_threshold === 'number'
+        ? maxRow.low_stock_threshold
+        : LOW_STOCK_DEFAULT_THRESHOLD;
+
+    const { data, error } = await supabase
+      .from('product_inventory')
+      .select('product_id, size, stock_quantity, low_stock_threshold, products(name, slug)')
+      .lte('stock_quantity', maxThreshold)
+      .order('stock_quantity', { ascending: true })
+      .limit(100);
+    if (error) {
+      logError(error);
+      return [];
+    }
+
+    return (data ?? [])
+      .filter(row => {
+        const threshold =
+          typeof row.low_stock_threshold === 'number'
+            ? row.low_stock_threshold
+            : LOW_STOCK_DEFAULT_THRESHOLD;
+        return row.stock_quantity <= threshold;
+      })
+      .slice(0, limit)
+      .map(row => {
+        // PostgREST returns the products embed as an object for this
+        // many-to-one relation, but the generated types claim an array —
+        // accept either shape so display never breaks on a type drift.
+        const raw = (row as { products?: unknown }).products;
+        const product = Array.isArray(raw)
+          ? (raw[0] as { name: string; slug: string } | undefined) ?? null
+          : raw && typeof raw === 'object'
+          ? (raw as { name: string; slug: string })
+          : null;
+        return {
+          product_id: row.product_id,
+          size: row.size,
+          stock_quantity: row.stock_quantity,
+          low_stock_threshold: row.low_stock_threshold,
+          product,
+        };
+      });
   },
 
   async createProduct(product: Record<string, unknown>) {

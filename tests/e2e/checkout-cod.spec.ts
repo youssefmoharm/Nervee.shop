@@ -23,7 +23,8 @@ async function addFirstProductToCart(page: Page) {
   );
   await cards.first().locator('a').first().click();
   await page.waitForURL(/\/product\//, { timeout: 10000 });
-  await page.getByTestId('size-option').first().click();
+  // The first size (XS) can be sold out — pick one that is actually available.
+  await page.locator('[data-testid="size-option"]:not([data-available="false"])').first().click();
   await page.getByTestId('add-to-bag-button').click();
   await expect(page.getByTestId('cart-count')).toHaveText('1');
 }

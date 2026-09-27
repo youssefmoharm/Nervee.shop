@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import type { WishlistItem } from '../types';
 import { useAuth } from './AuthContext';
 import { wishlistService } from '../services/wishlistService';
+import { trackEventOnce, DEFAULT_CURRENCY } from '../lib/analytics';
 
 interface WishlistContextValue {
   items: WishlistItem[];
@@ -86,6 +87,18 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   const toggle = (item: WishlistItem) => {
     const exists = items.some(i => i.productId === item.productId);
     setItems(prev => (exists ? prev.filter(i => i.productId !== item.productId) : [...prev, item]));
+    trackEventOnce(
+      exists ? 'remove_from_wishlist' : 'add_to_wishlist',
+      {
+        item_id: item.productId,
+        item_name: item.name,
+        item_category: item.category,
+        price: item.price,
+        currency: DEFAULT_CURRENCY,
+        value: item.price,
+      },
+      { key: `wishlist|${item.productId}|${exists ? 'remove' : 'add'}`, ttlMs: 1500 },
+    );
     if (user) {
       if (exists) void wishlistService.remove(item.productId);
       else void wishlistService.add(item.productId);

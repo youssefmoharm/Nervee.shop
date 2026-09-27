@@ -1,8 +1,8 @@
 # GO-LIVE CHECKLIST
 
-Final release gates for https://www.nerveey.shop. Code-side work is done and
-green; the ❌ items are owner/infra actions that cannot be completed from this
-repository. Verify with the commands at the bottom before flipping DNS/launch.
+Final release gates for https://www.nerveey.shop. Local CI currently passes,
+but live security remediation, deployment, and owner/infra gates remain before
+launch can be considered complete.
 
 **Legend:** ✅ done · ❌ owner action required · ⏸ deferred (not launch-blocking,
 tracked below)
@@ -14,40 +14,43 @@ tracked below)
 | Gate                    | Status | Evidence                                          |
 | ----------------------- | ------ | ------------------------------------------------- |
 | `npm run typecheck`     | ✅     | tsc, 0 errors                                     |
-| `npm run lint`          | ✅     | 0 errors, 34 warnings                             |
+| `npm run lint`          | ✅     | 0 errors, 38 warnings                             |
 | `npm run format:check`  | ✅     | prettier clean (incl. this file)                  |
-| `npm run test -- --run` | ✅     | 211/211 pass (21 files)                           |
+| `npm run test -- --run` | ✅     | 271/271 pass (25 files)                           |
 | `npx playwright test`   | ✅     | 255 pass / 0 fail / 24 skipped (3 browsers)       |
-| `npm run build`         | ✅     | production build passes                           |
+| `npm run build`         | ✅     | local build passes; production snapshot is Ready  |
 | `npm audit`             | ✅     | 0 vulnerabilities                                 |
 | Audit campaign          | ✅     | `AUDIT_REPORT.md` — all launch-critical IDs fixed |
 
-## 2. Database migrations — ❌
+## 2. Database migrations — ✅ / security follow-up required
 
-Migrations 036–040 exist in `supabase/migrations/` but are **not confirmed
-applied** to the production project (cannot be verified from code):
+- [x] Production migration history confirms migrations 001–053 are applied.
+- [x] Migrations 051–053 re-enabled RLS, revoked `anon` privileges, and added
+      restrictive deny policies to private customer, order, payment, return,
+      cart, wishlist, token, and support tables.
+- [x] Post-deploy anon API probes returned HTTP 401 for all 29 tested private
+      tables; public product reads still return HTTP 200.
+- [ ] Investigate the period of anonymous data exposure in Supabase logs and
+      assess notification/reporting obligations with the site owner.
+- [ ] Verify authenticated customer and admin workflows after the lockdown.
+- [ ] Run the catalog/RLS spot-checks in the SQL editor. `npm run test:sql`
+      currently skips because no database URL is configured for that runner.
 
-- [ ] ❌ `supabase db push` — applies 036–040 (SEC-01 admin RLS on
-      `customers`/`order_items`, SEC-12 `review_authors` view, PERF-06 catalog
-      indexes, PERF-05 wishlist batch indexes)
-- [ ] ❌ spot-check in SQL editor: `select relname from pg_stat_user_tables where relname = 'review_authors';`
-- [ ] ❌ confirm anon role cannot `select * from customers;`
+## 3. Secrets & environment — partial
 
-## 3. Secrets & environment — ❌
-
-- [ ] ❌ `supabase secrets set SENTRY_DSN=...` (server-side; OPS-02 forwards
-      edge-function failures) + optional `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`
-- [ ] ❌ Vercel env `VITE_SENTRY_DSN` (browser; error-only until consent) —
-      placeholder in `.env.example` is intentionally commented out
-- [ ] ❌ Vercel env `VITE_GA_ID` / `VITE_META_PIXEL_ID` (real IDs; analytics
-      events already wired, OPS-06)
-- [ ] ❌ Vercel env `SENTRY_AUTH_TOKEN` + `SENTRY_ORG`/`SENTRY_PROJECT` +
-      `SENTRY_UPLOAD=1` if uploading sourcemaps from CI (PERF-02 keeps them off
-      by default)
-- [ ] ❌ all `VITE_` values re-checked for prod domain
-      (`VITE_APP_URL=https://www.nerveey.shop`)
-- [ ] ❌ `.env` / `.env.local` confirmed untracked (baseline check passed;
-      re-confirm `git ls-files .env*` is empty of secrets)
+- [x] Core Supabase, Resend, AI, and cron secret names are present in the live
+      Supabase project. Secret values were not printed or copied into this repo.
+- [x] Vercel production has Supabase URL/key, `VITE_ENV`, and browser
+      `VITE_SENTRY_DSN` configured.
+- [x] `VITE_APP_URL=https://www.nerveey.shop` is now set in Vercel Production;
+      it takes effect on the next successful production build.
+- [x] `git ls-files .env*` confirms local secret files are not tracked.
+- [ ] Configure and validate the support inbox in Vercel/Resend.
+- [ ] Add real `VITE_GA_ID` / `VITE_META_PIXEL_ID` values if analytics are
+      required at launch.
+- [ ] Configure Sentry sourcemap upload settings if required. No server-side
+      `SENTRY_DSN` is currently configured, and the repository does not contain
+      an Edge Function Sentry integration to validate.
 
 ## 4. CI E2E fixtures — ❌
 
@@ -63,8 +66,10 @@ exist — seed them and the 24 skips collapse to real coverage:
 
 ## 5. Content & ops — ❌ / ⏸
 
-- [ ] ❌ real product photography replaces placeholders (FLOW-01 fix only
-      stops rendering picsum in prod; images themselves are owner-supplied)
+- [ ] ❌ real product photography replaces placeholders. Live browser check
+      previously found a mislabeled SVG served as JPEG. The fallback is now
+      corrected and decodes, but no actual product photography is present in
+      the workspace.
 - [ ] ❌ verify `npm run build` output once with real images wired
 - [ ] ❌ support inbox live for `VITE_SUPPORT_EMAIL` (Resend `RESEND_FROM_EMAIL` + `STORE_URL` set)
 - [ ] ❌ cookie banner copy reviewed post LEG-03 (footer link works)
@@ -92,6 +97,24 @@ exist — seed them and the 24 skips collapse to real coverage:
 
 ## 7. Sign-off sequence
 
+The current production deployment is Ready at
+`https://nerve-r6w6iaa3l-youssef-moharm.vercel.app` and is aliased to
+`https://www.nerveey.shop`. The live storefront returns HTTP 200, public
+products and collections return HTTP 200, and `/admin` redirects signed-out
+visitors to `/login`. The empty-cart checkout route renders its expected state.
+The branded placeholder asset now serves as `image/svg+xml` and decodes in the
+browser; it is not a substitute for product photography.
+
+This was deployed from the validated local workspace snapshot. The source
+changes are still uncommitted on top of `c24c454`; Vercel's latest Git-built
+deployment before this snapshot failed because its commit lacked the admin
+dashboard modules and matching context API. Future Git-triggered builds will
+remain at risk until the intended source changes are reviewed and committed.
+Authenticated checkout/admin workflows have not been run because production
+test credentials are not configured. Do not call the release fully verified
+until those flows, real product photography, inbox ownership, analytics IDs,
+and monitoring are confirmed.
+
 ```bash
 npm ci
 npm run typecheck && npm run lint && npm run format:check
@@ -103,10 +126,15 @@ git ls-files .env              # no secrets tracked
 ```
 
 - [ ] all gates ✅
-- [ ] migrations applied
+- [x] migrations applied
+- [x] anonymous access to tested private tables denied
 - [ ] secrets set
 - [ ] fixtures seeded (or skips consciously accepted for day one)
-- [ ] monitor Sentry for the first 24 h (OPS-01/02 now reporting)
+- [x] production snapshot deployed and public routes smoke-tested
+- [ ] intended source changes committed so Git-based deployments reproduce it
+- [ ] signed-in customer checkout and admin workflows smoke-tested
+- [ ] production content, support inbox, analytics, and Sentry validated
+- [ ] monitor Sentry for the first 24 h after launch
 
 ---
 

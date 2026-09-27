@@ -8,7 +8,7 @@
 -- production NERVE photography. Before launch, replace every image URL with
 -- real product images hosted in Supabase Storage (bucket: product-images) or
 -- your CDN. The frontend already handles missing images via
--- ProductCard onError fallback to /placeholder-product.jpg (public/placeholder-product.jpg).
+-- ProductCard onError fallback to /placeholder-product.svg (public/placeholder-product.svg).
 -- Do NOT ship picsum URLs to production.
 
 -- ============================================================================

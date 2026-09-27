@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured, SUPABASE_ANON_KEY } from '../lib/supabase';
 import { API_ENDPOINTS } from '../lib/apiEndpoints';
+import { trackSignUp, trackLogin } from '../lib/analytics';
 
 async function readJsonError(response: Response): Promise<string | null> {
   const contentType = response.headers.get('content-type') || '';
@@ -91,7 +92,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [user]);
 
-  const signUp: AuthContextValue['signUp'] = async (email, password, firstName, lastName, meta) => {
+  const performSignUp: AuthContextValue['signUp'] = async (
+    email,
+    password,
+    firstName,
+    lastName,
+    meta,
+  ) => {
     if (!isSupabaseConfigured) {
       return {
         error:
@@ -141,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signIn: AuthContextValue['signIn'] = async (email, password) => {
+  const performSignIn: AuthContextValue['signIn'] = async (email, password) => {
     if (!isSupabaseConfigured) {
       return {
         error:
@@ -196,6 +203,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Network / unexpected failure — fall back to direct GoTrue sign-in.
       return await directSignIn();
     }
+  };
+
+  /**
+   * Public auth API. Both wrappers report the funnel step only on success and
+   * never send the email address, the password or any other identity — the
+   * GA4 recommended events take nothing but the auth method.
+   */
+  const signUp: AuthContextValue['signUp'] = async (email, password, firstName, lastName, meta) => {
+    const result = await performSignUp(email, password, firstName, lastName, meta);
+    if (!result.error) trackSignUp();
+    return result;
+  };
+
+  const signIn: AuthContextValue['signIn'] = async (email, password) => {
+    const result = await performSignIn(email, password);
+    if (!result.error) trackLogin();
+    return result;
   };
 
   const signOut = async () => {

@@ -35,7 +35,8 @@ test.describe('Customer Journey', () => {
     await expect(page.getByText(/please select a size/i)).toBeVisible();
 
     // Pick a size then add to bag
-    await page.getByTestId('size-option').first().click();
+    // The first size (XS) can be sold out — pick one that is actually available.
+    await page.locator('[data-testid="size-option"]:not([data-available="false"])').first().click();
     await page.getByTestId('add-to-bag-button').click();
     await page.waitForTimeout(500); // Wait for cart update
 
@@ -64,7 +65,8 @@ test.describe('Customer Journey', () => {
     await page.getByTestId('product-card').first().locator('a').first().click();
     await page.waitForURL(/\/product\//, { timeout: 5000 });
 
-    await page.getByTestId('size-option').first().click();
+    // The first size (XS) can be sold out — pick one that is actually available.
+    await page.locator('[data-testid="size-option"]:not([data-available="false"])').first().click();
     await page.getByTestId('add-to-bag-button').click();
     await page.waitForTimeout(500);
 

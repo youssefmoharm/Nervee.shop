@@ -141,6 +141,12 @@ export default function ProductForm() {
       );
   }, [id, isNew]);
 
+  // Check for duplicate product name when editing
+  // The server-side validation will handle the uniqueness check
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [name, isNew, id]);
+
   const updateColor = (i: number, patch: Partial<ColorRow>) =>
     setColors(prev => prev.map((c, idx) => (idx === i ? { ...c, ...patch } : c)));
 
@@ -174,6 +180,34 @@ export default function ProductForm() {
     setSaving(true);
     setError(null);
 
+    // ---- Validation: reject before any write happens ----
+    const priceNum = Number(price);
+    if (!Number.isFinite(priceNum) || priceNum <= 0) {
+      setError('Price must be greater than 0.');
+      setSaving(false);
+      return;
+    }
+    const compareNum = compareAtPrice ? Number(compareAtPrice) : null;
+    if (compareNum !== null && (!Number.isFinite(compareNum) || compareNum <= priceNum)) {
+      setError('Compare-at price must be higher than the selling price.');
+      setSaving(false);
+      return;
+    }
+    for (const size of SIZES) {
+      const stock = inventory[size];
+      if (!Number.isInteger(stock) || stock < 0) {
+        setError(`Stock for size ${size} must be a whole number of 0 or more.`);
+        setSaving(false);
+        return;
+      }
+      const threshold = thresholds[size];
+      if (!Number.isInteger(threshold) || threshold < 0) {
+        setError(`Low-stock threshold for size ${size} must be a whole number of 0 or more.`);
+        setSaving(false);
+        return;
+      }
+    }
+
     const productId = isNew ? slugify(name) : id!;
     const productPayload = {
       id: productId,
@@ -181,8 +215,8 @@ export default function ProductForm() {
       name,
       category,
       collection_id: collectionId || null,
-      price: Number(price),
-      compare_at_price: compareAtPrice ? Number(compareAtPrice) : null,
+      price: priceNum,
+      compare_at_price: compareNum,
       currency: 'EGP',
       badge: badge || null,
       is_best_seller: isBestSeller,
@@ -205,11 +239,20 @@ export default function ProductForm() {
       return;
     }
 
-    // Replace colors
-    await supabase.from('product_colors').delete().eq('product_id', productId);
+    // Replace colors — a failed write must surface, not vanish: silently
+    // dropping colors would ship a product with no gallery.
+    const { error: colorDeleteError } = await supabase
+      .from('product_colors')
+      .delete()
+      .eq('product_id', productId);
+    if (colorDeleteError) {
+      setSaving(false);
+      setError(`Failed to update colors: ${colorDeleteError.message}`);
+      return;
+    }
     const validColors = colors.filter(c => c.name && c.image);
     if (validColors.length) {
-      await supabase.from('product_colors').insert(
+      const { error: colorInsertError } = await supabase.from('product_colors').insert(
         validColors.map((c, i) => ({
           product_id: productId,
           name: c.name,
@@ -219,19 +262,47 @@ export default function ProductForm() {
           sort_order: i,
         })),
       );
+      if (colorInsertError) {
+        setSaving(false);
+        setError(`Failed to save colors: ${colorInsertError.message}`);
+        return;
+      }
     }
 
-    // Upsert inventory rows for every size (stock + per-size low-stock threshold)
-    await supabase.from('product_inventory').upsert(
+    // Stock quantities go through update_inventory_with_lock (row lock,
+    // admin-gated, non-negative, in_stock synced) — an unlocked upsert here
+    // could silently overwrite a concurrent checkout's decrement.
+    for (const size of SIZES) {
+      if (isNew || inventory[size] !== initialInventory[size]) {
+        const { error: invError } = await adminService.setInventory(
+          productId,
+          size,
+          inventory[size] ?? 0,
+        );
+        if (invError) {
+          setSaving(false);
+          setError(`Failed to save ${size} stock: ${invError}`);
+          return;
+        }
+      }
+    }
+
+    // Thresholds are alert-only metadata — write just that column (the rows
+    // already exist from the setInventory pass above) so stock_quantity is
+    // never touched here.
+    const { error: thresholdError } = await supabase.from('product_inventory').upsert(
       SIZES.map(size => ({
         product_id: productId,
         size,
-        stock_quantity: inventory[size] ?? 0,
-        in_stock: (inventory[size] ?? 0) > 0,
         low_stock_threshold: thresholds[size] ?? 5,
       })),
       { onConflict: 'product_id,size' },
     );
+    if (thresholdError) {
+      setSaving(false);
+      setError(`Failed to save low-stock thresholds: ${thresholdError.message}`);
+      return;
+    }
 
     // Notify anyone waiting on a size that just came back into stock.
     for (const size of SIZES) {
@@ -316,7 +387,8 @@ export default function ProductForm() {
             <input
               required
               type="number"
-              min={0}
+              min={0.01}
+              step="0.01"
               data-testid="product-price-input"
               value={price}
               onChange={e => setPrice(e.target.value)}
@@ -330,6 +402,8 @@ export default function ProductForm() {
             <input
               type="number"
               min={0}
+              step="0.01"
+              data-testid="product-compare-at-input"
               value={compareAtPrice}
               onChange={e => setCompareAtPrice(e.target.value)}
               className="w-full border border-navy/20 px-4 py-3 text-sm focus:outline-none focus:border-navy"

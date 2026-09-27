@@ -161,6 +161,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       clampedLine.name,
       clampedLine.price,
       clampedLine.quantity,
+      clampedLine.color ? `${clampedLine.color} / ${clampedLine.size}` : clampedLine.size,
+      clampedLine.category,
     );
     if (user) {
       void cartService
@@ -184,7 +186,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       prev.filter(l => !(l.productId === productId && l.color === color && l.size === size)),
     );
     if (removed) {
-      ecommerce.removeFromCart(removed.productId, removed.name, removed.price, removed.quantity);
+      ecommerce.removeFromCart(
+        removed.productId,
+        removed.name,
+        removed.price,
+        removed.quantity,
+        removed.color ? `${removed.color} / ${removed.size}` : removed.size,
+        removed.category,
+      );
     }
     if (user) {
       void cartService.removeLine(productId, color, size).catch(err => {

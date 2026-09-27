@@ -68,6 +68,8 @@ export interface CartLine {
   color: string;
   size: Size;
   quantity: number;
+  /** Product category — carried for analytics (add_to_cart / purchase items). */
+  category?: string;
 }
 
 export interface WishlistItem {
@@ -76,6 +78,8 @@ export interface WishlistItem {
   slug: string;
   image: string;
   price: number;
+  /** Product category — carried for analytics (add_to_wishlist). */
+  category?: string;
 }
 
 export interface User {

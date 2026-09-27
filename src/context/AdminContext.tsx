@@ -8,7 +8,7 @@ import {
 
 interface AdminContextType {
   dateRange: DateRangeWithPrevious;
-  setDateRange: (range: DateRangeWithPrevious) => void;
+  handleDateRangeChange: (range: DateRangeWithPrevious) => void;
   setCustomDateRange: (start: Date, end: Date) => void;
   getPeriodComparison: (
     current: number,
@@ -70,7 +70,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       dateRange,
-      setDateRange: handleDateRangeChange,
+      handleDateRangeChange,
       setCustomDateRange,
       getPeriodComparison,
       isMobile,

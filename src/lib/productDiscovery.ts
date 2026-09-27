@@ -15,6 +15,7 @@ export interface CatalogFilters {
   sizes?: string[];
   priceMin?: number;
   priceMax?: number;
+  badges?: string[];
   /** Keep only products with at least one in-stock size. Products without
    *  availability data are kept (unknown ≠ sold out). */
   inStockOnly?: boolean;
@@ -114,6 +115,7 @@ export function filterProducts(products: Product[], filters: CatalogFilters): Se
     sizes = [],
     priceMin,
     priceMax,
+    badges = [],
     inStockOnly = false,
   } = filters;
 
@@ -140,6 +142,10 @@ export function filterProducts(products: Product[], filters: CatalogFilters): Se
 
   if (priceMax != null) {
     visible = visible.filter(product => product.price <= priceMax);
+  }
+
+  if (badges.length) {
+    visible = visible.filter(product => product.badge && badges.includes(product.badge));
   }
 
   if (inStockOnly) {
@@ -185,6 +191,20 @@ export function getSearchSuggestions(products: Product[], query: string, limit =
   ).slice(0, limit);
 }
 
+/**
+ * Fuse's score alone lets a three-letter scribble "match" something, so a
+ * correction must also share a two-character fragment with the product name.
+ * Keeps noise like "xyz" / "xyzzyq" silent while a real typo such as
+ * "hoddie" (shares ho/od/di with HOODIE) still recovers.
+ */
+function sharesFragment(query: string, productName: string): boolean {
+  const target = productName.toLowerCase();
+  for (let i = 0; i + 2 <= query.length; i += 1) {
+    if (target.includes(query.slice(i, i + 2))) return true;
+  }
+  return false;
+}
+
 /** Close-name recovery for empty result sets: runs on a looser threshold so a
  *  genuinely misspelled query can still surface a correction. */
 export function getDidYouMean(products: Product[], query: string, limit = 3): string[] {
@@ -194,12 +214,18 @@ export function getDidYouMean(products: Product[], query: string, limit = 3): st
   return uniqueStrings(
     getFuse(products, SUGGEST_THRESHOLD)
       .search(normalized)
-      .map(result => result.item.name),
+      .map(result => result.item.name)
+      .filter(name => sharesFragment(normalized, name)),
   ).slice(0, limit);
 }
 
 export function sortProducts(products: Product[], sort: SortOption): Product[] {
-  const newestFirst = (a: Product, b: Product) => +new Date(b.createdAt) - +new Date(a.createdAt);
+  // createdAt alone leaves ties (same-day seeds) order-dependent on however the
+  // API happened to return them — break them by name, then id, everywhere.
+  const newestFirst = (a: Product, b: Product) =>
+    +new Date(b.createdAt) - +new Date(a.createdAt) ||
+    a.name.localeCompare(b.name) ||
+    a.id.localeCompare(b.id);
   const result = [...products];
 
   switch (sort) {

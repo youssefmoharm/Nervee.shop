@@ -38,6 +38,22 @@ export default defineConfig({
               test: (id: string) => id.replace(/\\/g, '/').includes('node_modules/lucide-react/'),
             },
             {
+              // Charting is only imported by the lazy /admin dashboard, but the
+              // catch-all `vendor` group below would otherwise pull it into the
+              // eager vendor chunk that every storefront visit downloads (~50 kB
+              // gzipped of code the marketing pages never execute).
+              name: 'admin-charts',
+              priority: 65,
+              test: (id: string) => {
+                const n = id.replace(/\\/g, '/');
+                return (
+                  n.includes('node_modules/chart.js/') ||
+                  n.includes('node_modules/react-chartjs-2/') ||
+                  n.includes('node_modules/@kurkle/')
+                );
+              },
+            },
+            {
               name: 'context-auth',
               priority: 60,
               test: (id: string) => id.includes('AuthContext'),

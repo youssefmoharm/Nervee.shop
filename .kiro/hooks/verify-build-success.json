@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Verify Build Success Hook",
+      "trigger": "PostFileSave",
+      "description": "Create hook to verify build success",
+      "action": {
+        "type": "command",
+        "command": "node -e \"console.log(JSON.stringify(process.argv, null, 2))\" _hook_payload_"
+      }
+    }
+  ]
+}

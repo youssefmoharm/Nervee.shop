@@ -11,9 +11,30 @@ import {
   STANDARD_SHIPPING_COST,
 } from '../lib/storeConfig';
 import { formatEGP } from '../lib/format';
+import { trackContact } from '../lib/analytics';
 import { useI18n } from '../lib/i18n';
 
 const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || 'nerveey.shop@gmail.com';
+
+/**
+ * Coarse inquiry categories for the `contact` analytics event. Only the
+ * category leaves the browser — the sender's name, email, subject text and
+ * message body are never sent to any analytics provider.
+ */
+const INQUIRY_RULES: Array<[RegExp, string]> = [
+  [/(order|track|tracking|shipping|delivery|dispatch|refund|return|exchange)/i, 'order'],
+  [/(size|fit|sizing|measure|stock|available|restock)/i, 'product'],
+  [/(payment|cod|cash|price|discount|coupon|voucher)/i, 'payment'],
+  [/(collab|wholesale|press|influencer|partnership|bulk)/i, 'business'],
+];
+
+function classifyInquiry(subject: string, message: string): string {
+  const haystack = `${subject} ${message}`;
+  for (const [pattern, label] of INQUIRY_RULES) {
+    if (pattern.test(haystack)) return label;
+  }
+  return 'general';
+}
 
 function Shell({
   title,
@@ -84,6 +105,7 @@ export function Contact() {
       setStatus('error');
       return;
     }
+    trackContact(classifyInquiry(form.subject, form.message));
     setStatus('success');
     setForm({ name: '', email: '', subject: '', message: '', website: '' });
   };

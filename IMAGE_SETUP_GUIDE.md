@@ -17,9 +17,9 @@ The system is now configured with a **3-tier image fallback strategy**:
 
 2. **Secondary:** Local fallback placeholder
 
-   - Path: `/placeholder-product.jpg`
-   - Used when Supabase is not configured or image doesn't exist
-   - Size: 450x563px (card size)
+- Path: `/placeholder-product.svg`
+- Used when Supabase is not configured or image doesn't exist
+- Size: 450x563px (card size)
 
 3. **Tertiary:** Error handling
    - If image fails to load, graceful fallback to placeholder
@@ -199,7 +199,7 @@ CREATE POLICY "Allow admin upload" ON storage.objects
 
 ### Before Images Are Uploaded ✅
 
-- ✅ Placeholder image used: `/placeholder-product.jpg`
+- ✅ Placeholder image used: `/placeholder-product.svg`
 - ✅ Responsive framework working
 - ✅ Component rendering correctly
 - ✅ Build size optimized
@@ -233,7 +233,7 @@ Navigate to:
 ### Test Placeholder Functionality
 
 1. Network tab → filter images
-2. Should see `/placeholder-product.jpg` requests
+2. Should see `/placeholder-product.svg` requests
 3. 200 status (successful)
 4. Responsive srcSet working (multiple requests at different sizes)
 

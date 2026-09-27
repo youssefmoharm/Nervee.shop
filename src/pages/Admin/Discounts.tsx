@@ -49,11 +49,26 @@ export default function Discounts() {
     e.preventDefault();
     setSaving(true);
     setError(null);
+
+    // Mirror the server-side CHECK (050): percentage codes must be 1–100,
+    // fixed codes must be a positive amount — reject before hitting write.
+    const value = Number(form.discount_value);
+    if (!Number.isFinite(value) || value < 1) {
+      setError('Discount value must be 1 or more.');
+      setSaving(false);
+      return;
+    }
+    if (form.discount_type === 'percentage' && value > 100) {
+      setError('Percentage discounts cannot exceed 100%.');
+      setSaving(false);
+      return;
+    }
+
     const { error } = await adminService.createDiscount({
       code: form.code,
       description: form.description || null,
       discount_type: form.discount_type,
-      discount_value: Number(form.discount_value),
+      discount_value: value,
       minimum_purchase: form.minimum_purchase ? Number(form.minimum_purchase) : null,
       usage_limit: form.usage_limit ? Number(form.usage_limit) : null,
       valid_until: form.valid_until ? new Date(form.valid_until).toISOString() : null,

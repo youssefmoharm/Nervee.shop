@@ -19,19 +19,48 @@ interface ProductRow {
   product_inventory: { size: string; stock_quantity: number }[];
 }
 
+const PAGE_SIZE = 25;
+
 export default function Products() {
   const [products, setProducts] = useState<ProductRow[] | null>(null);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'hidden'>('all');
+  const [refreshTick, setRefreshTick] = useState(0);
   const { showToast } = useToast();
 
-  const load = () =>
-    adminService
-      .listProducts()
-      .then(result => setProducts(result.data as ProductRow[]))
-      .catch(err => logError('Failed to load products', err));
-
   useEffect(() => {
-    load();
-  }, []);
+    let cancelled = false;
+    adminService
+      .listProducts(
+        page,
+        PAGE_SIZE,
+        appliedSearch || undefined,
+        statusFilter === 'all' ? undefined : statusFilter === 'active',
+      )
+      .then(result => {
+        if (cancelled) return;
+        setProducts(result.data as ProductRow[]);
+        setTotal(result.total);
+      })
+      .catch(err => logError('Failed to load products', err));
+    return () => {
+      cancelled = true;
+    };
+  }, [page, appliedSearch, statusFilter, refreshTick]);
+
+  // Debounce search so typing doesn't fire a query per keystroke.
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setAppliedSearch(searchQuery.trim());
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [searchQuery]);
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   // FLOW-07: surface the result instead of silently reloading after a
   // (possibly failed) delete; products with order history are hidden, not erased.
@@ -53,24 +82,54 @@ export default function Products() {
       hidden ? `"${name}" is hidden from the store (it has order history).` : `"${name}" deleted.`,
       'success',
     );
-    load();
+    setRefreshTick(t => t + 1);
   };
 
   return (
     <AdminLayout>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <h1 className="nv-heading text-4xl">Products</h1>
         <Link
           to="/admin/products/new"
           data-testid="new-product-link"
-          className="bg-navy text-white nv-eyebrow px-6 py-3 hover:bg-navy-2 transition-colors"
+          className="bg-navy text-white nv-eyebrow px-6 py-3 hover:bg-navy-2 transition-colors text-center"
         >
           + New Product
         </Link>
       </div>
 
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <input
+          type="text"
+          placeholder="Search by name or category..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          data-testid="products-search-input"
+          aria-label="Search products"
+          className="flex-1 border border-navy/20 px-4 py-2 text-sm focus:outline-none focus:border-navy"
+        />
+        <select
+          value={statusFilter}
+          onChange={e => {
+            setStatusFilter(e.target.value as 'all' | 'active' | 'hidden');
+            setPage(1);
+          }}
+          aria-label="Filter products by visibility"
+          data-testid="products-status-filter"
+          className="border border-navy/20 px-3 py-2 text-sm"
+        >
+          <option value="all">All</option>
+          <option value="active">Visible</option>
+          <option value="hidden">Hidden</option>
+        </select>
+      </div>
+
       {!products ? (
         <Loader2 className="animate-spin text-navy/60" size={20} />
+      ) : products.length === 0 ? (
+        <p className="text-navy/60" data-testid="products-empty">
+          No products found.
+        </p>
       ) : (
         <div className="overflow-x-auto border border-navy/10">
           <table className="w-full text-sm" data-testid="products-table">
@@ -148,6 +207,35 @@ export default function Products() {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {total > PAGE_SIZE && products && products.length > 0 && (
+        <div
+          className="flex items-center justify-between text-sm text-navy/70 mt-4"
+          data-testid="products-pagination"
+        >
+          <span>
+            {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total}
+          </span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={page <= 1}
+              onClick={() => setPage(p => p - 1)}
+              className="border border-navy/20 px-3 py-1.5 disabled:opacity-40 hover:bg-mist"
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              disabled={page >= totalPages}
+              onClick={() => setPage(p => p + 1)}
+              className="border border-navy/20 px-3 py-1.5 disabled:opacity-40 hover:bg-mist"
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
     </AdminLayout>

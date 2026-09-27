@@ -29,7 +29,7 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
   } = useComparison();
 
   const color = product.colors[colorIdx] ??
-    product.colors[0] ?? { name: '', hex: '#ccc', image: '/placeholder-product.jpg' };
+    product.colors[0] ?? { name: '', hex: '#ccc', image: '/placeholder-product.svg' };
   const wished = has(product.id);
 
   // Low stock: prefer the server-computed product_stock_status flag; fall
@@ -62,6 +62,7 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
       color: color.name,
       size,
       quantity: 1,
+      category: product.category,
     });
     showToast(`${t('Added')} ${product.name} ${t('to bag')}`, 'success', 3000);
     setQuickAddOpen(false);
@@ -144,6 +145,7 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
               slug: product.slug,
               image: color.image,
               price: product.price,
+              category: product.category,
             })
           }
           className="absolute top-3 end-3 w-11 h-11 rounded-full bg-white/90 flex items-center justify-center transition-transform hover:scale-110"

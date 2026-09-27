@@ -31,7 +31,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { useBrowsingHistory } from '../context/BrowsingHistoryContext';
 import { useToast } from '../context/ToastContext';
 import { useSEO, useStructuredData } from '../lib/seo';
-import { ecommerce } from '../lib/analytics';
+import { ecommerce, trackVariantSelection } from '../lib/analytics';
 import ProductCard from '../components/ProductCard';
 import SizeGuideModal from '../components/SizeGuideModal';
 import ReviewPhotoGallery from '../components/ReviewPhotoGallery';
@@ -329,23 +329,35 @@ export default function ProductDetail() {
   }, [colorIdx]);
 
   if (loading) {
+    // The skeleton mirrors the loaded layout's element structure (same nesting,
+    // same class names on the grid wrappers, same column boxes). React then
+    // patches text/children in place instead of unmounting and re-creating the
+    // tree, so nothing moves when data arrives — this is what kept CLS at
+    // 0.49 (desktop) on this route before.
     return (
-      <div className="bg-white min-h-screen pt-24 md:pt-28 px-5 md:px-8">
-        <div className="mx-auto max-w-[1600px] grid md:grid-cols-2 gap-10">
-          <div className="space-y-3">
-            <Skeleton className="aspect-[4/5] w-full" />
-            <div className="grid grid-cols-4 gap-2">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="aspect-square" />
-              ))}
+      <div className="bg-white text-navy min-h-screen pt-24 md:pt-28 pb-28 md:pb-24">
+        <div className="mx-auto max-w-[1600px] px-5 md:px-8">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-14">
+            <div>
+              <div className="relative aspect-[4/5] bg-mist overflow-hidden mb-3">
+                <Skeleton className="w-full h-full" />
+              </div>
+              <div className="grid grid-cols-4 md:grid-cols-5 gap-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="aspect-square" />
+                ))}
+              </div>
             </div>
-          </div>
-          <div className="space-y-5 pt-4">
-            <Skeleton variant="text" count={1} height="h-8" />
-            <Skeleton variant="text" count={1} height="h-5" />
-            <Skeleton className="h-24 w-full" />
-            <div className="space-y-3">
-              <Skeleton variant="text" count={3} height="h-3" />
+            <div className="md:pt-2">
+              <nav className="mb-4" aria-hidden="true">
+                <Skeleton variant="text" count={1} height="h-3" />
+              </nav>
+              <div className="space-y-3">
+                <Skeleton variant="text" count={1} height="h-8" />
+                <Skeleton variant="text" count={1} height="h-5" />
+                <Skeleton className="h-24 w-full" />
+                <Skeleton variant="text" count={3} height="h-3" />
+              </div>
             </div>
           </div>
         </div>
@@ -405,6 +417,7 @@ export default function ProductDetail() {
         color: color?.name || '',
         size,
         quantity: qty,
+        category: product.category,
       });
       setSizeError(false);
       setAddedPulse(true);
@@ -758,7 +771,19 @@ export default function ProductDetail() {
                   {product.colors.map((c, i) => (
                     <button
                       key={c.name}
-                      onClick={() => setColorIdx(i)}
+                      onClick={() => {
+                        if (i !== colorIdx) {
+                          trackVariantSelection({
+                            product_id: product.id,
+                            product_name: product.name,
+                            category: product.category,
+                            variant_type: 'color',
+                            variant_value: c.name,
+                            price: product.price,
+                          });
+                        }
+                        setColorIdx(i);
+                      }}
                       aria-label={`${t('Select color')}: ${c.name}`}
                       aria-pressed={i === colorIdx}
                       data-testid="color-option"
@@ -822,6 +847,16 @@ export default function ProductDetail() {
                       data-available={unavailable ? 'false' : 'true'}
                       onClick={() => {
                         if (s.inStock) {
+                          if (size !== s.size) {
+                            trackVariantSelection({
+                              product_id: product.id,
+                              product_name: product.name,
+                              category: product.category,
+                              variant_type: 'size',
+                              variant_value: s.size,
+                              price: product.price,
+                            });
+                          }
                           setSize(s.size);
                           setSizeError(false);
                           setNotifySize(null);
@@ -963,6 +998,7 @@ export default function ProductDetail() {
                     slug: product.slug,
                     image: color?.image || '',
                     price: product.price,
+                    category: product.category,
                   });
                   showToast(
                     wished ? t('Removed from wishlist') : t('Added to wishlist'),

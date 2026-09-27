@@ -40,7 +40,7 @@ serve(async req => {
     const admin = await requireAdmin(req, supabase);
     if (!admin) return json({ error: 'Admin access required.' }, 403, corsHeaders);
 
-    const { orderId, status, trackingNumber, trackingUrl } = await req.json();
+    const { orderId, status, trackingNumber, trackingUrl, reason } = await req.json();
     if (!orderId || !VALID_STATUSES.includes(status)) {
       return json({ error: 'orderId and a valid status are required.' }, 400, corsHeaders);
     }
@@ -50,7 +50,7 @@ serve(async req => {
       p_status: status,
       p_tracking_number: trackingNumber ?? null,
       p_tracking_url: trackingUrl ?? null,
-      p_reason: req.body.reason || null,
+      p_reason: typeof reason === 'string' && reason.trim() ? reason.trim() : null,
       p_changed_by: admin.id,
     });
 

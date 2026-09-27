@@ -3,7 +3,8 @@ import { safeImageSrc } from '../lib/images';
 import { Link, useParams } from 'react-router-dom';
 import type { Collection, Product } from '../types';
 import { productService } from '../services/productService';
-import { useSEO } from '../lib/seo';
+import { useSEO, getCollectionSchema, getItemListSchema } from '../lib/seo';
+import { useStructuredData } from '../hooks/useStructuredData';
 import ProductCard from '../components/ProductCard';
 import { useI18n } from '../lib/i18n';
 
@@ -18,6 +19,31 @@ export default function CollectionDetail() {
     title: collection ? `${collection.name} | NERVE` : 'Collection | NERVE',
     description: collection?.description || collection?.tagline || 'Browse the NERVE collection.',
   });
+
+  useStructuredData(
+    collection
+      ? getCollectionSchema({
+          name: collection.name,
+          description: collection.description,
+          image: collection.image,
+          url: `https://www.nerveey.shop/collections/${collection.id}`,
+          productCount: products.length,
+        })
+      : {},
+  );
+
+  useStructuredData(
+    collection && products.length > 0
+      ? getItemListSchema(
+          products.map(p => ({
+            name: p.name,
+            url: `https://www.nerveey.shop/product/${p.slug ?? p.id}`,
+            ...(p.colors?.[0]?.image && { image: p.colors[0].image }),
+          })),
+          collection.name,
+        )
+      : {},
+  );
 
   useEffect(() => {
     if (!id) return;
