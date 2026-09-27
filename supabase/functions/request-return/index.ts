@@ -148,7 +148,8 @@ serve(async req => {
         timer.end();
         return json({ error: 'Delivery date unavailable; contact support' }, 400, corsHeaders);
       }
-      const daysSinceDelivered = (now.getTime() - new Date(order.delivered_at).getTime()) / (1000 * 60 * 60 * 24);
+      const daysSinceDelivered =
+        (now.getTime() - new Date(order.delivered_at).getTime()) / (1000 * 60 * 60 * 24);
       if (daysSinceDelivered > 7) {
         timer.end();
         return json({ error: 'Return window expired (7 days)' }, 400, corsHeaders);
