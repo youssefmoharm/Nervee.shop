@@ -99,8 +99,7 @@ exist — seed them and the 24 skips collapse to real coverage:
 
 ## 7. Sign-off sequence
 
-The current Git-backed production deployment is Ready at
-`https://nerve-p4wsjnbt0-youssef-moharm.vercel.app` and is aliased to
+The current Git-backed production deployment is Ready and aliased to
 `https://www.nerveey.shop`. The live storefront returns HTTP 200, public
 products and collections return HTTP 200, and `/admin` redirects signed-out
 visitors to `/login`. The empty-cart checkout route renders its expected state.
