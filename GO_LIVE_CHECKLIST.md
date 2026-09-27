@@ -18,7 +18,7 @@ tracked below)
 | `npm run format:check`  | ✅     | prettier clean (incl. this file)                  |
 | `npm run test -- --run` | ✅     | 271/271 pass (25 files)                           |
 | `npx playwright test`   | ✅     | 255 pass / 0 fail / 24 skipped (3 browsers)       |
-| `npm run build`         | ✅     | local build passes; production snapshot is Ready  |
+| `npm run build`         | ✅     | CI and Git-backed production deployment are Ready |
 | `npm audit`             | ✅     | 0 vulnerabilities                                 |
 | Audit campaign          | ✅     | `AUDIT_REPORT.md` — all launch-critical IDs fixed |
 
@@ -43,9 +43,11 @@ tracked below)
 - [x] Vercel production has Supabase URL/key, `VITE_ENV`, and browser
       `VITE_SENTRY_DSN` configured.
 - [x] `VITE_APP_URL=https://www.nerveey.shop` is now set in Vercel Production;
-      it takes effect on the next successful production build.
+      it is included in the current production deployment.
+- [x] Owner-confirmed `nerveey.shop@gmail.com` is set as `VITE_SUPPORT_EMAIL`
+      in Vercel Production.
 - [x] `git ls-files .env*` confirms local secret files are not tracked.
-- [ ] Configure and validate the support inbox in Vercel/Resend.
+- [ ] Verify inbound support mail and a transactional Resend delivery end to end.
 - [ ] Add real `VITE_GA_ID` / `VITE_META_PIXEL_ID` values if analytics are
       required at launch.
 - [ ] Configure Sentry sourcemap upload settings if required. No server-side
@@ -71,7 +73,7 @@ exist — seed them and the 24 skips collapse to real coverage:
       corrected and decodes, but no actual product photography is present in
       the workspace.
 - [ ] ❌ verify `npm run build` output once with real images wired
-- [ ] ❌ support inbox live for `VITE_SUPPORT_EMAIL` (Resend `RESEND_FROM_EMAIL` + `STORE_URL` set)
+- [ ] ❌ verify inbound support mail and transactional Resend delivery
 - [ ] ❌ cookie banner copy reviewed post LEG-03 (footer link works)
 - [ ] ⏸ SEC-08 captcha/Turnstile on auth + checkout (owner decision; rate
       limits already active)
@@ -97,23 +99,20 @@ exist — seed them and the 24 skips collapse to real coverage:
 
 ## 7. Sign-off sequence
 
-The current production deployment is Ready at
-`https://nerve-r6w6iaa3l-youssef-moharm.vercel.app` and is aliased to
+The current Git-backed production deployment is Ready at
+`https://nerve-p4wsjnbt0-youssef-moharm.vercel.app` and is aliased to
 `https://www.nerveey.shop`. The live storefront returns HTTP 200, public
 products and collections return HTTP 200, and `/admin` redirects signed-out
 visitors to `/login`. The empty-cart checkout route renders its expected state.
 The branded placeholder asset now serves as `image/svg+xml` and decodes in the
 browser; it is not a substitute for product photography.
 
-This was deployed from the validated local workspace snapshot. The source
-changes are still uncommitted on top of `c24c454`; Vercel's latest Git-built
-deployment before this snapshot failed because its commit lacked the admin
-dashboard modules and matching context API. Future Git-triggered builds will
-remain at risk until the intended source changes are reviewed and committed.
-Authenticated checkout/admin workflows have not been run because production
-test credentials are not configured. Do not call the release fully verified
-until those flows, real product photography, inbox ownership, analytics IDs,
-and monitoring are confirmed.
+Release source is committed and pushed to `main` at `31a0b46`, and Vercel has
+successfully built that Git revision. The owner confirmed the support inbox and
+dedicated E2E accounts will be provisioned securely. Authenticated checkout/admin
+workflows remain untested until those accounts and CI secrets are ready. Do not
+call the release fully verified until those flows, real product photography,
+analytics IDs, email delivery, and monitoring are confirmed.
 
 ```bash
 npm ci
@@ -130,10 +129,10 @@ git ls-files .env              # no secrets tracked
 - [x] anonymous access to tested private tables denied
 - [ ] secrets set
 - [ ] fixtures seeded (or skips consciously accepted for day one)
-- [x] production snapshot deployed and public routes smoke-tested
-- [ ] intended source changes committed so Git-based deployments reproduce it
+- [x] Git-backed production deployment is Ready and public routes smoke-tested
+- [x] intended source changes committed and pushed
 - [ ] signed-in customer checkout and admin workflows smoke-tested
-- [ ] production content, support inbox, analytics, and Sentry validated
+- [ ] real product photography, email delivery, analytics, and Sentry validated
 - [ ] monitor Sentry for the first 24 h after launch
 
 ---
