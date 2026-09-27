@@ -740,7 +740,7 @@ export default function ProductDetail() {
               <li className="rounded-full bg-mist px-3 py-1 flex items-center gap-1.5">
                 <RotateCcw size={12} aria-hidden="true" />
                 <Link to="/returns" className="underline hover:text-navy">
-                  {t('14-day returns on unworn items')}
+                  {t('7-day free returns on unworn items')}
                 </Link>
               </li>
               <li className="rounded-full bg-mist px-3 py-1 flex items-center gap-1.5">
@@ -1175,7 +1175,7 @@ export default function ProductDetail() {
                           <div className="flex items-start gap-2">
                             <RotateCcw size={16} className="mt-0.5 flex-shrink-0" />
                             <div>
-                              <p>{t('Free returns within 14 days of delivery on unworn items.')}</p>
+                              <p>{t('Free returns within 7 days of delivery on unworn items.')}</p>
                               <p>{t('Free size exchanges within 30 days.')}</p>
                               <Link to="/returns" className="underline text-navy inline-block mt-1">
                                 {t('Full returns policy')}

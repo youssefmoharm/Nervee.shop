@@ -32,8 +32,8 @@ export function About() {
             <h2 className="text-navy font-semibold text-2xl mb-6">{t('Shopping & Policies')}</h2>
             <p className="text-lg leading-relaxed mb-4">
               We ship across Egypt with cash on delivery — free standard shipping on orders over EGP
-              2,000, Express 1–2 day delivery available. Returns within 14 days on unworn tagged
-              items, with free size exchanges within 30 days.
+              2,000, Express 1–2 day delivery available. Returns within 7 days of delivery on unworn
+              tagged items, with free size exchanges within 30 days.
             </p>
             <p className="text-lg leading-relaxed">
               {t('Questions?')}{' '}

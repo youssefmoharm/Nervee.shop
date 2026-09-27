@@ -656,7 +656,7 @@ export default function Checkout() {
                   <p className="text-sm text-green-800">
                     <span className="font-semibold">{t('✓ Order Protected')}</span> —{' '}
                     {t(
-                      'Cash on delivery only — you pay the courier when your order arrives. Unworn tagged items can be returned within 14 days of delivery.',
+                      'Cash on delivery only — you pay the courier when your order arrives. Unworn tagged items can be returned free within 7 days of delivery.',
                     )}{' '}
                     <Link to="/returns" className="underline hover:text-green-900">
                       {t('Returns policy')}

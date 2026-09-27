@@ -284,7 +284,7 @@ export default function Cart() {
                 <p className="flex items-center justify-center gap-2 text-xs text-navy/60">
                   <ShieldCheck size={12} />
                   <Link to="/returns" className="underline hover:text-navy">
-                    {t('14-day returns on unworn items')}
+                    {t('7-day free returns on unworn items')}
                   </Link>
                 </p>
                 <p className="text-center text-xs text-navy/60">

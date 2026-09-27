@@ -4,7 +4,7 @@
 // Authenticated users: verified via JWT (auth.uid() must own order)
 // Guest users: verified via email+orderNumber+token through lookup_guest_order (service_role)
 // Single request per order+type enforced via UNIQUE(order_id, type) in DB.
-// Only delivered orders within 14 days can be returned; placed/processing can be cancelled within 2h.
+// Delivered orders can be returned within 7 days of delivery; placed/processing orders can be cancelled within 2h.
 
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
@@ -102,7 +102,7 @@ serve(async req => {
     // Fetch order and verify ownership / eligibility
     const { data: order, error: orderErr } = await supabase
       .from('orders')
-      .select('id, order_number, customer_id, email, status, created_at, placed_at')
+      .select('id, order_number, customer_id, email, status, created_at, placed_at, delivered_at')
       .eq('id', resolvedOrderId)
       .maybeSingle();
 
@@ -134,20 +134,24 @@ serve(async req => {
       return json({ error: 'Authentication or guest token required' }, 401, corsHeaders);
     }
 
-    // Eligibility: returns only for delivered within 14 days; cancellations within 2h of placed
+    // Eligibility: returns within 7 days of delivery; cancellations within 2h of placement.
     const placedAt = new Date(order.placed_at || order.created_at);
     const now = new Date();
     const hoursSincePlaced = (now.getTime() - placedAt.getTime()) / (1000 * 60 * 60);
-    const daysSincePlaced = hoursSincePlaced / 24;
 
     if (type === 'return') {
       if (order.status !== 'delivered') {
         timer.end();
         return json({ error: 'Only delivered orders can be returned' }, 400, corsHeaders);
       }
-      if (daysSincePlaced > 14) {
+      if (!order.delivered_at) {
         timer.end();
-        return json({ error: 'Return window expired (14 days)' }, 400, corsHeaders);
+        return json({ error: 'Delivery date unavailable; contact support' }, 400, corsHeaders);
+      }
+      const daysSinceDelivered = (now.getTime() - new Date(order.delivered_at).getTime()) / (1000 * 60 * 60 * 24);
+      if (daysSinceDelivered > 7) {
+        timer.end();
+        return json({ error: 'Return window expired (7 days)' }, 400, corsHeaders);
       }
     } else if (type === 'cancellation') {
       if (!['placed', 'processing'].includes(order.status)) {

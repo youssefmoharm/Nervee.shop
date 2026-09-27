@@ -307,7 +307,7 @@ export default function OrderDetail() {
               </div>
               <p className="text-[11px] text-navy/60">
                 {t(
-                  'Returns: delivered only, 14 days. Cancellations: placed/processing, 2 hours. One request per order.',
+                  'Returns: within 7 days of delivery. Cancellations: placed/processing, 2 hours. One request per order.',
                 )}
               </p>
             </div>

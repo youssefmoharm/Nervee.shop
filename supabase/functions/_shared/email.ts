@@ -245,7 +245,7 @@ export function orderDeliveredEmail(order: OrderForEmail) {
     <p style="font-size:14px;color:#3f3f46;">Hi ${escapeHtml(order.first_name)}, order #${
       order.order_number
     } has been delivered. We hope you love it.</p>
-    <p style="font-size:13px;color:#71717a;margin-top:16px;">Something not right? Reply to this email or reach us at hello@nerveey.shop within 14 days for returns/exchanges.</p>
+    <p style="font-size:13px;color:#71717a;margin-top:16px;">Something not right? Reply to this email or contact support within 7 days of delivery for returns.</p>
     `,
   );
 }

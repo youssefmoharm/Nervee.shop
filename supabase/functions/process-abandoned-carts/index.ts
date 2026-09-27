@@ -258,7 +258,7 @@ function generateCartAbandonmentEmail(cart: AbandonedCart, recoveryUrl: string):
           <div style="text-align: center; margin: 30px 0;"><a href="${recoveryUrl}" style="background: #061735; color: white; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; display: inline-block;">Complete Your Purchase →</a></div>
           <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0;">
             <h4 style="margin: 0 0 15px 0; color: #061735;">Why choose NERVE?</h4>
-            <ul style="margin: 0; padding-left: 20px;"><li>✅ Free delivery across Egypt</li><li>✅ 14-day easy returns</li><li>✅ Premium quality guaranteed</li></ul>
+            <ul style="margin: 0; padding-left: 20px;"><li>✅ Free delivery across Egypt</li><li>✅ Free returns within 7 days of delivery</li><li>✅ Premium quality guaranteed</li></ul>
           </div>
           <p style="margin-top: 30px; font-size: 14px; color: #666; text-align: center;">This offer expires in 24 hours. ⏰</p>
         </div>

@@ -393,7 +393,7 @@ export default function ProductQuickView() {
 
                 {/* Info */}
                 <div className="text-xs text-navy/60 space-y-1 pt-2 border-t border-navy/10">
-                  <p>{t('Free returns within 14 days')}</p>
+                  <p>{t('Free returns within 7 days of delivery')}</p>
                   <p>{t('Cash on delivery available')}</p>
                 </div>
               </div>

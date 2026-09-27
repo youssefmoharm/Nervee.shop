@@ -39,7 +39,7 @@ test.describe('Trust & policy routes', () => {
 
   test('returns page covers return, exchange, and cancellation windows', async ({ page }) => {
     await page.goto('/returns', { waitUntil: 'load' });
-    await expect(page.getByText(/14 days from delivery/i)).toBeVisible();
+    await expect(page.getByText(/7 days from delivery/i)).toBeVisible();
     await expect(page.getByText(/free size exchanges within 30 days/i)).toBeVisible();
     await expect(page.getByText(/cancel.*within 2 hours|2 hours/i).first()).toBeVisible();
   });
@@ -105,7 +105,7 @@ test.describe('Trust & policy routes', () => {
     await page.goto('/cart', { waitUntil: 'load' });
     await expect(page.getByTestId('cart-item').first()).toBeVisible();
     await expect(page.getByRole('link', { name: /shipping details/i })).toBeVisible();
-    await expect(page.getByRole('link', { name: /14-day returns/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /7-day free returns/i })).toBeVisible();
     await expect(page.getByRole('link', { name: 'FAQ', exact: true })).toBeVisible();
   });
 });

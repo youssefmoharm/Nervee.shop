@@ -338,7 +338,7 @@ export function Returns() {
   useSEO({
     title: 'Returns & Exchanges | NERVE',
     description:
-      'Return unworn tagged items within 14 days of delivery. Free size exchanges within 30 days. Cancel within 2 hours while the order is still processing. Cash on delivery store in Egypt.',
+      'Return unworn tagged items free within 7 days of delivery. Free size exchanges within 30 days. Cancel within 2 hours while the order is still processing. Cash on delivery store in Egypt.',
   });
   return (
     <Shell title="Returns & Exchanges" wide>
@@ -346,7 +346,7 @@ export function Returns() {
 
       <h2 className="text-navy font-semibold text-lg">{t('Returns (refund)')}</h2>
       <ul className="list-disc ps-5 space-y-1.5">
-        <li>{t('Window: 14 days from delivery (orders must be marked delivered).')}</li>
+        <li>{t('Window: 7 days from delivery (orders must be marked delivered).')}</li>
         <li>{t('Condition: unworn, unwashed, with tags attached.')}</li>
         <li>{t('Outcome: full refund of the item price for accepted returns.')}</li>
         <li>
@@ -365,7 +365,7 @@ export function Returns() {
       <h2 className="text-navy font-semibold text-lg pt-4">{t('Cancellations')}</h2>
       <ul className="list-disc ps-5 space-y-1.5">
         <li>{t('Orders can be cancelled within 2 hours while status is placed or processing.')}</li>
-        <li>{t('After that, use a return once the order is delivered (14-day window).')}</li>
+        <li>{t('After delivery, use our 7-day return window instead.')}</li>
       </ul>
 
       <h2 className="text-navy font-semibold text-lg pt-4">{t('How to start')}</h2>
@@ -452,12 +452,12 @@ const shopFaqs = [
   {
     question: 'Can I cancel my order?',
     answer:
-      'Yes — you can cancel within 2 hours while the order is still placed or processing. After delivery, use our 14-day return window instead.',
+      'Yes — you can cancel within 2 hours while the order is still placed or processing. After delivery, use our 7-day return window instead.',
   },
   {
     question: 'Can I return or exchange an item?',
     answer:
-      'Unworn items with tags can be returned within 14 days of delivery for a full refund. Free size exchanges are available within 30 days. Sale and limited items are final sale unless faulty. One return request per order.',
+      'Unworn items with tags can be returned free within 7 days of delivery for a full refund. Free size exchanges are available within 30 days. Sale and limited items are final sale unless faulty. One return request per order.',
   },
   {
     question: 'How are refunds handled?',

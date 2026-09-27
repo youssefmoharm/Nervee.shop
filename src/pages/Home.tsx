@@ -115,7 +115,7 @@ const trustItems = [
     id: 'returns',
     icon: RotateCcw,
     titleKey: 'Easy returns',
-    bodyKey: 'Free returns within 14 days of delivery on unworn items.',
+    bodyKey: 'Free returns within 7 days of delivery on unworn items.',
     link: '/returns',
     linkKey: 'Returns',
   },
