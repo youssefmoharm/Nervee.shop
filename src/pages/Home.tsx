@@ -282,45 +282,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3 — Editorial / brand story */}
-      <section
-        className="bg-mist text-navy py-16 md:py-24 px-5 md:px-8"
-        aria-labelledby="brand-heading"
-      >
-        <div className="mx-auto max-w-4xl text-center">
-          <p className="nv-eyebrow text-navy/70 mb-3">{t('Alexandria, Egypt · EST 2026')}</p>
-          <h2 id="brand-heading" className="nv-heading text-3xl md:text-5xl mb-6">
-            NERVE — Cool but Chic
-          </h2>
-          <p className="text-navy/75 leading-relaxed max-w-2xl mx-auto">
-            {t(
-              'NERVE is a contemporary Egyptian concept store built around individuality, movement, and the pieces that become part of your everyday identity. Cool but chic — always.',
-            )}
-          </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-4 text-sm">
-            <Link to="/about" className="nv-eyebrow underline underline-offset-4 hover:opacity-60">
-              {t('About')}
-            </Link>
-            <Link to="/faq" className="nv-eyebrow underline underline-offset-4 hover:opacity-60">
-              {t('FAQ')}
-            </Link>
-            <Link
-              to="/shipping"
-              className="nv-eyebrow underline underline-offset-4 hover:opacity-60"
-            >
-              {t('Shipping')}
-            </Link>
-            <Link
-              to="/returns"
-              className="nv-eyebrow underline underline-offset-4 hover:opacity-60"
-            >
-              {t('Returns')}
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* 4 — Curated collections (brand shopping paths) */}
+      {/* 3 — Curated collections (brand shopping paths) */}
       <section className="bg-navy py-16 md:py-24 px-5 md:px-8">
         <div className="mx-auto max-w-[1600px]">
           <p className="nv-eyebrow text-white mb-2">{t('Curated Edits')}</p>
