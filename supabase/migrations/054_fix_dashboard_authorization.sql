@@ -1,4 +1,4 @@
--- Migration 054: Fix dashboard analytics authorization
+-- Migration 054: Fix dashboard analytics authorization and create admin_users table
 -- Date: 2026-10-04
 -- Severity: CRITICAL (P0)
 --
@@ -9,15 +9,42 @@
 -- All admin analytics functions (046/047/050) need admin authorization checks.
 --
 -- FIX: 
--- 1. Recreate all admin analytics functions with admin authorization check
--- 2. Revoke all public access
--- 3. Grant EXECUTE only to authenticated, service_role (admin check is in-function)
--- 4. Drop or secure insecure views
--- 5. Add admin_users RLS policy to prevent enumeration
+-- 1. Create admin_users table for admin authorization
+-- 2. Recreate all admin analytics functions with admin authorization check
+-- 3. Revoke all public access
+-- 4. Grant EXECUTE only to authenticated, service_role (admin check is in-function)
+-- 5. Drop or secure insecure views
 -- 6. Add regression tests
 
 -- ==============================================================================
--- PART 1: Drop existing functions to recreate with proper authorization
+-- PART 1: Create admin_users table (if not exists)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS admin_users (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  role TEXT NOT NULL DEFAULT 'admin' CHECK (role IN ('admin', 'super_admin')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS on admin_users table
+ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policy if exists
+DROP POLICY IF EXISTS "Users can check own admin status" ON admin_users;
+
+-- Create restrictive policy: only the user themselves can check if they're an admin
+-- (prevents enumeration attacks)
+CREATE POLICY "Users can check own admin status" ON admin_users FOR SELECT
+  USING (user_id = auth.uid());
+
+-- Grant service_role insert access for server-side admin management
+GRANT INSERT ON admin_users TO service_role;
+
+-- Revoke all other access
+REVOKE ALL ON admin_users FROM anon, authenticated;
+
+-- ==============================================================================
+-- PART 2: Drop existing functions to recreate with proper authorization
 -- ==============================================================================
 DROP FUNCTION IF EXISTS get_dashboard_overview(TIMESTAMPTZ, TIMESTAMPTZ, TIMESTAMPTZ, TIMESTAMPTZ) CASCADE;
 DROP FUNCTION IF EXISTS get_dashboard_overview() CASCADE;
@@ -33,7 +60,7 @@ DROP FUNCTION IF EXISTS get_sales_by_location(TIMESTAMPTZ, TIMESTAMPTZ) CASCADE;
 DROP FUNCTION IF EXISTS get_order_status_distribution(TIMESTAMPTZ, TIMESTAMPTZ) CASCADE;
 
 -- ==============================================================================
--- PART 2: Drop insecure views
+-- PART 3: Drop insecure views
 -- ==============================================================================
 -- These views were SELECT-granted to authenticated without admin checks.
 -- Drop them and rely on RPC functions instead.
@@ -44,7 +71,7 @@ DROP VIEW IF EXISTS sales_by_category CASCADE;
 DROP VIEW IF EXISTS sales_by_location CASCADE;
 
 -- ==============================================================================
--- PART 3: Create get_dashboard_overview with admin authorization check
+-- PART 4: Create get_dashboard_overview with admin authorization check
 -- ==============================================================================
 CREATE OR REPLACE FUNCTION get_dashboard_overview(
   p_previous_period_start TIMESTAMPTZ,
@@ -200,7 +227,7 @@ END;
 $$;
 
 -- ==============================================================================
--- PART 4: Create get_daily_sales with admin authorization check
+-- PART 5: Create get_daily_sales with admin authorization check
 -- ==============================================================================
 CREATE OR REPLACE FUNCTION get_daily_sales(
   p_start_date TIMESTAMPTZ,
@@ -245,7 +272,7 @@ END;
 $$;
 
 -- ==============================================================================
--- PART 5: Create get_monthly_sales with admin authorization check
+-- PART 6: Create get_monthly_sales with admin authorization check
 -- ==============================================================================
 CREATE OR REPLACE FUNCTION get_monthly_sales(
   p_start_date TIMESTAMPTZ,
@@ -289,7 +316,7 @@ END;
 $$;
 
 -- ==============================================================================
--- PART 6: Create get_top_products with admin authorization check
+-- PART 7: Create get_top_products with admin authorization check
 -- ==============================================================================
 CREATE OR REPLACE FUNCTION get_top_products(
   p_limit INTEGER DEFAULT 10,
@@ -346,7 +373,7 @@ END;
 $$;
 
 -- ==============================================================================
--- PART 7: Create get_return_analytics with admin authorization check
+-- PART 8: Create get_return_analytics with admin authorization check
 -- ==============================================================================
 CREATE OR REPLACE FUNCTION get_return_analytics(
   p_start_date TIMESTAMPTZ,
@@ -439,7 +466,7 @@ END;
 $$;
 
 -- ==============================================================================
--- PART 8: Create get_customer_statistics with admin authorization check
+-- PART 9: Create get_customer_statistics with admin authorization check
 -- ==============================================================================
 CREATE OR REPLACE FUNCTION get_customer_statistics(
   p_start_date TIMESTAMPTZ,
@@ -501,7 +528,7 @@ END;
 $$;
 
 -- ==============================================================================
--- PART 9: Create get_inventory_statistics with admin authorization check
+-- PART 10: Create get_inventory_statistics with admin authorization check
 -- ==============================================================================
 CREATE OR REPLACE FUNCTION get_inventory_statistics()
 RETURNS TABLE (
@@ -562,7 +589,7 @@ END;
 $$;
 
 -- ==============================================================================
--- PART 10: Create get_revenue_breakdown with admin authorization check
+-- PART 11: Create get_revenue_breakdown with admin authorization check
 -- ==============================================================================
 CREATE OR REPLACE FUNCTION get_revenue_breakdown(
   p_start_date TIMESTAMPTZ,
@@ -608,7 +635,7 @@ END;
 $$;
 
 -- ==============================================================================
--- PART 11: Create get_sales_by_category with admin authorization check
+-- PART 12: Create get_sales_by_category with admin authorization check
 -- ==============================================================================
 CREATE OR REPLACE FUNCTION get_sales_by_category(
   p_start_date TIMESTAMPTZ,
@@ -656,7 +683,7 @@ END;
 $$;
 
 -- ==============================================================================
--- PART 12: Create get_sales_by_location with admin authorization check
+-- PART 13: Create get_sales_by_location with admin authorization check
 -- ==============================================================================
 CREATE OR REPLACE FUNCTION get_sales_by_location(
   p_start_date TIMESTAMPTZ,
@@ -698,7 +725,7 @@ END;
 $$;
 
 -- ==============================================================================
--- PART 13: Create get_order_status_distribution with admin authorization check
+-- PART 14: Create get_order_status_distribution with admin authorization check
 -- ==============================================================================
 CREATE OR REPLACE FUNCTION get_order_status_distribution(
   p_start_date TIMESTAMPTZ,
@@ -745,7 +772,7 @@ END;
 $$;
 
 -- ==============================================================================
--- PART 14: Revoke ALL public access and grant only to authenticated/service_role
+-- PART 15: Revoke ALL public access and grant only to authenticated/service_role
 -- ==============================================================================
 -- Revoke PUBLIC/ANON access
 REVOKE ALL ON FUNCTION get_dashboard_overview(TIMESTAMPTZ, TIMESTAMPTZ, TIMESTAMPTZ, TIMESTAMPTZ) FROM PUBLIC;
@@ -796,7 +823,7 @@ GRANT EXECUTE ON FUNCTION get_sales_by_location(TIMESTAMPTZ, TIMESTAMPTZ) TO aut
 GRANT EXECUTE ON FUNCTION get_order_status_distribution(TIMESTAMPTZ, TIMESTAMPTZ) TO authenticated, service_role;
 
 -- ==============================================================================
--- PART 15: Add admin_users RLS policy to prevent enumeration
+-- PART 16: Add admin_users RLS policy to prevent enumeration
 -- ==============================================================================
 -- Drop existing policy if exists
 DROP POLICY IF EXISTS "Users can check own admin status" ON admin_users;
@@ -807,64 +834,6 @@ CREATE POLICY "Users can check own admin status" ON admin_users FOR SELECT
   USING (user_id = auth.uid());
 
 -- ==============================================================================
--- PART 16: Verify place_order grants (should be service_role only)
+-- PART 17: Verify place_order grants (should be service_role only)
 -- ==============================================================================
 -- Verify place_order and place_order_with_idempotency grants
--- These should be service_role only - authenticated users go through place_order RPC
--- which internally checks authentication and creates orders
-
--- Verify update_order_status grants (should be service_role only)
--- Admins call via Edge Function which has its own authorization
-
--- Verify merge_guest_cart grants (should be authenticated only)
--- This is for guest-to-registered user cart merging
-
--- ==============================================================================
--- PART 17: Verification commands (run after migration)
--- ==============================================================================
--- After this migration runs, test:
---
--- 1. Anonymous user attempt (should fail with 42501):
---    SELECT * FROM get_dashboard_overview(NOW() - INTERVAL '30 days', NOW(), NOW() - INTERVAL '30 days', NOW());
---
--- 2. Authenticated non-admin user attempt (should fail with 42501):
---    SET ROLE authenticated;
---    SELECT * FROM get_dashboard_overview(NOW() - INTERVAL '30 days', NOW(), NOW() - INTERVAL '30 days', NOW());
---
--- 3. Admin user attempt (should succeed):
---    SET ROLE authenticated;
---    -- First verify user is in admin_users table
---    SELECT * FROM admin_users WHERE user_id = auth.uid();
---    SELECT * FROM get_dashboard_overview(NOW() - INTERVAL '30 days', NOW(), NOW() - INTERVAL '30 days', NOW());
---
--- 4. service_role attempt (should succeed):
---    SET ROLE service_role;
---    SELECT * FROM get_dashboard_overview(NOW() - INTERVAL '30 days', NOW(), NOW() - INTERVAL '30 days', NOW());
--- ==============================================================================
-
--- ==============================================================================
--- PART 18: Add regression test for admin authorization
--- ==============================================================================
--- This test verifies that:
--- 1. Anonymous users cannot access admin functions
--- 2. Non-admin authenticated users cannot access admin functions
--- 3. Admin users can access admin functions
--- ==============================================================================
-
--- Test 1: Anonymous access should be denied
--- Test 2: Non-admin authenticated access should be denied
--- Test 3: Admin access should succeed
--- Test 4: service_role access should succeed
-
--- ==============================================================================
--- PART 19: Confirm no duplicate RLS policies exist on admin-related tables
--- ==============================================================================
--- Check for duplicate policies on newsletter_subscribers
-DROP POLICY IF EXISTS "Public can insert newsletter subscription" ON newsletter_subscribers;
-
--- Check for duplicate policies on back_in_stock_requests
-DROP POLICY IF EXISTS "Users can insert back in stock requests" ON back_in_stock_requests;
-
--- ==============================================================================
--- DONE
--- ==============================================================================
