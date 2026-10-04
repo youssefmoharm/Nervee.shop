@@ -58,11 +58,12 @@ App available at `http://localhost:5173`
 
 ## Documentation
 
-- **[SETUP.md](./SETUP.md)** - Complete setup guide (Supabase, deployment)
+- **[SETUP.md](./docs/SETUP.md)** - Complete setup guide (Supabase, deployment)
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Design decisions & architecture
-- **[SECURITY_IMPLEMENTATION.md](./SECURITY_IMPLEMENTATION.md)** - Security details
-- **[TESTING.md](./TESTING.md)** - Testing checklist
-- **[PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md)** - Deploy checklist
+- **[SECURITY_IMPLEMENTATION.md](./docs/SECURITY_IMPLEMENTATION.md)** - Security details
+- **[TESTING.md](./docs/TESTING.md)** - Testing checklist
+- **[PRODUCTION_READINESS.md](./docs/PRODUCTION_READINESS.md)** - Deploy checklist
+- **[ADMIN_DASHBOARD.md](./docs/ADMIN_DASHBOARD.md)** - Admin dashboard guide
 
 ## Project Structure
 
@@ -103,34 +104,33 @@ npm run ci # typecheck + lint + test --run + build
 
 1. Create a Supabase project at [supabase.com](https://supabase.com)
 2. Apply **all** migrations in `supabase/migrations/` — they run in lexical
-   order (`001_…` through `033_…`), never edit one that has already run:
+   order (`001_…` through `057_…`), never edit one that has already run:
 
-   ***REMOVED***
+   ```sh
    supabase link --project-ref <your-ref>
    supabase db push --linked --include-all
-```
+   ```
 
 (Or paste them one by one into the SQL Editor in lexical order.)
 
 3. Run `supabase/seed.sql` for sample data
 
-See [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) for details.
+See [SUPABASE_SETUP.md](./docs/SUPABASE_SETUP.md) for details.
 
 ## Edge Functions
 
 Functions live under `supabase/functions/` (one directory per function) and
 deploy with:
 
-**_REMOVED_**
+```sh
 supabase functions deploy
+```
 
-````
-
-For the COD-only launch there are 17 functions: `auth-sign-in`,
+For the COD-only launch there are 18 functions: `auth-sign-in`,
 `auth-sign-up`, `create-order`, `update-order-status`, `send-email`,
 `contact`, `back-in-stock`, `send-back-in-stock`, `process-restock`,
 `process-abandoned-carts`, `record-abandoned-cart`, `handle-unsubscribe`,
-`chat-ai`, `create-support-ticket`, `verify-guest-order`,
+`log-admin-activity`, `chat-ai`, `create-support-ticket`, `verify-guest-order`,
 `resend-guest-verification`, `request-return` (`_shared/` holds common
 utilities). Payment functions are out of scope — the store is Cash on
 Delivery only.

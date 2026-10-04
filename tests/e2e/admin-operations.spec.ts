@@ -166,7 +166,8 @@ test.describe('Admin — access control', () => {
   test('signed-in admin sees the dashboard with operational KPIs', async ({ page }) => {
     await seedAdminSession(page, true);
     await mockOrders(page);
-    await page.route('**/rest/v1/rpc/get_dashboard_overview*', route =>
+    // RPC endpoints use POST and require exact path match (no wildcard at end)
+    await page.route('**/rest/v1/rpc/get_dashboard_overview', route =>
       route.fulfill({
         status: 200,
         headers: { 'content-type': 'application/json; charset=utf-8' },
@@ -180,11 +181,18 @@ test.describe('Admin — access control', () => {
         json: [],
       }),
     );
+    // product_inventory: listLowStock queries with select including products embed
+    // Return low stock rows that match the threshold filter logic (stock <= threshold)
     await page.route('**/rest/v1/product_inventory*', route =>
       route.fulfill({
         status: 200,
-        headers: { 'content-type': 'application/json; charset=utf-8' },
-        json: [],
+        headers: { 'content-type': 'application/json; charset=utf-8', 'content-range': '0-3/4' },
+        json: [
+          { product_id: 'p1', size: 'M', stock_quantity: 2, low_stock_threshold: 5, products: [{ name: 'Test Product M', slug: 'test-m' }] },
+          { product_id: 'p2', size: 'L', stock_quantity: 0, low_stock_threshold: 3, products: [{ name: 'Test Product L', slug: 'test-l' }] },
+          { product_id: 'p3', size: 'S', stock_quantity: 4, low_stock_threshold: 4, products: [{ name: 'Test Product S', slug: 'test-s' }] },
+          { product_id: 'p4', size: 'XL', stock_quantity: 1, low_stock_threshold: 2, products: [{ name: 'Test Product XL', slug: 'test-xl' }] },
+        ],
       }),
     );
 
