@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Check production homepage
         run: |
-          code=$(***REMOVED*** -sS -L -o /dev/null -w '%{http_code}' --max-time 30 \
+          code=$(curl -sS -L -o /dev/null -w '%{http_code}' --max-time 30 \
             https://www.nerveey.shop/)
           echo "GET https://www.nerveey.shop/ -> $code"
           if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then
@@ -32,7 +32,7 @@ jobs:
 
       - name: Check production sitemap
         run: |
-          code=$(***REMOVED*** -sS -L -o /dev/null -w '%{http_code}' --max-time 30 \
+          code=$(curl -sS -L -o /dev/null -w '%{http_code}' --max-time 30 \
             https://www.nerveey.shop/sitemap.xml)
           echo "GET https://www.nerveey.shop/sitemap.xml -> $code"
           if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then

@@ -7,8 +7,6 @@
  * - Unauthorized data manipulation
  */
 
-import { createHmac } from 'https://deno.land/std@0.224.0/hash/mod.ts';
-
 /**
  * Webhook signature header names by provider
  */
@@ -19,6 +17,33 @@ export const WEBHOOK_SIGNATURE_HEADERS: Record<string, string> = {
 };
 
 /**
+ * Compute HMAC-SHA256 hash
+ *
+ * @param message - Message to hash
+ * @param secret - Secret key
+ * @returns Hex-encoded HMAC hash
+ */
+async function hmacSha256(message: string, secret: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secret);
+  const msgData = encoder.encode(message);
+  
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  
+  const signature = await crypto.subtle.sign('HMAC', cryptoKey, msgData);
+  
+  return Array.from(new Uint8Array(signature))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+/**
  * Verify webhook signature using HMAC-SHA256
  *
  * @param payload - Raw webhook payload (must be string)
@@ -27,12 +52,12 @@ export const WEBHOOK_SIGNATURE_HEADERS: Record<string, string> = {
  * @param headerName - Name of the header containing the signature
  * @returns true if signature is valid, false otherwise
  */
-export function verifyWebhookSignature(
+export async function verifyWebhookSignature(
   payload: string,
   signature: string | null,
   secret: string,
   headerName: string = 'x-signature',
-): boolean {
+): Promise<boolean> {
   if (!signature) {
     return false;
   }
@@ -51,10 +76,8 @@ export function verifyWebhookSignature(
     return false;
   }
 
-  // Compute expected hash
-  const hmac = createHmac('SHA256', secret);
-  hmac.update(payload);
-  const computedHash = hmac.digest('hex');
+  // Compute expected hash using built-in WebCrypto
+  const computedHash = await hmacSha256(payload, secret);
 
   // Constant-time comparison to prevent timing attacks
   return constantTimeCompare(computedHash, expectedHash);
