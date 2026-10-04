@@ -2526,17 +2526,12 @@ CREATE POLICY "Users can check own admin status" ON admin_users FOR SELECT USING
 -- Newsletter subscribers
 -- ---------------------------------------------------------------------------
 DROP POLICY IF EXISTS "Anyone can subscribe" ON newsletter_subscribers;
+DROP POLICY IF EXISTS "Public can insert newsletter subscription" ON newsletter_subscribers;
 CREATE POLICY "Anyone can subscribe" ON newsletter_subscribers FOR INSERT
   WITH CHECK (true);
-DROP POLICY IF EXISTS "Public can insert newsletter subscription" ON newsletter_subscribers;
-CREATE POLICY "Public can insert newsletter subscription" ON newsletter_subscribers FOR INSERT
-  WITH CHECK (true);
 DROP POLICY IF EXISTS "Admins can view subscribers" ON newsletter_subscribers;
-CREATE POLICY "Admins can view subscribers" ON newsletter_subscribers FOR SELECT USING (
-  auth.uid() IN (SELECT user_id FROM admin_users)
-);
 DROP POLICY IF EXISTS "Admins can view all newsletter subscribers" ON newsletter_subscribers;
-CREATE POLICY "Admins can view all newsletter subscribers" ON newsletter_subscribers FOR SELECT USING (
+CREATE POLICY "Admins can view subscribers" ON newsletter_subscribers FOR SELECT USING (
   auth.uid() IN (SELECT user_id FROM admin_users)
 );
 DROP POLICY IF EXISTS "Admins can update newsletter subscribers" ON newsletter_subscribers;

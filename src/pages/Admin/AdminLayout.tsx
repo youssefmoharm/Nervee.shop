@@ -1,8 +1,8 @@
-import { useState, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSEO } from '../../hooks/useSEO';
-import { Menu, X, Home } from 'lucide-react';
+import { Menu, X, Home, Lock } from 'lucide-react';
 
 const links = [
   { to: '/admin', label: 'Dashboard', end: true },
@@ -16,8 +16,15 @@ const links = [
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  const { signOut } = useAuth();
+  const { signOut, isAdmin, loading } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Redirect non-admins to home
+  useEffect(() => {
+    if (!loading && !isAdmin) {
+      window.location.href = '/';
+    }
+  }, [isAdmin, loading]);
 
   // Admin routes must never be indexed and should not inherit the previous
   // page's title/canonical (AUDIT SEO-03).
@@ -26,6 +33,39 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     description: 'NERVE store administration.',
     robots: 'noindex, nofollow',
   });
+
+  // Show access denied screen during auth check
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white text-navy">
+        <div className="text-center">
+          <Lock className="w-12 h-12 mx-auto mb-4 text-navy/40 animate-spin" />
+          <p className="text-navy/60">Checking access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white text-navy">
+        <div className="text-center max-w-md px-6">
+          <Lock className="w-16 h-16 mx-auto mb-4 text-red-500" />
+          <h2 className="text-2xl font-semibold mb-2">Access Denied</h2>
+          <p className="text-navy/60 mb-6">
+            You do not have permission to access the admin area. Please contact an administrator if
+            you believe this is an error.
+          </p>
+          <button
+            onClick={() => (window.location.href = '/')}
+            className="nv-eyebrow px-6 py-3 bg-navy text-white rounded hover:bg-navy-2"
+          >
+            Return to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white text-navy min-h-screen">

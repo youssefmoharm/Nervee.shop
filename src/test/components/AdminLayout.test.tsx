@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import AdminLayout from '../../pages/Admin/AdminLayout';
 
 vi.mock('../../context/AuthContext', () => ({
-  useAuth: () => ({ signOut: vi.fn() }),
+  useAuth: () => ({ signOut: vi.fn(), isAdmin: true, loading: false }),
 }));
 
 describe('AdminLayout', () => {
