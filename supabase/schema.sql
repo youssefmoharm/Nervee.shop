@@ -2562,21 +2562,19 @@ CREATE POLICY "Admins can update messages" ON contact_messages FOR UPDATE USING 
 -- Back-in-stock requests
 -- ---------------------------------------------------------------------------
 DROP POLICY IF EXISTS "Anyone can request a back-in-stock alert" ON back_in_stock_requests;
-CREATE POLICY "Anyone can request a back-in-stock alert" ON back_in_stock_requests FOR INSERT
-  WITH CHECK (true);
 DROP POLICY IF EXISTS "Users can insert back in stock requests" ON back_in_stock_requests;
-CREATE POLICY "Users can insert back in stock requests" ON back_in_stock_requests FOR INSERT
+CREATE POLICY "Anyone can request a back-in-stock alert" ON back_in_stock_requests FOR INSERT
   WITH CHECK (true);
 DROP POLICY IF EXISTS "Admins can view back-in-stock requests" ON back_in_stock_requests;
 CREATE POLICY "Admins can view back-in-stock requests" ON back_in_stock_requests FOR SELECT USING (
   auth.uid() IN (SELECT user_id FROM admin_users)
 );
 DROP POLICY IF EXISTS "Users can view own back in stock requests" ON back_in_stock_requests;
+DROP POLICY IF EXISTS "Users can delete own back in stock requests" ON back_in_stock_requests;
 CREATE POLICY "Users can view own back in stock requests" ON back_in_stock_requests FOR SELECT USING (
   customer_email = (SELECT email FROM auth.users WHERE id = auth.uid()) OR
   auth.uid() IN (SELECT user_id FROM admin_users)
 );
-DROP POLICY IF EXISTS "Users can delete own back in stock requests" ON back_in_stock_requests;
 CREATE POLICY "Users can delete own back in stock requests" ON back_in_stock_requests FOR DELETE USING (
   customer_email = (SELECT email FROM auth.users WHERE id = auth.uid())
 );
