@@ -1,3 +1,4 @@
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { logError } from '../lib/sentry';
 import type { CartLine } from '../types';
@@ -30,17 +31,37 @@ export interface PlaceOrderResult {
   details?: string[];
 }
 
-let currentIdempotencyKey: string | null = null;
+const ATTEMPT_KEY = 'nerve.checkout-attempt';
+let currentAttempt: { key: string; payload: string } | null = null;
 
-function getIdempotencyKey(): string {
-  if (!currentIdempotencyKey) {
-    currentIdempotencyKey = crypto.randomUUID();
+function getIdempotencyKey(payload: string): string {
+  try {
+    const stored = localStorage.getItem(ATTEMPT_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (typeof parsed.key === 'string' && parsed.payload === payload) currentAttempt = parsed;
+    }
+  } catch {
+    /* Storage can be unavailable; retain the in-memory attempt. */
   }
-  return currentIdempotencyKey;
+  if (!currentAttempt || currentAttempt.payload !== payload) {
+    currentAttempt = { key: crypto.randomUUID(), payload };
+  }
+  try {
+    localStorage.setItem(ATTEMPT_KEY, JSON.stringify(currentAttempt));
+  } catch {
+    /* best effort */
+  }
+  return currentAttempt.key;
 }
 
 export function resetIdempotencyKey() {
-  currentIdempotencyKey = null;
+  currentAttempt = null;
+  try {
+    localStorage.removeItem(ATTEMPT_KEY);
+  } catch {
+    /* best effort */
+  }
 }
 
 export const orderService = {
@@ -65,7 +86,7 @@ export const orderService = {
     }
 
     try {
-      const idempotencyKey = getIdempotencyKey();
+      const idempotencyKey = getIdempotencyKey(JSON.stringify({ info, lines }));
 
       const { data, error } = await supabase.functions.invoke('create-order', {
         body: {
@@ -82,14 +103,18 @@ export const orderService = {
       });
 
       if (error) {
-        const bodyError =
-          typeof data === 'object' && data && 'error' in data
-            ? (data as Record<string, unknown>).error
-            : null;
-        const details =
-          typeof data === 'object' && data && Array.isArray((data as { details?: unknown }).details)
-            ? (data as { details: string[] }).details
-            : undefined;
+        let body: { error?: unknown; details?: unknown } = data ?? {};
+        if (error instanceof FunctionsHttpError) {
+          try {
+            body = await error.context.json();
+          } catch {
+            /* use fallback below */
+          }
+        }
+        const bodyError = body?.error;
+        const details = Array.isArray(body?.details)
+          ? body.details.filter((detail): detail is string => typeof detail === 'string')
+          : undefined;
         const message =
           (typeof bodyError === 'string' && bodyError) ||
           error.message ||

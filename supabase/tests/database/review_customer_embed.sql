@@ -50,15 +50,12 @@ BEGIN
   )
   ON CONFLICT (id) DO NOTHING;
 
-  -- Fixture customer. customers.id references auth.users, so create the auth
-  -- user first via the auth schema's own helper; if unavailable, seed through
-  -- auth.users directly is not permitted, so fall back to an existing row.
-  IF EXISTS (SELECT 1 FROM customers LIMIT 1) THEN
-    -- Use a real customer row so the FK target is satisfiable in any env.
-    SELECT id INTO v_customer_id FROM customers LIMIT 1;
-  ELSE
-    RAISE EXCEPTION 'SKIP-ENV: no customers rows exist to satisfy the FK in this environment';
-  END IF;
+  v_customer_id := gen_random_uuid();
+  INSERT INTO auth.users(id,email,raw_user_meta_data)
+  VALUES (v_customer_id, v_customer_id::text || '@example.test', '{"first_name":"Test","last_name":"Buyer"}');
+  INSERT INTO customers(id,email,first_name,last_name)
+  VALUES (v_customer_id, v_customer_id::text || '@example.test','Test','Buyer')
+  ON CONFLICT (id) DO UPDATE SET first_name='Test',last_name='Buyer';
 
   INSERT INTO product_reviews (product_id, customer_id, rating, title, comment)
   VALUES (v_product_id, v_customer_id, 5, 'Embed test', 'Join resolves')

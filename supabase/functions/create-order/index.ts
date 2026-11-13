@@ -22,7 +22,7 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import { getCorsHeaders } from '../_shared/cors.ts';
-import { orderConfirmedEmail, sendEmail } from '../_shared/email.ts';
+import { deliverOrderNotifications } from '../_shared/order-notifications.ts';
 import {
   generateCorrelationId,
   logEvent,
@@ -232,84 +232,18 @@ serve(async req => {
 
     logOrderSuccess(fullOrder.id, fullOrder.order_number, fullOrder.total, 'cod');
 
-    // Idempotent retry: order already existed — skip side effects (email,
-    // guest token, recovered mark) so retries never double-send.
-    if (!isDuplicate) {
-      // Guest checkout: persist a tracking token so the confirmation email
-      // link (and resend-guest-verification) can look the order up.
-      if (!customerId) {
-        const verificationToken =
-          crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
-        const { hashBuffer } = await sha256(verificationToken);
-        const tokenHash = Array.from(new Uint8Array(hashBuffer))
-          .map(b => b.toString(16).padStart(2, '0'))
-          .join('');
-        const { error: guestErr } = await supabase.from('guest_orders').upsert(
-          {
-            email: fullOrder.email,
-            order_number: fullOrder.order_number,
-            verification_token: verificationToken,
-            token_hash: tokenHash,
-            expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            order_id: fullOrder.id,
-          },
-          { onConflict: 'order_number' },
-        );
-        if (guestErr) console.error('Failed to create guest_orders row:', guestErr);
-
-        const storeUrl = Deno.env.get('STORE_URL') || 'https://www.nerveey.shop';
-        const trackingLink = `${storeUrl}/track-order?email=${encodeURIComponent(
-          fullOrder.email,
-        )}&orderNumber=${encodeURIComponent(fullOrder.order_number)}&token=${encodeURIComponent(
-          verificationToken,
-        )}`;
-
-        const { data: items } = await supabase
-          .from('order_items')
-          .select('product_name, color, size, quantity, subtotal')
-          .eq('order_id', fullOrder.id);
-
-        const sendResult = await sendEmail(
-          fullOrder.email,
-          `Order Confirmed — #${fullOrder.order_number}`,
-          orderConfirmedEmail(fullOrder, items ?? [], trackingLink),
-          'order_confirmation',
-        );
-        if (!sendResult.success) {
-          console.error('Order confirmation email failed:', sendResult.error);
-        }
-      } else {
-        const { data: items } = await supabase
-          .from('order_items')
-          .select('product_name, color, size, quantity, subtotal')
-          .eq('order_id', fullOrder.id);
-
-        const sendResult = await sendEmail(
-          fullOrder.email,
-          `Order Confirmed — #${fullOrder.order_number}`,
-          orderConfirmedEmail(fullOrder, items ?? []),
-          'order_confirmation',
-        );
-        if (!sendResult.success) {
-          console.error('Order confirmation email failed:', sendResult.error);
-        }
-      }
-
-      // Mark any tracked abandoned cart for this email as recovered.
-      try {
-        await supabase.rpc('mark_cart_abandonment_recovered', {
-          p_customer_email: fullOrder.email,
-        });
-      } catch (recoveredErr) {
-        console.error('mark_cart_abandonment_recovered failed:', recoveredErr);
-      }
+    // Work was queued atomically by the database, including guest tracking.
+    // A duplicate request may recover a previously failed delivery.
+    try {
+      await deliverOrderNotifications(supabase, fullOrder.id);
+    } catch {
+      console.error('Notification worker unavailable; job remains queued');
     }
 
     timer.end();
 
     // Add correlation ID to response headers for tracing
     const correlationId = generateCorrelationId();
-    req.headers.set('x-correlation-id', correlationId);
     const responseHeaders = {
       ...corsHeaders,
       'X-Correlation-Id': correlationId,
@@ -363,12 +297,6 @@ serve(async req => {
     );
   }
 });
-
-async function sha256(text: string): Promise<{ hashBuffer: ArrayBuffer }> {
-  const data = new TextEncoder().encode(text);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  return { hashBuffer };
-}
 
 function json(body: unknown, status = 200, headers: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), {

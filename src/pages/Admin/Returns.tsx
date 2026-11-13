@@ -63,10 +63,11 @@ export default function AdminReturns() {
       `Change return request from "${current}" to "${status}"? This cannot be undone.`,
     );
     if (!ok) return;
-    const { error } = await supabase
-      .from('order_return_requests')
-      .update({ status, resolved_at: new Date().toISOString() })
-      .eq('id', id);
+    const { error } = await supabase.rpc('resolve_return_request', {
+      p_id: id,
+      p_status: status,
+      p_expected_status: current,
+    });
     if (error) showToast(error.message, 'error', 4000);
     else {
       showToast(`Return ${status}`, 'success', 2500);
@@ -161,9 +162,9 @@ export default function AdminReturns() {
         </div>
       )}
       <p className="text-xs text-navy/60 mt-4">
-        Approve → then go to Orders and set status to <span className="font-medium">refunded</span>{' '}
-        or <span className="font-medium">cancelled</span> to restock inventory (once via
-        update_order_status). One request per order/type enforced via UNIQUE.
+        Approve the request, then mark completed after receiving the return. Completion refunds the
+        order status and restocks inventory in one transaction. Record any cash repayment
+        separately; this action does not transfer money.
       </p>
     </AdminLayout>
   );

@@ -28,6 +28,7 @@ export async function sendEmail(
   subject: string,
   html: string,
   type: string = 'transactional',
+  idempotencyKey?: string,
 ): Promise<SendEmailResult> {
   const apiKey = Deno.env.get('RESEND_API_KEY');
   const from = Deno.env.get('RESEND_FROM_EMAIL') ?? 'NERVE <onboarding@resend.dev>';
@@ -42,8 +43,10 @@ export async function sendEmail(
   try {
     const res = await fetch(RESEND_API, {
       method: 'POST',
+      signal: AbortSignal.timeout(15000),
       headers: {
         Authorization: `Bearer ${apiKey}`,
+        ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ from, to, subject, html }),

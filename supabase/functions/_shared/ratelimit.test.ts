@@ -83,29 +83,14 @@ Deno.test('rateLimitIdentifier with no auth header uses IP bucket', async () => 
   if (identifier !== 'ip:4.4.4.4') throw new Error(`expected ip bucket, got ${identifier}`);
 });
 
-Deno.test('rateLimitIdentifier hashes non-user bearer tokens (never raw)', async () => {
-  const token = 'some-opaque-oauth-token-value';
-  const identifier = await rateLimitIdentifier(
-    req({ authorization: `Bearer ${token}` }),
-    stubSupabase(null), // getUser throws → fall through to tok: hash
-  );
-  if (!identifier.startsWith('tok:')) throw new Error(`expected tok: bucket, got ${identifier}`);
-  if (identifier.includes(token)) throw new Error('raw token leaked into identifier');
-  if (identifier.length !== 'tok:'.length + 32) {
-    throw new Error(`expected 32-char hash prefix, got ${identifier}`);
+Deno.test('changing invalid bearer tokens cannot reset the IP bucket', async () => {
+  for (const token of ['invalid-a', 'invalid-b']) {
+    const id = await rateLimitIdentifier(
+      req({ authorization: `Bearer ${token}`, 'x-forwarded-for': '5.5.5.5' }),
+      stubSupabase(null),
+    );
+    if (id !== 'ip:5.5.5.5') throw new Error(`invalid auth selected ${id}`);
   }
-});
-
-Deno.test('rateLimitIdentifier is deterministic for the same non-user token', async () => {
-  const a = await rateLimitIdentifier(
-    req({ authorization: 'Bearer fixed-token' }),
-    stubSupabase(null),
-  );
-  const b = await rateLimitIdentifier(
-    req({ authorization: 'Bearer fixed-token' }),
-    stubSupabase(null),
-  );
-  if (a !== b) throw new Error(`hash not deterministic: ${a} vs ${b}`);
 });
 
 Deno.test('legacy rateLimit allows then denies after maxRequests in a window', () => {
