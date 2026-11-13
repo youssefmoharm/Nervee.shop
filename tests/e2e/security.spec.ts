@@ -78,7 +78,7 @@ test.describe('Security — client-side guards and validation', () => {
     await page.getByTestId('search-input').fill(payload);
     // Payload must not execute or appear as live markup in the DOM
     await page.waitForTimeout(500);
-    const executed = await page.evaluate(() => (window as any).__xss === true);
+    const executed = await page.evaluate(() => (window as unknown as { __xss?: boolean }).__xss === true);
     expect(executed).toBe(false);
   });
 

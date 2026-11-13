@@ -105,7 +105,7 @@ export async function initSentry(options?: { consent?: boolean }) {
   });
 }
 
-export function trackError(error: Error, context?: Record<string, any>) {
+export function trackError(error: Error, context?: Record<string, unknown>) {
   if (!SentryMod || !sentryEnabled) return;
   SentryMod.captureException(error, {
     contexts: { custom: context },
@@ -135,7 +135,7 @@ export function clearUserContext() {
  * Central error logger. Always logs to the console for local debugging, and
  * forwards to Sentry when VITE_SENTRY_DSN is configured.
  */
-export function logError(message: unknown, error?: unknown, context?: Record<string, any>) {
+export function logError(message: unknown, error?: unknown, context?: Record<string, unknown>) {
   if (error) {
     console.error(message, error);
   } else {

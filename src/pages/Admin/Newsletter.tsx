@@ -5,7 +5,11 @@ import { logError } from '../../lib/sentry';
 import { Loader2 } from 'lucide-react';
 
 export default function Newsletter() {
-  const [subs, setSubs] = useState<any[] | null>(null);
+  interface Subscriber {
+    email: string;
+    created_at?: string;
+  }
+  const [subs, setSubs] = useState<Subscriber[] | null>(null);
 
   useEffect(() => {
     adminService

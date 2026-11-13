@@ -8,8 +8,36 @@ import { formatEGP } from '../../lib/format';
 
 export default function CustomerDetail() {
   const { id } = useParams();
-  const [customer, setCustomer] = useState<any | null>(null);
-  const [orders, setOrders] = useState<any[] | null>(null);
+
+  interface Customer {
+    id: string;
+    email: string;
+    first_name?: string;
+    last_name?: string;
+    phone?: string;
+    created_at: string;
+    customer_addresses?: Address[];
+  }
+
+  interface Address {
+    id: string;
+    label?: string;
+    address: string;
+    city: string;
+    governorate: string;
+    postal_code?: string;
+  }
+
+  interface Order {
+    id: string;
+    order_number: string;
+    total: number;
+    status: string;
+    created_at: string;
+  }
+
+  const [customer, setCustomer] = useState<Customer | null>(null);
+  const [orders, setOrders] = useState<Order[] | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -56,7 +84,7 @@ export default function CustomerDetail() {
         <h2 className="nv-eyebrow text-xs text-navy/60 mb-2">Addresses</h2>
         {customer.customer_addresses?.length ? (
           <ul className="space-y-2">
-            {customer.customer_addresses.map((a: any) => (
+            {customer.customer_addresses.map((a: Address) => (
               <li key={a.id} className="border border-navy/10 p-3">
                 <div className="text-sm">{a.label || 'Address'}</div>
                 <div className="text-xs text-navy/70">

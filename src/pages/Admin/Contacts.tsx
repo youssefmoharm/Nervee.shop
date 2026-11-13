@@ -5,7 +5,15 @@ import { logError } from '../../lib/sentry';
 import { Loader2 } from 'lucide-react';
 
 export default function Contacts() {
-  const [messages, setMessages] = useState<any[] | null>(null);
+  interface ContactMessage {
+    id: string;
+    name: string;
+    email: string;
+    status: string;
+    created_at: string;
+    message: string;
+  }
+  const [messages, setMessages] = useState<ContactMessage[] | null>(null);
 
   const load = () =>
     adminService

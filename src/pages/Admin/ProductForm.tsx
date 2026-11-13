@@ -116,12 +116,14 @@ export default function ProductForm() {
           setCare((data.care ?? []).join('\n'));
           if (data.product_colors?.length) {
             setColors(
-              data.product_colors.map((c: any) => ({
-                name: c.name,
-                hex: c.hex,
-                image: c.image,
-                hover_image: c.hover_image ?? '',
-              })),
+              data.product_colors.map(
+                (c: { name: string; hex: string; image: string; hover_image?: string }) => ({
+                  name: c.name,
+                  hex: c.hex,
+                  image: c.image,
+                  hover_image: c.hover_image ?? '',
+                }),
+              ),
             );
           }
           const inv: Record<string, number> = Object.fromEntries(SIZES.map(s => [s, 0]));

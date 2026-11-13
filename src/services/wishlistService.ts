@@ -17,13 +17,23 @@ export const wishlistService = {
       return [];
     }
 
-    return items.map((row: any) => ({
-      productId: row.product_id,
-      name: row.products?.name ?? '',
-      slug: row.products?.slug ?? '',
-      image: row.products?.product_colors?.[0]?.image ?? '',
-      price: row.products?.price ?? 0,
-    }));
+    return items.map(
+      (row: {
+        product_id: string;
+        products?: {
+          name?: string;
+          slug?: string;
+          price?: number;
+          product_colors?: { image?: string }[];
+        };
+      }) => ({
+        productId: row.product_id,
+        name: row.products?.name ?? '',
+        slug: row.products?.slug ?? '',
+        image: row.products?.product_colors?.[0]?.image ?? '',
+        price: row.products?.price ?? 0,
+      }),
+    );
   },
 
   async add(productId: string) {

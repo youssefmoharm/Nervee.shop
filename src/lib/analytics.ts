@@ -282,9 +282,13 @@ export function initGoogleAnalytics() {
   document.head.appendChild(script);
 
   // Initialize gtag
+  interface DataLayerWindow extends Window {
+    dataLayer?: unknown[][];
+  }
+  const win = window as DataLayerWindow;
+  win.dataLayer = win.dataLayer || [];
   window.gtag = function (...args: unknown[]) {
-    (window as any).dataLayer = (window as any).dataLayer || [];
-    ((window as any).dataLayer as any[]).push(...args);
+    win.dataLayer.push(args);
   };
 
   window.gtag('js', new Date());
@@ -317,16 +321,29 @@ export function initMetaPixel() {
   document.head.appendChild(script);
 
   // Initialize fbq after script loads
-  window.fbq = function (...args: unknown[]) {
-    if (window.fbq && (window.fbq as any).callMethod) {
-      (window.fbq as any).callMethod.apply(window.fbq, args as []);
-    } else if (window.fbq && (window.fbq as any).queue) {
-      (window.fbq as any).queue.push(args);
+  interface FbqMethod {
+    (...args: unknown[]): void;
+    callMethod?: (...args: unknown[]) => void;
+    queue?: unknown[][];
+    loaded?: boolean;
+    version?: string;
+  }
+  interface FbqWindow extends Window {
+    fbq?: FbqMethod;
+  }
+  const fbWin = window as FbqWindow;
+
+  fbWin.fbq = function (...args: unknown[]) {
+    if (fbWin.fbq && fbWin.fbq.callMethod) {
+      fbWin.fbq.callMethod(...args);
+    } else if (fbWin.fbq && fbWin.fbq.queue) {
+      fbWin.fbq.queue.push(args);
     }
-  };
-  (window.fbq as any).loaded = true;
-  (window.fbq as any).version = '2.0';
-  (window.fbq as any).queue = [];
+  } as FbqMethod;
+
+  fbWin.fbq.loaded = true;
+  fbWin.fbq.version = '2.0';
+  fbWin.fbq.queue = [];
 
   // Initialize with pixel ID (safe - numeric only)
   window.fbq('init', pixelId);

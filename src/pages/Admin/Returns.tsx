@@ -80,7 +80,9 @@ export default function AdminReturns() {
         <h1 className="nv-heading text-4xl">Returns</h1>
         <select
           value={filter}
-          onChange={e => setFilter(e.target.value as any)}
+          onChange={e =>
+            setFilter(e.target.value as 'pending' | 'approved' | 'rejected' | 'completed' | '')
+          }
           aria-label="Filter returns by status"
           className="border border-navy/20 px-3 py-2 text-sm"
         >

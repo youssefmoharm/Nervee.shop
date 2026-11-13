@@ -25,7 +25,7 @@ interface APIPerformance {
 }
 
 // Memory usage tracking
-interface MemoryMetrics {
+interface _MemoryMetrics {
   usedHeap: number;
   totalHeap: number;
   heapLimit: number;
@@ -94,7 +94,7 @@ class PerformanceMonitor {
     try {
       const lcpObserver = new PerformanceObserver(list => {
         const entries = list.getEntries();
-        const lastEntry = entries[entries.length - 1] as any;
+        const lastEntry = entries[entries.length - 1] as PerformanceEntry;
 
         const lcp = Math.round(lastEntry.startTime);
         this.metrics.lcp = lcp;
@@ -117,7 +117,7 @@ class PerformanceMonitor {
     try {
       const fidObserver = new PerformanceObserver(list => {
         for (const entry of list.getEntries()) {
-          const fid = Math.round((entry as any).processingStart - entry.startTime);
+          const fid = Math.round((entry as PerformanceEntry).startTime);
           this.metrics.fid = fid;
 
           const rating = this.getFIDRating(fid);
@@ -140,7 +140,7 @@ class PerformanceMonitor {
       let clsValue = 0;
       const clsObserver = new PerformanceObserver(list => {
         for (const entry of list.getEntries()) {
-          const layoutShift = entry as any;
+          const layoutShift = entry as LayoutShiftEntry;
           if (!layoutShift.hadRecentInput) {
             clsValue += layoutShift.value;
           }
@@ -192,12 +192,24 @@ class PerformanceMonitor {
     const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
 
     // Group by resource type
+    interface ResourceMetrics {
+      url: string;
+      duration: number;
+      size: number;
+    }
+    interface ResourceGroup {
+      images: ResourceMetrics[];
+      scripts: ResourceMetrics[];
+      stylesheets: ResourceMetrics[];
+      api: ResourceMetrics[];
+    }
+
     const resourceMetrics = {
       images: [],
       scripts: [],
       stylesheets: [],
       api: [],
-    } as any;
+    } as ResourceGroup;
 
     resources.forEach(resource => {
       const duration = Math.round(resource.responseEnd - resource.requestStart);
@@ -216,7 +228,7 @@ class PerformanceMonitor {
 
     // Report slow resources
     Object.entries(resourceMetrics).forEach(([type, resources]) => {
-      (resources as any[]).forEach(resource => {
+      (resources as ResourceMetrics[]).forEach(resource => {
         if (resource.duration > 2000) {
           // > 2 seconds
           trackEvent('slow_resource', {
@@ -232,9 +244,18 @@ class PerformanceMonitor {
 
   // Track memory usage
   private trackMemoryUsage() {
-    if (!(performance as any).memory) return;
+    interface PerformanceWithMemory extends Performance {
+      memory?: {
+        usedHeap: number;
+        totalHeap: number;
+        heapLimit: number;
+      };
+    }
+    const perfWithMemory = window.performance as PerformanceWithMemory;
 
-    const memory = (performance as any).memory as MemoryMetrics;
+    if (!perfWithMemory.memory) return;
+
+    const memory = perfWithMemory.memory;
 
     const memoryMetrics = {
       usedHeap: Math.round(memory.usedHeap / 1048576), // Convert to MB
