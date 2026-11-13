@@ -138,7 +138,7 @@ async function seedAdminSession(page: Page, isAdmin: boolean) {
   );
 
   // Role gate: admin_users membership decides isAdmin in AuthContext.
-  await page.route('**/rest/v1/admin_users*', route =>
+  await page.route('**/rest/v1/admin_users**', route =>
     route.fulfill({
       status: 200,
       headers: { 'content-type': 'application/json; charset=utf-8' },
@@ -154,10 +154,54 @@ async function seedAdminSession(page: Page, isAdmin: boolean) {
       json: { id: USER_ID, aud: 'authenticated', email: 'e2e-admin@nerve.test' },
     }),
   );
+
+  // Mock external analytics/analytics-related scripts to prevent networkidle timeout
+  // Google Tag Manager, GA4, Meta Pixel, and Crisp chat all load external scripts
+  await page.route('https://www.googletagmanager.com/**', route =>
+    route.fulfill({
+      status: 200,
+      headers: { 'content-type': 'application/javascript; charset=utf-8' },
+      body: '// Mock Google Tag Manager',
+    }),
+  );
+  await page.route('https://www.googletagmanager.com/gtm.js**', route =>
+    route.fulfill({
+      status: 200,
+      headers: { 'content-type': 'application/javascript; charset=utf-8' },
+      body: '// Mock GTM script',
+    }),
+  );
+  await page.route('https://connect.facebook.net/**', route =>
+    route.fulfill({
+      status: 200,
+      headers: { 'content-type': 'application/javascript; charset=utf-8' },
+      body: '// Mock Facebook Pixel',
+    }),
+  );
+  await page.route('https://static.crisp.chat/**', route =>
+    route.fulfill({
+      status: 200,
+      headers: { 'content-type': 'application/javascript; charset=utf-8' },
+      body: '// Mock Crisp Chat',
+    }),
+  );
+  // Also catch any other external script sources that might block networkidle
+  await page.route('https://**/*.js', route => {
+    // Allow scripts from our own domain to load normally
+    if (route.request().url().includes('localhost') || route.request().url().includes('127.0.0.1')) {
+      route.continue();
+    } else {
+      route.fulfill({
+        status: 200,
+        headers: { 'content-type': 'application/javascript; charset=utf-8' },
+        body: '// Mock external script',
+      });
+    }
+  });
 }
 
 async function mockOrders(page: Page, orders: unknown[] = [ORDER]) {
-  await page.route('**/rest/v1/orders*', route =>
+  await page.route('**/rest/v1/orders**', route =>
     route.fulfill({ status: 200, headers: jsonHeaders, json: orders }),
   );
 }
@@ -174,7 +218,7 @@ test.describe('Admin — access control', () => {
         json: [DASHBOARD_ROW],
       }),
     );
-    await page.route('**/rest/v1/order_items*', route =>
+    await page.route('**/rest/v1/order_items**', route =>
       route.fulfill({
         status: 200,
         headers: { 'content-type': 'application/json; charset=utf-8' },
@@ -183,7 +227,7 @@ test.describe('Admin — access control', () => {
     );
     // product_inventory: listLowStock queries with select including products embed
     // Return low stock rows that match the threshold filter logic (stock <= threshold)
-    await page.route('**/rest/v1/product_inventory*', route =>
+    await page.route('**/rest/v1/product_inventory**', route =>
       route.fulfill({
         status: 200,
         headers: { 'content-type': 'application/json; charset=utf-8', 'content-range': '0-3/4' },
@@ -196,9 +240,12 @@ test.describe('Admin — access control', () => {
       }),
     );
 
-    await page.goto('/admin', { waitUntil: 'networkidle' });
+    // Use 'load' instead of 'networkidle' to avoid timing out on external
+    // scripts (analytics, chat, etc.) that never complete
+    await page.goto('/admin', { waitUntil: 'load' });
 
-    await expect(page.getByTestId('admin-dashboard')).toBeVisible();
+    // Wait for the dashboard to finish loading its data
+    await expect(page.getByTestId('admin-dashboard')).toBeVisible({ timeout: 10000 });
 
     // Needs-attention tiles carry the RPC's operational counts.
     await expect(page.getByTestId('attention-pending-orders-count')).toHaveText('3');
@@ -220,7 +267,8 @@ test.describe('Admin — access control', () => {
   test('signed-in non-admin is denied with a visible Access Denied screen', async ({ page }) => {
     await seedAdminSession(page, false);
 
-    await page.goto('/admin/orders', { waitUntil: 'networkidle' });
+    // Use 'load' to avoid timing out on external scripts
+    await page.goto('/admin/orders', { waitUntil: 'load' });
 
     await expect(page.getByTestId('admin-access-denied')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Access Denied' })).toBeVisible();
@@ -247,7 +295,7 @@ test.describe('Admin — order operations', () => {
       });
     });
 
-    await page.goto('/admin/orders', { waitUntil: 'networkidle' });
+    await page.goto('/admin/orders', { waitUntil: 'load' });
     await expect(page.getByTestId('orders-table')).toBeVisible();
 
     const select = page.getByTestId('order-status-NV-1001');
@@ -271,7 +319,7 @@ test.describe('Admin — order operations', () => {
     await seedAdminSession(page, true);
     await mockOrders(page);
 
-    await page.goto('/admin/orders', { waitUntil: 'networkidle' });
+    await page.goto('/admin/orders', { waitUntil: 'load' });
     await expect(page.getByTestId('orders-table')).toBeVisible();
 
     const searchPromise = page.waitForRequest(
@@ -307,7 +355,8 @@ test.describe('Admin — product form validation', () => {
       });
     });
 
-    await page.goto('/admin/products/new', { waitUntil: 'networkidle' });
+    // Use 'load' to avoid timing out on external scripts
+    await page.goto('/admin/products/new', { waitUntil: 'load' });
     await expect(page.getByRole('heading', { name: 'New Product' })).toBeVisible();
     return writes;
   }
@@ -367,7 +416,8 @@ test.describe('Admin — responsive dashboard', () => {
       }),
     );
 
-    await page.goto('/admin/orders', { waitUntil: 'networkidle' });
+    // Use 'load' to avoid timing out on external scripts
+    await page.goto('/admin/orders', { waitUntil: 'load' });
     await expect(page.getByTestId('orders-table')).toBeVisible();
 
     // Hamburger opens the off-canvas sidebar…

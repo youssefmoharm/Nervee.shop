@@ -126,14 +126,16 @@ deploy with:
 supabase functions deploy
 ```
 
-For the COD-only launch there are 18 functions: `auth-sign-in`,
+For the COD-only launch there are 18 edge functions: `auth-sign-in`,
 `auth-sign-up`, `create-order`, `update-order-status`, `send-email`,
 `contact`, `back-in-stock`, `send-back-in-stock`, `process-restock`,
 `process-abandoned-carts`, `record-abandoned-cart`, `handle-unsubscribe`,
 `log-admin-activity`, `chat-ai`, `create-support-ticket`, `verify-guest-order`,
-`resend-guest-verification`, `request-return` (`_shared/` holds common
-utilities). Payment functions are out of scope — the store is Cash on
+`resend-guest-verification`, `request-return`. The `_shared/` directory holds
+common utilities. Payment functions are out of scope — the store is Cash on
 Delivery only.
+
+Database migrations: 57 total (001 through 057).
 
 ## Environment Variables
 

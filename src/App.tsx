@@ -20,6 +20,7 @@ import { BrowsingHistoryProvider } from './context/BrowsingHistoryContext';
 import { ToastProvider } from './context/ToastContext';
 import { QuickViewProvider } from './context/QuickViewContext';
 import { ComparisonProvider } from './context/ComparisonContext';
+import { AdminProvider } from './context/AdminContext';
 import ComparisonWidget from './components/ComparisonWidget';
 import FloatingDock from './components/FloatingDock';
 import { initSentry, trackError } from './lib/sentry';
@@ -287,109 +288,111 @@ function AppContent() {
         <Route
           path="/admin/*"
           element={
-            <Suspense fallback={<AdminFallback />}>
-              <Routes>
-                <Route
-                  index
-                  element={
-                    <AdminRoute>
-                      <AdminDashboard />
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="products"
-                  element={
-                    <AdminRoute>
-                      <AdminProducts />
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="products/:id"
-                  element={
-                    <AdminRoute>
-                      <AdminProductForm />
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="orders"
-                  element={
-                    <AdminRoute>
-                      <AdminOrders />
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="customers"
-                  element={
-                    <AdminRoute>
-                      <AdminCustomers />
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="customers/:id"
-                  element={
-                    <AdminRoute>
-                      <AdminCustomerDetail />
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="contacts"
-                  element={
-                    <AdminRoute>
-                      <AdminContacts />
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="newsletter"
-                  element={
-                    <AdminRoute>
-                      <AdminNewsletter />
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="discounts"
-                  element={
-                    <AdminRoute>
-                      <AdminDiscounts />
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="returns"
-                  element={
-                    <AdminRoute>
-                      <AdminReturns />
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="*"
-                  element={
-                    <AdminRoute>
-                      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-5">
-                        <h1 className="nv-heading text-4xl mb-3">Admin page not found</h1>
-                        <p className="text-navy/60 mb-6">
-                          The admin page you&apos;re looking for doesn&apos;t exist.
-                        </p>
-                        <Link
-                          to="/admin"
-                          className="inline-block bg-navy text-white nv-eyebrow px-6 py-3 hover:bg-navy-2 transition-colors"
-                        >
-                          Back to Admin Dashboard
-                        </Link>
-                      </div>
-                    </AdminRoute>
-                  }
-                />
-              </Routes>
-            </Suspense>
+            <AdminProvider>
+              <Suspense fallback={<AdminFallback />}>
+                <Routes>
+                  <Route
+                    index
+                    element={
+                      <AdminRoute>
+                        <AdminDashboard />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="products"
+                    element={
+                      <AdminRoute>
+                        <AdminProducts />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="products/:id"
+                    element={
+                      <AdminRoute>
+                        <AdminProductForm />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="orders"
+                    element={
+                      <AdminRoute>
+                        <AdminOrders />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="customers"
+                    element={
+                      <AdminRoute>
+                        <AdminCustomers />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="customers/:id"
+                    element={
+                      <AdminRoute>
+                        <AdminCustomerDetail />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="contacts"
+                    element={
+                      <AdminRoute>
+                        <AdminContacts />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="newsletter"
+                    element={
+                      <AdminRoute>
+                        <AdminNewsletter />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="discounts"
+                    element={
+                      <AdminRoute>
+                        <AdminDiscounts />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="returns"
+                    element={
+                      <AdminRoute>
+                        <AdminReturns />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="*"
+                    element={
+                      <AdminRoute>
+                        <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-5">
+                          <h1 className="nv-heading text-4xl mb-3">Admin page not found</h1>
+                          <p className="text-navy/60 mb-6">
+                            The admin page you&apos;re looking for doesn&apos;t exist.
+                          </p>
+                          <Link
+                            to="/admin"
+                            className="inline-block bg-navy text-white nv-eyebrow px-6 py-3 hover:bg-navy-2 transition-colors"
+                          >
+                            Back to Admin Dashboard
+                          </Link>
+                        </div>
+                      </AdminRoute>
+                    }
+                  />
+                </Routes>
+              </Suspense>
+            </AdminProvider>
           }
         />
 

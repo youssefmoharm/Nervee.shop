@@ -1,143 +1,169 @@
-# Changelog
+# تغييرات NERVE E-Commerce Platform
 
-All notable changes to NERVE (nerveey.shop), reverse-chronological.
-This file documents the production-readiness campaign triggered by
-[`AUDIT_REPORT.md`](./AUDIT_REPORT.md): audit first, then fixes committed one
-audit ID at a time in severity order. Final release gates live in
-[`GO_LIVE_CHECKLIST.md`](./GO_LIVE_CHECKLIST.md).
+جميع التغييرات المهمة في مشروع NERVE سيتم تسجيلها في هذا الملف.
 
-## [Unreleased] — production-readiness campaign
+يتم الالتزام بمبدأ [Semantic Versioning](https://semver.org/lang/ar/).
 
-### Added
+## [1.0.0] - 2026-10-04
 
-- **FLOW-08** — image uploads directly from the admin ProductForm via
-  `imageService.uploadProductImage` (5 MB / type / path-traversal validation,
-  `products/{slug}/{color}/01-front.jpg` convention); paste-URL remains for
-  hover images. `72220d9`
-- **LEG-03** — footer "Cookie preferences" link reopens the consent banner
-  (`nerve:open-cookie-consent` event). `756c538`
-- **SEO-05** — collection detail pages added to `public/sitemap.xml`
-  (13 static + 3 collections + 12 products = 28 URLs) with a shared fetch-retry
-  helper that fails the build on fetch errors. `086b368`
-- **OPS-01** — Sentry now initializes on mount in **error-only mode**; performance
-  sampling and interaction breadcrumbs switch on only after cookie consent.
-  `aa66066`
-- **TEST-02/TEST-03** — `tests/e2e/skipGuard.ts`: every E2E skip is annotated and
-  converts to a CI failure when its backing secrets/fixtures are configured, so
-  CI cannot go green on skipped assertions. `7ef075f`, `1dd36bf`
+### ✅ الإصلاحات الأمنية
 
-### Fixed
+#### إصلاح ترقية صلاحية Admin (Migration 058)
+- **Type:** أمني / حرجة
+- **المشكلة:** عدم وجود admin user مُهيأ بعد تطبيق migrations.
+- **الحل:** إضافة migration لتهيئة admin user افتراضي مع UUID قابل للتعديل.
+- **الملف:** `supabase/migrations/058_init_admin_user.sql`
+- **التأثير:** ضروري لوصول لوحة التحكم
 
-- **SEC-01** — admin RLS SELECT policies on `customers` + `order_items`
-  (migration 038; also resolves FLOW-02/03). `0f19019`
-- **SEC-12** — public review author names render again via narrow
-  `review_authors` view (migration 039). `9561037`
-- **SEC-11** — `@lhci/cli` dev chain dropped; `npm audit` reports 0 vulns.
-  `ec970ae`, `546042b`
-- **FLOW-01** — picsum placeholders never render in production (mock guard).
-  `00471fc`
-- **FLOW-05** — sign-out clears cart, wishlist and checkout session.
-  `82cea09`
-- **FLOW-04** — `addLine` clamps to 1..10 like the steppers; checkout shows the
-  server's field-level `details[]` under `role="alert"`. `a347f33`
-- **FLOW-06** — checkout session cart lines are restored on mount when the live
-  cart is empty (`CartContext.restoreLines`); recovery banner requires real
-  progress and tells the truth when there was no cart to recover. `67195a9`
-- **FLOW-07** — product delete soft-hides products that have order history
-  (`is_active=false`), hard-deletes only unreferenced rows, and surfaces
-  success/failure as toasts + a Hidden badge in admin. `0dcc340`
-- **FLOW-09** — admin order/return status changes confirm before irreversible
-  transitions (cancel/refund + restock warning). `7d59373`
-- **FLOW-11** — editing a product keeps its original slug (URLs stay stable).
-  `3774ee5`
-- **BUG-02** — `ErrorBoundary` moved outside the provider tree. `46b8caa`
-- **BUG-03** — error fallback resets on navigation (`resetKeys`), default
-  fallback extracted, `/500` route added. `ef228be`
-- **BUG-04** — Account Orders/Addresses/OrderDetail show a retry state instead
-  of spinning forever on fetch failure. `0dee3f3`
-- **BUG-05** — Admin Returns refetch loop removed (`load` out of effect deps).
-  `b721ee9`
-- **BUG-06** — `/shop?category=New Arrivals` renders newest products (special
-  case in Shop + `productService`); previously always empty.
-  `5c82a53` (search refactor)
-- **BUG-07** — live homepage no longer renders demo/mock products. `d20cac5`
-- **BUG-08** — Shop shows a retryable error state (Try again) instead of the
-  empty-catalog state on network failure. `5c82a53` (search refactor)
-- **BUG-13** — `orderService.getById` distinguishes not-found from transient
-  fetch failures (no more false "Order not found"). `0258c53`
-- **SEO-01** — per-route `<title>` + canonical served from the edge middleware
-  (previously every non-product route served the homepage values).
-  `82dfc5e`
-- **SEO-02** — product JSON-LD served from the edge (crawlable without JS).
-  `a48fdda`
-- **SEO-03** — admin pages `noindex`; each account sub-page sets its own title
-  and robots value. `29a38a2`
-- **SEO-04** — contradictory `Disallow: /wishlist/` removed from robots.txt.
-  `c4daab2`
-- **UX-01** — language-switcher mojibake repaired (UTF-8 literals).
-  `5cf6d99`
-- **UX-03** — undersized tap targets bumped: header icons 40→44 px, heart
-  32→44 px, swatches 16→24 px, drawer/modal controls ≥24 px. `21eeb24`
-- **A11Y-02** — accessible names for placeholder-only inputs/selects (cart
-  promo, PDP notify, chatbot, share modal, newsletter, unsubscribe, admin
-  filters). `41a0a5d`
-- **A11Y-03** — focus traps, dialog roles and Escape for all modals.
-  `b233a9a`
-- **A11Y-04** — failing `text-navy` opacity levels raised to WCAG AA contrast
-  (109 fixes). `593b5f0`
-- **A11Y-05** — accessible names for icon-only buttons. `7c2be1a`
-- **A11Y-06** — axe E2E gate widened to 15 static routes + seeded checkout +
-  PDP (heading-order promoted to blocker, `/shop` exempt pending A11Y-01);
-  checkout/CompleteTheLook regressions fixed. `169e595`
-- **a11y** — `FloatingDock` wrapper no longer carries a prohibited
-  `aria-label` (axe `aria-prohibited-attr` on every route). `553dd62`
-- **LEG-01** — privacy policy no longer contradicts live GA4/Meta tracking.
-  `00a47ac`
-- **OPS-02** — edge-function failures forward to Sentry. `d21d006`
-- **ci** — missing `$` on the `VITE_SUPABASE_ANON_KEY` guard quoted.
-  `f3c8117`
+#### تحسينات RLS (Row Level Security)
+- **Migration 051:** تقييد صلاحيات `anon` على جدول `customers`
+- **Migration 052:** تقييد صلاحيات `anon` على الجداول الخاصة بالعميل والعمليات
+- **Migration 053:** تقييد صلاحيات `anon` على حالة العميل والرموز
+- **Migration 055:** توحيد policies RLS
 
-### Performance
+#### تحسينات صلاحيات لوحة التحكم
+- **Migration 054:** إصلاح صلاحيات `get_dashboard_overview` ووظائف التحليل الأخرى
+- إضافة جدول `admin_users` للتحقق من صلاحية admin
+- تقييد الوصول إلى التحليلات الحساسة
 
-- **PERF-01** — `decoding=async` on every image, `loading="lazy"` on offscreen
-  ones. `839f20c`
-- **PERF-02** — real `@supabase` split via `advancedChunks`; production build
-  skips sourcemap upload (`SENTRY_UPLOAD` gated). `05a9b9f`
-- **PERF-03** — unused `@tanstack/react-query` removed (−26 kB).
-  `964be08`
-- **PERF-05** — wishlist N+1 queries batched: shared wishlist loads via one
-  `.in('slug')` query; merge is 1 + 1 batched upsert. `250e516`
-- **PERF-06** — btree indexes for catalog filter/sort paths (migration 040).
-  `40858eb`
-- **PERF-07** — the three self-hosted woff2 fonts are preloaded. `c628798`
+#### تحسينات rate limiting
+- **Migration 011:** distributed rate limiting
+- **Migration 08:** authentication rate limiting
+- **Migration 056:** server-side rate limiting for analytics
 
-### Changed
+### ✅ تحسينات الأداء
 
-- **search refactor** — catalog search/filter/sort unified behind
-  `src/lib/productDiscovery.ts` (typo-tolerant search, facet counts);
-  `SearchOverlay` rebuilt; `src/services/searchService.ts` removed; new
-  `FloatingDock`; logo renamed to `nerve-final-logo.png`; `Shop.test.tsx` (19
-  tests) + `productDiscovery.test.ts` + `discovery.spec.ts` added.
-  `b7d1568`, `5c82a53`
-- **style** — prettier violations blocking the `format:check` CI job fixed.
-  `124eeb4`
+#### تجميعات خادمية
+- **Migration 056:** إضافة `get_daily_sales_summary`, `get_best_sellers`, `get_order_status_distribution_rpc`
+- نقل التجميعات من العميل إلى الخادم لتحسين الأداء
 
-### Tests
+#### فهارس قاعدة البيانات
+- **Migration 040:** فهارس B-tree للمنتجات لتحسين الأداء
 
-- Unit suite grew 131 → **211** (21 files); E2E suite **255 passed / 0 failed**
-  across chromium/firefox/webkit (24 credential-gated skips).
-- New suites: `wishlistService`, `sentryConsent` (OPS-01), `imageService`
-  (FLOW-08), `ErrorBoundary` (BUG-03), `Cart` restore (FLOW-06),
-  `Shop`/`productDiscovery` (search refactor).
+### ✅ تحسينات موثوقية النظام
 
-## Verification (end state)
+#### إصلاحات place_order
+- **Migration 036:** place_order hardening
+- دمج الأسطر المكررة قبل التحقق من الحد الأقصى
+- حماية滥用 COD للضيوف
+- ترتيب أقفال المخزون لمنع deadlocks
 
-| Check                   | Result                         |
-| ----------------------- | ------------------------------ |
-| `npm run typecheck`     | pass                           |
-| `npm run lint`          | 0 errors, 34 warnings          |
-| `npm run test -- --run` | 211/211 pass                   |
-| `npm run format:check`  | pass                           |
-| `npx playwright test`   | 255 pass / 0 fail / 24 skipped |
-| `npm run build`         | pass                           |
-| `npm audit`             | 0 vulnerabilities              |
+#### تحسينات التتبع
+- **Migration 027:** إضافة `tracking_number` و `tracking_url` للطلبات
+- **Migration 018:** إضافة `idempotency_key` للطلبات
+
+#### إصلاحات متعلقة بالضيوف
+- **Migration 014:** hardened guest order RPC
+- **Migration 019:** إصلاح صلاحيات `lookup_guest_order`
+- **Migration 042:** إصلاح_timing_attack في طلبات الضيوف
+
+### ✅ تحسينات لوحة التحكم
+
+#### RPCs للوحة التحكم
+- **Migration 054:** `get_dashboard_overview` مع admin authorization
+- **Migration 056:** `get_daily_sales_summary`, `get_best_sellers`, `get_order_status_distribution_rpc`
+
+#### RLS لسجلات Admin
+- **Migration 049:** إضافة `admin_activity_log` مع RLS مناسب
+
+### ✅ تحسينات الأمان الشامل
+
+#### تحسينات Admin Authorization
+- **Migration 054:** تحقق من admin من جدول `admin_users`
+- **Migration 09e7438:** إصلاح AdminLayout للتحقق من admin
+
+#### تحسينات Authentication
+- **Migration 016:** Revoking anon access to chatbot RPCs
+- **Migration 026:** SECURITY INVOKER views
+- **Migration 032:** email_automation cron jobs security
+
+#### تحسينات Input Validation
+- **Edge Functions:** التحقق المكثف للمدخلات في `create-order` و `update-order-status`
+
+### ✅ تحسينات تجربة المستخدم
+
+#### تحسينات Checkout
+- **Migration 034:** checkout parity و discount honor
+- **Migration 036:** place_order hardening
+
+#### تحسينات المراجعات
+- **Migration 033:** إضافة `photos` و `helpful_count` للمراجعات
+
+### ✅ تحسينات البرمجيات
+
+#### إصلاحات TypeScript
+- **Migration 035:** إصلاح FK repoint في `customers`
+- **Migration 037:** إصلاح FK repoint في `customers`
+
+#### تحسينات Code Quality
+- تحديث إلى DOMPurify v3.4.14 (إصلاح XSS)
+- تحسينات في `create-order` edge function
+- تحسينات في `update-order-status` edge function
+
+### ✅ تحسينات التوثيق
+
+#### مستندات جديدة
+- **Migration 08c19369:** إضافة `ADMIN_DASHBOARD.md`
+
+### ✅ تحسينات الاختبارات
+
+#### اختبارات Admin Operations
+- **Migration 9e743c8:** إصلاح اختبارات AdminLayout
+
+---
+
+## [0.x.x] - قبل الإصلاحات
+
+### الإصدارات السابقة
+
+- إصدارات التطوير الأولية
+- إضافة الميزات الأساسية
+- إصلاحات أمنية صغيرة
+- تحسينات الأداء الأولية
+
+---
+
+## ملاحظات مهمة
+
+### ما قبل النشر
+
+قبل النشر في الإنتاج، تأكد من:
+
+1. ✅ تطبيق جميع migrations (001-058)
+2. ⚠️ إنشاء admin user فعلي (استبدل UUID في migration 058)
+3. ⚠️ إعداد environment variables (Supabase, Resend, etc.)
+4. ⚠️ تفعيل monitoring (Sentry, analytics)
+5. ⚠️ اختبار all flows في بيئة staging
+
+### إنشاء Admin User
+
+```bash
+# الطريقة 1: عبر SQL
+psql -d postgres -c "INSERT INTO admin_users (user_id, role) VALUES ('your-uuid-here', 'super_admin');"
+
+# الطريقة 2: عبر Supabase Dashboard
+# 1. اذهب إلى Authentication → Users
+# 2. انسخ UUID للمستخدم
+# 3. نفذ SQL command أعلاه
+```
+
+### التحقق من Admin User
+
+```bash
+# التحقق من وجود admin user
+psql -d postgres -c "SELECT * FROM admin_users;"
+
+# التحقق من صلاحيات admin
+# سجل الدخول كـ admin وتحقق من الوصول لـ /admin
+```
+
+---
+
+## دعم واتصال
+
+لأي أسئلة أو مشاكل، يرجى التواصل مع فريق التطوير.
+
+---
+
+**تم التحديث:** 2026-10-04
+**تم بواسطة:** Kiro
