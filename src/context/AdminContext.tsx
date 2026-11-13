@@ -1,4 +1,12 @@
-import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  type ReactNode,
+} from 'react';
 import {
   DATE_RANGES,
   addPeriodComparison,
@@ -41,11 +49,17 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const handleDateRangeChange = (range: DateRangeWithPrevious) => {
-    setDateRange(range);
-  };
+  const handleDateRangeChange = useCallback((range: DateRangeWithPrevious) => {
+    setDateRange(previous =>
+      ['start', 'end', 'previousStart', 'previousEnd'].every(
+        key => previous[key as 'start'].getTime() === range[key as 'start'].getTime(),
+      ) && previous.key === range.key
+        ? previous
+        : range,
+    );
+  }, []);
 
-  const setCustomDateRange = (start: Date, end: Date) => {
+  const setCustomDateRange = useCallback((start: Date, end: Date) => {
     const range = DATE_RANGES['custom'](new Date());
     const newRange = {
       ...range,
@@ -55,9 +69,9 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       previousEnd: new Date(start.getTime() - 1),
     };
     setDateRange(newRange);
-  };
+  }, []);
 
-  const getPeriodComparison = (current: number, previous: number) => {
+  const getPeriodComparison = useCallback((current: number, previous: number) => {
     const percentage = calculatePercentageChange(current, previous);
     return {
       percentage,
@@ -65,7 +79,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       isNegative: percentage < 0,
       isNeutral: percentage === 0,
     };
-  };
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -75,7 +89,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       getPeriodComparison,
       isMobile,
     }),
-    [dateRange, isMobile],
+    [dateRange, isMobile, handleDateRangeChange, setCustomDateRange, getPeriodComparison],
   );
 
   return <AdminContext.Provider value={value}>{children}</AdminContext.Provider>;

@@ -1,3 +1,4 @@
+import GuestReturnForm from '../components/GuestReturnForm';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
@@ -188,6 +189,27 @@ export function TrackOrder() {
             </div>
           </div>
 
+          <GuestReturnForm order={order} token={searchParams.get('token') || ''} />
+          {order.requests?.map(request => (
+            <div key={request.id} className="border p-4 mt-4">
+              <p>
+                {request.type}: {request.status}
+              </p>
+              {request.return_exchange_shipments?.tracking_number && (
+                <p>Replacement tracking: {request.return_exchange_shipments.tracking_number}</p>
+              )}
+              {request.return_exchange_shipments?.tracking_url?.startsWith('https://') && (
+                <a
+                  className="underline"
+                  href={request.return_exchange_shipments.tracking_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Track replacement
+                </a>
+              )}
+            </div>
+          ))}
           <div className="mt-8 text-center">
             <button
               onClick={() => {

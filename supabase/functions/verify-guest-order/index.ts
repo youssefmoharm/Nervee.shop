@@ -4,6 +4,7 @@
 // via the lookup_guest_order RPC (which compares token hash and checks expiry).
 // Rate-limited per IP and per email. Never reveals whether an order exists.
 
+import { isOrderNumber } from '../_shared/order-number.ts';
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import { getCorsHeaders } from '../_shared/cors.ts';
@@ -64,7 +65,7 @@ serve(async req => {
       timer.end();
       return json({ error: 'Valid email is required' }, 400, corsHeaders);
     }
-    if (!orderNumber || !/^NRV-[0-9]{6}$/.test(orderNumber)) {
+    if (!orderNumber || !isOrderNumber(orderNumber)) {
       timer.end();
       return json({ error: 'Valid order number is required (e.g. NRV-123456)' }, 400, corsHeaders);
     }
@@ -129,7 +130,7 @@ serve(async req => {
       const { data: fullOrder } = await supabase
         .from('orders')
         .select(
-          'id, order_number, status, total, subtotal, shipping_cost, discount_amount, email, delivery_method, tracking_number, tracking_url, placed_at, created_at',
+          'id, order_number, status, total, subtotal, shipping_cost, discount_amount, email, delivery_method, tracking_number, tracking_url, placed_at, delivered_at, created_at',
         )
         .eq('id', row.order_id)
         .maybeSingle();
@@ -137,10 +138,16 @@ serve(async req => {
       if (fullOrder) {
         const { data: items } = await supabase
           .from('order_items')
-          .select('product_id, product_name, color, size, quantity, price, subtotal')
+          .select(
+            'id, product_id, product_name, color, size, quantity, price, subtotal, returned_quantity',
+          )
           .eq('order_id', row.order_id);
 
-        orderDetails = { ...fullOrder, items: items || [] };
+        const { data: requests } = await supabase
+          .from('order_return_requests')
+          .select('id,type,status,return_exchange_shipments(tracking_number,tracking_url)')
+          .eq('order_id', row.order_id);
+        orderDetails = { ...fullOrder, items: items || [], requests: requests || [] };
       }
     }
 

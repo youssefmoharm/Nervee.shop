@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'fix/**']
   pull_request:
     branches: [main]
 
@@ -59,27 +59,8 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
-      - name: Build
-        env:
-          # Public VITE_* values required by prebuild sitemap. Configure as
-          # GitHub Actions secrets — never commit credential values here.
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          # Emit hidden source maps so the Sentry upload step below can
-          # symbolicate releases. This CI dist is never deployed (Vercel
-          # runs its own build without this flag, so no .map files ship).
-          SENTRY_UPLOAD: '1'
-        run: |
-          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_ANON_KEY" ]; then
-            echo "::error::Missing GitHub secrets VITE_SUPABASE_URL and/or VITE_SUPABASE_ANON_KEY. Set them under Settings → Secrets and variables → Actions."
-            exit 1
-          fi
-          npm run build
-
-      # prebuild generates public/sitemap.xml; this gate fails the build if the
-      # sitemap or robots.txt is missing/empty or missing required directives.
-      - name: Verify SEO artifacts (sitemap + robots)
-        run: node scripts/verify-seo.mjs
+      - name: Compile frontend (full sitemap build runs with isolated Supabase below)
+        run: npm exec -- tsc -b && npm exec -- vite build
 
       - name: Set APP_VERSION
         run: echo "APP_VERSION=$(node -p "require('./package.json').version")" >> "$GITHUB_ENV"
@@ -102,11 +83,6 @@ jobs:
 
       - name: Run Deno tests
         run: npm run test:deno
-
-      - name: Run SQL tests (optional)
-        run: npm run test:sql
-        env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
 
       # Local dev-server E2E only — @live specs are excluded by default
       # (grepInvert in playwright.config.ts) and run via live-smoke.yml.
@@ -178,6 +154,8 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: 2.39.2
+      - name: Install dependencies
+        run: npm ci
       - name: Start isolated Supabase and apply every migration
         run: supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,supavisor
       - name: Install SQL client
@@ -189,6 +167,31 @@ jobs:
         env:
           REQUIRE_SQL_TESTS: '1'
           SUPABASE_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+      - name: Verify backup restoration into separate database
+        run: node scripts/verify-local-restore.mjs
+        env:
+          SUPABASE_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+      - name: Export disposable local connection settings
+        run: |
+          umask 077
+          supabase status -o env > "$RUNNER_TEMP/supabase.env"
+      - name: Build with real local catalog and verify sitemap
+        run: |
+          node --env-file="$RUNNER_TEMP/supabase.env" scripts/build-local.mjs
+          npm run verify:seo
+      - name: Start local edge functions
+        run: |
+          supabase functions serve > "$RUNNER_TEMP/edge-functions.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/edge-functions.pid"
+          for attempt in $(seq 1 60); do
+            if curl -s -o /dev/null -f http://127.0.0.1:54321/functions/v1/; then exit 0; fi
+            # A 404 from the running router also establishes HTTP readiness.
+            if [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:54321/functions/v1/verify-guest-order)" = '405' ]; then exit 0; fi
+            sleep 2
+          done
+          echo 'Edge functions did not become ready'; exit 1
+      - name: Exercise guest and account checkout against local edge functions
+        run: node --env-file="$RUNNER_TEMP/supabase.env" scripts/test-local-backend.mjs
       - name: Stop isolated services
         if: always()
         run: supabase stop --no-backup

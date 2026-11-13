@@ -34,6 +34,9 @@ npm run test:e2e
 `build` also fetches the active catalog to generate `public/sitemap.xml`; it requires
 the two Supabase variables and network access. For compilation without sitemap
 or backend validation, run `npm exec -- tsc -b && npm exec -- vite build`.
+Playwright runs the core suite followed by isolated mocked admin/catalog checks.
+Desktop suites cover Chromium, Firefox and WebKit. Core mobile checks cover
+Chromium shopping, accessibility and policy flows.
 Playwright requires its browsers (`npx playwright install --with-deps`). Live specs
 are excluded by default.
 

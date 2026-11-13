@@ -80,7 +80,7 @@ test.describe('Customer Journey', () => {
     await expect(promoInput).toBeVisible();
     await promoInput.fill('NERVE10');
     await page.getByTestId('promo-apply').click();
-    await expect(page.getByText(/applied|invalid discount code/i)).toBeVisible();
+    await expect(page.getByTestId('promo-feedback')).toContainText(/applied|invalid|unavailable/i);
   });
 
   test('wishlist toggle from product page', async ({ page }) => {

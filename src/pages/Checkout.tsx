@@ -408,7 +408,12 @@ export default function Checkout() {
             >
               <ChevronLeft size={16} /> {t('Back to bag')}
             </Link>
-            <div className="flex items-center gap-2 mb-10 overflow-x-auto">
+            <div
+              className="flex items-center gap-2 mb-10 overflow-x-auto"
+              role="region"
+              aria-label={t('Checkout steps')}
+              tabIndex={0}
+            >
               {steps.slice(0, 4).map((label, i) => (
                 <div key={label} className="flex items-center gap-2 flex-shrink-0">
                   <div

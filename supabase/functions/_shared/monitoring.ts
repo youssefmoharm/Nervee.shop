@@ -109,6 +109,7 @@ export async function sendToSentry(event: MonitoringEvent): Promise<void> {
   try {
     const res = await fetch(`${parsed.origin}/api/${parsed.projectId}/envelope/`, {
       method: 'POST',
+      signal: AbortSignal.timeout(10000),
       headers: {
         'content-type': 'application/x-sentry-envelope',
         'x-sentry-auth': `Sentry sentry_version=7, sentry_key=${parsed.publicKey}, sentry_client=${SENTRY_CLIENT}`,

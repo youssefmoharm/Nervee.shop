@@ -37,6 +37,16 @@ module.exports = {
   },
   overrides: [
     {
+      // Horizontal scroll regions need keyboard focus (verified by axe on mobile).
+      files: ['src/components/SizeChartTable.tsx', 'src/pages/Checkout.tsx'],
+      rules: {
+        'jsx-a11y/no-noninteractive-tabindex': [
+          'error',
+          { roles: ['tabpanel', 'region'], allowExpressionValues: true },
+        ],
+      },
+    },
+    {
       // Vitest (not Jest) powers unit tests; globals are enabled in vite.config.
       files: ['tests/**/*.{ts,tsx}', 'src/**/*.test.{ts,tsx}', 'src/test/**/*.{ts,tsx}'],
       env: {

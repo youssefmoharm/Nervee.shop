@@ -16,7 +16,12 @@ export default function SizeChartTable({
   const { t } = useI18n();
   if (variant === 'tool') {
     return (
-      <div className="overflow-x-auto">
+      <div
+        className="overflow-x-auto"
+        role="region"
+        aria-label={t('Size measurements')}
+        tabIndex={0}
+      >
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="bg-mist">
@@ -45,7 +50,12 @@ export default function SizeChartTable({
 
   if (variant === 'page') {
     return (
-      <div className="overflow-x-auto">
+      <div
+        className="overflow-x-auto"
+        role="region"
+        aria-label={t('Size measurements')}
+        tabIndex={0}
+      >
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-navy text-white">
@@ -85,7 +95,7 @@ export default function SizeChartTable({
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto" role="region" aria-label={t('Size measurements')} tabIndex={0}>
       <table className="w-full text-sm border-collapse">
         <thead>
           <tr className="border-b border-navy/20">

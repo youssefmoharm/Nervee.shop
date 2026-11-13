@@ -173,6 +173,11 @@ export const orderService = {
       logError('Error fetching order items:', itemsError);
       throw itemsError;
     }
-    return { ...order, items: items ?? [] };
+    const { data: requests, error: requestsError } = await supabase
+      .from('order_return_requests')
+      .select('id,type,status,return_exchange_shipments(tracking_number,tracking_url)')
+      .eq('order_id', id);
+    if (requestsError) throw requestsError;
+    return { ...order, items: items ?? [], requests: requests ?? [] };
   },
 };

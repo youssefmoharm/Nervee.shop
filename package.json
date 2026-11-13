@@ -12,7 +12,7 @@
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
     "test:ui": "vitest --ui",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test && playwright test --config playwright.mock.config.ts",
     "test:e2e:ui": "playwright test --ui",
     "test:deno": "deno test --allow-env tests/deno supabase/functions/_shared",
     "test:sql": "node scripts/run-sql-tests.mjs",

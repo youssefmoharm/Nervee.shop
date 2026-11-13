@@ -6,13 +6,14 @@
 // Single request per order+type enforced via UNIQUE(order_id, type) in DB.
 // Delivered orders can be returned within 7 days of delivery; placed/processing orders can be cancelled within 2h.
 
+import { canRequestReturn } from '../_shared/return-access.ts';
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import { getCorsHeaders } from '../_shared/cors.ts';
 import { PerformanceTimer, logEvent } from '../_shared/monitoring.ts';
 import { clientIp, distributedRateLimit, getRateLimitHeaders } from '../_shared/ratelimit.ts';
 
-const VALID_TYPES = ['cancellation', 'return'] as const;
+const VALID_TYPES = ['cancellation', 'return', 'exchange'] as const;
 
 serve(async req => {
   const corsHeaders = getCorsHeaders(req);
@@ -41,22 +42,27 @@ serve(async req => {
 
     // Auth: try JWT, fallback to guest token flow
     let customerId: string | null = null;
+    let authenticatedEmail: string | undefined;
     let guestVerified = false;
     const authHeader = req.headers.get('Authorization');
     if (authHeader) {
       const token = authHeader.replace('Bearer ', '');
       const { data: userData } = await supabase.auth.getUser(token);
-      if (userData?.user) customerId = userData.user.id;
+      if (userData?.user) {
+        customerId = userData.user.id;
+        authenticatedEmail = userData.user.email?.toLowerCase();
+      }
     }
 
     const body = await req.json();
-    const { orderId, orderNumber, email, token, type, reason } = body as {
+    const { orderId, orderNumber, email, token, type, reason, items } = body as {
       orderId?: string;
       orderNumber?: string;
       email?: string;
       token?: string;
       type?: string;
       reason?: string;
+      items?: Array<{ orderItemId: string; quantity: number; replacementSize?: string }>;
     };
 
     if (!type || !VALID_TYPES.includes(type as (typeof VALID_TYPES)[number])) {
@@ -111,27 +117,9 @@ serve(async req => {
       return json({ error: 'Order not found' }, 404, corsHeaders);
     }
 
-    // Ownership check
-    if (customerId) {
-      if (order.customer_id && order.customer_id !== customerId) {
-        timer.end();
-        return json({ error: 'Forbidden: not your order' }, 403, corsHeaders);
-      }
-      if (!order.customer_id && order.email && resolvedEmail) {
-        // guest order accessed via authenticated session but emails differ
-        // allow if guestVerified via token, otherwise check email matches JWT email
-        const { data: user } = await supabase.auth.admin.getUserById(customerId);
-        if (user?.user?.email?.toLowerCase() !== order.email?.toLowerCase() && !guestVerified) {
-          timer.end();
-          return json({ error: 'Forbidden: email mismatch' }, 403, corsHeaders);
-        }
-      }
-    } else if (guestVerified) {
-      // already verified via lookup
-    } else {
-      // Neither authenticated nor guest-verified
+    if (!canRequestReturn(order, customerId, authenticatedEmail, guestVerified)) {
       timer.end();
-      return json({ error: 'Authentication or guest token required' }, 401, corsHeaders);
+      return json({ error: 'Order access denied' }, 403, corsHeaders);
     }
 
     // Eligibility: returns within 7 days of delivery; cancellations within 2h of placement.
@@ -139,7 +127,7 @@ serve(async req => {
     const now = new Date();
     const hoursSincePlaced = (now.getTime() - placedAt.getTime()) / (1000 * 60 * 60);
 
-    if (type === 'return') {
+    if (type === 'return' || type === 'exchange') {
       if (order.status !== 'delivered') {
         timer.end();
         return json({ error: 'Only delivered orders can be returned' }, 400, corsHeaders);
@@ -150,9 +138,9 @@ serve(async req => {
       }
       const daysSinceDelivered =
         (now.getTime() - new Date(order.delivered_at).getTime()) / (1000 * 60 * 60 * 24);
-      if (daysSinceDelivered > 7) {
+      if (daysSinceDelivered > (type === 'exchange' ? 30 : 7)) {
         timer.end();
-        return json({ error: 'Return window expired (7 days)' }, 400, corsHeaders);
+        return json({ error: 'Return or exchange window expired' }, 400, corsHeaders);
       }
     } else if (type === 'cancellation') {
       if (!['placed', 'processing'].includes(order.status)) {
@@ -166,17 +154,13 @@ serve(async req => {
     }
 
     // Insert request (dedup via UNIQUE)
-    const { data: inserted, error: insertErr } = await supabase
-      .from('order_return_requests')
-      .insert({
-        order_id: resolvedOrderId,
-        customer_id: customerId,
-        type,
-        reason: sanitizedReason,
-        status: 'pending',
-      })
-      .select('id, order_id, type, status, requested_at')
-      .single();
+    const { data: inserted, error: insertErr } = await supabase.rpc('create_item_return_request', {
+      p_order_id: resolvedOrderId,
+      p_customer_id: customerId,
+      p_type: type,
+      p_reason: sanitizedReason,
+      p_items: items ?? [],
+    });
 
     if (insertErr) {
       if (insertErr.code === '23505') {
@@ -186,7 +170,7 @@ serve(async req => {
       console.error('request-return insert error', insertErr);
       timer.end();
       return json(
-        { error: 'Failed to create request', details: insertErr.message },
+        { error: insertErr.code === 'P0001' ? insertErr.message : 'Failed to create request' },
         500,
         corsHeaders,
       );
@@ -200,7 +184,14 @@ serve(async req => {
     });
 
     timer.end();
-    return json({ success: true, request: inserted }, 200, corsHeaders);
+    return json(
+      {
+        success: true,
+        request: { id: inserted, order_id: resolvedOrderId, type, status: 'pending' },
+      },
+      200,
+      corsHeaders,
+    );
   } catch (err) {
     console.error('request-return error', err);
     return json(

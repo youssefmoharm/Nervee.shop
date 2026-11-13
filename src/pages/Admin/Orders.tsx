@@ -30,6 +30,10 @@ interface OrderRow {
 const PAGE_SIZE = 25;
 
 export default function AdminOrders() {
+  const [shipmentOrderId, setShipmentOrderId] = useState('');
+  const [trackingNumber, setTrackingNumber] = useState('');
+  const [trackingUrl, setTrackingUrl] = useState('');
+  const [savingShipment, setSavingShipment] = useState(false);
   const [orders, setOrders] = useState<OrderRow[] | null>(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -147,6 +151,59 @@ export default function AdminOrders() {
           </select>
         </div>
 
+        {shipmentOrderId && (
+          <form
+            className="border p-4 space-y-2"
+            onSubmit={async e => {
+              e.preventDefault();
+              if (savingShipment) return;
+              setSavingShipment(true);
+              try {
+                const { error } = await adminService.updateOrderStatus(shipmentOrderId, 'shipped', {
+                  trackingNumber,
+                  trackingUrl,
+                });
+                if (error) showToast(error, 'error');
+                else {
+                  setShipmentOrderId('');
+                  setTrackingNumber('');
+                  setTrackingUrl('');
+                  showToast('Shipment recorded', 'success');
+                  load();
+                }
+              } catch {
+                showToast('Could not record shipment. Try again.', 'error');
+              } finally {
+                setSavingShipment(false);
+              }
+            }}
+          >
+            <label className="block">
+              Tracking number
+              <input
+                className="border p-2 ml-2"
+                required
+                maxLength={200}
+                value={trackingNumber}
+                onChange={e => setTrackingNumber(e.target.value)}
+              />
+            </label>
+            <label className="block">
+              Courier HTTPS tracking URL
+              <input
+                className="border p-2 ml-2"
+                required
+                type="url"
+                pattern="https://.*"
+                value={trackingUrl}
+                onChange={e => setTrackingUrl(e.target.value)}
+              />
+            </label>
+            <button className="bg-navy text-white p-2" disabled={savingShipment}>
+              Save shipment and mark shipped
+            </button>
+          </form>
+        )}
         {/* Search and Date Filters */}
         <div className="flex flex-col sm:flex-row gap-3">
           <input
@@ -205,7 +262,17 @@ export default function AdminOrders() {
                   const nextStatuses = validNextStatuses(o.status);
                   return (
                     <tr key={o.id}>
-                      <td className="px-4 py-3 font-medium">{o.order_number}</td>
+                      <td className="px-4 py-3 font-medium">
+                        {o.order_number}
+                        {['processing', 'shipped'].includes(o.status) && (
+                          <button
+                            className="block text-xs underline mt-2"
+                            onClick={() => setShipmentOrderId(o.id)}
+                          >
+                            Record shipment
+                          </button>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-navy/70 whitespace-nowrap">
                         {new Date(o.created_at).toLocaleDateString('en-GB', {
                           day: 'numeric',

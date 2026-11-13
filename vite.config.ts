@@ -106,7 +106,6 @@ export default defineConfig({
       // Deno-only suites (Deno.test) — must not run under vitest/jsdom
       'tests/deno/**',
       'supabase/**/*.test.ts',
-      '**/Nervee.shop/**',
       // Agent/worktree scratch dirs: they contain duplicate copies of src/,
       // which would otherwise run the same specs twice (and report failures
       // against files that are not part of this project's source).
@@ -131,7 +130,6 @@ export default defineConfig({
         'dist/',
         'src/main.tsx',
         'src/vite-env.d.ts',
-        'Nervee.shop/**',
         '.kilo/**',
         '.freebuff/**',
       ],

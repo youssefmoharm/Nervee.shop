@@ -118,6 +118,24 @@ export interface Order {
 export type SortOption = 'newest' | 'price-asc' | 'price-desc' | 'best-selling';
 
 export interface GuestOrder {
+  delivered_at?: string;
+  placed_at?: string;
+  items?: Array<{
+    id: string;
+    product_name: string;
+    size: string;
+    quantity: number;
+    returned_quantity?: number;
+  }>;
+  requests?: Array<{
+    id: string;
+    type: string;
+    status: string;
+    return_exchange_shipments?: {
+      tracking_number: string | null;
+      tracking_url: string | null;
+    } | null;
+  }>;
   delivery_method?: 'standard' | 'express';
   tracking_number?: string;
   tracking_url?: string;

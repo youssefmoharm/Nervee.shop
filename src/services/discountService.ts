@@ -52,7 +52,10 @@ export const discountService = {
    */
   async validate(code: string, subtotal: number): Promise<DiscountResult> {
     if (!isSupabaseConfigured) {
-      return { valid: false, error: 'Supabase not configured' };
+      return {
+        valid: false,
+        error: 'Discount codes are temporarily unavailable. Please try again later.',
+      };
     }
 
     if (!code || code.trim() === '') {

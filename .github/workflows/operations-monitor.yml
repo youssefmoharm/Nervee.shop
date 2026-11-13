@@ -1,0 +1,22 @@
+name: Operations monitor
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Check worker, recover pending deliveries and report backlog
+        run: node scripts/check-operations.mjs
+        env:
+          OPS_WORKER_URL: ${{ vars.OPS_WORKER_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}

@@ -29,6 +29,7 @@ export default function Cart() {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [promo, setPromo] = useState('');
+  const [promoMessage, setPromoMessage] = useState('');
   const [promoStatus, setPromoStatus] = useState<'idle' | 'applied' | 'invalid'>('idle');
   const [applyingPromo, setApplyingPromo] = useState(false);
   const [recommended, setRecommended] = useState<Product[]>([]);
@@ -84,6 +85,7 @@ export default function Cart() {
       if (!result.valid || !result.discount) {
         trackCoupon('apply', promo.trim(), { status: 'invalid' });
         showToast(result.error || t('Please check your code and try again'), 'error', 3000);
+        setPromoMessage(result.error || 'Invalid discount code.');
         setPromoStatus('invalid');
         return;
       }
@@ -101,6 +103,7 @@ export default function Cart() {
       setPromoStatus('applied');
       showToast(`${t('You saved')} ${formatEGP(amt)}`, 'success', 3000);
     } catch (error) {
+      setPromoMessage('Could not validate the discount code. Please try again.');
       console.error('Failed to apply promo code:', error);
       trackCoupon('apply', promo.trim(), { status: 'error' });
       showToast(t('Please check your code and try again'), 'error', 3000);
@@ -234,12 +237,14 @@ export default function Cart() {
                   </button>
                 </div>
                 {promoStatus === 'applied' && (
-                  <p className="text-xs text-green-700">
+                  <p role="status" data-testid="promo-feedback" className="text-xs text-green-700">
                     {t('Code')} {promo.trim().toUpperCase()} {t('applied — you saved.')}
                   </p>
                 )}
                 {promoStatus === 'invalid' && (
-                  <p className="text-xs text-red-600">{t('Invalid discount code.')}</p>
+                  <p role="alert" data-testid="promo-feedback" className="text-xs text-red-600">
+                    {t(promoMessage || 'Invalid discount code.')}
+                  </p>
                 )}
 
                 <div className="space-y-2 pt-2 border-t border-navy/10 text-sm">

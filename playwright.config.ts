@@ -19,12 +19,13 @@ const LIVE = process.env.PLAYWRIGHT_LIVE === '1';
 
 export default defineConfig({
   testDir: './tests/e2e',
+  testIgnore: ['**/admin-operations.spec.ts'],
   fullyParallel: false, // Run tests sequentially to avoid port conflicts
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : 1,
   reporter: [['html'], ['github'], ['junit', { outputFile: 'test-results/junit.xml' }]],
-  grepInvert: LIVE ? undefined : /@live/,
+  grepInvert: LIVE ? undefined : /@live|mocked catalog/,
   timeout: 30000, // Increase test timeout
   expect: {
     timeout: 10000,
@@ -39,7 +40,29 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
+          ? { launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } }
+          : {}),
+      },
+    },
+    {
+      name: 'mobile-chromium',
+      testMatch: [
+        '**/a11y.spec.ts',
+        '**/customer-flow.spec.ts',
+        '**/dock.spec.ts',
+        '**/policy-routes.spec.ts',
+        '**/checkout-cod.spec.ts',
+        '**/mobile-shopping.spec.ts',
+      ],
+      use: {
+        ...devices['Pixel 7'],
+        ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
+          ? { launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } }
+          : {}),
+      },
     },
     {
       name: 'firefox',

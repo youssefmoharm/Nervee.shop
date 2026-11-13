@@ -1,0 +1,46 @@
+name: Staging validation
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  staging:
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Verify isolated staging checkout and tracking
+        run: node scripts/test-local-backend.mjs
+        env:
+          API_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+          STAGING_PROJECT_REF: ${{ vars.STAGING_PROJECT_REF }}
+          ALLOW_STAGING_WRITES: '1'
+      - name: Install browser engines
+        run: npx playwright install --with-deps
+      - name: Require admin fixtures for staging browser coverage
+        run: |
+          node -e "const missing=['ADMIN_TEST_EMAIL','ADMIN_TEST_PASSWORD'].filter(name=>!process.env[name]);if(missing.length){console.error('Missing staging fixture settings: '+missing.join(', '));process.exit(1)}"
+        env:
+          ADMIN_TEST_EMAIL: ${{ secrets.STAGING_ADMIN_TEST_EMAIL }}
+          ADMIN_TEST_PASSWORD: ${{ secrets.STAGING_ADMIN_TEST_PASSWORD }}
+      - name: Run browser and accessibility suites against staging catalog
+        run: npm run test:e2e
+        env:
+          CI: true
+          ADMIN_TEST_EMAIL: ${{ secrets.STAGING_ADMIN_TEST_EMAIL }}
+          ADMIN_TEST_PASSWORD: ${{ secrets.STAGING_ADMIN_TEST_PASSWORD }}
+          VITE_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: staging-browser-report
+          path: playwright-report/

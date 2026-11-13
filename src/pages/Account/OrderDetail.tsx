@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { safeImageSrc } from '../../lib/images';
 import { Link, useParams } from 'react-router-dom';
 import { ChevronLeft, Loader2 } from 'lucide-react';
+import { returnEligibility } from '../../lib/returnEligibility';
 import { orderService } from '../../services/orderService';
 import { logError } from '../../lib/sentry';
 import { supabase } from '../../lib/supabase';
@@ -20,6 +21,7 @@ interface OrderItem {
   price: number;
   quantity: number;
   subtotal: number;
+  returned_quantity?: number;
 }
 
 interface OrderDetailData {
@@ -36,7 +38,18 @@ interface OrderDetailData {
   governorate: string;
   postal_code: string | null;
   created_at: string;
+  placed_at?: string;
+  delivered_at?: string;
   items: OrderItem[];
+  requests?: Array<{
+    id: string;
+    type: string;
+    status: string;
+    return_exchange_shipments?: {
+      tracking_number: string | null;
+      tracking_url: string | null;
+    } | null;
+  }>;
 }
 
 export default function OrderDetail() {
@@ -48,6 +61,10 @@ export default function OrderDetail() {
   });
   const { id } = useParams();
   const [order, setOrder] = useState<OrderDetailData | null | undefined>(undefined);
+  const [requestType, setRequestType] = useState<'return' | 'exchange'>('return');
+  const [selected, setSelected] = useState<
+    Record<string, { quantity: number; replacementSize: string }>
+  >({});
   const [showReturn, setShowReturn] = useState(false);
   const [returnReason, setReturnReason] = useState('');
   const [returnStatus, setReturnStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(
@@ -77,19 +94,11 @@ export default function OrderDetail() {
     };
   }, [id, reloadKey]);
 
-  const canReturn =
-    order &&
-    order.status === 'delivered' &&
-    Date.now() - new Date(order.created_at).getTime() < 14 * 24 * 60 * 60 * 1000;
-  const canCancel =
-    order &&
-    ['placed', 'processing'].includes(order.status) &&
-    Date.now() - new Date(order.created_at).getTime() < 2 * 60 * 60 * 1000;
-  const cancelTimeLeft = canCancel
-    ? Math.ceil((2 * 60 * 60 * 1000 - (Date.now() - new Date(order.created_at).getTime())) / 1000)
-    : 0;
+  const { canReturn, canExchange, canCancel, cancelTimeLeft } = order
+    ? returnEligibility(order)
+    : { canReturn: false, canExchange: false, canCancel: false, cancelTimeLeft: 0 };
 
-  const submitReturn = async (type: 'return' | 'cancellation') => {
+  const submitReturn = async (type: 'return' | 'cancellation' | 'exchange') => {
     if (!order || !id) return;
     if (returnReason.trim().length < 10) {
       setReturnError(t('Reason must be at least 10 characters'));
@@ -102,26 +111,40 @@ export default function OrderDetail() {
       setIsCancelling(true);
     }
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
-    const res = await fetch(getEndpoint('REQUEST_RETURN'), {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ orderId: id, type, reason: returnReason.trim() }),
-    });
-    const json = await res.json();
-    if (!res.ok) {
-      setReturnError(json.error || 'Failed');
-      setReturnStatus('error');
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
+      const res = await fetch(getEndpoint('REQUEST_RETURN'), {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          orderId: id,
+          type,
+          reason: returnReason.trim(),
+          items: Object.entries(selected)
+            .filter(([, v]) => v.quantity > 0)
+            .map(([orderItemId, v]) => ({ orderItemId, ...v })),
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setReturnError(json.error || 'Failed');
+        setReturnStatus('error');
+        setIsCancelling(false);
+        return;
+      }
+      setReturnStatus('success');
       setIsCancelling(false);
-      return;
+      setTimeout(() => setShowReturn(false), 1500);
+    } catch {
+      setReturnError(t('Could not submit request. Please try again.'));
+      setReturnStatus('error');
+    } finally {
+      setIsCancelling(false);
     }
-    setReturnStatus('success');
-    setIsCancelling(false);
-    setTimeout(() => setShowReturn(false), 1500);
   };
 
   if (loadError) {
@@ -262,20 +285,105 @@ export default function OrderDetail() {
         </div>
       )}
 
-      {(canReturn || canCancel) && (
+      {order.requests?.map(request => (
+        <div className="border p-4 mt-4" key={request.id}>
+          <p>
+            {request.type}: {request.status}
+          </p>
+          {request.return_exchange_shipments?.tracking_number && (
+            <p>Replacement tracking: {request.return_exchange_shipments.tracking_number}</p>
+          )}
+          {request.return_exchange_shipments?.tracking_url?.startsWith('https://') && (
+            <a
+              className="underline"
+              href={request.return_exchange_shipments.tracking_url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Track replacement
+            </a>
+          )}
+        </div>
+      ))}
+      {(canReturn || canExchange || canCancel) && (
         <div className="mt-8 border-t border-navy/10 pt-6">
           <h3 className="nv-eyebrow text-sm mb-3">
-            {t('Need to')} {canReturn ? t('return') : t('cancel')}?
+            {t('Need to')} {canReturn || canExchange ? t('return or exchange') : t('cancel')}?
           </h3>
           {!showReturn ? (
             <button
               onClick={() => setShowReturn(true)}
               className="border border-navy px-6 py-2.5 text-sm hover:bg-navy hover:text-white transition-colors"
             >
-              {t('Request')} {canReturn ? t('Return') : t('Cancellation')}
+              {t('Request')}{' '}
+              {canReturn || canExchange ? t('Return or Exchange') : t('Cancellation')}
             </button>
           ) : (
             <div className="space-y-3 max-w-md">
+              {(canReturn || canExchange) && (
+                <>
+                  <label className="block">
+                    Request type
+                    <select
+                      value={canReturn ? requestType : 'exchange'}
+                      onChange={e => setRequestType(e.target.value as 'return' | 'exchange')}
+                      className="border p-2 ml-2"
+                    >
+                      {canReturn && <option value="return">Return for refund</option>}
+                      {canExchange && <option value="exchange">Size exchange</option>}
+                    </select>
+                  </label>
+                  {order.items.map(item => (
+                    <div className="border p-2" key={item.id}>
+                      <label>
+                        {item.product_name} ({item.size}) — Quantity
+                        <input
+                          aria-label={`Return quantity for ${item.product_name}`}
+                          type="number"
+                          min={0}
+                          max={item.quantity - (item.returned_quantity ?? 0)}
+                          value={selected[item.id]?.quantity ?? 0}
+                          onChange={e =>
+                            setSelected(prev => ({
+                              ...prev,
+                              [item.id]: {
+                                replacementSize: prev[item.id]?.replacementSize ?? '',
+                                quantity: Number(e.target.value),
+                              },
+                            }))
+                          }
+                          className="border p-1 w-16 ml-2"
+                        />
+                      </label>
+                      {(requestType === 'exchange' || !canReturn) && (
+                        <label className="block">
+                          Replacement size
+                          <select
+                            aria-label={`Replacement size for ${item.product_name}`}
+                            value={selected[item.id]?.replacementSize ?? ''}
+                            onChange={e =>
+                              setSelected(prev => ({
+                                ...prev,
+                                [item.id]: {
+                                  quantity: prev[item.id]?.quantity ?? 0,
+                                  replacementSize: e.target.value,
+                                },
+                              }))
+                            }
+                          >
+                            <option value="">Choose size</option>
+                            {['XS', 'S', 'M', 'L', 'XL', 'XXL']
+                              .filter(size => size !== item.size)
+                              .map(size => (
+                                <option key={size}>{size}</option>
+                              ))}
+                          </select>
+                        </label>
+                      )}
+                    </div>
+                  ))}
+                </>
+              )}
               <textarea
                 value={returnReason}
                 onChange={e => setReturnReason(e.target.value)}
@@ -291,7 +399,15 @@ export default function OrderDetail() {
               )}
               <div className="flex gap-2">
                 <button
-                  onClick={() => submitReturn(canReturn ? 'return' : 'cancellation')}
+                  onClick={() =>
+                    submitReturn(
+                      canReturn || canExchange
+                        ? canReturn
+                          ? requestType
+                          : 'exchange'
+                        : 'cancellation',
+                    )
+                  }
                   disabled={returnStatus === 'loading'}
                   className="bg-navy text-white px-6 py-2 text-sm disabled:opacity-60 flex items-center gap-2"
                 >

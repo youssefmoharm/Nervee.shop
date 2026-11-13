@@ -160,7 +160,7 @@ export default function AdminDashboard() {
     loadDashboardStats();
   }, [loadDashboardStats]);
 
-  if (loading) {
+  if (loading && !stats) {
     return (
       <AdminLayout>
         <LoadingState message="Loading dashboard statistics..." />
@@ -168,7 +168,7 @@ export default function AdminDashboard() {
     );
   }
 
-  if (error) {
+  if (error && !stats) {
     return (
       <AdminLayout>
         <EmptyState

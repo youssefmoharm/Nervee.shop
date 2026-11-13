@@ -6,6 +6,7 @@
 //
 // POST { email, orderNumber }
 
+import { isOrderNumber } from '../_shared/order-number.ts';
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import { getCorsHeaders } from '../_shared/cors.ts';
@@ -72,7 +73,7 @@ serve(async req => {
       !email ||
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
       !orderNumber ||
-      !/^NRV-[0-9]{6}$/.test(orderNumber)
+      !isOrderNumber(orderNumber)
     ) {
       timer.end();
       return json({ error: 'Valid email and order number are required' }, 400, corsHeaders);

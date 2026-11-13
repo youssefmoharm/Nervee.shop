@@ -52,3 +52,6 @@ supabase/.temp/
 supabase/.branches/
 supabase/.env
 .vercel
+
+# Local coverage output
+coverage/

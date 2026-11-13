@@ -12,10 +12,19 @@ interface ReturnRow {
   reason: string;
   status: string;
   requested_at: string;
+  return_request_items?: Array<{
+    quantity: number;
+    replacement_size: string | null;
+    order_items: { product_name: string; size: string };
+  }>;
   orders?: { order_number: string; status: string; email: string; total: number };
 }
 
 export default function AdminReturns() {
+  const [shipmentId, setShipmentId] = useState('');
+  const [trackingNumber, setTrackingNumber] = useState('');
+  const [trackingUrl, setTrackingUrl] = useState('');
+  const [savingShipment, setSavingShipment] = useState(false);
   const [rows, setRows] = useState<ReturnRow[] | null>(null);
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected' | 'completed' | ''>(
     'pending',
@@ -32,7 +41,7 @@ export default function AdminReturns() {
     let q = supabase
       .from('order_return_requests')
       .select(
-        'id, order_id, type, reason, status, requested_at, orders(order_number, status, email, total)',
+        'id, order_id, type, reason, status, requested_at, orders(order_number, status, email, total), return_request_items(quantity, replacement_size, order_items(product_name,size))',
       )
       .order('requested_at', { ascending: false })
       .limit(50);
@@ -148,6 +157,11 @@ export default function AdminReturns() {
                         Mark Completed
                       </button>
                     )}
+                    {r.type === 'exchange' && r.status === 'completed' && (
+                      <button className="underline" onClick={() => setShipmentId(r.id)}>
+                        Record shipment
+                      </button>
+                    )}
                     <a
                       href={`/admin/orders`}
                       className="px-2 py-1.5 text-xs text-navy/60 underline"
@@ -161,10 +175,63 @@ export default function AdminReturns() {
           </table>
         </div>
       )}
+      {shipmentId && (
+        <form
+          className="space-y-2 mt-4"
+          onSubmit={async e => {
+            e.preventDefault();
+            if (savingShipment) return;
+            setSavingShipment(true);
+            try {
+              const { error } = await supabase.rpc('record_exchange_shipment', {
+                p_request_id: shipmentId,
+                p_number: trackingNumber,
+                p_url: trackingUrl,
+              });
+              if (error) showToast(error.message, 'error');
+              else {
+                setShipmentId('');
+                setTrackingNumber('');
+                setTrackingUrl('');
+                showToast('Shipment recorded', 'success');
+              }
+            } catch {
+              showToast('Could not record shipment. Try again.', 'error');
+            } finally {
+              setSavingShipment(false);
+            }
+          }}
+        >
+          <label className="block">
+            Tracking number
+            <input
+              className="border p-2 ml-2"
+              required
+              maxLength={200}
+              value={trackingNumber}
+              onChange={e => setTrackingNumber(e.target.value)}
+            />
+          </label>
+          <label className="block">
+            HTTPS tracking URL
+            <input
+              className="border p-2 ml-2"
+              type="url"
+              pattern="https://.*"
+              required
+              value={trackingUrl}
+              onChange={e => setTrackingUrl(e.target.value)}
+            />
+          </label>
+          <button className="bg-navy text-white p-2" disabled={savingShipment}>
+            Save exchange shipment
+          </button>
+        </form>
+      )}
       <p className="text-xs text-navy/60 mt-4">
-        Approve the request, then mark completed after receiving the return. Completion refunds the
-        order status and restocks inventory in one transaction. Record any cash repayment
-        separately; this action does not transfer money.
+        Complete a return after receiving the selected items. Only those quantities are restocked.
+        Size exchanges reserve replacement stock atomically. Record cash repayments on the COD
+        refunds page.
       </p>
     </AdminLayout>
   );
