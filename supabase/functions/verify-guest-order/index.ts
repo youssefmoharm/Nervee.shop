@@ -129,7 +129,7 @@ serve(async req => {
       const { data: fullOrder } = await supabase
         .from('orders')
         .select(
-          'id, order_number, status, total, subtotal, shipping_cost, discount_amount, delivery_method, placed_at, created_at',
+          'id, order_number, status, total, subtotal, shipping_cost, discount_amount, email, delivery_method, tracking_number, tracking_url, placed_at, created_at',
         )
         .eq('id', row.order_id)
         .maybeSingle();

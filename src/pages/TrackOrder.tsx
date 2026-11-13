@@ -161,14 +161,30 @@ export function TrackOrder() {
           <div className="border border-navy/20 rounded-lg p-6">
             <h2 className="nv-heading text-xl mb-4">{t('Delivery Information')}</h2>
             <div className="space-y-3 text-sm text-navy/80">
-              <p>• {t('Order confirmed and being processed')}</p>
-              <p>• {t('You will receive a tracking number via email')}</p>
-              <p>
-                • {t('Delivery time')}: {t('2-5 business days')}
-              </p>
-              <p>
-                • {t('Express delivery available')}: {t('1-2 business days')}
-              </p>
+              <p>{t(STATUS_LABELS[statusKey] || statusKey)}</p>
+              {!['cancelled', 'refunded', 'delivered'].includes(statusKey) && (
+                <p>
+                  {t('Delivery time')}:{' '}
+                  {order.delivery_method === 'express'
+                    ? t('1-2 business days')
+                    : t('2-5 business days')}
+                </p>
+              )}
+              {order.tracking_number && (
+                <p>
+                  {t('Tracking number')}: {order.tracking_number}
+                </p>
+              )}
+              {order.tracking_url && /^https:\/\//i.test(order.tracking_url) && (
+                <a
+                  href={order.tracking_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  {t('Track shipment')}
+                </a>
+              )}
             </div>
           </div>
 

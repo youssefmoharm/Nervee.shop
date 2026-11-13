@@ -46,15 +46,15 @@ END $$;
 -- ---------------------------------------------------------------------------
 DO $$
 BEGIN
-  IF has_function_privilege('anon', 'update_order_status(uuid,text,text,text,text)', 'EXECUTE') THEN
+  IF has_function_privilege('anon', 'update_order_status(uuid,text,text,text,text,uuid)', 'EXECUTE') THEN
     RAISE EXCEPTION 'FAIL: anon must not EXECUTE update_order_status';
   END IF;
 
-  IF has_function_privilege('authenticated', 'update_order_status(uuid,text,text,text,text)', 'EXECUTE') THEN
+  IF has_function_privilege('authenticated', 'update_order_status(uuid,text,text,text,text,uuid)', 'EXECUTE') THEN
     RAISE EXCEPTION 'FAIL: authenticated must not EXECUTE update_order_status';
   END IF;
 
-  IF NOT has_function_privilege('service_role', 'update_order_status(uuid,text,text,text,text)', 'EXECUTE') THEN
+  IF NOT has_function_privilege('service_role', 'update_order_status(uuid,text,text,text,text,uuid)', 'EXECUTE') THEN
     RAISE EXCEPTION 'FAIL: service_role must be able to EXECUTE update_order_status';
   END IF;
 END $$;

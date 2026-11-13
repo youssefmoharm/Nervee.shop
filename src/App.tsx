@@ -74,6 +74,7 @@ const AdminCustomerDetail = lazy(() => import('./pages/Admin/CustomerDetail'));
 const AdminContacts = lazy(() => import('./pages/Admin/Contacts'));
 const AdminNewsletter = lazy(() => import('./pages/Admin/Newsletter'));
 const AdminDiscounts = lazy(() => import('./pages/Admin/Discounts'));
+const AdminNotifications = lazy(() => import('./pages/Admin/Notifications'));
 const AdminReturns = lazy(() => import('./pages/Admin/Returns'));
 
 function AdminFallback() {
@@ -366,6 +367,14 @@ function AppContent() {
                   element={
                     <AdminRoute>
                       <AdminReturns />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="notifications"
+                  element={
+                    <AdminRoute>
+                      <AdminNotifications />
                     </AdminRoute>
                   }
                 />

@@ -166,3 +166,29 @@ jobs:
         # vulnerable tmp/uuid/puppeteer dev chain stays out of the lockfile
         # (audit SEC-11). Same version the budgets were tuned against.
         run: npx --yes @lhci/cli@0.14.0 autorun
+
+  database:
+    name: Required database integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.39.2
+      - name: Start isolated Supabase and apply every migration
+        run: supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,supavisor
+      - name: Install SQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Execute database assertions (never skip)
+        run: |
+          npm run test:sql
+          node scripts/test-checkout-concurrency.mjs
+        env:
+          REQUIRE_SQL_TESTS: '1'
+          SUPABASE_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+      - name: Stop isolated services
+        if: always()
+        run: supabase stop --no-backup

@@ -35,20 +35,12 @@ export function clientIp(req: Request): string {
   return req.headers.get('cf-connecting-ip') || req.headers.get('x-real-ip') || 'anonymous';
 }
 
-async function sha256Hex(text: string): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-  return Array.from(new Uint8Array(digest))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-}
-
 /**
  * Build a spoof-resistant rate-limit identifier, in priority order:
  *   1. Authenticated user id (resolved from a real user JWT — never the
  *      anon/publishable key, which every browser sends and must not bucket
  *      all users together).
- *   2. A non-user bearer token (hashed — raw tokens are never used as keys).
- *   3. The client IP (last X-Forwarded-For hop).
+ *   2. The client IP (last X-Forwarded-For hop).
  */
 export async function rateLimitIdentifier(req: Request, supabase: any): Promise<string> {
   const authHeader = req.headers.get('authorization') || '';
@@ -68,7 +60,8 @@ export async function rateLimitIdentifier(req: Request, supabase: any): Promise<
     } catch {
       // Not a valid user JWT — fall through to a hashed token bucket.
     }
-    return `tok:${(await sha256Hex(token)).slice(0, 32)}`;
+    // Unverified input must never choose a fresh rate-limit bucket.
+    return `ip:${clientIp(req)}`;
   }
 
   return `ip:${clientIp(req)}`;

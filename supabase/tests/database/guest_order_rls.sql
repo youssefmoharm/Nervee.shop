@@ -28,7 +28,9 @@ BEGIN
     FROM pg_policies
     WHERE schemaname = 'public'
       AND tablename = 'guest_orders'
-      AND (command IS NULL OR command = 'ALL' OR command = 'SELECT');
+      AND cmd IN ('ALL', 'SELECT')
+      AND roles && ARRAY['public', 'anon', 'authenticated']::name[]
+      AND COALESCE(qual, 'true') <> 'false';
 
   IF v_policy_count > 0 THEN
     RAISE EXCEPTION 'FAIL: guest_orders must have no client-reachable SELECT policies (found %)', v_policy_count;

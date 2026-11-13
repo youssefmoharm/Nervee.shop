@@ -1,5 +1,4 @@
-[project]
-id = "gfmxvvjqlhrnmidutjwx"
+project_id = "gfmxvvjqlhrnmidutjwx"
 
 [api]
 enabled = true
@@ -86,3 +85,6 @@ verify_jwt = true
 
 [functions.update-order-status]
 verify_jwt = true
+
+[functions.process-order-notifications]
+verify_jwt = false

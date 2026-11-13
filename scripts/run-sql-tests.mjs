@@ -14,11 +14,16 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const testsDir = join(root, 'supabase', 'tests', 'database');
 
+const required = process.env.REQUIRE_SQL_TESTS === '1';
+function skip(message) {
+  console[required ? 'error' : 'log'](message);
+  process.exit(required ? 1 : 0);
+}
+
 const dbUrl = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL;
 
 if (!dbUrl) {
-  console.log('SKIP: set SUPABASE_DB_URL to run pgTAP/DO-block SQL tests');
-  process.exit(0);
+  skip('SKIP: set SUPABASE_DB_URL to run pgTAP/DO-block SQL tests');
 }
 
 let files;
@@ -27,19 +32,16 @@ try {
     .filter(f => f.endsWith('.sql'))
     .sort();
 } catch {
-  console.log(`SKIP: no SQL tests directory found at ${testsDir}`);
-  process.exit(0);
+  skip(`SKIP: no SQL tests directory found at ${testsDir}`);
 }
 
 if (files.length === 0) {
-  console.log('SKIP: no .sql test files in supabase/tests/database');
-  process.exit(0);
+  skip('SKIP: no .sql test files in supabase/tests/database');
 }
 
 const version = spawnSync('psql', ['--version'], { encoding: 'utf8' });
 if (version.error || version.status !== 0) {
-  console.warn('WARN: psql not found on PATH — skipping SQL tests');
-  process.exit(0);
+  skip('WARN: psql not found on PATH — skipping SQL tests');
 }
 
 let failed = 0;
