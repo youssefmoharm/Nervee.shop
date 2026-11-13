@@ -32,6 +32,11 @@ ChartJS.defaults.color = '#64748b';
 ChartJS.defaults.borderColor = '#e2e8f0';
 ChartJS.defaults.font.family = 'inherit';
 
+interface ChartTooltipContext {
+  parsed: { y: number };
+  label?: string;
+}
+
 interface RevenueChartProps {
   data: { date: string; revenue: number }[];
   loading: boolean;
@@ -86,7 +91,7 @@ export function RevenueChart({ data, loading, error }: RevenueChartProps) {
         borderColor: '#e2e8f0',
         borderWidth: 1,
         callbacks: {
-          label: function (context: any) {
+          label: function (context: ChartTooltipContext) {
             return `EGP ${context.parsed.y.toLocaleString()}`;
           },
         },
@@ -163,7 +168,7 @@ export function SalesChart({ data, loading, error }: SalesChartProps) {
         borderColor: '#e2e8f0',
         borderWidth: 1,
         callbacks: {
-          label: function (context: any) {
+          label: function (context: ChartTooltipContext) {
             return `${context.parsed.y} units`;
           },
         },
