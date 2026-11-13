@@ -752,8 +752,8 @@ export function trackWebVitals() {
     try {
       const fidObserver = new PerformanceObserver(list => {
         for (const entry of list.getEntries()) {
-          const perfEntry = entry as any;
-          if (perfEntry.processingStart) {
+          const perfEntry = entry as PerformanceEntry;
+          if ('processingStart' in perfEntry && perfEntry.processingStart) {
             const fid = perfEntry.processingStart - entry.startTime;
 
             trackEvent('fid', {
@@ -774,8 +774,8 @@ export function trackWebVitals() {
       let clsValue = 0;
       const clsObserver = new PerformanceObserver(list => {
         for (const entry of list.getEntries()) {
-          if (!(entry as any).hadRecentInput) {
-            clsValue += (entry as any).value;
+          if (!(entry as LayoutShiftEntry).hadRecentInput) {
+            clsValue += (entry as LayoutShiftEntry).value;
           }
         }
 
